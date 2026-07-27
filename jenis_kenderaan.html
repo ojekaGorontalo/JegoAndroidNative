@@ -1,0 +1,1928 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Pilih Kendaraan - JeGo</title>
+    <script src="app_check/check_app.js"></script>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --primary: #FF6D00;
+            --primary-dark: #E65100;
+            --primary-light: #FFB74D;
+            --secondary: #FF9800;
+            --accent: #FFC107;
+            --dark: #212121;
+            --gray-dark: #424242;
+            --gray: #757575;
+            --gray-light: #E0E0E0;
+            --light: #F5F5F5;
+            --white: #FFFFFF;
+            --success: #4CAF50;
+            --danger: #F44336;
+            --surface: #FFFFFF;
+            --background: #F8F9FA;
+            --text-primary: #212121;
+            --text-secondary: #757575;
+        }
+
+        body.dark-mode {
+            --primary: #FF9800;
+            --primary-dark: #F57C00;
+            --primary-light: #FFB74D;
+            --secondary: #FF9800;
+            --accent: #FFC107;
+            --dark: #E0E0E0;
+            --gray-dark: #BDBDBD;
+            --gray: #9E9E9E;
+            --gray-light: #424242;
+            --light: #2C2C2C;
+            --white: #1E1E1E;
+            --surface: #2C2C2C;
+            --background: #121212;
+            --text-primary: #FFFFFF;
+            --text-secondary: #BDBDBD;
+        }
+
+        .dark-mode-btn {
+            background: rgba(255,255,255,0.2);
+            width: 40px;
+            height: 40px;
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+            border: none;
+            color: white;
+            transition: 0.2s;
+        }
+        .dark-mode-btn:active {
+            background: rgba(255,255,255,0.4);
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Roboto', system-ui, -apple-system, 'Helvetica Neue', sans-serif;
+            background-color: var(--background);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: var(--text-primary);
+            transition: background-color 0.3s, color 0.2s;
+        }
+
+        .status-bar {
+            padding-top: env(safe-area-inset-top, 20px);
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+        }
+
+        .app-bar {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .app-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .menu-button {
+            background: rgba(255,255,255,0.2);
+            width: 40px;
+            height: 40px;
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 24px;
+            color: white;
+            text-decoration: none;
+        }
+        .menu-button:active {
+            background: rgba(255,255,255,0.4);
+        }
+
+        .app-bar-title {
+            font-size: 1.35rem;
+            font-weight: 600;
+            color: white;
+            letter-spacing: 0.5px;
+        }
+
+        .app-bar-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .profile-badge {
+            background: rgba(255,255,255,0.2);
+            border-radius: 32px;
+            padding: 6px 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: white;
+            font-size: 0.85rem;
+            font-weight: 500;
+            backdrop-filter: blur(4px);
+        }
+
+        .profile-badge .avatar {
+            width: 28px;
+            height: 28px;
+            background: var(--white);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        .action-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            border-radius: 32px;
+            padding: 6px 16px;
+            color: white;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .action-btn:active {
+            background: rgba(255,255,255,0.4);
+        }
+
+        .main-container {
+            flex: 1;
+            padding: 20px 16px 80px;
+            max-width: 600px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .welcome-card {
+            background: var(--surface);
+            border-radius: 28px;
+            padding: 20px 20px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid var(--gray-light);
+        }
+        
+        .welcome-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 4px;
+        }
+        
+        .welcome-text {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .alert-warning-custom {
+            background: #FFF3E0;
+            border-left: 5px solid #FF9800;
+            color: #E65100;
+            padding: 12px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 16px;
+        }
+        body.dark-mode .alert-warning-custom {
+            background: #2c241a;
+            color: #FFB74D;
+            border-left-color: #FF9800;
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 20px 0 12px 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .section-title span {
+            background: var(--primary-light);
+            width: 6px;
+            height: 24px;
+            border-radius: 6px;
+            display: inline-block;
+        }
+
+        .transport-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .transport-card {
+            background: var(--surface);
+            border-radius: 24px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            border: 1px solid var(--gray-light);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .transport-card:active {
+            transform: scale(0.98);
+            background: #fef9f0;
+        }
+        body.dark-mode .transport-card:active {
+            background: #3a2a1a;
+        }
+
+        .transport-card.selected {
+            border: 2px solid var(--primary);
+            background: linear-gradient(135deg, #FFF8F0, #FFF3E6);
+            box-shadow: 0 6px 14px rgba(255,109,0,0.15);
+        }
+        body.dark-mode .transport-card.selected {
+            background: linear-gradient(135deg, #2a2418, #1f1a12);
+        }
+
+        .transport-icon {
+            width: 70px;
+            height: 70px;
+            background: #FFF2E5;
+            border-radius: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        body.dark-mode .transport-icon {
+            background: #3a2a1a;
+        }
+        
+        .transport-icon img {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+        }
+
+        .transport-info {
+            flex: 1;
+        }
+
+        .transport-name {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .transport-capacity {
+            font-size: 0.75rem;
+            color: var(--primary);
+            font-weight: 600;
+            background: rgba(255,109,0,0.1);
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 20px;
+            margin-bottom: 6px;
+        }
+
+        .transport-description {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            line-height: 1.3;
+        }
+
+        .card-arrow {
+            color: var(--gray-light);
+            font-size: 20px;
+            font-weight: 300;
+        }
+
+        .loading-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+        
+        .spinner {
+            width: 44px;
+            height: 44px;
+            border: 4px solid rgba(255,109,0,0.2);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .login-card {
+            background: var(--surface);
+            border-radius: 32px;
+            padding: 40px 24px;
+            text-align: center;
+            box-shadow: 0 12px 28px rgba(0,0,0,0.08);
+        }
+        
+        .login-card h2 {
+            color: var(--primary-dark);
+            margin-bottom: 12px;
+            font-size: 1.7rem;
+        }
+        
+        .login-card p {
+            color: var(--text-secondary);
+            margin-bottom: 28px;
+        }
+        
+        .login-card .btn-primary-custom {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 14px 28px;
+            border: none;
+            border-radius: 40px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .alert {
+            padding: 14px 18px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: none;
+            backdrop-filter: blur(8px);
+        }
+        .alert-success {
+            background: #E8F5E9;
+            color: #2E7D32;
+            border-left: 5px solid var(--success);
+        }
+        body.dark-mode .alert-success {
+            background: #1e3a1e;
+            color: #8bc34a;
+        }
+        .alert-danger {
+            background: #FFEBEE;
+            color: #C62828;
+            border-left: 5px solid var(--danger);
+        }
+        body.dark-mode .alert-danger {
+            background: #3e1a1a;
+            color: #ef9a9a;
+        }
+
+        .global-loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(8px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            flex-direction: column;
+        }
+        .global-loading .spinner {
+            width: 56px;
+            height: 56px;
+            border-width: 5px;
+        }
+        .global-loading p {
+            color: white;
+            margin-top: 20px;
+            font-weight: 500;
+        }
+
+        /* ===== MODAL FULLSCREEN UNTUK KURIR ===== */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(4px);
+            z-index: 1500;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+        .modal-content {
+            background: var(--surface);
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 0;
+            overflow-y: auto;
+            animation: modalFade 0.2s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        @keyframes modalFade {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .modal-header {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            color: white;
+            padding: 24px 20px;
+            text-align: center;
+            border-radius: 0;
+            flex-shrink: 0;
+        }
+        .modal-header h2 {
+            font-size: 1.5rem;
+            margin: 0;
+        }
+        .modal-body {
+            padding: 24px;
+            flex: 1;
+            overflow-y: auto;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: block;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+        .input-with-icon {
+            position: relative;
+        }
+        .input-with-icon input {
+            width: 100%;
+            padding: 14px 50px 14px 18px;
+            border: 1.5px solid var(--gray-light);
+            border-radius: 40px;
+            font-size: 1rem;
+            background: var(--light);
+            transition: 0.2s;
+            color: var(--text-primary);
+        }
+        .input-with-icon input:focus {
+            border-color: var(--primary);
+            outline: none;
+            background: var(--surface);
+        }
+        .contact-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--primary);
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 16px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            border: none;
+        }
+        .contact-icon:active {
+            background: var(--primary-dark);
+        }
+        .category-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 6px;
+        }
+        .category-btn {
+            padding: 10px 18px;
+            background: var(--light);
+            border: 1px solid var(--gray-light);
+            border-radius: 40px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            color: var(--text-primary);
+        }
+        .category-btn.selected {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            box-shadow: 0 2px 8px rgba(255,109,0,0.3);
+        }
+        textarea {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1.5px solid var(--gray-light);
+            border-radius: 24px;
+            font-family: inherit;
+            resize: vertical;
+            background: var(--light);
+            font-size: 0.9rem;
+            color: var(--text-primary);
+        }
+        textarea:focus {
+            border-color: var(--primary);
+            outline: none;
+            background: var(--surface);
+        }
+        .modal-footer {
+            padding: 20px;
+            display: flex;
+            gap: 12px;
+            border-top: 1px solid var(--gray-light);
+            flex-shrink: 0;
+            background: var(--surface);
+        }
+        .modal-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 40px;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            font-size: 0.9rem;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+        .btn-secondary {
+            background: var(--light);
+            color: var(--text-primary);
+            border: 1px solid var(--gray-light);
+        }
+        
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: var(--surface);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 8px 16px 16px;
+            box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
+            border-top: 1px solid var(--gray-light);
+            z-index: 99;
+        }
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            flex: 1;
+            padding: 4px 0;
+            border-radius: 32px;
+            transition: background 0.2s;
+            color: var(--gray);
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+        .nav-item .nav-icon {
+            font-size: 24px;
+        }
+        .nav-item.active {
+            color: var(--primary);
+            background: rgba(255,109,0,0.08);
+        }
+        .nav-item:active {
+            background: rgba(0,0,0,0.05);
+        }
+        body.dark-mode .nav-item:active {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            display: none;
+            backdrop-filter: blur(2px);
+        }
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -280px;
+            width: 280px;
+            height: 100%;
+            background: var(--surface);
+            box-shadow: 2px 0 12px rgba(0,0,0,0.15);
+            z-index: 1001;
+            transition: left 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            padding-top: 60px;
+        }
+        .sidebar.open {
+            left: 0;
+        }
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--gray-light);
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            color: white;
+            margin-top: -60px;
+            padding-top: 60px;
+        }
+        .sidebar-header h3 {
+            font-size: 1.2rem;
+        }
+        .sidebar-menu {
+            flex: 1;
+            padding: 16px 0;
+        }
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 14px 24px;
+            cursor: pointer;
+            transition: background 0.2s;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+        .sidebar-item:active {
+            background: var(--light);
+        }
+        .sidebar-item .icon {
+            font-size: 22px;
+            width: 28px;
+        }
+        .close-sidebar {
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            font-size: 24px;
+            cursor: pointer;
+            color: white;
+            z-index: 1002;
+        }
+
+        .notif-prompt-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 2100;
+            align-items: center;
+            justify-content: center;
+        }
+        .notif-prompt-content {
+            background: white;
+            border-radius: 16px;
+            width: 85%;
+            max-width: 320px;
+            text-align: center;
+            padding: 20px;
+        }
+        .notif-prompt-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+        .notif-prompt-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: var(--primary);
+        }
+        .notif-prompt-message {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        .notif-prompt-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        .notif-prompt-buttons button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-allow {
+            background: var(--primary);
+            color: white;
+        }
+        .btn-later {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        @media (max-width: 480px) {
+            .app-bar-title {
+                font-size: 1.2rem;
+            }
+            .transport-icon {
+                width: 60px;
+                height: 60px;
+            }
+            .transport-icon img {
+                width: 40px;
+                height: 40px;
+            }
+            .transport-name {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="global-loading" id="globalLoading">
+    <div class="spinner"></div>
+    <p>Memproses...</p>
+</div>
+
+<!-- MODAL PROMPT NOTIFIKASI UNTUK CUSTOMER -->
+<div id="notifPromptModalCustomer" class="notif-prompt-modal">
+    <div class="notif-prompt-content">
+        <div class="notif-prompt-icon">🔔</div>
+        <div class="notif-prompt-title">Aktifkan Notifikasi</div>
+        <div class="notif-prompt-message">Aktifkan notifikasi untuk mendapatkan update pesanan dan promo terbaru.</div>
+        <div class="notif-prompt-buttons">
+            <button id="promptAllowBtnCustomer" class="btn-allow">Aktifkan</button>
+            <button id="promptLaterBtnCustomer" class="btn-later">Nanti</button>
+        </div>
+    </div>
+</div>
+
+<!-- Android Native Style App Bar -->
+<div class="status-bar"></div>
+<div class="app-bar">
+    <div class="app-bar-left">
+        <div class="menu-button" id="menuButton">☰</div>
+        <div class="app-bar-title">JeGo</div>
+    </div>
+    <div class="app-bar-right" id="appBarRight">
+        <div class="dark-mode-btn" id="darkModeToggle">🌙</div>
+    </div>
+</div>
+
+<!-- Sidebar -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<div class="sidebar" id="sidebar">
+    <div class="close-sidebar" id="closeSidebar">✕</div>
+    <div class="sidebar-header">
+        <h3>Menu JeGo</h3>
+        <p style="font-size:0.8rem; opacity:0.9;">Halo, Customer</p>
+    </div>
+    <div class="sidebar-menu">
+        <div class="sidebar-item" data-link="profile">
+            <span class="icon">👤</span> Profil Saya
+        </div>
+        <div class="sidebar-item" data-link="referral">
+            <span class="icon">🎁</span> Referral
+        </div>
+        <div class="sidebar-item" data-link="help">
+            <span class="icon">❓</span> Bantuan & Dukungan
+        </div>
+        <div class="sidebar-item" data-link="about">
+            <span class="icon">ℹ️</span> Tentang JeGo
+        </div>
+        <div class="sidebar-item" id="shareToFriend">
+            <span class="icon">📤</span> Bagikan ke teman
+        </div>
+        <div class="sidebar-item" data-link="logout">
+            <span class="icon">🚪</span> Logout
+        </div>
+        <div class="sidebar-item" id="modeDriverBtn">
+            <span class="icon">🚗</span> Mode Pengemudi
+        </div>
+    </div>
+</div>
+
+<div class="main-container">
+    <div id="successAlert" class="alert alert-success"></div>
+    <div id="errorAlert" class="alert alert-danger"></div>
+
+    <div id="mainContent" style="display: none;">
+        <div class="welcome-card" id="welcomeCard">
+            <div class="welcome-title">Halo, <span id="userNameSpan">Pengguna</span> 👋</div>
+            <div class="welcome-text" id="welcomeMessageText">Pilih kendaraan favoritmu untuk memulai perjalanan</div>
+        </div>
+
+        <div id="photoProfileAlert" class="alert-warning-custom" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span>📸 <strong>Lengkapi Foto Profil</strong> – Unggah foto asli Anda agar driver lebih mudah mengenali Anda. Profil dengan foto akan diprioritaskan.</span>
+                <button id="closePhotoAlert" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: inherit;">&times;</button>
+            </div>
+        </div>
+        
+        <div class="section-title">
+            <span></span> Pilih Kendaraan
+        </div>
+        
+        <div id="loadingSpinner" class="loading-container" style="display: none;">
+            <div class="spinner"></div>
+        </div>
+        <div id="transportGrid" class="transport-grid"></div>
+    </div>
+
+    <div id="loginRequiredContent" style="display: none;">
+        <div class="login-card">
+            <h2>🔐 Login Diperlukan</h2>
+            <p>Silakan masuk ke akun JeGo untuk memesan kendaraan dan ekspedisi</p>
+            <a href="loginUser.html" class="btn-primary-custom">Login Sekarang</a>
+            <p style="margin-top: 20px; font-size: 0.8rem;">Belum punya akun? <a href="registrasi_jego.html" style="color:var(--primary); font-weight:600;">Daftar</a></p>
+        </div>
+    </div>
+</div>
+
+<!-- Bottom Navigation Bar -->
+<div class="bottom-nav">
+    <div class="nav-item" id="navHome">
+        <div class="nav-icon">🏠</div>
+        <span>Beranda</span>
+    </div>
+    <div class="nav-item" id="navAccount">
+        <div class="nav-icon">👤</div>
+        <span>Akun</span>
+    </div>
+    <div class="nav-item" id="navHistory">
+        <div class="nav-icon">📜</div>
+        <span>Riwayat</span>
+    </div>
+</div>
+
+<!-- Modal Kurir (Pengiriman) FULLSCREEN -->
+<div id="kurirModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>📦 Detail Pengiriman</h2>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>Nomor Pengirim</label>
+                <div class="input-with-icon">
+                    <input type="tel" id="senderPhone" placeholder="08xx-xxxx-xxxx">
+                    <button class="contact-icon" onclick="pickContact('sender')">📞</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Nomor Penerima</label>
+                <div class="input-with-icon">
+                    <input type="tel" id="receiverPhone" placeholder="08xx-xxxx-xxxx">
+                    <button class="contact-icon" onclick="pickContact('receiver')">📞</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Jenis Barang</label>
+                <div class="category-buttons" id="categoryButtons">
+                    <button class="category-btn" data-category="Makanan">🍔 Makanan</button>
+                    <button class="category-btn" data-category="Pakaian">👕 Pakaian</button>
+                    <button class="category-btn" data-category="Paket">📦 Paket</button>
+                    <button class="category-btn" data-category="Elektronik">📱 Elektronik</button>
+                    <button class="category-btn" data-category="Dokumen">📄 Dokumen</button>
+                    <button class="category-btn" data-category="Obat-obatan">💊 Obat</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Deskripsi (opsional)</label>
+                <textarea id="description" placeholder="Contoh: barang rapuh, ukuran kecil..."></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn btn-secondary" onclick="closeModal()">Batal</button>
+            <button class="modal-btn btn-primary" onclick="saveDeliveryData()">Simpan</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Edit Profil -->
+<div id="editProfileModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>✏️ Lengkapi Profil</h2>
+            <button class="close-modal" id="closeEditModal" style="background: none; border: none; font-size: 1.8rem; color: white; cursor: pointer;">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>Nama Lengkap <span style="color:red;">*</span></label>
+                <input type="text" id="editName" placeholder="Masukkan nama Anda" required>
+            </div>
+            <div class="form-group">
+                <label>Nomor Telepon <span style="color:red;">*</span></label>
+                <input type="tel" id="editPhone" placeholder="08xx-xxxx-xxxx" required>
+            </div>
+            <div class="form-group">
+                <label>Alamat Lengkap <span style="color:red;">*</span></label>
+                <textarea id="editAddress" rows="2" placeholder="Masukkan alamat lengkap" required></textarea>
+            </div>
+            <div class="form-group">
+                <label>Foto Profil (opsional)</label>
+                <div style="display: flex; flex-direction: column; align-items: center;">
+                    <img id="photoPreviewEdit" class="photo-preview" src="" alt="Preview" style="width:100px; height:100px; border-radius:50%; object-fit:cover; border:2px solid var(--primary); margin-bottom:10px;">
+                    <div class="upload-area">
+                        <input type="file" id="photoFileEdit" accept="image/*" style="display: none;">
+                        <button type="button" class="upload-btn" id="uploadPhotoEditBtn">📷 Upload Foto</button>
+                        <div id="uploadStatusEdit" style="margin-top: 8px; font-size: 0.75rem; color: var(--text-secondary);"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn modal-btn-cancel" id="cancelEdit">Batal</button>
+            <button class="modal-btn modal-btn-confirm" id="saveEdit">Simpan</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ==================== KONFIGURASI FIREBASE ====================
+    const FIREBASE_CONFIG = {
+        apiKey: "AIzaSyCD0pgeZio-LdKqYDtWxcdXcZwyL4ngYQI",
+        authDomain: "jego-35a2b.firebaseapp.com",
+        databaseURL: "https://jego-35a2b-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "jego-35a2b",
+        storageBucket: "jego-35a2b.firebasestorage.app",
+        messagingSenderId: "600037007040",
+        appId: "1:600037007040:web:ac3243ad9b472647ffd725"
+    };
+
+    let firebaseDatabase = null;
+    let firebaseAuth = null;
+    let currentUser = null;
+    let transportData = {};
+    let tariffRates = {};
+    let selectedTransport = null;
+    let selectedCategory = null;
+    let isProcessing = false;
+
+    const transportNameMapping = {
+    'Motor': 'motor',
+    'JeGo Ride': 'motor',
+    'Bentor': 'bentor',
+    'JeGo Trike': 'bentor',
+    'Mobil': 'mobil',
+    'JeGo Car': 'mobil',
+    'Kurir Motor': 'kurir_motor',
+    'JeGo Send': 'kurir_motor',
+    'Kurir Bentor': 'kurir_bentor',
+    'JeGo Trike Send': 'kurir_bentor'
+};
+
+    // ==================== ONE SIGNAL UNTUK CUSTOMER ====================
+    async function initOneSignalForCustomer() {
+        if (typeof median === 'undefined' || !median.onesignal) {
+            console.warn("⚠️ Median OneSignal tidak tersedia");
+            showToastCustomer("OneSignal tidak tersedia.", "warning");
+            return false;
+        }
+        try {
+            if (median.onesignal.setConsentGiven) await median.onesignal.setConsentGiven(true);
+            await median.onesignal.register();
+            if (median.onesignal.promptForPushNotificationsWithUserResponse) {
+                await median.onesignal.promptForPushNotificationsWithUserResponse();
+            }
+            await new Promise(r => setTimeout(r, 8000));
+            let playerId = null;
+            for (let i = 0; i < 3; i++) {
+                const info = await median.onesignal.onesignalInfo();
+                playerId = info?.userId || info?.oneSignalUserId || info?.subscription?.id;
+                if (playerId) break;
+                await new Promise(r => setTimeout(r, 5000));
+            }
+            if (playerId && currentUser && currentUser.uid) {
+                await firebaseDatabase.ref(`users/${currentUser.uid}`).update({ 
+                    playerId, 
+                    last_playerid_update: new Date().toISOString() 
+                });
+                showToastCustomer("Notifikasi Aktif", "success");
+                return true;
+            }
+            return false;
+        } catch (err) {
+            console.error("OneSignal error:", err);
+            return false;
+        }
+    }
+
+    async function checkPlayerIdAndPromptForCustomer() {
+        if (!currentUser || !currentUser.uid) return;
+        try {
+            const snap = await firebaseDatabase.ref(`users/${currentUser.uid}/playerId`).once('value');
+            if (!snap.val()) {
+                document.getElementById('notifPromptModalCustomer').style.display = 'flex';
+            }
+        } catch (err) {
+            console.warn("Gagal cek playerId:", err);
+        }
+    }
+
+    function closeNotifPromptCustomer() {
+        document.getElementById('notifPromptModalCustomer').style.display = 'none';
+    }
+
+    function showToastCustomer(message, type) {
+        alert(message);
+    }
+
+    // ========== DARK MODE TOGGLE ==========
+    function initDarkMode() {
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        if (!darkModeToggle) return;
+        
+        const isDarkMode = localStorage.getItem('jego_dark_mode') === 'true';
+        if (isDarkMode) {
+            document.body.classList.add('dark-mode');
+            darkModeToggle.textContent = '☀️';
+        } else {
+            document.body.classList.remove('dark-mode');
+            darkModeToggle.textContent = '🌙';
+        }
+        
+        darkModeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('jego_dark_mode', isDark);
+            darkModeToggle.textContent = isDark ? '☀️' : '🌙';
+        });
+    }
+
+    // ========== SIDEBAR TOGGLE ==========
+    function toggleSidebar(open) {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        if (open) {
+            sidebar.classList.add('open');
+            overlay.style.display = 'block';
+        } else {
+            sidebar.classList.remove('open');
+            overlay.style.display = 'none';
+        }
+    }
+
+    function shareToWhatsApp() {
+        const downloadLink = "https://play.google.com/store/apps/details?id=co.median.android.abekdjw";
+        const message = `Halo! Yuk coba aplikasi JeGo - Transportasi & Ekspedisi mudah dan cepat. Download di sini: ${downloadLink}`;
+        const encodedMessage = encodeURIComponent(message);
+        const whatsappUrl = `https://api.whatsapp.com/send?text=${encodedMessage}`;
+        window.open(whatsappUrl, '_blank');
+    }
+
+    async function switchToDriver() {
+        const customerDataStr = localStorage.getItem('jego_logged_in_user');
+        if (!customerDataStr) {
+            alert('Anda belum login sebagai customer. Silakan login terlebih dahulu.');
+            window.location.href = 'customer/loginUser.html';
+            return;
+        }
+        let customerData;
+        try {
+            customerData = JSON.parse(customerDataStr);
+        } catch(e) {
+            alert('Data sesi tidak valid. Silakan login ulang.');
+            window.location.href = 'customer/loginUser.html';
+            return;
+        }
+        const uid = customerData.uid;
+        if (!uid) {
+            alert('UID tidak ditemukan. Silakan login ulang.');
+            window.location.href = '/customer/loginUser.html';
+            return;
+        }
+
+        showGlobalLoading(true);
+
+        try {
+            if (!firebaseDatabase) {
+                await initializeFirebase();
+            }
+            const driverSnap = await firebaseDatabase.ref(`drivers/${uid}`).once('value');
+            if (!driverSnap.exists()) {
+                showGlobalLoading(false);
+                window.location.href = '../lengkapiData.html';
+                return;
+            }
+
+            const driverData = driverSnap.val();
+            const isComplete = driverData.vehicle_type && driverData.plate_number && driverData.phone && driverData.address;
+            if (!isComplete) {
+                showGlobalLoading(false);
+                window.location.href = '../lengkapiData.html';
+                return;
+            }
+
+            const driverSession = {
+                uid: uid,
+                name: driverData.name || customerData.name,
+                phone: driverData.phone || customerData.phone,
+                email: driverData.email || customerData.email,
+                address: driverData.address || customerData.address,
+                vehicleType: driverData.vehicle_type,
+                plateNumber: driverData.plate_number,
+                vehicleBrand: driverData.vehicle_brand || '',
+                status: driverData.status || 'pending',
+                rating: driverData.rating || 5,
+                perjalanan: driverData.perjalanan || 0,
+                Balance: driverData.balance || 0,
+                Potongan: driverData.potongan || 0,
+                profilePhotoUrl: driverData.photoURL || '',
+                fotoProfilURL: driverData.photoURL || ''
+            };
+            localStorage.setItem('jego_logged_in_driver', JSON.stringify(driverSession));
+            localStorage.removeItem('jego_logged_in_user');
+
+            const statusDriver = driverData.status || 'pending';
+            if (statusDriver === 'active' || statusDriver === 'accepted') {
+                window.location.href = '../index.html';
+            } else {
+                window.location.href = '../verifikasi_driver.html';
+            }
+        } catch (err) {
+            console.error('Gagal beralih ke mode driver:', err);
+            showGlobalLoading(false);
+            alert('Terjadi kesalahan, silakan coba lagi.');
+        }
+    }
+
+    function setupBottomNav() {
+        const currentPath = window.location.pathname.split('/').pop();
+        const navHome = document.getElementById('navHome');
+        const navAccount = document.getElementById('navAccount');
+        const navHistory = document.getElementById('navHistory');
+        
+        if (currentPath === 'jenis_kenderaan.html' || currentPath === '') {
+            navHome.classList.add('active');
+        } else {
+            navHome.classList.remove('active');
+        }
+        
+        navHome.addEventListener('click', () => {
+            if (currentPath !== 'jenis_kenderaan.html' && currentPath !== '') {
+                window.location.href = 'jenis_kenderaan.html';
+            }
+        });
+        navAccount.addEventListener('click', () => {
+            window.location.href = 'userAccount.html';
+        });
+        navHistory.addEventListener('click', () => {
+            window.location.href = 'riwayatUser.html';
+        });
+    }
+
+    function setupSidebarActions() {
+        const menuItems = document.querySelectorAll('.sidebar-item');
+        menuItems.forEach(item => {
+            item.addEventListener('click', async (e) => {
+                const link = item.getAttribute('data-link');
+                if (item.id === 'shareToFriend') {
+                    toggleSidebar(false);
+                    shareToWhatsApp();
+                    return;
+                }
+                if (item.id === 'modeDriverBtn') {
+                    e.stopPropagation();
+                    toggleSidebar(false);
+                    await switchToDriver();
+                    return;
+                }
+                toggleSidebar(false);
+                if (link === 'profile') {
+                    window.location.href = 'userAccount.html';
+                } else if (link === 'referral') {
+                    window.location.href = 'programReferral.html';
+                } else if (link === 'help') {
+                    window.location.href = 'cs_jego.html';
+                } else if (link === 'about') {
+                    alert('JeGo v1.0 - Aplikasi transportasi & ekspedisi.');
+                } else if (link === 'logout') {
+                    if (firebaseAuth) {
+                        await firebaseAuth.signOut();
+                    }
+                    localStorage.removeItem('jego_logged_in_user');
+                    localStorage.removeItem('current_order_id');
+                    window.location.href = '../loginUser.html';  // naik satu folder
+                }
+            });
+        });
+
+        document.getElementById('menuButton').addEventListener('click', () => toggleSidebar(true));
+        document.getElementById('closeSidebar').addEventListener('click', () => toggleSidebar(false));
+        document.getElementById('sidebarOverlay').addEventListener('click', () => toggleSidebar(false));
+    }
+
+    async function cekOrderAktifDanRedirect() {
+        const orderId = localStorage.getItem('current_order_id');
+        if (!orderId) return false;
+        try {
+            const snap = await firebaseDatabase.ref(`orders/${orderId}`).once('value');
+            const order = snap.val();
+            if (!order) {
+                localStorage.removeItem('current_order_id');
+                return false;
+            }
+            if (order.status === 'waiting') {
+                window.location.href = 'rute.html';
+                return true;
+            }
+            const statusAktif = ['accepted', 'on_the_way', 'arrived', 'on_trip'];
+            if (statusAktif.includes(order.status)) {
+                window.location.href = 'tracking_customer.html';
+                return true;
+            } else {
+                localStorage.removeItem('current_order_id');
+                return false;
+            }
+        } catch (err) {
+            console.error('Cek order error:', err);
+            return false;
+        }
+    }
+
+    async function initializeFirebase() {
+        try {
+            if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+            firebaseDatabase = firebase.database();
+            firebaseAuth = firebase.auth();
+            await firebaseAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+            console.log('🔒 Persistence LOCAL di customer');
+            return true;
+        } catch (error) {
+            console.error('Init Firebase error:', error);
+            return false;
+        }
+    }
+
+    function waitForFirebaseAuth(maxWait = 10000) {
+        return new Promise((resolve) => {
+            if (!firebaseAuth) {
+                resolve(null);
+                return;
+            }
+            if (firebaseAuth.currentUser) {
+                resolve(firebaseAuth.currentUser);
+                return;
+            }
+            let resolved = false;
+            const unsubscribe = firebaseAuth.onAuthStateChanged((user) => {
+                if (!resolved) {
+                    resolved = true;
+                    unsubscribe();
+                    resolve(user);
+                }
+            });
+            setTimeout(() => {
+                if (!resolved) {
+                    resolved = true;
+                    unsubscribe();
+                    firebaseAuth.currentUser?.reload().catch(() => {});
+                    resolve(firebaseAuth.currentUser || null);
+                }
+            }, maxWait);
+        });
+    }
+
+    async function checkLogin() {
+        const loggedInUser = localStorage.getItem('jego_logged_in_user');
+        if (loggedInUser) {
+            try {
+                currentUser = JSON.parse(loggedInUser);
+                document.getElementById('mainContent').style.display = 'block';
+                document.getElementById('loginRequiredContent').style.display = 'none';
+                document.getElementById('userNameSpan').innerText = escapeHtml(currentUser.name.split(' ')[0]);
+                document.getElementById('welcomeMessageText').innerHTML = `Selamat datang kembali, ${escapeHtml(currentUser.name)}! Pilih kendaraan untuk melanjutkan perjalanan.`;
+
+                if (!currentUser.photoURL || currentUser.photoURL === '') {
+                    const photoAlert = document.getElementById('photoProfileAlert');
+                    if (photoAlert) {
+                        photoAlert.style.display = 'block';
+                        const closeBtn = document.getElementById('closePhotoAlert');
+                        if (closeBtn) {
+                            closeBtn.onclick = () => {
+                                photoAlert.style.display = 'none';
+                            };
+                        }
+                    }
+                } else {
+                    const photoAlert = document.getElementById('photoProfileAlert');
+                    if (photoAlert) photoAlert.style.display = 'none';
+                }
+
+                const appBarRight = document.getElementById('appBarRight');
+                const darkModeBtn = document.getElementById('darkModeToggle');
+                appBarRight.innerHTML = '';
+                if (darkModeBtn) appBarRight.appendChild(darkModeBtn);
+                const badge = document.createElement('div');
+                badge.className = 'profile-badge';
+                badge.innerHTML = `<div class="avatar">${escapeHtml(currentUser.name.charAt(0).toUpperCase())}</div><span>${escapeHtml(currentUser.name.split(' ')[0])}</span>`;
+                appBarRight.appendChild(badge);
+                
+                const firebaseReady = await initializeFirebase();
+                if (!firebaseReady) {
+                    showAlert('❌ Gagal koneksi Firebase', 'error');
+                    return false;
+                }
+                let firebaseUser = await waitForFirebaseAuth(10000);
+                if (!firebaseUser) {
+                    console.warn('Firebase user still null, trying to force refresh...');
+                    try {
+                        await firebaseAuth.currentUser?.reload();
+                        firebaseUser = firebaseAuth.currentUser;
+                    } catch(e) {}
+                }
+                if (!firebaseUser) {
+                    showAlert('⚠️ Sesi tidak valid, silakan login ulang', 'error');
+                    setTimeout(() => window.location.href = '../loginUser.html', 2000);
+                    return false;
+                }
+                if (firebaseUser.uid !== currentUser.uid) {
+                    await firebaseAuth.signOut();
+                    localStorage.removeItem('jego_logged_in_user');
+                    showLoginRequired();
+                    return false;
+                }
+                const orderAktif = await cekOrderAktifDanRedirect();
+                if (orderAktif) return true;
+                await fetchTransportData();
+
+                const requiredFields = ['name', 'phone', 'address'];
+                const missingFields = requiredFields.filter(field => !currentUser[field] || currentUser[field].trim() === '');
+                if (missingFields.length > 0) {
+                    showAlert(`⚠️ Lengkapi data profil Anda (${missingFields.join(', ')}) sebelum memesan.`, 'error');
+                    setTimeout(() => {
+                        openEditProfileModal();
+                    }, 1000);
+                    return;
+                }
+
+                checkPlayerIdAndPromptForCustomer();
+                document.getElementById('promptAllowBtnCustomer')?.addEventListener('click', async () => {
+                    closeNotifPromptCustomer();
+                    await initOneSignalForCustomer();
+                });
+                document.getElementById('promptLaterBtnCustomer')?.addEventListener('click', closeNotifPromptCustomer);
+
+                return true;
+            } catch (error) {
+                console.error(error);
+                showLoginRequired();
+                return false;
+            }
+        } else {
+            showLoginRequired();
+            return false;
+        }
+    }
+
+    function showLoginRequired() {
+        document.getElementById('mainContent').style.display = 'none';
+        document.getElementById('loginRequiredContent').style.display = 'block';
+        const appBarRight = document.getElementById('appBarRight');
+        const darkModeBtn = document.getElementById('darkModeToggle');
+        appBarRight.innerHTML = '';
+        if (darkModeBtn) appBarRight.appendChild(darkModeBtn);
+        const loginBtn = document.createElement('a');
+        loginBtn.href = 'loginUser.html';
+        loginBtn.className = 'action-btn';
+        loginBtn.innerText = 'Login';
+        const registerBtn = document.createElement('a');
+        registerBtn.href = 'registrasi_jego.html';
+        registerBtn.className = 'action-btn';
+        registerBtn.innerText = 'Daftar';
+        appBarRight.appendChild(loginBtn);
+        appBarRight.appendChild(registerBtn);
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
+    }
+
+    async function fetchTransportData() {
+        try {
+            if (!firebaseDatabase) throw new Error('Firebase null');
+            showLoading(true);
+            const snapshot = await firebaseDatabase.ref('data-jego/tarif').once('value');
+            const firebaseData = snapshot.val();
+            if (!firebaseData) throw new Error('data kosong');
+            transportData = {};
+            tariffRates = {};
+            snapshot.forEach((child) => {
+                const data = child.val();
+                const transportName = data.nama;
+                const internalName = transportNameMapping[transportName];
+                if (internalName && data) {
+                    transportData[internalName] = {
+                        name: data.nama,
+                        capacity: data.capacity || "Kapasitas standar",
+                        description: data.deskripsi || "Layanan terbaik JeGo",
+                        icon: data.icon_url || "https://cdn-icons-png.flaticon.com/128/7890/7890227.png",
+                        minimalDistance: data.minimal_distance || 4,
+                        minimalPrice: data.minimal_price || 10000
+                    };
+                    tariffRates[internalName] = data.price_per_km || 2000;
+                }
+            });
+            renderTransportCards();
+            showLoading(false);
+        } catch (error) {
+            console.error(error);
+            showLoading(false);
+            loadFallbackData();
+            showAlert('Menggunakan data lokal, koneksi ke server terganggu', 'error');
+        }
+    }
+
+    function loadFallbackData() {
+        transportData = {
+            motor: { name: "Motor", capacity: "1 Penumpang", description: "Cepat dan lincah di jalan padat", icon: "https://cdn-icons-png.flaticon.com/128/5811/5811823.png", minimalDistance: 4, minimalPrice: 10000 },
+            bentor: { name: "Bentor", capacity: "2 Penumpang", description: "Khas Gorontalo, nyaman dan stabil", icon: "https://cdn-icons-png.flaticon.com/128/7890/7890227.png", minimalDistance: 4, minimalPrice: 11000 },
+            mobil: { name: "Mobil", capacity: "4 Penumpang + AC", description: "Nyaman untuk perjalanan grup", icon: "https://cdn-icons-png.flaticon.com/128/12689/12689302.png", minimalDistance: 4, minimalPrice: 15000 },
+            kurir_motor: { name: "Kurir Motor", capacity: "Paket Kecil", description: "Pengiriman instan dalam kota", icon: "https://cdn-icons-png.flaticon.com/128/9561/9561688.png", minimalDistance: 4, minimalPrice: 10000 },
+            kurir_bentor: { name: "Kurir Bentor", capacity: "Paket Sedang", description: "Kirim barang dengan kapasitas besar", icon: "https://cdn-icons-png.flaticon.com/128/7890/7890227.png", minimalDistance: 4, minimalPrice: 10000 }
+        };
+        tariffRates = { motor: 2200, bentor: 3000, mobil: 4000, kurir_motor: 2100, kurir_bentor: 2100 };
+        renderTransportCards();
+    }
+
+    function renderTransportCards() {
+        const grid = document.getElementById('transportGrid');
+        if (!grid) return;
+        grid.innerHTML = '';
+        const order = ['motor', 'bentor', 'mobil', 'kurir_motor', 'kurir_bentor'];
+        order.forEach(type => {
+            const t = transportData[type];
+            if (t) {
+                const card = document.createElement('div');
+                card.className = 'transport-card';
+                card.innerHTML = `
+                    <div class="transport-icon"><img src="${t.icon}" alt="${t.name}" loading="lazy"></div>
+                    <div class="transport-info">
+                        <div class="transport-name">${t.name}</div>
+                        <div class="transport-capacity">${t.capacity}</div>
+                        <div class="transport-description">${t.description}</div>
+                    </div>
+                    <div class="card-arrow">›</div>
+                `;
+                card.addEventListener('click', () => selectTransport(type, t, card));
+                grid.appendChild(card);
+            }
+        });
+    }
+
+    function selectTransport(type, t, card) {
+        if (isProcessing) return;
+        showGlobalLoading(true);
+        isProcessing = true;
+        document.querySelectorAll('.transport-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        selectedTransport = {
+            type: type,
+            name: t.name,
+            capacity: t.capacity,
+            icon: t.icon,
+            description: t.description,
+            tariff: tariffRates[type],
+            minimalDistance: t.minimalDistance,
+            minimalPrice: t.minimalPrice
+        };
+        if (type.includes('kurir')) {
+            showGlobalLoading(false);
+            isProcessing = false;
+            showKurirModal();
+        } else {
+            setTimeout(() => processTransportSelection(selectedTransport), 600);
+        }
+    }
+
+    function showKurirModal() {
+        document.getElementById('kurirModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('kurirModal').style.display = 'none';
+        document.getElementById('senderPhone').value = '';
+        document.getElementById('receiverPhone').value = '';
+        document.getElementById('description').value = '';
+        document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('selected'));
+        selectedCategory = null;
+        isProcessing = false;
+    }
+
+    // ========== FUNGSI PICK CONTACT YANG DIPERBAIKI ==========
+    function pickContact(field) {
+        console.log('🔍 pickContact dipanggil untuk field:', field);
+        console.log('📱 typeof median:', typeof median);
+        console.log('📱 median.contacts:', typeof median !== 'undefined' ? median.contacts : 'undefined');
+        
+        // ===== METODE 1: Plugin Median.co =====
+        if (typeof median !== 'undefined' && median.contacts) {
+            console.log('✅ Plugin median.contacts tersedia');
+            
+            // Coba metode pickContact
+            if (typeof median.contacts.pickContact === 'function') {
+                try {
+                    median.contacts.pickContact(function(contact) {
+                        console.log('📞 Kontak dipilih:', contact);
+                        if (contact && contact.phoneNumbers && contact.phoneNumbers.length > 0) {
+                            let phone = contact.phoneNumbers[0].number;
+                            phone = cleanPhoneNumber(phone);
+                            if (field === 'sender') {
+                                document.getElementById('senderPhone').value = phone;
+                            } else if (field === 'receiver') {
+                                document.getElementById('receiverPhone').value = phone;
+                            }
+                            showAlert('✅ Nomor kontak berhasil diisi!', 'success');
+                        } else {
+                            showAlert('❌ Kontak tidak memiliki nomor telepon.', 'error');
+                        }
+                    }, function(error) {
+                        console.warn('❌ Gagal membuka kontak Median:', error);
+                        tryAlternativeMedianMethod(field);
+                    });
+                    return;
+                } catch (err) {
+                    console.warn('❌ Error saat memanggil median.contacts.pickContact:', err);
+                    tryAlternativeMedianMethod(field);
+                    return;
+                }
+            }
+            
+            // Coba metode alternatif: getContacts
+            if (typeof median.contacts.getContacts === 'function') {
+                try {
+                    median.contacts.getContacts(function(contacts) {
+                        console.log('📞 Daftar kontak:', contacts);
+                        if (contacts && contacts.length > 0) {
+                            let contactList = contacts.map((c, i) => {
+                                let name = c.name || 'Kontak ' + (i+1);
+                                let phone = c.phoneNumbers ? c.phoneNumbers[0]?.number || '-' : '-';
+                                return `${i+1}. ${name} - ${phone}`;
+                            }).join('\n');
+                            
+                            let selectedIndex = prompt(
+                                'Pilih kontak (masukkan nomor urut):\n\n' + contactList,
+                                '1'
+                            );
+                            
+                            if (selectedIndex !== null) {
+                                let idx = parseInt(selectedIndex) - 1;
+                                if (idx >= 0 && idx < contacts.length) {
+                                    let contact = contacts[idx];
+                                    if (contact.phoneNumbers && contact.phoneNumbers.length > 0) {
+                                        let phone = cleanPhoneNumber(contact.phoneNumbers[0].number);
+                                        if (field === 'sender') {
+                                            document.getElementById('senderPhone').value = phone;
+                                        } else if (field === 'receiver') {
+                                            document.getElementById('receiverPhone').value = phone;
+                                        }
+                                        showAlert('✅ Nomor kontak berhasil diisi!', 'success');
+                                    } else {
+                                        showAlert('❌ Kontak tidak memiliki nomor telepon.', 'error');
+                                    }
+                                } else {
+                                    showAlert('❌ Nomor urut tidak valid.', 'error');
+                                }
+                            }
+                        } else {
+                            showAlert('❌ Tidak ada kontak ditemukan.', 'error');
+                        }
+                    }, function(error) {
+                        console.warn('❌ Gagal getContacts:', error);
+                        fallbackContactPicker(field);
+                    });
+                    return;
+                } catch (err) {
+                    console.warn('❌ Error getContacts:', err);
+                    fallbackContactPicker(field);
+                    return;
+                }
+            }
+        }
+        
+        // ===== METODE 2: Contact Picker API (Browser) =====
+        fallbackContactPicker(field);
+    }
+
+    function tryAlternativeMedianMethod(field) {
+        console.log('🔄 Mencoba metode alternatif Median...');
+        
+        if (typeof median !== 'undefined' && median.device && median.device.pickContact) {
+            try {
+                median.device.pickContact(function(contact) {
+                    if (contact && contact.phone) {
+                        let phone = cleanPhoneNumber(contact.phone);
+                        if (field === 'sender') {
+                            document.getElementById('senderPhone').value = phone;
+                        } else if (field === 'receiver') {
+                            document.getElementById('receiverPhone').value = phone;
+                        }
+                        showAlert('✅ Nomor kontak berhasil diisi!', 'success');
+                    }
+                }, function(error) {
+                    console.warn('❌ Gagal median.device.pickContact:', error);
+                    fallbackContactPicker(field);
+                });
+                return;
+            } catch (err) {
+                console.warn('❌ Error median.device.pickContact:', err);
+            }
+        }
+        
+        fallbackContactPicker(field);
+    }
+
+    function fallbackContactPicker(field) {
+        console.log('🔄 Mencoba fallback Contact Picker API...');
+        
+        if (navigator.contacts && typeof navigator.contacts.select === 'function') {
+            try {
+                navigator.contacts.select(['name', 'tel'], { multiple: false })
+                    .then(contacts => {
+                        console.log('📞 Kontak dari API:', contacts);
+                        if (contacts.length > 0) {
+                            const contact = contacts[0];
+                            if (contact.tel && contact.tel.length > 0) {
+                                let phone = cleanPhoneNumber(contact.tel[0]);
+                                if (field === 'sender') {
+                                    document.getElementById('senderPhone').value = phone;
+                                } else if (field === 'receiver') {
+                                    document.getElementById('receiverPhone').value = phone;
+                                }
+                                showAlert('✅ Nomor kontak berhasil diisi!', 'success');
+                            } else {
+                                showAlert('❌ Kontak tidak memiliki nomor telepon.', 'error');
+                            }
+                        } else {
+                            showAlert('❌ Tidak ada kontak dipilih.', 'error');
+                        }
+                    })
+                    .catch(err => {
+                        console.warn('❌ Contact Picker API error:', err);
+                        showManualInputMessage(field);
+                    });
+                return;
+            } catch (err) {
+                console.warn('❌ Error Contact Picker API:', err);
+            }
+        }
+        
+        showManualInputMessage(field);
+    }
+
+    function cleanPhoneNumber(phone) {
+        if (!phone) return '';
+        let cleaned = phone.replace(/[\s\-\(\)]/g, '');
+        if (cleaned.startsWith('+62')) {
+            cleaned = '0' + cleaned.substring(3);
+        }
+        return cleaned;
+    }
+
+    function showManualInputMessage(field) {
+        showAlert('📱 Silakan masukkan nomor secara manual di kolom input.', 'error');
+        if (field === 'sender') {
+            document.getElementById('senderPhone').focus();
+        } else if (field === 'receiver') {
+            document.getElementById('receiverPhone').focus();
+        }
+    }
+
+    function saveDeliveryData() {
+        const senderPhone = document.getElementById('senderPhone').value.trim();
+        const receiverPhone = document.getElementById('receiverPhone').value.trim();
+        const description = document.getElementById('description').value.trim();
+        if (!senderPhone || !receiverPhone || !selectedCategory) {
+            showAlert('Harap lengkapi semua data pengiriman (nomor pengirim, penerima, dan jenis barang)', 'error');
+            return;
+        }
+        showGlobalLoading(true);
+        selectedTransport.deliveryData = {
+            senderPhone, receiverPhone, itemCategory: selectedCategory, description,
+            timestamp: new Date().toISOString()
+        };
+        closeModal();
+        setTimeout(() => processTransportSelection(selectedTransport), 600);
+    }
+
+    function processTransportSelection(transport) {
+        localStorage.setItem('jego_last_transport', JSON.stringify(transport));
+        window.location.href = "rute.html";
+    }
+
+    function showLoading(show) {
+        const spinner = document.getElementById('loadingSpinner');
+        const grid = document.getElementById('transportGrid');
+        if (spinner) spinner.style.display = show ? 'flex' : 'none';
+        if (grid) grid.style.display = show ? 'none' : 'flex';
+    }
+
+    function showGlobalLoading(show) {
+        document.getElementById('globalLoading').style.display = show ? 'flex' : 'none';
+    }
+
+    function showAlert(message, type) {
+        const alertDiv = type === 'error' ? document.getElementById('errorAlert') : document.getElementById('successAlert');
+        if (alertDiv) {
+            alertDiv.textContent = message;
+            alertDiv.style.display = 'block';
+            setTimeout(() => alertDiv.style.display = 'none', 3500);
+        }
+    }
+
+    document.querySelectorAll('.category-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('selected'));
+            this.classList.add('selected');
+            selectedCategory = this.getAttribute('data-category');
+        });
+    });
+
+    // ========== MODAL EDIT PROFIL ==========
+    let newPhotoBase64 = null;
+
+    function openEditProfileModal() {
+        if (!currentUser) return;
+        document.getElementById('editName').value = currentUser.name || '';
+        document.getElementById('editPhone').value = currentUser.phone || '';
+        document.getElementById('editAddress').value = currentUser.address || '';
+        const preview = document.getElementById('photoPreviewEdit');
+        preview.src = currentUser.photoURL || 'https://www.gravatar.com/avatar/?d=mp';
+        newPhotoBase64 = null;
+        document.getElementById('uploadStatusEdit').innerHTML = '';
+        document.getElementById('editProfileModal').style.display = 'flex';
+    }
+
+    function closeEditProfileModal() {
+        document.getElementById('editProfileModal').style.display = 'none';
+        document.getElementById('photoFileEdit').value = '';
+        newPhotoBase64 = null;
+    }
+
+    document.getElementById('uploadPhotoEditBtn').addEventListener('click', () => {
+        document.getElementById('photoFileEdit').click();
+    });
+
+    document.getElementById('photoFileEdit').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (!file.type.startsWith('image/')) {
+            showAlert('Hanya file gambar yang diperbolehkan!', 'error');
+            return;
+        }
+        if (file.size > 2 * 1024 * 1024) {
+            showAlert('Ukuran file maksimal 2MB!', 'error');
+            return;
+        }
+        const btn = document.getElementById('uploadPhotoEditBtn');
+        btn.disabled = true;
+        btn.innerHTML = 'Memproses...';
+        document.getElementById('uploadStatusEdit').innerHTML = 'Mengompres...';
+        try {
+            const base64 = await compressImage(file, 300, 300, 0.7);
+            document.getElementById('photoPreviewEdit').src = base64;
+            newPhotoBase64 = base64;
+            document.getElementById('uploadStatusEdit').innerHTML = '✅ Foto siap';
+        } catch (err) {
+            console.error(err);
+            document.getElementById('uploadStatusEdit').innerHTML = '❌ Gagal';
+            showAlert('Gagal memproses foto.', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '📷 Upload Foto';
+        }
+    });
+
+    document.getElementById('saveEdit').addEventListener('click', async () => {
+        const name = document.getElementById('editName').value.trim();
+        const phone = document.getElementById('editPhone').value.trim();
+        const address = document.getElementById('editAddress').value.trim();
+        if (!name || !phone || !address) {
+            showAlert('Semua field wajib diisi!', 'error');
+            return;
+        }
+        const btn = document.getElementById('saveEdit');
+        btn.disabled = true;
+        btn.innerHTML = 'Menyimpan...';
+        try {
+            const updates = { name, phone, address };
+            if (newPhotoBase64) updates.photoURL = newPhotoBase64;
+            await firebaseDatabase.ref(`users/${currentUser.uid}`).update(updates);
+            currentUser = { ...currentUser, ...updates };
+            localStorage.setItem('jego_logged_in_user', JSON.stringify(currentUser));
+            document.getElementById('userNameSpan').innerText = escapeHtml(currentUser.name.split(' ')[0]);
+            document.getElementById('welcomeMessageText').innerHTML = `Selamat datang kembali, ${escapeHtml(currentUser.name)}! Pilih kendaraan untuk melanjutkan perjalanan.`;
+            closeEditProfileModal();
+            showAlert('✅ Profil berhasil diperbarui!', 'success');
+        } catch (err) {
+            console.error(err);
+            showAlert('Gagal menyimpan: ' + err.message, 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = 'Simpan';
+        }
+    });
+
+    document.getElementById('cancelEdit').addEventListener('click', closeEditProfileModal);
+    document.getElementById('closeEditModal').addEventListener('click', closeEditProfileModal);
+    window.addEventListener('click', (e) => {
+        if (e.target === document.getElementById('editProfileModal')) closeEditProfileModal();
+    });
+
+    function compressImage(file, maxWidth = 300, maxHeight = 300, quality = 0.7) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width, height = img.height;
+                    if (width > height) {
+                        if (width > maxWidth) { height *= maxWidth / width; width = maxWidth; }
+                    } else {
+                        if (height > maxHeight) { width *= maxHeight / height; height = maxHeight; }
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    resolve(canvas.toDataURL('image/jpeg', quality));
+                };
+                img.onerror = reject;
+                img.src = e.target.result;
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
+
+    window.onload = () => {
+        checkLogin();
+        setupBottomNav();
+        setupSidebarActions();
+        initDarkMode();
+    };
+</script>
+</body>
+</html>
