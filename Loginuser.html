@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+  <title>Login - JeGo</title>
+  <script src="app_check/check_app.js"></script>
+  <!-- Firebase SDK (Auth + Database) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <!-- Font Awesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary: #FF9800;
+      --primary-dark: #E65100;
+      --secondary: #FF5722;
+      --accent: #FFC107;
+      --dark: #1E2A3E;
+      --light: #F8F9FA;
+      --gray: #6C757D;
+      --white: #FFFFFF;
+      --danger: #E74C3C;
+      --success: #2ECC71;
+      --surface: #ffffff;
+      --border-light: #e9ecef;
+      --text-secondary: #6c757d;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #FFF3E0, #FFE0B2);
+      min-height: 100vh;
+      padding: 0;
+      margin: 0;
+      overflow-x: hidden;
+    }
+
+    .android-toolbar {
+      position: sticky;
+      top: 0;
+      width: 100%;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      z-index: 100;
+    }
+
+    .toolbar-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      min-height: 56px;
+    }
+
+    .toolbar-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: white;
+      letter-spacing: 0.5px;
+    }
+
+    .menu-button {
+      background: rgba(255,255,255,0.2);
+      width: 40px;
+      height: 40px;
+      border-radius: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 24px;
+      color: white;
+      border: none;
+    }
+
+    .main-content {
+      padding: 0;
+      width: 100%;
+    }
+
+    .auth-container {
+      width: 100%;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .card {
+      background: var(--white);
+      border-radius: 0;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.05);
+      overflow: hidden;
+      width: 100%;
+    }
+
+    .card-header {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      padding: 28px 20px;
+      text-align: center;
+      color: white;
+    }
+
+    .logo-wrapper {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .logo-icon {
+      width: 56px;
+      height: 56px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      backdrop-filter: blur(4px);
+    }
+
+    .card-header h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+    }
+
+    .card-header p {
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+
+    .card-body {
+      padding: 32px 24px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--dark);
+      font-size: 0.9rem;
+    }
+
+    .input-group {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 14px 16px;
+      font-size: 1rem;
+      border: 2px solid #EDF2F7;
+      border-radius: 28px;
+      background: var(--light);
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--primary);
+      background: white;
+      box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.1);
+    }
+
+    .toggle-password {
+      position: absolute;
+      right: 16px;
+      background: none;
+      border: none;
+      font-size: 1.2rem;
+      cursor: pointer;
+      color: var(--gray);
+      padding: 0;
+    }
+
+    .btn-login {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border: none;
+      border-radius: 40px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 8px;
+      box-shadow: 0 4px 10px rgba(255, 152, 0, 0.3);
+    }
+
+    .btn-login:active {
+      transform: scale(0.98);
+    }
+
+    .btn-login:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .register-link {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 0.9rem;
+      color: var(--gray);
+    }
+
+    .register-link a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .forgot-password-link {
+      text-align: right;
+      margin: 8px 0 0;
+    }
+    .forgot-password-link a {
+      color: var(--primary);
+      text-decoration: none;
+      font-size: 0.85rem;
+    }
+    .forgot-password-link a:hover {
+      text-decoration: underline;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    .modal {
+      background-color: white;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      transform: translateY(-20px);
+      transition: transform 0.3s ease;
+      overflow: hidden;
+    }
+    .modal-overlay.active .modal {
+      transform: translateY(0);
+    }
+    .modal-header {
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #e9ecef;
+    }
+    .modal-title {
+      display: flex;
+      align-items: center;
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin: 0;
+    }
+    .modal-icon {
+      width: 24px;
+      height: 24px;
+      margin-right: 10px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+    }
+    .modal-icon.success { background-color: var(--success); }
+    .modal-icon.error { background-color: var(--danger); }
+    .modal-icon.warning { background-color: var(--warning); }
+    .modal-icon.info { background-color: var(--info); }
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #6c757d;
+      line-height: 1;
+      padding: 0;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: all 0.3s;
+    }
+    .close-btn:hover {
+      background-color: #f8f9fa;
+      color: var(--dark);
+    }
+    .modal-body {
+      padding: 20px;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+    .modal-footer {
+      padding: 15px 20px;
+      display: flex;
+      justify-content: flex-end;
+      border-top: 1px solid #e9ecef;
+      background-color: #f8f9fa;
+    }
+    .modal-btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 15px;
+    }
+    .modal-btn.confirm {
+      background-color: var(--primary);
+      color: white;
+      margin-left: 10px;
+    }
+    .modal-btn.confirm:hover {
+      background-color: var(--secondary);
+    }
+    .modal-btn.cancel {
+      background-color: #6c757d;
+      color: white;
+    }
+    .loading-modal .modal-body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+    .loading-spinner {
+      width: 60px;
+      height: 60px;
+      border: 4px solid rgba(255,152,0,0.1);
+      border-top: 4px solid var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .alert {
+      padding: 12px 16px;
+      border-radius: 20px;
+      margin-bottom: 20px;
+      font-size: 0.85rem;
+      display: none;
+    }
+    .alert.error {
+      background: #FEE2E2;
+      border-left: 4px solid var(--danger);
+      color: #991B1B;
+    }
+    .alert.success {
+      background: #D1FAE5;
+      border-left-color: var(--success);
+      color: #065F46;
+    }
+
+    .progress-container {
+      height: 4px;
+      background: #EDF2F7;
+      border-radius: 4px;
+      margin-top: 12px;
+      overflow: hidden;
+      display: none;
+    }
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      transition: width 0.3s;
+    }
+
+    .sidebar-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      display: none;
+      backdrop-filter: blur(2px);
+    }
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: -280px;
+      width: 280px;
+      height: 100%;
+      background: var(--surface);
+      box-shadow: 2px 0 12px rgba(0,0,0,0.15);
+      z-index: 1001;
+      transition: left 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      padding-top: 60px;
+    }
+    .sidebar.open {
+      left: 0;
+    }
+    .sidebar-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--border-light);
+      background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+      color: white;
+      margin-top: -60px;
+      padding-top: 60px;
+    }
+    .sidebar-header h3 {
+      font-size: 1.2rem;
+    }
+    .sidebar-menu {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 16px 0;
+    }
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 24px;
+      cursor: pointer;
+      transition: background 0.2s;
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+    .sidebar-item:active {
+      background: var(--light);
+    }
+    .sidebar-item .icon {
+      font-size: 22px;
+      width: 28px;
+    }
+    .close-sidebar {
+      position: absolute;
+      top: 16px;
+      right: 20px;
+      font-size: 24px;
+      cursor: pointer;
+      color: white;
+      z-index: 1002;
+    }
+    .mode-penumpang-card {
+      background: linear-gradient(135deg, #FF9800, #FF5722);
+      border-radius: 16px;
+      padding: 16px;
+      margin: 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+      margin-top: auto;
+    }
+    .mode-penumpang-card:active {
+      transform: scale(0.98);
+    }
+    .mode-penumpang-icon {
+      width: 48px;
+      height: 48px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: white;
+    }
+    .mode-penumpang-text {
+      flex: 1;
+    }
+    .mode-penumpang-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: white;
+      margin-bottom: 4px;
+    }
+    .mode-penumpang-desc {
+      font-size: 0.7rem;
+      color: rgba(255, 255, 255, 0.8);
+    }
+    .mode-penumpang-arrow {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: white;
+      opacity: 0.8;
+    }
+
+    @media (max-width: 480px) {
+      .card-body {
+        padding: 24px 20px;
+      }
+      .card-header {
+        padding: 24px 20px;
+      }
+      .toolbar-title {
+        font-size: 1.1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Toolbar dengan tombol menu -->
+<div class="android-toolbar">
+  <div class="toolbar-container">
+    <button class="menu-button" id="menuButton">☰</button>
+    <div class="toolbar-title">JeGo</div>
+    <div style="width: 40px;"></div>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<div class="sidebar" id="sidebar">
+  <div class="close-sidebar" id="closeSidebar">✕</div>
+  <div class="sidebar-header">
+    <h3>Menu JeGo</h3>
+    <p style="font-size:0.8rem; opacity:0.9;">Menu</p>
+  </div>
+  <div class="sidebar-menu">
+    <div class="sidebar-item" data-url="perlindunganCustomer.html">
+      <span class="icon">🛡️</span> Perlindungan
+    </div>
+    <div class="sidebar-item" data-url="https://whatsapp.com/channel/0029VbCtkcaEQIaidcHMTy0G" data-external="true">
+      <span class="icon"><i class="fab fa-whatsapp"></i></span> WhatsApp
+    </div>
+    <div class="sidebar-item" data-url="https://www.facebook.com/share/18gp8qJRdM/" data-external="true">
+      <span class="icon"><i class="fab fa-facebook"></i></span> Facebook
+    </div>
+    <div class="sidebar-item" data-url="https://www.tiktok.com" data-external="true">
+      <span class="icon"><i class="fab fa-tiktok"></i></span> TikTok
+    </div>
+    <div class="sidebar-item" data-url="../pengaturanDr.html">
+      <span class="icon">⚙️</span> Pengaturan
+    </div>
+    <!-- Tombol Mode Pengemudi (paling bawah) -->
+    <div class="mode-penumpang-card" id="modeDriverBtn">
+      <div class="mode-penumpang-icon">
+        <i class="fas fa-exchange-alt"></i>
+      </div>
+      <div class="mode-penumpang-text">
+        <div class="mode-penumpang-title">Mode Pengemudi</div>
+        <div class="mode-penumpang-desc">Beralih ke aplikasi driver</div>
+      </div>
+      <div class="mode-penumpang-arrow">›</div>
+    </div>
+  </div>
+</div>
+
+<!-- Konten utama - card full width -->
+<div class="main-content">
+  <div class="auth-container">
+    <div class="card">
+      <div class="card-header">
+        <div class="logo-wrapper">
+          <div class="logo-icon">🚗</div>
+          <h1>LOGIN PENUMPANG</h1>
+        </div>
+        <p>Masuk ke akun Anda</p>
+      </div>
+      <div class="card-body">
+        <div class="alert" id="statusMessage"></div>
+        <div class="progress-container" id="progressContainer">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <form id="loginForm">
+          <div class="form-group">
+            <label class="form-label" for="emailInput">Email</label>
+            <input type="email" id="emailInput" class="form-control" placeholder="contoh@email.com" required autocomplete="email">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="passwordInput">Password</label>
+            <div class="input-group">
+              <input type="password" id="passwordInput" class="form-control" placeholder="********" required autocomplete="current-password">
+              <button type="button" class="toggle-password" id="togglePassword">👁️</button>
+            </div>
+          </div>
+          <button type="submit" class="btn-login" id="loginBtn">Login</button>
+
+          <!-- TAMBAHAN LINK LUPA PASSWORD -->
+          <div class="forgot-password-link">
+            <a href="#" id="forgotPasswordLink">Lupa password?</a>
+          </div>
+        </form>
+
+        <div class="register-link">
+          Belum punya akun? <a href="registrasi_jego.html">Daftar sekarang</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Popup -->
+<div id="modalOverlay" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">
+        <span id="modalIcon" class="modal-icon">!</span>
+        <span id="modalTitleText">Judul</span>
+      </h3>
+      <button id="modalCloseBtn" class="close-btn">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p id="modalMessage">Pesan</p>
+    </div>
+    <div class="modal-footer">
+      <button id="modalCancelBtn" class="modal-btn cancel" style="display: none;">Batal</button>
+      <button id="modalConfirmBtn" class="modal-btn confirm">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- Loading Modal -->
+<div id="loadingModal" class="modal-overlay">
+  <div class="modal loading-modal">
+    <div class="modal-body">
+      <div class="loading-spinner"></div>
+      <p id="loadingText" class="loading-text">Sedang memproses...</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Konfigurasi Firebase
+  const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyCD0pgeZio-LdKqYDtWxcdXcZwyL4ngYQI",
+    authDomain: "jego-35a2b.firebaseapp.com",
+    databaseURL: "https://jego-35a2b-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "jego-35a2b",
+    storageBucket: "jego-35a2b.firebasestorage.app",
+    messagingSenderId: "600037007040",
+    appId: "1:600037007040:web:ac3243ad9b472647ffd725"
+  };
+
+  let firebaseAuth;
+  let firebaseDatabase;
+
+  function showStatus(msg, type) {
+    const el = document.getElementById('statusMessage');
+    el.textContent = msg;
+    el.className = `alert ${type}`;
+    el.style.display = 'block';
+    setTimeout(() => {
+      el.style.display = 'none';
+    }, 5000);
+  }
+
+  function showProgress(percent) {
+    const container = document.getElementById('progressContainer');
+    const bar = document.getElementById('progressBar');
+    container.style.display = 'block';
+    bar.style.width = percent + '%';
+  }
+
+  function hideProgress() {
+    const container = document.getElementById('progressContainer');
+    container.style.display = 'none';
+    document.getElementById('progressBar').style.width = '0%';
+  }
+
+  async function initFirebase() {
+    if (typeof firebase === 'undefined') throw new Error('Firebase SDK not loaded');
+    if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+    firebaseAuth = firebase.auth();
+    firebaseDatabase = firebase.database();
+  }
+
+  async function getUserDataFromDB(uid) {
+    const snapshot = await firebaseDatabase.ref(`users/${uid}`).once('value');
+    return snapshot.val();
+  }
+
+  // ================= MODAL FUNCTIONS =================
+  const modalOverlay = document.getElementById('modalOverlay');
+  const modalIcon = document.getElementById('modalIcon');
+  const modalTitleText = document.getElementById('modalTitleText');
+  const modalMessage = document.getElementById('modalMessage');
+  const modalCloseBtn = document.getElementById('modalCloseBtn');
+  const modalConfirmBtn = document.getElementById('modalConfirmBtn');
+  const modalCancelBtn = document.getElementById('modalCancelBtn');
+  const loadingModal = document.getElementById('loadingModal');
+  const loadingText = document.getElementById('loadingText');
+
+  function showPopup(title, message, type = 'info', options = {}) {
+    modalTitleText.textContent = title;
+    modalMessage.innerHTML = message;
+    modalIcon.className = 'modal-icon ' + type;
+    modalIcon.textContent = type === 'success' ? '✓' : type === 'error' ? '✗' : type === 'warning' ? '!' : 'i';
+    modalConfirmBtn.textContent = options.confirmText || 'OK';
+    modalCancelBtn.style.display = options.showCancel ? 'inline-block' : 'none';
+    if (options.showCancel) modalCancelBtn.textContent = options.cancelText || 'Batal';
+
+    modalConfirmBtn.onclick = () => { hidePopup(); if (options.onConfirm) options.onConfirm(); };
+    modalCancelBtn.onclick = () => { hidePopup(); if (options.onCancel) options.onCancel(); };
+    modalCloseBtn.onclick = () => { hidePopup(); if (options.onCancel) options.onCancel(); };
+
+    modalOverlay.classList.add('active');
+    if (options.autoHide) setTimeout(() => { hidePopup(); if (options.onAutoHide) options.onAutoHide(); }, options.autoHideDelay || 3000);
+  }
+
+  function hidePopup() { modalOverlay.classList.remove('active'); }
+  function showLoading(msg) { loadingText.textContent = msg; loadingModal.classList.add('active'); }
+  function hideLoading() { loadingModal.classList.remove('active'); }
+  function showError(msg) { showPopup('Error', msg, 'error'); }
+  function showSuccess(msg, autoHide = true) { showPopup('Sukses', msg, 'success', { autoHide, autoHideDelay: 2000 }); }
+
+  // ================= LOGIN CUSTOMER =================
+  document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('emailInput').value.trim();
+    const password = document.getElementById('passwordInput').value;
+
+    if (!email) return showStatus('Email harus diisi', 'error');
+    if (!password) return showStatus('Password harus diisi', 'error');
+
+    const btn = document.getElementById('loginBtn');
+    btn.disabled = true;
+    btn.innerText = 'Login...';
+    showProgress(20);
+
+    try {
+      await initFirebase();
+
+      // PERUBAHAN: Gunakan SESSION persistence, tangani jika tidak didukung
+      try {
+        await firebaseAuth.setPersistence(firebase.auth.Auth.Persistence.SESSION);
+      } catch (persistenceError) {
+        console.warn('Persistence setting not supported, using default.');
+        // Lanjutkan tanpa mengubah persistence
+      }
+
+      showProgress(50);
+      const userCredential = await firebaseAuth.signInWithEmailAndPassword(email, password);
+      const user = userCredential.user;
+      const uid = user.uid;
+
+      showProgress(70);
+      const userData = await getUserDataFromDB(uid);
+      if (!userData) {
+        throw new Error('Data user tidak ditemukan di database');
+      }
+
+      const session = {
+        userId: uid,
+        uid: uid,
+        name: userData.name || '',
+        phone: userData.phone || '',
+        email: userData.email || email,
+        address: userData.address || '',
+        gender: userData.gender || '',
+        status: userData.status || 'active',
+        photoURL: userData.photoURL || '',
+        rating: userData.rating || 5,
+        perjalanan: userData.perjalanan || 0
+      };
+      localStorage.setItem('jego_logged_in_user', JSON.stringify(session));
+
+      showProgress(100);
+      showStatus('Login berhasil! Mengalihkan...', 'success');
+      setTimeout(() => {
+        window.location.href = 'jenis_kenderaan.html';
+      }, 1500);
+    } catch (error) {
+      console.error('Login error:', error);
+      let pesanError = 'Login gagal. ';
+      switch (error.code) {
+        case 'auth/user-not-found':
+          pesanError += 'Email tidak terdaftar.';
+          break;
+        case 'auth/wrong-password':
+          pesanError += 'Password salah.';
+          break;
+        case 'auth/invalid-email':
+          pesanError += 'Format email tidak valid.';
+          break;
+        case 'auth/too-many-requests':
+          pesanError += 'Terlalu banyak percobaan. Coba lagi nanti.';
+          break;
+        default:
+          pesanError += error.message;
+      }
+      showStatus(pesanError, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerText = 'Login';
+      hideProgress();
+    }
+  });
+
+  // Toggle password
+  const togglePwdBtn = document.getElementById('togglePassword');
+  const pwdInput = document.getElementById('passwordInput');
+  togglePwdBtn.addEventListener('click', () => {
+    const type = pwdInput.getAttribute('type') === 'password' ? 'text' : 'password';
+    pwdInput.setAttribute('type', type);
+    togglePwdBtn.textContent = type === 'password' ? '👁️' : '🙈';
+  });
+
+  // ================= FITUR LUPA PASSWORD =================
+  document.getElementById('forgotPasswordLink').addEventListener('click', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('emailInput').value.trim();
+
+    if (!email) {
+      showError('Masukkan alamat email Anda terlebih dahulu.');
+      return;
+    }
+
+    // Popup konfirmasi terlebih dahulu
+    showPopup(
+      'Konfirmasi Reset Password',
+      `Kami akan mengirimkan email reset password ke <strong>${email}</strong>. Apakah Anda yakin?`,
+      'info',
+      {
+        showCancel: true,
+        confirmText: 'Ya, Kirim',
+        cancelText: 'Batal',
+        onConfirm: async () => {
+          // Kirim email reset
+          showLoading('Mengirim email reset password...');
+          try {
+            await firebaseAuth.sendPasswordResetEmail(email);
+            hideLoading();
+            showPopup(
+              'Email Reset Terkirim',
+              `Link reset password telah dikirim ke <strong>${email}</strong>.<br><br>Jika tidak ditemukan di Kotak Masuk, silakan periksa folder <strong>Spam/Junk Email</strong>.`,
+              'success',
+              { autoHide: false, confirmText: 'OK' }
+            );
+          } catch (error) {
+            hideLoading();
+            console.error(error);
+            let pesan = 'Gagal mengirim email reset. ';
+            if (error.code === 'auth/user-not-found') {
+              pesan += 'Email tidak terdaftar.';
+            } else if (error.code === 'auth/invalid-email') {
+              pesan += 'Format email tidak valid.';
+            } else {
+              pesan += 'Coba lagi nanti.';
+            }
+            showError(pesan);
+          }
+        },
+        onCancel: () => {
+          // Tidak melakukan apa-apa
+        }
+      }
+    );
+  });
+
+  // ========== SIDEBAR FUNCTIONS ==========
+  function toggleSidebar(open) {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    if (open) {
+      sidebar.classList.add('open');
+      overlay.style.display = 'block';
+    } else {
+      sidebar.classList.remove('open');
+      overlay.style.display = 'none';
+    }
+  }
+
+  document.querySelectorAll('.sidebar-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const url = item.getAttribute('data-url');
+      const isExternal = item.getAttribute('data-external') === 'true';
+      toggleSidebar(false);
+      if (url) {
+        if (isExternal) {
+          window.open(url, '_blank');
+        } else {
+          window.location.href = url;
+        }
+      }
+    });
+  });
+
+  document.getElementById('modeDriverBtn').addEventListener('click', () => {
+    toggleSidebar(false);
+    window.location.href = '../loginDriver.html';
+  });
+
+  document.getElementById('menuButton').addEventListener('click', () => toggleSidebar(true));
+  document.getElementById('closeSidebar').addEventListener('click', () => toggleSidebar(false));
+  document.getElementById('sidebarOverlay').addEventListener('click', () => toggleSidebar(false));
+
+  // Inisialisasi Firebase saat halaman dimuat
+  window.onload = async () => {
+    await initFirebase();
+  };
+</script>
+</body>
+</html>
