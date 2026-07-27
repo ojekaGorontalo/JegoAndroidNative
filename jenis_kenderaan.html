@@ -1031,7 +1031,7 @@
     'JeGo Trike Send': 'kurir_bentor'
 };
 
-    // ==================== ONE SIGNAL UNTUK CUSTOMER ====================
+    // ==================== ONE SIGNAL UNTUK CUSTOMER (TETAP DI PERTAHANKAN) ====================
     async function initOneSignalForCustomer() {
         if (typeof median === 'undefined' || !median.onesignal) {
             console.warn("⚠️ Median OneSignal tidak tersedia");
@@ -1570,185 +1570,49 @@
         isProcessing = false;
     }
 
-    // ========== FUNGSI PICK CONTACT YANG DIPERBAIKI ==========
+    // ================================================================
+    // ===== FUNGSI PICK CONTACT (DIUBAH MENGGUNAKAN ANDROID) ========
+    // ================================================================
     function pickContact(field) {
-        console.log('🔍 pickContact dipanggil untuk field:', field);
-        console.log('📱 typeof median:', typeof median);
-        console.log('📱 median.contacts:', typeof median !== 'undefined' ? median.contacts : 'undefined');
-        
-        // ===== METODE 1: Plugin Median.co =====
-        if (typeof median !== 'undefined' && median.contacts) {
-            console.log('✅ Plugin median.contacts tersedia');
-            
-            // Coba metode pickContact
-            if (typeof median.contacts.pickContact === 'function') {
-                try {
-                    median.contacts.pickContact(function(contact) {
-                        console.log('📞 Kontak dipilih:', contact);
-                        if (contact && contact.phoneNumbers && contact.phoneNumbers.length > 0) {
-                            let phone = contact.phoneNumbers[0].number;
-                            phone = cleanPhoneNumber(phone);
-                            if (field === 'sender') {
-                                document.getElementById('senderPhone').value = phone;
-                            } else if (field === 'receiver') {
-                                document.getElementById('receiverPhone').value = phone;
-                            }
-                            showAlert('✅ Nomor kontak berhasil diisi!', 'success');
-                        } else {
-                            showAlert('❌ Kontak tidak memiliki nomor telepon.', 'error');
-                        }
-                    }, function(error) {
-                        console.warn('❌ Gagal membuka kontak Median:', error);
-                        tryAlternativeMedianMethod(field);
-                    });
-                    return;
-                } catch (err) {
-                    console.warn('❌ Error saat memanggil median.contacts.pickContact:', err);
-                    tryAlternativeMedianMethod(field);
-                    return;
-                }
-            }
-            
-            // Coba metode alternatif: getContacts
-            if (typeof median.contacts.getContacts === 'function') {
-                try {
-                    median.contacts.getContacts(function(contacts) {
-                        console.log('📞 Daftar kontak:', contacts);
-                        if (contacts && contacts.length > 0) {
-                            let contactList = contacts.map((c, i) => {
-                                let name = c.name || 'Kontak ' + (i+1);
-                                let phone = c.phoneNumbers ? c.phoneNumbers[0]?.number || '-' : '-';
-                                return `${i+1}. ${name} - ${phone}`;
-                            }).join('\n');
-                            
-                            let selectedIndex = prompt(
-                                'Pilih kontak (masukkan nomor urut):\n\n' + contactList,
-                                '1'
-                            );
-                            
-                            if (selectedIndex !== null) {
-                                let idx = parseInt(selectedIndex) - 1;
-                                if (idx >= 0 && idx < contacts.length) {
-                                    let contact = contacts[idx];
-                                    if (contact.phoneNumbers && contact.phoneNumbers.length > 0) {
-                                        let phone = cleanPhoneNumber(contact.phoneNumbers[0].number);
-                                        if (field === 'sender') {
-                                            document.getElementById('senderPhone').value = phone;
-                                        } else if (field === 'receiver') {
-                                            document.getElementById('receiverPhone').value = phone;
-                                        }
-                                        showAlert('✅ Nomor kontak berhasil diisi!', 'success');
-                                    } else {
-                                        showAlert('❌ Kontak tidak memiliki nomor telepon.', 'error');
-                                    }
-                                } else {
-                                    showAlert('❌ Nomor urut tidak valid.', 'error');
-                                }
-                            }
-                        } else {
-                            showAlert('❌ Tidak ada kontak ditemukan.', 'error');
-                        }
-                    }, function(error) {
-                        console.warn('❌ Gagal getContacts:', error);
-                        fallbackContactPicker(field);
-                    });
-                    return;
-                } catch (err) {
-                    console.warn('❌ Error getContacts:', err);
-                    fallbackContactPicker(field);
-                    return;
-                }
+        if (typeof Android !== 'undefined' && Android.pickContact) {
+            Android.pickContact(field);
+        } else {
+            // Fallback jika tidak ada interface Android
+            alert('Fitur kontak tidak tersedia di versi ini. Silakan masukkan nomor secara manual.');
+            if (field === 'sender') {
+                document.getElementById('senderPhone').focus();
+            } else if (field === 'receiver') {
+                document.getElementById('receiverPhone').focus();
             }
         }
-        
-        // ===== METODE 2: Contact Picker API (Browser) =====
-        fallbackContactPicker(field);
     }
 
-    function tryAlternativeMedianMethod(field) {
-        console.log('🔄 Mencoba metode alternatif Median...');
-        
-        if (typeof median !== 'undefined' && median.device && median.device.pickContact) {
-            try {
-                median.device.pickContact(function(contact) {
-                    if (contact && contact.phone) {
-                        let phone = cleanPhoneNumber(contact.phone);
-                        if (field === 'sender') {
-                            document.getElementById('senderPhone').value = phone;
-                        } else if (field === 'receiver') {
-                            document.getElementById('receiverPhone').value = phone;
-                        }
-                        showAlert('✅ Nomor kontak berhasil diisi!', 'success');
-                    }
-                }, function(error) {
-                    console.warn('❌ Gagal median.device.pickContact:', error);
-                    fallbackContactPicker(field);
-                });
-                return;
-            } catch (err) {
-                console.warn('❌ Error median.device.pickContact:', err);
-            }
-        }
-        
-        fallbackContactPicker(field);
-    }
-
-    function fallbackContactPicker(field) {
-        console.log('🔄 Mencoba fallback Contact Picker API...');
-        
-        if (navigator.contacts && typeof navigator.contacts.select === 'function') {
-            try {
-                navigator.contacts.select(['name', 'tel'], { multiple: false })
-                    .then(contacts => {
-                        console.log('📞 Kontak dari API:', contacts);
-                        if (contacts.length > 0) {
-                            const contact = contacts[0];
-                            if (contact.tel && contact.tel.length > 0) {
-                                let phone = cleanPhoneNumber(contact.tel[0]);
-                                if (field === 'sender') {
-                                    document.getElementById('senderPhone').value = phone;
-                                } else if (field === 'receiver') {
-                                    document.getElementById('receiverPhone').value = phone;
-                                }
-                                showAlert('✅ Nomor kontak berhasil diisi!', 'success');
-                            } else {
-                                showAlert('❌ Kontak tidak memiliki nomor telepon.', 'error');
-                            }
-                        } else {
-                            showAlert('❌ Tidak ada kontak dipilih.', 'error');
-                        }
-                    })
-                    .catch(err => {
-                        console.warn('❌ Contact Picker API error:', err);
-                        showManualInputMessage(field);
-                    });
-                return;
-            } catch (err) {
-                console.warn('❌ Error Contact Picker API:', err);
-            }
-        }
-        
-        showManualInputMessage(field);
-    }
-
-    function cleanPhoneNumber(phone) {
-        if (!phone) return '';
-        let cleaned = phone.replace(/[\s\-\(\)]/g, '');
-        if (cleaned.startsWith('+62')) {
-            cleaned = '0' + cleaned.substring(3);
-        }
-        return cleaned;
-    }
-
-    function showManualInputMessage(field) {
-        showAlert('📱 Silakan masukkan nomor secara manual di kolom input.', 'error');
+    // ================================================================
+    // ===== FUNGSI PENERIMA HASIL DARI ANDROID =======================
+    // ================================================================
+    function fillContact(field, phone) {
         if (field === 'sender') {
-            document.getElementById('senderPhone').focus();
+            document.getElementById('senderPhone').value = phone;
         } else if (field === 'receiver') {
-            document.getElementById('receiverPhone').focus();
+            document.getElementById('receiverPhone').value = phone;
+        }
+        showAlert('✅ Nomor kontak berhasil diisi!', 'success');
+    }
+
+    // ================================================================
+    // ===== FUNGSI UPDATE PLAYERID DARI ONESIGNAL ====================
+    // ================================================================
+    function updatePlayerId(playerId) {
+        console.log('PlayerId dari OneSignal:', playerId);
+        if (typeof firebaseDatabase !== 'undefined' && currentUser && currentUser.uid) {
+            firebaseDatabase.ref(`users/${currentUser.uid}`).update({
+                playerId: playerId,
+                last_playerid_update: new Date().toISOString()
+            }).catch(err => console.warn('Gagal simpan playerId:', err));
         }
     }
 
+    // ========== FUNGSI LAINNYA (TIDAK DIUBAH) ==========
     function saveDeliveryData() {
         const senderPhone = document.getElementById('senderPhone').value.trim();
         const receiverPhone = document.getElementById('receiverPhone').value.trim();
