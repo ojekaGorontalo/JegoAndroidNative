@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Jego Notifikasi</title>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, 'Segoe UI', Roboto, Helvetica, sans-serif;
+            background: #f7f9fc;
+            padding: 24px 16px;
+            color: #1a2c3e;
+        }
+
+        .container {
+            max-width: 520px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 36px;
+            padding: 32px 24px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
+
+        .status-icon {
+            font-size: 80px;
+            margin-bottom: 16px;
+        }
+
+        h1 {
+            font-size: 1.9rem;
+            font-weight: 700;
+            color: #f97316;
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
+        }
+
+        .subhead {
+            color: #5a6e7c;
+            font-size: 0.9rem;
+            margin-bottom: 24px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 10px 24px;
+            border-radius: 100px;
+            font-weight: 600;
+            font-size: 1rem;
+            margin: 16px 0 20px;
+        }
+
+        .badge-active {
+            background: #e1f7e3;
+            color: #1f7b4d;
+            border: 1px solid #b2e0b2;
+        }
+
+        .badge-warning {
+            background: #fff0db;
+            color: #c26b00;
+            border: 1px solid #ffddb0;
+        }
+
+        .badge-inactive {
+            background: #ffe6e5;
+            color: #b91c1c;
+            border: 1px solid #fbc5c5;
+        }
+
+        .driver-info {
+            background: #f0f4f8;
+            border-radius: 28px;
+            padding: 18px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .driver-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            font-size: 0.95rem;
+        }
+
+        .driver-label {
+            font-weight: 500;
+            color: #2c3e50;
+        }
+
+        .driver-name {
+            font-weight: 700;
+            color: #f97316;
+        }
+
+        .tips-box {
+            background: #fef7e0;
+            border-radius: 24px;
+            padding: 16px 20px;
+            margin: 24px 0 16px;
+            text-align: left;
+            border-left: 5px solid #f97316;
+        }
+
+        .tips-title {
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #c26b00;
+        }
+
+        .tips-text {
+            font-size: 0.85rem;
+            color: #5a4a1a;
+            line-height: 1.4;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 14px 16px;
+            border: none;
+            border-radius: 60px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 12px;
+        }
+
+        .btn-primary {
+            background: #f97316;
+            color: white;
+            box-shadow: 0 2px 8px rgba(249, 115, 22, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: #ea580c;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: #e9edf2;
+            color: #2c3e50;
+        }
+
+        .btn-secondary:hover {
+            background: #dee4ea;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #d0d8e3;
+            color: #4a627a;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .footer-note {
+            font-size: 0.7rem;
+            color: #8a9bb0;
+            text-align: center;
+            margin-top: 24px;
+        }
+
+        .toast-message {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1a2c3e;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            z-index: 1000;
+            white-space: nowrap;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="card">
+        <div class="status-icon" id="statusIcon">🔔</div>
+        <h1>Jego Notifikasi</h1>
+        <div class="subhead">Pastikan tetap terhubung dengan order</div>
+        
+        <div id="statusBadge" class="status-badge badge-inactive">Memeriksa...</div>
+        
+        <div class="driver-info">
+            <div class="driver-row">
+                <span class="driver-label">👤 Driver</span>
+                <span class="driver-name" id="driverName">-</span>
+            </div>
+            <div class="driver-row">
+                <span class="driver-label">📱 Status perangkat</span>
+                <span id="deviceStatusText" style="font-weight:500;">-</span>
+            </div>
+        </div>
+
+        <div class="tips-box">
+            <div class="tips-title">
+                <span>📍</span> Tips agar tidak melewatkan order dekat anda
+            </div>
+            <div class="tips-text">
+                ✅ Pastikan layar status ini menunjukkan <strong>"Notifikasi Aktif"</strong>.<br>
+                ✅ Aktifkan <strong>Tracking & Autobid</strong> di aplikasi Jego (pengaturan driver).<br>
+                ✅ Dengan Autobid aktif, Anda tetap bisa menerima order meskipun aplikasi ditutup.<br>
+                ✅ Izinkan notifikasi dari pengaturan HP jika belum.<br>
+                ✅ Semakin dekat lokasi anda dengan customer, semakin besar peluang dapat order.
+            </div>
+        </div>
+
+        <button id="actionBtn" class="btn btn-primary">🔔 Aktifkan Notifikasi</button>
+        <button id="refreshBtn" class="btn btn-secondary">🔄 Refresh Status</button>
+        <button id="resetBtn" class="btn btn-outline" style="margin-top: 8px;">🗑️ Reset & Daftar Ulang</button>
+    </div>
+    <div class="footer-note">
+        ⚡ Jego akan mengirim order terdekat ke notifikasi HP anda
+    </div>
+</div>
+
+<script>
+    // ========== Firebase Config ==========
+    const firebaseConfig = {
+        apiKey: "AIzaSyCD0pgeZio-LdKqYDtWxcdXcZwyL4ngYQI",
+        authDomain: "jego-35a2b.firebaseapp.com",
+        databaseURL: "https://jego-35a2b-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "jego-35a2b",
+        storageBucket: "jego-35a2b.firebasestorage.app",
+        messagingSenderId: "600037007040",
+        appId: "1:600037007040:web:ac3243ad9b472647ffd725"
+    };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    const auth = firebase.auth();
+
+    let currentUid = null;
+    let isProcessing = false;
+    let medianReady = false;
+
+    function showToast(message, isError = false) {
+        let toast = document.querySelector('.toast-message');
+        if (toast) toast.remove();
+        toast = document.createElement('div');
+        toast.className = 'toast-message';
+        toast.textContent = message;
+        toast.style.background = isError ? '#b91c1c' : '#1f7b4d';
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+
+    // Menunggu median.onesignal
+    async function waitForMedian() {
+        return new Promise((resolve) => {
+            if (typeof median !== 'undefined' && median.onesignal) {
+                medianReady = true;
+                resolve(true);
+                return;
+            }
+            let attempts = 0;
+            const interval = setInterval(() => {
+                attempts++;
+                if (typeof median !== 'undefined' && median.onesignal) {
+                    clearInterval(interval);
+                    medianReady = true;
+                    resolve(true);
+                } else if (attempts > 30) {
+                    clearInterval(interval);
+                    resolve(false);
+                }
+            }, 500);
+        });
+    }
+
+    // Ekstrak Player ID dari berbagai field
+    function extractPlayerId(info) {
+        if (!info) return null;
+        if (info.oneSignalUserId) return info.oneSignalUserId;
+        if (info.userId) return info.userId;
+        if (info.subscription && info.subscription.id) return info.subscription.id;
+        if (info.oneSignalId) return info.oneSignalId;
+        return null;
+    }
+
+    async function fetchPlayerIdWithRetry(retries = 5, delay = 2000) {
+        for (let i = 1; i <= retries; i++) {
+            try {
+                const info = await median.onesignal.onesignalInfo();
+                const playerId = extractPlayerId(info);
+                if (playerId) return playerId;
+            } catch (err) {}
+            if (i < retries) await new Promise(r => setTimeout(r, delay));
+        }
+        return null;
+    }
+
+    // Firebase helpers
+    async function getFirebasePlayerId() {
+        if (!currentUid) return null;
+        let snap = await database.ref(`driver_locations/${currentUid}`).once('value');
+        let data = snap.val();
+        let pid = data?.playerId || data?.subscriptionId || null;
+        if (!pid) {
+            snap = await database.ref(`drivers/${currentUid}`).once('value');
+            data = snap.val();
+            pid = data?.playerId || data?.subscriptionId || null;
+        }
+        return pid;
+    }
+
+    async function savePlayerIdToFirebase(playerId) {
+        if (!currentUid || !playerId) return;
+        await database.ref(`drivers/${currentUid}`).update({ playerId: playerId, subscriptionId: playerId, last_update: new Date().toISOString() });
+        await database.ref(`driver_locations/${currentUid}`).update({ playerId: playerId, subscriptionId: playerId, last_update: new Date().toISOString() });
+    }
+
+    async function clearFirebasePlayerId() {
+        if (!currentUid) return;
+        await database.ref(`drivers/${currentUid}`).update({ playerId: null, subscriptionId: null });
+        await database.ref(`driver_locations/${currentUid}`).update({ playerId: null, subscriptionId: null });
+    }
+
+    // Proses aktivasi notifikasi
+    async function activateNotifications() {
+        if (isProcessing) return showToast("Proses sedang berjalan");
+        if (!currentUid) return showToast("Driver belum login", true);
+        if (!medianReady || !median.onesignal) return showToast("SDK OneSignal tidak siap", true);
+
+        isProcessing = true;
+        const actionBtn = document.getElementById('actionBtn');
+        const originalText = actionBtn.innerText;
+        actionBtn.innerText = "⏳ Memproses...";
+        actionBtn.disabled = true;
+
+        try {
+            await clearFirebasePlayerId();
+
+            if (median.onesignal.setConsentGiven) {
+                await median.onesignal.setConsentGiven(true);
+            }
+
+            await median.onesignal.register();
+
+            if (median.onesignal.promptForPushNotificationsWithUserResponse) {
+                await median.onesignal.promptForPushNotificationsWithUserResponse();
+            }
+
+            await new Promise(r => setTimeout(r, 8000));
+
+            const playerId = await fetchPlayerIdWithRetry(5, 2000);
+            if (playerId) {
+                await savePlayerIdToFirebase(playerId);
+                showToast("Notifikasi berhasil diaktifkan! 🎉");
+                await refreshStatus();
+            } else {
+                showToast("Gagal mendapatkan Player ID. Coba lagi.", true);
+                await refreshStatus();
+            }
+        } catch (err) {
+            showToast("Error: " + err.message, true);
+            await refreshStatus();
+        } finally {
+            isProcessing = false;
+            actionBtn.innerText = originalText;
+            actionBtn.disabled = false;
+        }
+    }
+
+    async function syncPlayerId() {
+        if (isProcessing) return showToast("Tunggu proses lain selesai");
+        if (!currentUid || !medianReady) return;
+        isProcessing = true;
+        try {
+            const info = await median.onesignal.onesignalInfo();
+            const playerId = extractPlayerId(info);
+            const isSubscribed = info?.subscription?.optedIn === true || info?.oneSignalSubscribed === true;
+            if (playerId && isSubscribed) {
+                await savePlayerIdToFirebase(playerId);
+                showToast("Sinkron berhasil!");
+            } else {
+                showToast("Tidak ada Player ID aktif. Aktifkan notifikasi dulu.", true);
+            }
+        } catch (err) {
+            showToast("Gagal sinkron: " + err.message, true);
+        } finally {
+            isProcessing = false;
+            await refreshStatus();
+        }
+    }
+
+    async function resetAndReRegister() {
+        if (!confirm("Reset akan menghapus data notifikasi. Lanjutkan?")) return;
+        await clearFirebasePlayerId();
+        showToast("Data direset. Silakan klik 'Aktifkan Notifikasi'", false);
+        await refreshStatus();
+    }
+
+    // Update UI
+    async function refreshStatus() {
+        if (!currentUid) {
+            document.getElementById('driverName').innerText = "(Belum login)";
+            document.getElementById('statusBadge').innerHTML = "⚠️ Driver belum login";
+            document.getElementById('statusBadge').className = "status-badge badge-inactive";
+            document.getElementById('statusIcon').innerHTML = "🔒";
+            document.getElementById('deviceStatusText').innerHTML = "-";
+            return;
+        }
+
+        const driverSnap = await database.ref(`drivers/${currentUid}`).once('value');
+        const driverData = driverSnap.val();
+        document.getElementById('driverName').innerText = driverData?.name || driverData?.fullName || "Driver";
+
+        const firebaseId = await getFirebasePlayerId();
+        let sdkStatus = { playerId: null, isSubscribed: false };
+        if (medianReady && median.onesignal) {
+            try {
+                const info = await median.onesignal.onesignalInfo();
+                sdkStatus.playerId = extractPlayerId(info);
+                sdkStatus.isSubscribed = info?.subscription?.optedIn === true || info?.oneSignalSubscribed === true;
+            } catch(e) {}
+        }
+
+        const isMatch = (firebaseId && sdkStatus.playerId && firebaseId === sdkStatus.playerId);
+        const isActive = (isMatch && sdkStatus.isSubscribed);
+        const badgeElem = document.getElementById('statusBadge');
+        const statusIconElem = document.getElementById('statusIcon');
+        const deviceSpan = document.getElementById('deviceStatusText');
+        const actionBtn = document.getElementById('actionBtn');
+
+        if (isActive) {
+            badgeElem.innerHTML = "✅ Notifikasi Aktif";
+            badgeElem.className = "status-badge badge-active";
+            statusIconElem.innerHTML = "✅🔔";
+            deviceSpan.innerHTML = "Siap menerima order";
+            actionBtn.innerHTML = "✅ Notifikasi Aktif";
+            actionBtn.disabled = true;
+            actionBtn.classList.remove("btn-primary");
+            actionBtn.classList.add("btn-secondary");
+            actionBtn.onclick = null;
+        } 
+        else if (sdkStatus.playerId && sdkStatus.isSubscribed && !isMatch) {
+            badgeElem.innerHTML = "🔄 Perlu Sinkronisasi";
+            badgeElem.className = "status-badge badge-warning";
+            statusIconElem.innerHTML = "🔄";
+            deviceSpan.innerHTML = "Klik tombol di bawah untuk sinkron";
+            actionBtn.innerHTML = "🔄 Sinkronkan Sekarang";
+            actionBtn.disabled = false;
+            actionBtn.classList.remove("btn-secondary");
+            actionBtn.classList.add("btn-primary");
+            actionBtn.onclick = () => syncPlayerId();
+        }
+        else {
+            badgeElem.innerHTML = "🔕 Notifikasi Tidak Aktif";
+            badgeElem.className = "status-badge badge-inactive";
+            statusIconElem.innerHTML = "🔕";
+            deviceSpan.innerHTML = "Belum diaktifkan";
+            actionBtn.innerHTML = "🔔 Aktifkan Notifikasi";
+            actionBtn.disabled = false;
+            actionBtn.classList.remove("btn-secondary");
+            actionBtn.classList.add("btn-primary");
+            actionBtn.onclick = () => activateNotifications();
+        }
+    }
+
+    // Inisialisasi
+    async function init() {
+        await waitForMedian();
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                currentUid = user.uid;
+                await refreshStatus();
+            } else {
+                currentUid = null;
+                await refreshStatus();
+            }
+        });
+        document.getElementById('refreshBtn').addEventListener('click', refreshStatus);
+        document.getElementById('resetBtn').addEventListener('click', resetAndReRegister);
+        if (auth.currentUser) {
+            currentUid = auth.currentUser.uid;
+            await refreshStatus();
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('deviceready', () => { if (!medianReady) init(); });
+</script>
+</body>
+</html>
