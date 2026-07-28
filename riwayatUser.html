@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover" />
+    <title>Riwayat Perjalanan - JeGo</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js">
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js">
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js">
+    </script>
+    <style>
+        /* ========== LIGHT MODE (DEFAULT) ========== */
+        :root {
+            --primary: #FF9800;
+            --primary-dark: #E65100;
+            --primary-light: #FFB74D;
+            --secondary: #F57C00;
+            --accent: #FFC107;
+            --surface: #FFFFFF;
+            --background: #F5F5F5;
+            --text-primary: #212121;
+            --text-secondary: #5f6368;
+            --border-light: #E0E0E0;
+            --card-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+            --status-completed-bg: #d4edda;
+            --status-completed-text: #155724;
+            --status-cancelled-bg: #f8d7da;
+            --status-cancelled-text: #721c24;
+            --status-onway-bg: #d1ecf1;
+            --status-onway-text: #0c5460;
+            --status-accepted-bg: #fff3cd;
+            --status-accepted-text: #856404;
+            --status-cancelled-customer-bg: #fff3cd;
+            --status-cancelled-customer-text: #856404;
+            --status-cancelled-driver-bg: #f8d7da;
+            --status-cancelled-driver-text: #721c24;
+        }
+
+        /* ========== DARK MODE OVERRIDES ========== */
+        body.dark-mode {
+            --primary: #FFB74D;
+            --primary-dark: #FF9800;
+            --primary-light: #FFA726;
+            --secondary: #FF7043;
+            --accent: #FFD54F;
+            --surface: #1E1E1E;
+            --background: #121212;
+            --text-primary: #FFFFFF;
+            --text-secondary: #B0B0B0;
+            --border-light: #333333;
+            --card-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            --status-completed-bg: #1e3a1e;
+            --status-completed-text: #8bc34a;
+            --status-cancelled-bg: #3e1a1a;
+            --status-cancelled-text: #ef9a9a;
+            --status-onway-bg: #1a2c3a;
+            --status-onway-text: #81d4fa;
+            --status-accepted-bg: #3a2a1a;
+            --status-accepted-text: #ffcc80;
+            --status-cancelled-customer-bg: #3a2a1a;
+            --status-cancelled-customer-text: #ffcc80;
+            --status-cancelled-driver-bg: #3e1a1a;
+            --status-cancelled-driver-text: #ef9a9a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s;
+        }
+
+        body {
+            background: var(--background);
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            min-height: 100vh;
+            color: var(--text-primary);
+        }
+
+        .native-container {
+            width: 100%;
+            max-width: 100%;
+            background: var(--background);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            padding: 20px;
+            text-align: center;
+            color: white;
+        }
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .filter-container {
+            background: var(--surface);
+            padding: 12px 16px;
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .filter-option {
+            background: var(--background);
+            border-radius: 30px;
+            padding: 6px 16px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: 0.2s;
+            color: var(--text-primary);
+        }
+        .filter-option.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .orders-list {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .date-section {
+            margin-bottom: 8px;
+        }
+        .date-header {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 8px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .order-item {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 14px;
+            box-shadow: var(--card-shadow);
+            cursor: pointer;
+            transition: 0.2s;
+            border: 1px solid var(--border-light);
+        }
+        .order-item:active {
+            transform: scale(0.98);
+        }
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .customer-name {
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 0.9rem;
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .status-completed {
+            background: var(--status-completed-bg);
+            color: var(--status-completed-text);
+        }
+        .status-cancelled {
+            background: var(--status-cancelled-bg);
+            color: var(--status-cancelled-text);
+        }
+        .status-on_the_way {
+            background: var(--status-onway-bg);
+            color: var(--status-onway-text);
+        }
+        .status-accepted {
+            background: var(--status-accepted-bg);
+            color: var(--status-accepted-text);
+        }
+        .status-cancelled-customer {
+            background: var(--status-cancelled-customer-bg);
+            color: var(--status-cancelled-customer-text);
+        }
+        .status-cancelled-driver {
+            background: var(--status-cancelled-driver-bg);
+            color: var(--status-cancelled-driver-text);
+        }
+
+        .route-info {
+            font-size: 0.8rem;
+            margin: 8px 0;
+            color: var(--text-primary);
+        }
+        .route-point {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+        .point-marker {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: bold;
+            color: white;
+            flex-shrink: 0;
+        }
+        .point-marker-a {
+            background: #4CAF50;
+        }
+        .point-marker-b {
+            background: var(--primary);
+        }
+
+        .order-details {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid var(--border-light);
+            font-size: 0.75rem;
+        }
+        .detail-item {
+            text-align: center;
+            flex: 1;
+        }
+        .detail-value {
+            font-weight: 700;
+            color: var(--primary);
+        }
+        .order-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+            background: var(--surface);
+            border-radius: 20px;
+            border: 1px solid var(--border-light);
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--border-light);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 12px;
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 16px;
+            margin-top: 8px;
+            background: var(--surface);
+            border-radius: 30px;
+            border: 1px solid var(--border-light);
+        }
+        .pagination button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: 0.2s;
+            min-width: 70px;
+        }
+        .pagination button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .pagination button:active:not(:disabled) {
+            transform: scale(0.95);
+        }
+        .pagination span {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .pagination .page-info {
+            background: var(--background);
+            padding: 4px 14px;
+            border-radius: 20px;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: var(--surface);
+            border-radius: 24px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 85vh;
+            overflow-y: auto;
+            border: 1px solid var(--border-light);
+        }
+        .modal-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-title {
+            color: var(--primary);
+            font-weight: 700;
+        }
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+        .modal-body {
+            padding: 16px;
+        }
+        .modal-detail-item {
+            margin-bottom: 12px;
+        }
+        .support-btn {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 40px;
+            color: white;
+            font-weight: bold;
+            margin-top: 16px;
+            cursor: pointer;
+        }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: #1E293B;
+            color: white;
+            text-align: center;
+            padding: 12px;
+            border-radius: 40px;
+            opacity: 0;
+            transition: 0.2s;
+            z-index: 1100;
+        }
+        body.dark-mode .toast {
+            background: #2c2c2c;
+            color: #eee;
+        }
+    </style>
+</head>
+<body>
+    <div class="native-container">
+        <div class="header">
+            <h1>Riwayat Perjalanan</h1>
+        </div>
+
+        <div class="filter-container">
+            <div class="filter-option active" data-filter="all">Semua</div>
+            <div class="filter-option" data-filter="completed">Selesai</div>
+            <div class="filter-option" data-filter="cancelled">Dibatalkan</div>
+            <div class="filter-option" data-filter="this_week">Minggu Ini</div>
+            <div class="filter-option" data-filter="this_month">Bulan Ini</div>
+        </div>
+
+        <div class="orders-list" id="ordersList">
+            <div class="loading"><div class="spinner"></div><p>Memuat riwayat...</p></div>
+        </div>
+
+        <!-- Pagination Controls -->
+        <div class="pagination" id="paginationControls" style="display: none;">
+            <button id="prevPageBtn">◀ Sebelumnya</button>
+            <span class="page-info" id="pageInfo">Halaman 1 dari ?</span>
+            <button id="nextPageBtn">Berikutnya ▶</button>
+        </div>
+    </div>
+
+    <!-- Modal Detail -->
+    <div class="modal" id="orderModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Detail Perjalanan</h3>
+                <button class="close-btn" id="closeModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="modalDetailContent"></div>
+                <button class="support-btn" id="hubungiDukunganBtn">📧 Hubungi Dukungan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal CS -->
+    <div class="modal" id="csModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Hubungi Customer Service</h3>
+                <button class="close-btn" id="closeCsModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Email: cs.jego.app@gmail.com</p>
+                <p>Sertakan Order ID: <span id="csOrderId">-</span></p>
+                <button class="support-btn" id="tutupCsModalBtn">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        // ========== KONFIGURASI FIREBASE ==========
+        const FIREBASE_CONFIG = {
+            apiKey: "AIzaSyCD0pgeZio-LdKqYDtWxcdXcZwyL4ngYQI",
+            authDomain: "jego-35a2b.firebaseapp.com",
+            databaseURL: "https://jego-35a2b-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "jego-35a2b",
+            storageBucket: "jego-35a2b.firebasestorage.app",
+            appId: "1:600037007040:web:ac3243ad9b472647ffd725"
+        };
+        if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+        const auth = firebase.auth();
+        const database = firebase.database();
+
+        let currentUser = null;
+        let currentFilter = 'all';
+        // Data halaman saat ini (5 order)
+        let currentOrders = [];
+        let currentFirstKey = null; // key terkecil di halaman ini
+        let currentLastKey = null; // key terbesar di halaman ini
+        let currentPage = 0; // 0-based
+        let hasNext = false;
+        let hasPrev = false;
+        const PER_PAGE = 5;
+
+        // ========== DARK MODE ==========
+        function applyDarkModeFromLocalStorage() {
+            const isDarkMode = localStorage.getItem('jego_dark_mode') === 'true';
+            if (isDarkMode) {
+                document.body.classList.add('dark-mode');
+            } else {
+                document.body.classList.remove('dark-mode');
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.style.opacity = '1';
+            setTimeout(() => toast.style.opacity = '0', 2500);
+        }
+
+        function formatRupiah(num) { return 'Rp ' + (num || 0).toLocaleString('id-ID'); }
+
+        // ===== FUNGSI STATUS =====
+        function getCancelledByText(order) {
+            const by = order.cancelled_by || '';
+            if (by === 'customer' || by === 'user' || by === 'customer_user') {
+                return 'Anda membatalkan perjalanan';
+            }
+            if (by === 'driver') {
+                return 'Driver membatalkan perjalanan';
+            }
+            if (by === 'admin') {
+                return 'Admin membatalkan perjalanan';
+            }
+            if (by === 'system' || by === 'auto') {
+                return 'Sistem membatalkan perjalanan';
+            }
+            return 'Dibatalkan';
+        }
+
+        function getStatusClassForOrder(order) {
+            if (order.status === 'completed') return 'status-completed';
+            if (order.status === 'on_the_way' || order.status === 'on_trip') return 'status-on_the_way';
+            if (order.status === 'accepted') return 'status-accepted';
+            if (order.status === 'cancelled' || order.status === 'cancelled_by_user' || order.status === 'cancelled_by_driver') {
+                const by = order.cancelled_by || '';
+                if (by === 'driver') return 'status-cancelled-driver';
+                if (by === 'customer' || by === 'user') return 'status-cancelled-customer';
+                return 'status-cancelled';
+            }
+            return 'status-cancelled';
+        }
+
+        function getStatusTextForOrder(order) {
+            if (order.status === 'completed') return 'Selesai';
+            if (order.status === 'on_the_way' || order.status === 'on_trip') return 'Dalam Perjalanan';
+            if (order.status === 'accepted') return 'Diterima';
+            if (order.status === 'cancelled' || order.status === 'cancelled_by_user' || order.status === 'cancelled_by_driver') {
+                return getCancelledByText(order);
+            }
+            return 'Dibatalkan';
+        }
+
+        // ===== FILTER =====
+        function isThisWeek(date) {
+            const today = new Date();
+            const start = new Date(today);
+            start.setDate(today.getDate() - today.getDay());
+            start.setHours(0, 0, 0, 0);
+            const end = new Date(today);
+            end.setDate(today.getDate() + (6 - today.getDay()));
+            end.setHours(23, 59, 59, 999);
+            return date >= start && date <= end;
+        }
+
+        function isThisMonth(date) {
+            const today = new Date();
+            return date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
+        }
+
+        function formatDisplayDate(dateStr) {
+            const date = new Date(dateStr);
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(today.getDate() - 1);
+            if (date.toDateString() === today.toDateString()) return 'Hari Ini';
+            if (date.toDateString() === yesterday.toDateString()) return 'Kemarin';
+            return date.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+        }
+
+        function groupOrdersByDate(orders) {
+            const groups = {};
+            orders.forEach(order => {
+                const date = new Date(order.completed_at || order.created_at);
+                const key = date.toISOString().split('T')[0];
+                if (!groups[key]) groups[key] = [];
+                groups[key].push(order);
+            });
+            return groups;
+        }
+
+        // ===== FILTER ORDERS (CLIENT-SIDE) =====
+        function filterOrders(orders) {
+            let filtered = [...orders];
+            if (currentFilter === 'completed') {
+                filtered = filtered.filter(o => o.status === 'completed');
+            } else if (currentFilter === 'cancelled') {
+                filtered = filtered.filter(o => o.status === 'cancelled' || o.status === 'cancelled_by_user' || o.status ===
+                    'cancelled_by_driver');
+            } else if (currentFilter === 'this_week') {
+                filtered = filtered.filter(o => isThisWeek(new Date(o.completed_at || o.created_at)));
+            } else if (currentFilter === 'this_month') {
+                filtered = filtered.filter(o => isThisMonth(new Date(o.completed_at || o.created_at)));
+            }
+            return filtered;
+        }
+
+        // ===== RENDER =====
+        function render() {
+            const container = document.getElementById('ordersList');
+            const pagination = document.getElementById('paginationControls');
+
+            const filtered = filterOrders(currentOrders);
+
+            if (!currentOrders.length) {
+                container.innerHTML = '<div class="empty-state">🔍 Tidak ada perjalanan</div>';
+                pagination.style.display = 'none';
+                return;
+            }
+
+            if (!filtered.length) {
+                container.innerHTML = '<div class="empty-state">🔍 Tidak ada perjalanan sesuai filter</div>';
+                pagination.style.display = 'flex'; // tetap tampilkan pagination
+                // update page info
+                document.getElementById('pageInfo').innerText = `Halaman ${currentPage+1}`;
+                document.getElementById('prevPageBtn').disabled = !hasPrev;
+                document.getElementById('nextPageBtn').disabled = !hasNext;
+                return;
+            }
+
+            // Group by date
+            const grouped = groupOrdersByDate(filtered);
+            const sortedDates = Object.keys(grouped).sort((a, b) => new Date(b) - new Date(a));
+
+            let html = '';
+            sortedDates.forEach(date => {
+                html +=
+                    `<div class="date-section"><div class="date-header">${formatDisplayDate(date)} • ${grouped[date].length} perjalanan</div>`;
+                grouped[date].forEach(order => {
+                    html += createOrderHTML(order);
+                });
+                html += '</div>';
+            });
+
+            container.innerHTML = html;
+
+            // Update pagination info
+            document.getElementById('pageInfo').innerText = `Halaman ${currentPage+1}`;
+            document.getElementById('prevPageBtn').disabled = !hasPrev;
+            document.getElementById('nextPageBtn').disabled = !hasNext;
+            pagination.style.display = 'flex';
+
+            // Attach click events to order items
+            container.querySelectorAll('.order-item').forEach(el => {
+                const orderId = el.getAttribute('data-order-id');
+                if (orderId) {
+                    el.addEventListener('click', () => {
+                        const order = currentOrders.find(o => o.id === orderId);
+                        if (order) showOrderDetail(order);
+                    });
+                }
+            });
+        }
+
+        function createOrderHTML(order) {
+            const durasi = order.duration_seconds ? Math.round(order.duration_seconds / 60) + ' menit' : '-';
+            const jarak = order.distance_meters ? (order.distance_meters / 1000).toFixed(1) + ' km' : '-';
+            const harga = order.price_after_bonus || order.price || 0;
+            const hasPromo = order.bonus_used > 0;
+            let hargaDisplay = hasPromo ?
+                `<span style="text-decoration:line-through; margin-right:4px;">${formatRupiah(order.price)}</span> ${formatRupiah(harga)}` :
+                formatRupiah(harga);
+            const statusText = getStatusTextForOrder(order);
+            const statusClass = getStatusClassForOrder(order);
+            const isKurir = order.transport_type?.includes('kurir') ? '📦 KURIR' : '';
+
+            return `
+                <div class="order-item" data-order-id="${order.id}">
+                    <div class="order-header">
+                        <div class="customer-name">${escapeHtml(order.customer_name || 'Pelanggan')} ${isKurir}</div>
+                        <span class="status-badge ${statusClass}">${statusText}</span>
+                    </div>
+                    <div class="route-info">
+                        <div class="route-point"><span class="point-marker point-marker-a">A</span><span>${escapeHtml(order.pickup_address || '-')}</span></div>
+                        <div class="route-point"><span class="point-marker point-marker-b">B</span><span>${escapeHtml(order.destination_address || '-')}</span></div>
+                    </div>
+                    <div class="order-details">
+                        <div class="detail-item"><span class="detail-value">${durasi}</span><div>Durasi</div></div>
+                        <div class="detail-item"><span class="detail-value">${jarak}</span><div>Jarak</div></div>
+                        <div class="detail-item"><span class="detail-value">${hargaDisplay}</span><div>Harga</div></div>
+                    </div>
+                    <div class="order-meta">
+                        <span>${new Date(order.created_at).toLocaleTimeString('id-ID', {hour:'2-digit',minute:'2-digit'})}</span>
+                        <span>${order.transport_type || 'Motor'}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' } [
+            m
+        ])); }
+
+        // ===== MODAL =====
+        function showOrderDetail(order) {
+            const modalContent = document.getElementById('modalDetailContent');
+            const statusText = getStatusTextForOrder(order);
+            modalContent.innerHTML = `
+                <div style="margin-bottom:12px"><strong>📍 Penjemputan:</strong><br>${escapeHtml(order.pickup_address || '-')}</div>
+                <div style="margin-bottom:12px"><strong>🏁 Tujuan:</strong><br>${escapeHtml(order.destination_address || '-')}</div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:12px">
+                    <div><strong>Jarak</strong><br>${order.distance_meters ? (order.distance_meters/1000).toFixed(1)+' km' : '-'}</div>
+                    <div><strong>Durasi</strong><br>${order.duration_seconds ? Math.round(order.duration_seconds/60)+' menit' : '-'}</div>
+                    <div><strong>Harga</strong><br>${order.price_after_bonus ? formatRupiah(order.price_after_bonus) : formatRupiah(order.price)}</div>
+                </div>
+                ${order.bonus_used ? `<div><strong>Bonus digunakan:</strong> ${formatRupiah(order.bonus_used)}</div>` : ''}
+                <div style="margin-top:12px"><strong>Status:</strong> ${statusText}</div>
+                <div style="margin-top:12px"><strong>Order ID:</strong> ${order.id}</div>
+                ${order.cancelled_by ? `<div style="margin-top:8px;font-size:0.8rem;color:var(--text-secondary)">Dibatalkan oleh: ${order.cancelled_by}</div>` : ''}
+            `;
+            document.getElementById('orderModal').style.display = 'flex';
+            window.currentOrderId = order.id;
+        }
+
+        function closeModal() { document.getElementById('orderModal').style.display = 'none'; }
+
+        function showCsModal() {
+            if (window.currentOrderId) document.getElementById('csOrderId').innerText = window.currentOrderId;
+            closeModal();
+            document.getElementById('csModal').style.display = 'flex';
+        }
+
+        function closeCsModal() { document.getElementById('csModal').style.display = 'none'; }
+
+        // ===== QUERY FUNCTIONS =====
+        function buildBaseQuery() {
+            return database.ref('orders').orderByChild('user_id').equalTo(currentUser.uid);
+        }
+
+        // Ambil halaman pertama (5 terbaru)
+        async function fetchFirstPage() {
+            const container = document.getElementById('ordersList');
+            container.innerHTML = '<div class="loading"><div class="spinner"></div><p>Memuat data...</p></div>';
+            document.getElementById('paginationControls').style.display = 'none';
+
+            try {
+                let query = buildBaseQuery().limitToLast(PER_PAGE);
+                const snapshot = await query.once('value');
+                const data = snapshot.val();
+                const orders = data ? Object.entries(data).map(([key, val]) => ({ id: key, ...val })) : [];
+
+                if (orders.length === 0) {
+                    currentOrders = [];
+                    currentFirstKey = null;
+                    currentLastKey = null;
+                    currentPage = 0;
+                    hasNext = false;
+                    hasPrev = false;
+                    render();
+                    return;
+                }
+
+                // Urutkan ascending berdasarkan key (agar firstKey = terkecil)
+                orders.sort((a, b) => a.id.localeCompare(b.id));
+                currentOrders = orders;
+                currentFirstKey = orders[0].id;
+                currentLastKey = orders[orders.length - 1].id;
+                currentPage = 0;
+
+                // Cek apakah ada data setelah halaman ini (next)
+                hasNext = await checkHasNext(currentLastKey);
+                hasPrev = false; // halaman pertama tidak ada prev
+
+                render();
+            } catch (err) {
+                console.error('Gagal memuat riwayat:', err);
+                container.innerHTML = '<div class="empty-state">⚠️ Gagal memuat data. Coba lagi nanti.</div>';
+            }
+        }
+
+        // Cek apakah ada data setelah key tertentu
+        async function checkHasNext(afterKey) {
+            try {
+                const query = buildBaseQuery().startAfter(afterKey).limitToFirst(1);
+                const snap = await query.once('value');
+                return snap.exists();
+            } catch {
+                return false;
+            }
+        }
+
+        // Cek apakah ada data sebelum key tertentu
+        async function checkHasPrev(beforeKey) {
+            try {
+                const query = buildBaseQuery().endBefore(beforeKey).limitToLast(1);
+                const snap = await query.once('value');
+                return snap.exists();
+            } catch {
+                return false;
+            }
+        }
+
+        // Navigasi ke halaman berikutnya (lebih lama)
+        async function goNext() {
+            if (!hasNext) {
+                showToast('Tidak ada data selanjutnya');
+                return;
+            }
+            try {
+                let query = buildBaseQuery().endBefore(currentFirstKey).limitToLast(PER_PAGE);
+                const snapshot = await query.once('value');
+                const data = snapshot.val();
+                const orders = data ? Object.entries(data).map(([key, val]) => ({ id: key, ...val })) : [];
+
+                if (orders.length === 0) {
+                    hasNext = false;
+                    render();
+                    showToast('Tidak ada data selanjutnya');
+                    return;
+                }
+
+                orders.sort((a, b) => a.id.localeCompare(b.id));
+                currentOrders = orders;
+                currentFirstKey = orders[0].id;
+                currentLastKey = orders[orders.length - 1].id;
+                currentPage++;
+
+                // Cek hasPrev (apakah ada data sebelum firstKey)
+                hasPrev = await checkHasPrev(currentFirstKey);
+                // Cek hasNext (apakah ada data setelah lastKey)
+                hasNext = await checkHasNext(currentLastKey);
+
+                render();
+            } catch (err) {
+                console.error('Gagal memuat halaman berikutnya:', err);
+                showToast('Gagal memuat data');
+            }
+        }
+
+        // Navigasi ke halaman sebelumnya (lebih baru)
+        async function goPrev() {
+            if (!hasPrev) {
+                showToast('Tidak ada data sebelumnya');
+                return;
+            }
+            try {
+                let query = buildBaseQuery().startAfter(currentLastKey).limitToFirst(PER_PAGE);
+                const snapshot = await query.once('value');
+                const data = snapshot.val();
+                const orders = data ? Object.entries(data).map(([key, val]) => ({ id: key, ...val })) : [];
+
+                if (orders.length === 0) {
+                    hasPrev = false;
+                    render();
+                    showToast('Tidak ada data sebelumnya');
+                    return;
+                }
+
+                orders.sort((a, b) => a.id.localeCompare(b.id));
+                currentOrders = orders;
+                currentFirstKey = orders[0].id;
+                currentLastKey = orders[orders.length - 1].id;
+                currentPage--;
+
+                hasPrev = await checkHasPrev(currentFirstKey);
+                hasNext = await checkHasNext(currentLastKey);
+
+                render();
+            } catch (err) {
+                console.error('Gagal memuat halaman sebelumnya:', err);
+                showToast('Gagal memuat data');
+            }
+        }
+
+        // ========== INISIALISASI ==========
+        document.addEventListener('DOMContentLoaded', () => {
+            applyDarkModeFromLocalStorage();
+
+            auth.onAuthStateChanged(async (user) => {
+                if (!user) {
+                    window.location.href = 'loginUser.html';
+                    return;
+                }
+                currentUser = user;
+                await fetchFirstPage();
+            });
+
+            document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+            document.getElementById('hubungiDukunganBtn').addEventListener('click', showCsModal);
+            document.getElementById('closeCsModalBtn').addEventListener('click', closeCsModal);
+            document.getElementById('tutupCsModalBtn').addEventListener('click', closeCsModal);
+            document.getElementById('orderModal').addEventListener('click', (e) => {
+                if (e.target === document.getElementById('orderModal')) closeModal();
+            });
+            document.getElementById('csModal').addEventListener('click', (e) => {
+                if (e.target === document.getElementById('csModal')) closeCsModal();
+            });
+
+            // Filter buttons
+            document.querySelectorAll('.filter-option').forEach(opt => {
+                opt.addEventListener('click', () => {
+                    document.querySelectorAll('.filter-option').forEach(o => o.classList.remove('active'));
+                    opt.classList.add('active');
+                    currentFilter = opt.dataset.filter;
+                    render(); // re-render dengan filter baru
+                });
+            });
+
+            // Pagination buttons
+            document.getElementById('prevPageBtn').addEventListener('click', goPrev);
+            document.getElementById('nextPageBtn').addEventListener('click', goNext);
+        });
+    </script>
+</body>
+</html>
