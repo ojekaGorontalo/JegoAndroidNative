@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <title>JeGo Customer Support</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js">
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js">
+    </script>
+    <style>
+        /* ====== STYLE SAMA SEPERTI SEBELUMNYA ====== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #FF9800, #F57C00);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+        }
+        .chat-container {
+            width: 100%;
+            flex: 1;
+            background-color: rgba(255, 255, 255, 0.95);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-header {
+            background: linear-gradient(135deg, #FF9800, #F57C00);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        .profile-img {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #FFE0B2;
+            background-color: #f0f0f0;
+        }
+        .profile-info {
+            flex: 1;
+        }
+        .profile-name {
+            font-weight: 600;
+            font-size: 18px;
+        }
+        .profile-status {
+            font-size: 13px;
+            opacity: 0.9;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            background-color: #4CAF50;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .chat-area {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background-color: #ece5dd;
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23FF9800' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+        }
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+            max-width: 80%;
+            opacity: 0;
+            transform: translateY(10px);
+            animation: fadeInUp 0.3s forwards;
+        }
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .received {
+            align-items: flex-start;
+        }
+        .sent {
+            align-items: flex-end;
+            margin-left: auto;
+        }
+        .message-bubble {
+            padding: 12px 16px;
+            border-radius: 18px;
+            position: relative;
+            word-wrap: break-word;
+            line-height: 1.4;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            max-width: 100%;
+        }
+        .received .message-bubble {
+            background-color: white;
+            border-top-left-radius: 5px;
+            color: #333;
+        }
+        .sent .message-bubble {
+            background-color: #dcf8c6;
+            border-top-right-radius: 5px;
+            color: #333;
+        }
+        .message-time {
+            font-size: 11px;
+            color: #666;
+            margin-top: 5px;
+            padding: 0 5px;
+        }
+        .sent .message-time {
+            text-align: right;
+        }
+        .received .message-time {
+            text-align: left;
+        }
+        .input-area {
+            padding: 12px 15px;
+            background-color: white;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .input-container {
+            flex: 1;
+            display: flex;
+            background-color: #f0f0f0;
+            border-radius: 25px;
+            padding: 8px 15px;
+            align-items: center;
+        }
+        .message-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            background: transparent;
+            font-size: 16px;
+            padding: 5px;
+            color: #333;
+            width: 100%;
+        }
+        .send-button {
+            background: linear-gradient(135deg, #FF9800, #F57C00);
+            color: white;
+            border: none;
+            width: 45px;
+            height: 45px;
+            min-width: 45px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            margin-left: 5px;
+        }
+        .send-button:hover {
+            opacity: 0.9;
+        }
+        .send-button i {
+            font-size: 18px;
+        }
+        .typing-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 10px 15px;
+            background-color: white;
+            border-radius: 18px;
+            border-top-left-radius: 5px;
+            margin-bottom: 15px;
+        }
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #999;
+            border-radius: 50%;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+        .typing-dot:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+        .typing-dot:nth-child(2) {
+            animation-delay: -0.16s;
+        }
+        @keyframes typing {
+            0%,
+            80%,
+            100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-10px);
+            }
+        }
+        .chat-area::-webkit-scrollbar {
+            width: 6px;
+        }
+        .chat-area::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        .chat-area::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 3px;
+        }
+        @media (max-width: 600px) {
+            .chat-container {
+                height: 100vh;
+            }
+            .chat-header {
+                padding: 12px 15px;
+            }
+            .input-area {
+                padding: 10px 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <!-- Header -->
+        <div class="chat-header">
+            <img src="https://cdn-icons-png.flaticon.com/128/7890/7890227.png" alt="JeGo Customer Support" class="profile-img" id="profileImage" />
+            <div class="profile-info">
+                <div class="profile-name">JeGo Customer Support</div>
+                <div class="profile-status">
+                    <span class="status-indicator"></span>
+                    <span id="statusText">Online</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Area -->
+        <div class="chat-area" id="chatArea">
+            <div class="message received">
+                <div class="message-bubble">Halo! Ada yang bisa saya bantu?</div>
+                <div class="message-time" id="initialTime"></div>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="input-area">
+            <div class="input-container">
+                <input type="text" class="message-input" id="messageInput" placeholder="Tanya tentang JeGo..." autocomplete="off" />
+            </div>
+            <button class="send-button" id="sendButton">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // 1. Firebase Config (Baru)
+        // ============================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyCD0pgeZio-LdKqYDtWxcdXcZwyL4ngYQI",
+            authDomain: "jego-8e531.firebaseapp.com",
+            databaseURL: "https://jego-8e531-default-rtdb.firebaseio.com",
+            projectId: "jego-8e531",
+            storageBucket: "jego-8e531.firebasestorage.app",
+            appId: "1:600037007040:web:ac3243ad9b472647ffd725"
+        };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // ============================================================
+        // 2. SYSTEM PROMPT LENGKAP (WAJIB)
+        // ============================================================
+        const DEFAULT_SYSTEM_PROMPT = `Anda adalah Asisten Resmi JEGO, aplikasi transportasi online karya anak daerah Gorontalo. Jawablah dengan ramah, sopan, singkat, dan menggunakan bahasa Indonesia yang mudah dipahami. Gunakan sapaan "kak" kepada pengguna.
+
+Tentang JEGO:
+Nama aplikasi: JEGO
+Slogan: Aplikasi Transportasi Online Karya Anak Daerah Gorontalo.
+Wilayah Operasional: Seluruh Provinsi Gorontalo.
+Alamat operasional: Kabupaten Bone Bolango, Gorontalo.
+Saat ini JEGO masih beroperasi secara digital dan belum memiliki kantor tetap.
+
+Layanan JEGO:
+JEGO melayani:
+- Ojek Motor
+- Bentor
+- Mobil
+- Kurir
+Saat ini Cargo belum tersedia.
+
+Cara Kerja:
+Customer membuat pesanan.
+Sistem mengirim order ke driver dalam radius terdekat (maksimal ~3 km dari penjemputan).
+Driver menerima dan menuju lokasi penjemputan.
+
+Autobid:
+Driver dapat mengaktifkan Autobid. Jika aktif, semua tawaran customer otomatis diterima.
+Jika tidak aktif, driver dapat menerima manual atau menawar harga.
+
+Fitur Tawar Menawar:
+Customer bisa menawar tarif, driver juga bisa menaikkan tarif. Harga berdasarkan kesepakatan bersama.
+
+Pendaftaran Driver:
+Melalui aplikasi JEGO:
+1. Download aplikasi
+2. Klik ikon tiga garis di kiri atas
+3. Pilih Mode Pengemudi
+4. Isi data (nama sesuai KTP, pilih kendaraan)
+5. Kirim data, tunggu verifikasi admin.
+Tidak ada aplikasi driver terpisah.
+
+Kendaraan Driver:
+Menerima: Motor, Bentor, Mobil, Kurir. Cargo belum tersedia.
+
+Saldo Driver:
+Top up melalui QRIS. Nominal harus sesuai dengan kode unik, jika tidak maka verifikasi otomatis gagal.
+
+Komisi:
+Sementara 8% + PPN sesuai ketentuan.
+
+Referral:
+Hanya untuk Customer, belum tersedia untuk Driver.
+
+Customer:
+Dapat memesan, memilih layanan, tawar harga, dan driver dipilih sistem.
+
+Driver:
+Dapat menerima/menolak order, menawar, mengaktifkan Autobid, melihat order masuk.
+
+Login Driver:
+Jika OTP tidak masuk Gmail, cek Spam/Promosi/Semua Email, pastikan Gmail benar, kirim ulang.
+
+Jika Akun Driver Ditolak:
+Penyebab: nama tidak sesuai KTP, data tidak lengkap, dokumen kurang jelas. Sarankan daftar ulang dengan data benar.
+
+Lupa Password:
+Jika NIK sudah terdaftar, jangan buat akun baru, lakukan pemulihan akun.
+
+Radius Driver:
+Order dikirim ke driver dalam radius ~3 km terdekat.
+
+Operasional:
+JEGO sudah dapat digunakan, masih dalam pengembangan dan sosialisasi. Order akan bertambah seiring pengguna.
+
+Pembayaran Top up:
+QRIS, Dana, GoPay, OVO, Mobile Banking yang mendukung QRIS.
+
+Visi:
+Membantu masyarakat, membuka lapangan pekerjaan, mendukung UMKM, sistem adil.
+
+Misi:
+Mendukung ekonomi lokal, mengutamakan pelayanan, biaya transparan, menerima masukan driver, mengembangkan aplikasi sesuai kebutuhan masyarakat Gorontalo.
+
+Jawaban yang harus dihindari:
+- Jangan membuat janji yang belum pasti.
+- Jangan menyebut informasi yang tidak ada.
+- Jangan memberikan informasi palsu.
+Jika tidak tahu, gunakan:
+"Mohon maaf, untuk informasi tersebut kami masih melakukan pengembangan. Silakan menunggu informasi resmi dari tim JEGO."
+
+Gaya Bahasa:
+Sopan, selalu panggil "kak", gunakan emoji seperlunya (😊🙏🧡🚖), jawaban maksimal 4 paragraf.`;
+
+        // ============================================================
+        // 3. Konfigurasi API
+        // ============================================================
+        const GITHUB_MODELS_ENDPOINT = "https://models.github.ai/inference/chat/completions";
+        const GITHUB_MODELS_MODEL = "openai/gpt-4o-mini"; // gratis
+
+        const OPENROUTER_ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
+        const OPENROUTER_MODEL = "deepseek/deepseek-chat";
+
+        // ============================================================
+        // 4. State
+        // ============================================================
+        let isProcessing = false;
+        let GITHUB_TOKEN = null;
+        let OPENROUTER_FALLBACK_TOKEN = null;
+        let SYSTEM_PROMPT = DEFAULT_SYSTEM_PROMPT; // default diisi prompt lengkap
+
+        // ============================================================
+        // 5. DOM refs
+        // ============================================================
+        const chatArea = document.getElementById('chatArea');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const profileImage = document.getElementById('profileImage');
+        const statusText = document.getElementById('statusText');
+
+        // ============================================================
+        // 6. Helper
+        // ============================================================
+        function getCurrentTime() {
+            const now = new Date();
+            return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+        }
+
+        function showTypingIndicator() {
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'typing-indicator';
+            typingDiv.id = 'typingIndicator';
+            typingDiv.innerHTML = `<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>`;
+            chatArea.appendChild(typingDiv);
+            chatArea.scrollTop = chatArea.scrollHeight;
+            return typingDiv;
+        }
+
+        function hideTypingIndicator() {
+            const el = document.getElementById('typingIndicator');
+            if (el) el.remove();
+        }
+
+        function addMessage(text, isReceived = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isReceived ? 'received' : 'sent'}`;
+            const timeString = getCurrentTime();
+            messageDiv.innerHTML =
+                `<div class="message-bubble">${text}</div><div class="message-time">${timeString}</div>`;
+            chatArea.appendChild(messageDiv);
+            setTimeout(() => chatArea.scrollTo({ top: chatArea.scrollHeight, behavior: 'smooth' }), 50);
+        }
+
+        // ============================================================
+        // 7. Firebase: ambil token & prompt tambahan
+        // ============================================================
+        async function fetchGitHubToken() {
+            try {
+                const ref = database.ref('Data-jego/github-ai');
+                const snapshot = await ref.once('value');
+                const val = snapshot.val();
+                if (val && typeof val === 'string' && val.startsWith('ghp_') && val.length > 20) {
+                    GITHUB_TOKEN = val;
+                    console.log('✅ GitHub token loaded from Firebase (Data-jego/github-ai)');
+                    return true;
+                } else {
+                    console.warn('⚠️ GitHub token not found or invalid (must start with ghp_)');
+                    return false;
+                }
+            } catch (err) {
+                console.error('❌ Failed to fetch GitHub token:', err);
+                return false;
+            }
+        }
+
+        async function fetchOpenRouterFallbackToken() {
+            try {
+                const ref = database.ref('Data-jego/chatbot/Apikey_openRouter_fallback');
+                const snapshot = await ref.once('value');
+                const val = snapshot.val();
+                if (val && typeof val === 'string' && val.length > 10) {
+                    OPENROUTER_FALLBACK_TOKEN = val;
+                    console.log('✅ OpenRouter fallback token loaded from Firebase');
+                    return true;
+                } else {
+                    console.warn('⚠️ OpenRouter fallback token not found');
+                    return false;
+                }
+            } catch (err) {
+                console.warn('ℹ️ OpenRouter fallback token tidak dapat diakses. Fallback tidak tersedia.');
+                return false;
+            }
+        }
+
+        // Gabungkan prompt tambahan dari Firebase (jika ada) ke DEFAULT_SYSTEM_PROMPT
+        async function fetchAndMergePrompts() {
+            try {
+                const ref = database.ref('Data-jego/chatbot/prompts');
+                const snapshot = await ref.once('value');
+                const promptsObj = snapshot.val();
+                if (promptsObj && typeof promptsObj === 'object') {
+                    // Ambil semua nilai dan gabungkan dengan baris baru
+                    const extraPrompts = Object.values(promptsObj).join('\n\n');
+                    // Gabungkan dengan default (extra di belakang)
+                    SYSTEM_PROMPT = DEFAULT_SYSTEM_PROMPT + '\n\n' + extraPrompts;
+                    console.log('✅ Prompts tambahan dari Firebase berhasil digabung.');
+                } else {
+                    // Jika tidak ada prompt tambahan, gunakan default saja
+                    SYSTEM_PROMPT = DEFAULT_SYSTEM_PROMPT;
+                    console.log('ℹ️ Tidak ada prompt tambahan dari Firebase, menggunakan default.');
+                }
+                return true;
+            } catch (err) {
+                console.error('❌ Gagal mengambil prompt tambahan:', err);
+                SYSTEM_PROMPT = DEFAULT_SYSTEM_PROMPT; // tetap pakai default
+                return false;
+            }
+        }
+
+        // ============================================================
+        // 8. API Calls
+        // ============================================================
+
+        async function callGitHubModels(userMessage) {
+            if (!GITHUB_TOKEN) {
+                throw new Error('GitHub token tidak tersedia');
+            }
+
+            const response = await fetch(GITHUB_MODELS_ENDPOINT, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${GITHUB_TOKEN}`,
+                    'Accept': 'application/vnd.github+json',
+                    'X-GitHub-Api-Version': '2022-11-28',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    model: GITHUB_MODELS_MODEL,
+                    messages: [
+                        { role: 'system', content: SYSTEM_PROMPT },
+                        { role: 'user', content: userMessage }
+                    ],
+                    temperature: 0.3,
+                    max_tokens: 600
+                })
+            });
+
+            if (!response.ok) {
+                const status = response.status;
+                let errorBody = '';
+                try {
+                    errorBody = await response.text();
+                } catch (_) { /* ignore */ }
+                console.error(`GitHub Models error ${status}:`, errorBody);
+                const err = new Error(`GitHub Models error ${status}`);
+                err.status = status;
+                err.body = errorBody;
+                throw err;
+            }
+
+            const data = await response.json();
+            if (data.choices && data.choices[0] && data.choices[0].message) {
+                return data.choices[0].message.content;
+            } else {
+                throw new Error('Format respons GitHub Models tidak valid');
+            }
+        }
+
+        async function callOpenRouter(userMessage) {
+            if (!OPENROUTER_FALLBACK_TOKEN) {
+                throw new Error('OpenRouter fallback token tidak tersedia');
+            }
+
+            const response = await fetch(OPENROUTER_ENDPOINT, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${OPENROUTER_FALLBACK_TOKEN}`,
+                    'HTTP-Referer': window.location.origin,
+                    'X-Title': 'JeGo Customer Support'
+                },
+                body: JSON.stringify({
+                    model: OPENROUTER_MODEL,
+                    messages: [
+                        { role: 'system', content: SYSTEM_PROMPT },
+                        { role: 'user', content: userMessage }
+                    ],
+                    temperature: 0.3,
+                    max_tokens: 600
+                })
+            });
+
+            if (!response.ok) {
+                const status = response.status;
+                let errorBody = '';
+                try {
+                    errorBody = await response.text();
+                } catch (_) { /* ignore */ }
+                console.error(`OpenRouter fallback error ${status}:`, errorBody);
+                throw new Error(`OpenRouter error ${status}: ${errorBody}`);
+            }
+
+            const data = await response.json();
+            if (data.choices && data.choices[0] && data.choices[0].message) {
+                return data.choices[0].message.content;
+            } else {
+                throw new Error('Format respons OpenRouter tidak valid');
+            }
+        }
+
+        async function getAIResponse(userMessage) {
+            try {
+                return await callGitHubModels(userMessage);
+            } catch (err) {
+                const status = err.status;
+                const shouldFallback = (status === 402 || status === 404 || status === 429 || status === 500 || status === 503) &&
+                    OPENROUTER_FALLBACK_TOKEN;
+                if (shouldFallback) {
+                    console.warn(`⚠️ GitHub Models gagal (${status}), mencoba OpenRouter fallback...`);
+                    try {
+                        return await callOpenRouter(userMessage);
+                    } catch (fallbackErr) {
+                        console.error('❌ OpenRouter fallback juga gagal:', fallbackErr);
+                        throw new Error('Semua layanan AI gagal. Silakan coba lagi nanti.');
+                    }
+                } else {
+                    throw err;
+                }
+            }
+        }
+
+        // ============================================================
+        // 9. Proses pesan user
+        // ============================================================
+        async function generateAIResponse(userMessage) {
+            showTypingIndicator();
+            try {
+                const response = await getAIResponse(userMessage);
+                hideTypingIndicator();
+                addMessage(response, true);
+            } catch (error) {
+                hideTypingIndicator();
+                console.error('❌ AI response error:', error);
+                let userFriendly = 'Maaf, terjadi kesalahan. Silakan coba lagi.';
+                if (error.message) {
+                    if (error.message.includes('402') || error.message.includes('404')) {
+                        userFriendly = 'Layanan AI sedang sibuk. Mohon coba beberapa saat lagi.';
+                    } else if (error.message.includes('401') || error.message.includes('403')) {
+                        userFriendly = 'Masalah autentikasi. Silakan hubungi tim teknis.';
+                    } else if (error.message.includes('429')) {
+                        userFriendly = 'Terlalu banyak permintaan. Tunggu sebentar lalu coba lagi.';
+                    } else {
+                        userFriendly = error.message;
+                    }
+                }
+                addMessage(userFriendly, true);
+            }
+        }
+
+        function sendMessage() {
+            if (!GITHUB_TOKEN) {
+                addMessage('Sistem sedang memuat token. Tunggu sebentar.', true);
+                return;
+            }
+            const text = messageInput.value.trim();
+            if (text === '') return;
+            addMessage(text, false);
+            messageInput.value = '';
+            generateAIResponse(text);
+            messageInput.focus();
+        }
+
+        // ============================================================
+        // 10. Init
+        // ============================================================
+        async function initializeApp() {
+            document.getElementById('initialTime').textContent = getCurrentTime();
+            addMessage('⏳ Menyiapkan sistem...', true);
+
+            const githubOk = await fetchGitHubToken();
+            await fetchOpenRouterFallbackToken();
+            await fetchAndMergePrompts(); // menggabungkan prompt tambahan ke default
+
+            if (githubOk) {
+                addMessage('✅ Sistem siap! Silakan tanya.', true);
+                setTimeout(() => messageInput.focus(), 500);
+            } else {
+                addMessage('⚠️ Token GitHub tidak ditemukan. Sistem tidak dapat berfungsi.', true);
+            }
+
+            if (OPENROUTER_FALLBACK_TOKEN) {
+                console.log('ℹ️ OpenRouter fallback tersedia.');
+            } else {
+                console.warn('ℹ️ OpenRouter fallback tidak dikonfigurasi. Fallback tidak tersedia.');
+            }
+
+            statusText.textContent = 'Online';
+        }
+
+        // ============================================================
+        // 11. Event listeners
+        // ============================================================
+        sendButton.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        profileImage.onerror = () => {
+            profileImage.src = 'https://cdn-icons-png.flaticon.com/128/3135/3135715.png';
+        };
+
+        setInterval(() => {
+            const indicator = document.querySelector('.status-indicator');
+            if (indicator) indicator.style.backgroundColor = '#4CAF50';
+            if (statusText) statusText.textContent = 'Online';
+        }, 30000);
+
+        window.onload = initializeApp;
+    </script>
+</body>
+</html>
