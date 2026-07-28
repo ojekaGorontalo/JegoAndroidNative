@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <title>Penilaian Layanan - JeGo Driver</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <style>
+    :root {
+      --primary: #FF9800;
+      --primary-dark: #F57C00;
+      --secondary: #FF5722;
+      --accent: #FFC107;
+      --light: #f8f9fa;
+      --dark: #1e2a3e;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --info: #3b82f6;
+      --gray: #64748b;
+      --gray-light: #e2e8f0;
+      --bg: #f1f5f9;
+      --card-bg: #ffffff;
+      --text-primary: #1e2a3e;
+      --text-secondary: #64748b;
+      --border: #edf2f7;
+    }
+
+    body.dark-mode {
+      --primary: #FFB74D;
+      --primary-dark: #FF9800;
+      --bg: #121212;
+      --card-bg: #1e1e1e;
+      --text-primary: #e9ecef;
+      --text-secondary: #adb5bd;
+      --border: #343a40;
+      --gray-light: #2c2c2c;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text-primary);
+      line-height: 1.4;
+      font-size: 0.8rem;
+      padding: 0;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .header {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      padding: 14px 16px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .logo {
+      width: 30px;
+      height: 30px;
+      background-color: rgba(255,255,255,0.2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 0.9rem;
+    }
+    .header-title {
+      font-size: 1rem;
+      font-weight: 700;
+    }
+    .back-btn {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      border-radius: 30px;
+      padding: 5px 12px;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.75rem;
+    }
+    .back-btn:hover {
+      background: rgba(255,255,255,0.3);
+    }
+
+    .container {
+      max-width: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    .rating-summary {
+      background: var(--card-bg);
+      border-radius: 20px;
+      padding: 14px 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      margin-bottom: 16px;
+      text-align: center;
+      border: 1px solid var(--border);
+    }
+    .overall-rating {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: var(--primary);
+      margin-bottom: 4px;
+    }
+    .rating-stars {
+      display: flex;
+      justify-content: center;
+      gap: 2px;
+      margin-bottom: 6px;
+    }
+    .star {
+      font-size: 1.2rem;
+      color: var(--gray-light);
+    }
+    .star.filled { color: var(--accent); }
+    .rating-count {
+      color: var(--text-secondary);
+      font-size: 0.7rem;
+      margin-bottom: 10px;
+    }
+    .policy-btn {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      border: none;
+      padding: 6px 16px;
+      border-radius: 30px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .rating-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .rating-card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 10px 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      border-left: 3px solid var(--primary);
+      border: 1px solid var(--border);
+    }
+    .rating-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .passenger-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .passenger-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 0.75rem;
+    }
+    .passenger-name {
+      font-weight: 700;
+      font-size: 0.8rem;
+      color: var(--text-primary);
+    }
+    .rating-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .satisfaction-emoji { font-size: 1rem; }
+    .small-rating-stars {
+      display: flex;
+      gap: 1px;
+    }
+    .small-star {
+      font-size: 0.75rem;
+      color: var(--gray-light);
+    }
+    .small-star.filled { color: var(--accent); }
+    .rating-comment {
+      color: var(--text-primary);
+      font-size: 0.75rem;
+      line-height: 1.4;
+      margin-bottom: 6px;
+      padding: 8px 10px;
+      background-color: var(--bg);
+      border-radius: 12px;
+      border-left: 2px solid var(--info);
+      word-break: break-word;
+    }
+    .rating-date {
+      color: var(--text-secondary);
+      font-size: 0.65rem;
+      text-align: right;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 4px;
+    }
+
+    .empty-state, .loading, .error-state {
+      background: var(--card-bg);
+      border-radius: 20px;
+      padding: 30px 16px;
+      text-align: center;
+      border: 1px solid var(--border);
+    }
+    .empty-state-icon { font-size: 2.5rem; margin-bottom: 10px; }
+    .spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid rgba(255,152,0,0.1);
+      border-radius: 50%;
+      border-top-color: var(--primary);
+      animation: spin 1s linear infinite;
+      margin: 0 auto 12px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .refresh-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 6px 18px;
+      border-radius: 30px;
+      font-weight: 600;
+      font-size: 0.75rem;
+      margin-top: 12px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+<div class="header">
+  <div class="logo-container">
+    <div class="logo">★</div>
+    <div class="header-title">Penilaian Layanan</div>
+  </div>
+  <button class="back-btn" id="backBtn"><span>←</span> Kembali</button>
+</div>
+<div class="container" id="mainContainer">
+  <div class="loading"><div class="spinner"></div><div>Memuat data penilaian...</div></div>
+</div>
+
+<script>
+  // ========== DARK MODE SINKRON ==========
+  const THEME_KEY = 'jego_driver_theme';
+
+  function applyTheme(theme) {
+    if (theme === 'dark') document.body.classList.add('dark-mode');
+    else document.body.classList.remove('dark-mode');
+  }
+
+  function loadTheme() {
+    let theme = localStorage.getItem(THEME_KEY);
+    if (theme !== 'dark' && theme !== 'light') {
+      theme = 'light';
+      localStorage.setItem(THEME_KEY, theme);
+    }
+    applyTheme(theme);
+  }
+
+  // ========== FIREBASE CONFIG ==========
+  const firebaseConfig = {
+    apiKey: "AIzaSyCD0pgeZio-LdKqYDtWxcdXcZwyL4ngYQI",
+    authDomain: "jego-35a2b.firebaseapp.com",
+    databaseURL: "https://jego-35a2b-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "jego-35a2b",
+    storageBucket: "jego-35a2b.firebasestorage.app",
+    messagingSenderId: "600037007040",
+    appId: "1:600037007040:web:ac3243ad9b472647ffd725"
+  };
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const database = firebase.database();
+
+  let driverId = null;
+  let allRatings = [];
+  let avgRating = 0;
+  let totalRatings = 0;
+
+  // ========== OPTIMASI BANDWIDTH ==========
+  // 1. Ambil order dengan limitToLast(100) untuk mengurangi data
+  // 2. Gunakan data customer_name dari order (tanpa query terpisah)
+  // 3. Hanya lakukan 1 query rating per order (N+1 dengan N≤100)
+  async function loadRatings() {
+    const container = document.getElementById('mainContainer');
+    container.innerHTML = `<div class="loading"><div class="spinner"></div><div>Memuat data penilaian...</div></div>`;
+
+    const driverDataRaw = localStorage.getItem('jego_logged_in_driver');
+    if (!driverDataRaw) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">🔐</div>
+          <h3>Belum Login</h3>
+          <p>Silakan login terlebih dahulu untuk melihat penilaian.</p>
+          <button class="refresh-btn" id="loginBtn">Login Driver</button>
+        </div>
+      `;
+      document.getElementById('loginBtn')?.addEventListener('click', () => {
+        window.location.href = 'loginDriver.html';
+      });
+      return;
+    }
+
+    try {
+      const driver = JSON.parse(driverDataRaw);
+      driverId = driver.uid || driver.driverId;
+      if (!driverId) throw new Error('ID driver tidak ditemukan');
+
+      // === AMBIL ORDER MILIK DRIVER (HANYA 100 TERAKHIR) ===
+      const ordersSnap = await database.ref('orders')
+          .orderByChild('driver_id')
+          .equalTo(driverId)
+          .limitToLast(100)
+          .once('value');
+      const orders = ordersSnap.val();
+      if (!orders) {
+        showEmpty('Belum ada order selesai, jadi belum ada rating.');
+        return;
+      }
+
+      // Kumpulkan orderId yang completed beserta customer_name
+      const completedOrders = [];
+      for (const [orderId, order] of Object.entries(orders)) {
+        if (order.status === 'completed') {
+          completedOrders.push({
+            orderId,
+            customerName: order.customer_name || 'Penumpang'
+          });
+        }
+      }
+
+      if (completedOrders.length === 0) {
+        showEmpty('Belum ada order selesai, jadi belum ada rating.');
+        return;
+      }
+
+      // === AMBIL RATING UNTUK SETIAP ORDER (N+1, TAPI N ≤ 100) ===
+      let ratingList = [];
+      for (const { orderId, customerName } of completedOrders) {
+        const ratingSnap = await database.ref(`ratings/${orderId}/driver_rating`).once('value');
+        const ratingData = ratingSnap.val();
+        if (ratingData && ratingData.rating) {
+          ratingList.push({
+            id: orderId,
+            rating: ratingData.rating,
+            comment: ratingData.comment || 'Tidak ada komentar',
+            customerName: customerName, // langsung dari data order
+            timestamp: ratingData.timestamp || ratingData.created_at,
+            rated_at: ratingData.created_at || new Date().toISOString()
+          });
+        }
+      }
+
+      if (ratingList.length === 0) {
+        showEmpty('Belum ada rating dari penumpang.');
+        return;
+      }
+
+      // Urutkan dari terbaru
+      ratingList.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+      let sum = 0;
+      ratingList.forEach(r => sum += r.rating);
+      avgRating = sum / ratingList.length;
+      totalRatings = ratingList.length;
+      allRatings = ratingList;
+      displayRatings();
+
+    } catch (err) {
+      console.error(err);
+      showError('Gagal memuat data rating: ' + err.message);
+    }
+  }
+
+  function displayRatings() {
+    const container = document.getElementById('mainContainer');
+    const starsHtml = generateStarRating(avgRating, 'star');
+    const ratingCards = allRatings.map(r => generateRatingCard(r)).join('');
+
+    container.innerHTML = `
+      <div class="rating-summary">
+        <div class="overall-rating">${avgRating.toFixed(1)}</div>
+        <div class="rating-stars">${starsHtml}</div>
+        <div class="rating-count">${totalRatings} ulasan</div>
+        <button class="policy-btn" id="policyBtn">Kebijakan Ulasan</button>
+      </div>
+      <div class="rating-list">
+        ${ratingCards}
+      </div>
+    `;
+    document.getElementById('policyBtn')?.addEventListener('click', () => {
+      window.location.href = 'kebijakanUlasan.html';
+    });
+  }
+
+  function generateRatingCard(r) {
+    const emoji = getSatisfactionEmoji(r.rating);
+    const stars = generateStarRating(r.rating, 'small-star');
+    const initial = r.customerName ? r.customerName.charAt(0).toUpperCase() : 'P';
+    return `
+      <div class="rating-card">
+        <div class="rating-header">
+          <div class="passenger-info">
+            <div class="passenger-avatar">${initial}</div>
+            <div class="passenger-name">${escapeHtml(r.customerName)}</div>
+          </div>
+          <div class="rating-meta">
+            <span class="satisfaction-emoji">${emoji}</span>
+            <span class="small-rating-stars">${stars}</span>
+          </div>
+        </div>
+        <div class="rating-comment">${escapeHtml(r.comment)}</div>
+        <div class="rating-date">
+          <span>🕒</span> ${formatTime(r.rated_at)}
+        </div>
+      </div>
+    `;
+  }
+
+  function generateStarRating(rating, cls = 'star') {
+    const full = Math.floor(rating);
+    const half = rating % 1 >= 0.5 ? 1 : 0;
+    const empty = 5 - full - half;
+    let stars = '';
+    for (let i = 0; i < full; i++) stars += `<span class="${cls} filled">★</span>`;
+    if (half) stars += `<span class="${cls} filled">½</span>`;
+    for (let i = 0; i < empty; i++) stars += `<span class="${cls}">☆</span>`;
+    return stars;
+  }
+
+  function getSatisfactionEmoji(rating) {
+    if (rating >= 4.5) return '😍';
+    if (rating >= 4) return '😊';
+    if (rating >= 3) return '🙂';
+    if (rating >= 2) return '😐';
+    return '😞';
+  }
+
+  function formatTime(dateStr) {
+    if (!dateStr) return 'Tanggal tidak tersedia';
+    const d = new Date(dateStr);
+    const now = new Date();
+    const diff = now - d;
+    if (diff < 86400000 && now.toDateString() === d.toDateString()) {
+      return `Hari ini, ${d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`;
+    } else if (diff < 172800000) {
+      return `Kemarin, ${d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`;
+    }
+    return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+      if (m === '&') return '&amp;';
+      if (m === '<') return '&lt;';
+      if (m === '>') return '&gt;';
+      return m;
+    });
+  }
+
+  function showEmpty(msg) {
+    const container = document.getElementById('mainContainer');
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">📭</div>
+        <h3>Belum Ada Penilaian</h3>
+        <p>${msg}</p>
+        <button class="refresh-btn" id="refreshBtn">Muat Ulang</button>
+      </div>
+    `;
+    document.getElementById('refreshBtn')?.addEventListener('click', loadRatings);
+  }
+
+  function showError(msg) {
+    const container = document.getElementById('mainContainer');
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">⚠️</div>
+        <h3>Gagal Memuat Data</h3>
+        <p>${msg}</p>
+        <button class="refresh-btn" id="retryBtn">Coba Lagi</button>
+      </div>
+    `;
+    document.getElementById('retryBtn')?.addEventListener('click', loadRatings);
+  }
+
+  // ========== TOMBOL KEMBALI ==========
+  document.getElementById('backBtn')?.addEventListener('click', () => {
+    window.history.back();
+  });
+
+  // ========== DOM READY ==========
+  document.addEventListener('DOMContentLoaded', () => {
+    loadTheme();
+    window.addEventListener('storage', (e) => {
+      if (e.key === THEME_KEY) loadTheme();
+    });
+
+    auth.onAuthStateChanged((user) => {
+      if (user) {
+        loadRatings();
+      } else {
+        const localDriver = localStorage.getItem('jego_logged_in_driver');
+        if (!localDriver) {
+          const container = document.getElementById('mainContainer');
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">🔐</div>
+              <h3>Login Diperlukan</h3>
+              <p>Silakan login sebagai driver untuk melihat penilaian.</p>
+              <button class="refresh-btn" id="loginBtn">Login Driver</button>
+            </div>
+          `;
+          document.getElementById('loginBtn')?.addEventListener('click', () => {
+            window.location.href = 'loginDriver.html';
+          });
+        } else {
+          loadRatings();
+        }
+      }
+    });
+  });
+</script>
+</body>
+</html>
