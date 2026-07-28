@@ -460,12 +460,25 @@
     }
     function removeDeleteWarning() { const w = document.getElementById('deleteWarning'); if (w) w.remove(); }
 
-    function logout() {
-      showPopup('Konfirmasi Logout', 'Apakah Anda yakin ingin logout?', 'warning', {
-        showCancel: true, confirmText: 'Ya, Logout', cancelText: 'Batal',
-        onConfirm: async () => { await auth.signOut(); localStorage.removeItem('jego_logged_in_driver'); window.location.href = 'loginDriver.html'; }
-      });
+    function isAndroidAvailable() {
+  return typeof Android !== 'undefined' && Android !== null;
+}
+
+function logout() {
+  showPopup('Konfirmasi Logout', 'Apakah Anda yakin ingin logout?', 'warning', {
+    showCancel: true, confirmText: 'Ya, Logout', cancelText: 'Batal',
+    onConfirm: async () => {
+      // 🆕 Hentikan service tracking sebelum logout
+      if (isAndroidAvailable()) {
+        Android.stopDriverTracking();
+        console.log('⏹️ Service tracking dihentikan dari akun.html');
+      }
+      await auth.signOut();
+      localStorage.removeItem('jego_logged_in_driver');
+      window.location.href = 'loginDriver.html';
     }
+  });
+}
 
     // ================= EVENT LISTENER VERIFIKASI =================
     verifyForm.addEventListener('submit', async (e) => {
@@ -511,14 +524,24 @@
     });
 
     verifyLogoutBtn.addEventListener('click', () => {
-      auth.signOut();
-      localStorage.removeItem('jego_logged_in_driver');
-      window.location.href = 'loginDriver.html';
-    });
+  // 🆕 Hentikan service tracking
+  if (isAndroidAvailable()) {
+    Android.stopDriverTracking();
+    console.log('⏹️ Service tracking dihentikan dari modal verifikasi');
+  }
+  auth.signOut();
+  localStorage.removeItem('jego_logged_in_driver');
+  window.location.href = 'loginDriver.html';
+});
 
     verifyCloseBtn.addEventListener('click', () => {
-      verifyLogoutBtn.click();
-    });
+  // 🆕 Hentikan service tracking sebelum logout
+  if (isAndroidAvailable()) {
+    Android.stopDriverTracking();
+    console.log('⏹️ Service tracking dihentikan dari tombol tutup modal verifikasi');
+  }
+  verifyLogoutBtn.click();
+});
 
     // ================= DOM READY =================
     document.addEventListener('DOMContentLoaded', () => {
