@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <title>Riwayat Order - JeGo Driver</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+  <!-- Leaflet CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <style>
+    :root {
+      --primary: #FF9800;
+      --primary-dark: #F57C00;
+      --secondary: #FF5722;
+      --accent: #FFC107;
+      --light: #f8f9fa;
+      --dark: #1e2a3e;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --info: #3b82f6;
+      --gray: #64748b;
+      --gray-light: #e2e8f0;
+      --bg: #f1f5f9;
+      --card-bg: #ffffff;
+      --text-primary: #1e2a3e;
+      --text-secondary: #64748b;
+      --border: #eef2f6;
+    }
+
+    /* Dark Mode */
+    body.dark-mode {
+      --primary: #FFB74D;
+      --primary-dark: #FF9800;
+      --bg: #121212;
+      --card-bg: #1e1e1e;
+      --text-primary: #e9ecef;
+      --text-secondary: #adb5bd;
+      --border: #343a40;
+      --gray-light: #2c2c2c;
+      --dark: #e9ecef;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text-primary);
+      line-height: 1.5;
+      font-size: 0.875rem;
+      padding: 0;  /* tanpa padding, card full width */
+      transition: background 0.2s, color 0.2s;
+    }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      padding: 18px 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      margin-bottom: 16px;
+    }
+    .header-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .header-actions {
+      display: flex;
+      gap: 12px;
+    }
+    .action-btn {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      border-radius: 40px;
+      padding: 6px 16px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: white;
+      cursor: pointer;
+      transition: 0.2s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .action-btn:hover {
+      background: rgba(255,255,255,0.35);
+      transform: translateY(-1px);
+    }
+
+    /* Filter container - full width, padding horizontal */
+    .filter-container {
+      background: var(--card-bg);
+      padding: 6px 16px;
+      margin-bottom: 16px;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      scrollbar-width: thin;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .filter-option {
+      background: var(--bg);
+      border: none;
+      border-radius: 40px;
+      padding: 8px 18px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+      color: var(--text-primary);
+    }
+    .filter-option.active {
+      background: var(--primary);
+      color: white;
+      box-shadow: 0 4px 10px rgba(255,152,0,0.3);
+    }
+
+    /* Orders List - full width */
+    .orders-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .date-header {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--primary-dark);
+      margin: 8px 16px 6px 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid rgba(255,152,0,0.2);
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+    /* Card full width: tanpa padding horizontal */
+    .order-item {
+      background: var(--card-bg);
+      padding: 16px 0;        /* hanya padding vertikal, horizontal 0 */
+      cursor: pointer;
+      transition: all 0.2s;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .order-item:first-of-type {
+      border-top: none;
+    }
+    .order-item:hover {
+      background: var(--bg);
+      border-color: var(--primary);
+    }
+    .order-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding: 0 16px;  /* beri padding agar teks tidak mepet */
+    }
+    .customer-name {
+      font-weight: 700;
+      color: var(--primary-dark);
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .kurir-badge {
+      background: var(--accent);
+      color: #2c3e50;
+      padding: 2px 10px;
+      border-radius: 30px;
+      font-size: 0.65rem;
+      font-weight: 700;
+    }
+    body.dark-mode .kurir-badge {
+      color: #1e2a3e;
+    }
+    .status-badge {
+      padding: 4px 12px;
+      border-radius: 30px;
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+    .status-completed { background: #d1fae5; color: #065f46; }
+    body.dark-mode .status-completed { background: #14532d; color: #bbf7d0; }
+    .status-cancelled { background: #fee2e2; color: #991b1b; }
+    body.dark-mode .status-cancelled { background: #7f1d1d; color: #fecaca; }
+
+    .route-info {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .route-point {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 0 16px;   /* beri padding agar ikon dan teks tidak mepet */
+    }
+    .point-marker {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: bold;
+      color: white;
+      flex-shrink: 0;
+    }
+    .point-marker-a { background: var(--primary); }
+    .point-marker-b { background: var(--secondary); }
+    .point-address {
+      flex: 1;
+      word-break: break-word;
+      font-size: 0.8rem;
+      color: var(--text-primary);
+    }
+
+    .order-details {
+      display: flex;
+      justify-content: space-between;
+      border-top: 1px solid var(--border);
+      padding: 12px 16px 0 16px;
+      margin-bottom: 8px;
+    }
+    .detail-item {
+      flex: 1;
+      text-align: center;
+    }
+    .detail-value {
+      font-weight: 700;
+      color: var(--primary);
+      font-size: 0.85rem;
+    }
+    .price-highlight {
+      color: var(--success);
+    }
+    .order-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.7rem;
+      color: var(--text-secondary);
+      border-top: 1px solid var(--border);
+      padding: 8px 16px 0 16px;
+    }
+    .empty-state, .loading, .login-required {
+      background: var(--card-bg);
+      padding: 48px 20px;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+      border: 1px solid var(--border);
+      margin: 16px;
+    }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(0,0,0,0.1);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 15px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Detail Panel (floating, tidak berubah) */
+    .detail-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      visibility: hidden;
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+    .detail-overlay.active {
+      visibility: visible;
+      opacity: 1;
+    }
+    .detail-panel {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 100%;
+      max-width: 500px;
+      height: 100%;
+      background: var(--card-bg);
+      box-shadow: -8px 0 40px rgba(0,0,0,0.15);
+      z-index: 1001;
+      transform: translateX(100%);
+      transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .detail-overlay.active .detail-panel {
+      transform: translateX(0);
+    }
+    .detail-header {
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .close-detail {
+      background: var(--bg);
+      border: none;
+      border-radius: 40px;
+      padding: 8px 18px;
+      color: var(--text-primary);
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      transition: 0.2s;
+    }
+    .close-detail:hover {
+      background: var(--gray-light);
+    }
+    .detail-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      flex: 1;
+      color: var(--text-primary);
+    }
+    .detail-body {
+      padding: 20px;
+      flex: 1;
+      background: var(--bg);
+    }
+    .detail-card {
+      background: var(--card-bg);
+      border-radius: 28px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+      border: 1px solid var(--border);
+    }
+    .map-detail {
+      height: 240px;
+      border-radius: 20px;
+      overflow: hidden;
+      margin-bottom: 0;
+      border: 1px solid var(--border);
+    }
+    .customer-profile-detail {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .customer-avatar {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--primary);
+      background: #fff;
+    }
+    .customer-name-detail {
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: var(--text-primary);
+    }
+    .stars {
+      color: #fbbf24;
+      letter-spacing: 2px;
+      font-size: 0.85rem;
+    }
+    .route-detail {
+      margin-bottom: 20px;
+    }
+    .route-detail .point {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 14px;
+      align-items: flex-start;
+    }
+    .marker {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+    .marker.b {
+      background: var(--secondary);
+    }
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      background: var(--bg);
+      border-radius: 20px;
+      padding: 16px;
+      margin: 16px 0;
+    }
+    .info-item {
+      text-align: center;
+    }
+    .info-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+    .info-value {
+      font-weight: 800;
+      font-size: 1rem;
+      margin-top: 4px;
+      color: var(--text-primary);
+    }
+    .breakdown-box {
+      background: #fefce8;
+      border-radius: 24px;
+      padding: 18px;
+      margin: 16px 0;
+      border: 1px solid #fde68a;
+    }
+    body.dark-mode .breakdown-box {
+      background: #2d2a1e;
+      border-color: #5c4a1a;
+    }
+    .break-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      font-size: 0.85rem;
+      align-items: center;
+    }
+    .timeline-detail {
+      margin-top: 20px;
+      background: var(--bg);
+      border-radius: 20px;
+      padding: 12px;
+    }
+    .timeline-item {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 14px;
+      font-size: 0.8rem;
+      align-items: baseline;
+      padding-bottom: 8px;
+      border-bottom: 1px dashed var(--border);
+    }
+    .timeline-time {
+      width: 110px;
+      color: var(--text-secondary);
+      font-size: 0.7rem;
+      font-weight: 500;
+    }
+    .timeline-desc {
+      flex: 1;
+      color: var(--text-primary);
+    }
+    @media (max-width: 500px) {
+      .detail-panel { max-width: 100%; }
+      .timeline-time { width: 90px; }
+      .info-grid { gap: 8px; }
+      .header-actions { gap: 6px; }
+      .action-btn { padding: 4px 12px; font-size: 0.7rem; }
+      .order-header, .route-point, .order-details, .order-meta {
+        padding-left: 12px;
+        padding-right: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+<script>
+  // Dark mode segera (tanpa flicker)
+  (function() {
+    try {
+      const theme = localStorage.getItem('jego_driver_theme');
+      if (theme === 'dark') {
+        document.body.classList.add('dark-mode');
+      } else {
+        document.body.classList.remove('dark-mode');
+      }
+    } catch(e) {}
+  })();
+</script>
+
+<div class="header">
+  <div class="header-title">📋 Riwayat Order</div>
+  <div class="header-actions">
+    <a href="referensi.html" class="action-btn">📜 Regensi</a>
+    <a href="feedback.html" class="action-btn">💬 Feedback</a>
+  </div>
+</div>
+
+<div class="filter-container">
+  <div class="filter-option active" data-filter="all">Semua</div>
+  <div class="filter-option" data-filter="completed">Selesai</div>
+  <div class="filter-option" data-filter="cancelled">Dibatalkan</div>
+  <div class="filter-option" data-filter="this_week">Minggu Ini</div>
+  <div class="filter-option" data-filter="this_month">Bulan Ini</div>
+</div>
+
+<div class="orders-list" id="ordersList">
+  <div class="loading"><div class="spinner"></div><p>Memuat data riwayat...</p></div>
+</div>
+
+<div class="detail-overlay" id="detailOverlay">
+  <div class="detail-panel">
+    <div class="detail-header">
+      <button class="close-detail" id="closeDetailBtn">← Kembali</button>
+      <div class="detail-title">Detail Perjalanan</div>
+      <div style="width: 30px;"></div>
+    </div>
+    <div class="detail-body" id="detailBody">
+      <div class="loading"><div class="spinner"></div><p>Memuat detail...</p></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ========== DARK MODE SINKRON ==========
+  const THEME_KEY = 'jego_driver_theme';
+  function applyTheme(theme) {
+    if (theme === 'dark') document.body.classList.add('dark-mode');
+    else document.body.classList.remove('dark-mode');
+  }
+  function loadTheme() {
+    let theme = localStorage.getItem(THEME_KEY);
+    if (theme !== 'dark' && theme !== 'light') {
+      theme = 'light';
+      localStorage.setItem(THEME_KEY, theme);
+    }
+    applyTheme(theme);
+  }
+  window.addEventListener('storage', (e) => {
+    if (e.key === THEME_KEY) loadTheme();
+  });
+  loadTheme();
+
+  // ========== FIREBASE ==========
+  const firebaseConfig = {
+    apiKey: "AIzaSyCD0pgeZio-LdKqYDtWxcdXcZwyL4ngYQI",
+    authDomain: "jego-35a2b.firebaseapp.com",
+    databaseURL: "https://jego-35a2b-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "jego-35a2b",
+    storageBucket: "jego-35a2b.firebasestorage.app",
+    messagingSenderId: "600037007040",
+    appId: "1:600037007040:web:ac3243ad9b472647ffd725"
+  };
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  const database = firebase.database();
+
+  let currentDriverData = null, driverId = null;
+  let currentFilter = 'all';
+  let feePersen = 0, pajakPersen = 0;
+  let currentDetailMap = null;
+  let isHandlingPopState = false;
+
+  function formatRupiah(num) {
+    if (num === undefined || num === null) return 'Rp 0';
+    return 'Rp ' + num.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  }
+  function formatDateTime(dateStr) {
+    if (!dateStr) return '-';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return '-';
+    return d.toLocaleString('id-ID', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+  }
+  function formatTime(timeStr) {
+    if (!timeStr) return '-';
+    const d = new Date(timeStr);
+    return d.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit' });
+  }
+  function formatDateKey(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('id-ID', { year:'numeric', month:'2-digit', day:'2-digit' });
+  }
+  function isThisWeek(date) {
+    const today = new Date();
+    const start = new Date(today); start.setDate(today.getDate() - today.getDay()); start.setHours(0,0,0,0);
+    const end = new Date(today); end.setDate(today.getDate() + (6 - today.getDay())); end.setHours(23,59,59,999);
+    return date >= start && date <= end;
+  }
+  function isThisMonth(date) {
+    const today = new Date();
+    const start = new Date(today.getFullYear(), today.getMonth(), 1);
+    const end = new Date(today.getFullYear(), today.getMonth()+1, 0, 23,59,59,999);
+    return date >= start && date <= end;
+  }
+  function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]); }
+
+  async function loadFeeSettings() {
+    try {
+      const potonganSnap = await database.ref('data-jego/potongan').once('value');
+      const pajakSnap = await database.ref('data-jego/pajak').once('value');
+      feePersen = potonganSnap.exists() ? parseFloat(potonganSnap.val()) : 7;
+      pajakPersen = pajakSnap.exists() ? parseFloat(pajakSnap.val()) : 11;
+    } catch(e) {
+      feePersen = 7;
+      pajakPersen = 11;
+    }
+  }
+
+  function calculateEarningsDetails(price, orderFee = null, orderTax = null) {
+    const fee = (orderFee !== null && orderFee !== undefined) ? orderFee : feePersen;
+    const tax = (orderTax !== null && orderTax !== undefined) ? orderTax : pajakPersen;
+    const potonganRupiah = price * (fee / 100);
+    const pajakRupiah = potonganRupiah * (tax / 100);
+    const totalPotongan = potonganRupiah + pajakRupiah;
+    const netEarnings = price - totalPotongan;
+    return { net: netEarnings, fee: potonganRupiah, tax: pajakRupiah, totalPotongan, feePercent: fee, taxPercent: tax };
+  }
+
+  function checkDriverData() {
+    const data = localStorage.getItem('jego_logged_in_driver');
+    if (!data) return false;
+    try {
+      const d = JSON.parse(data);
+      const uid = d.uid || d.driverId;
+      if (!uid) return false;
+      currentDriverData = d;
+      driverId = uid;
+      return true;
+    } catch { return false; }
+  }
+
+  function closeDetail() {
+    const overlay = document.getElementById('detailOverlay');
+    if (!overlay.classList.contains('active')) return;
+    if (currentDetailMap) {
+      currentDetailMap.remove();
+      currentDetailMap = null;
+    }
+    overlay.classList.remove('active');
+    if (!isHandlingPopState && window.history.state && window.history.state.isDetailOpen === true) {
+      isHandlingPopState = true;
+      history.back();
+      setTimeout(() => { isHandlingPopState = false; }, 100);
+    }
+  }
+
+  async function showOrderDetail(orderId) {
+    const overlay = document.getElementById('detailOverlay');
+    if (overlay.classList.contains('active')) return;
+    
+    const state = { isDetailOpen: true, orderId: orderId };
+    history.pushState(state, '', window.location.href);
+    
+    const body = document.getElementById('detailBody');
+    overlay.classList.add('active');
+    body.innerHTML = '<div class="loading"><div class="spinner"></div><p>Memuat detail...</p></div>';
+
+    try {
+      const orderSnap = await database.ref('orders/' + orderId).once('value');
+      const order = orderSnap.val();
+      if (!order) throw new Error('Order tidak ditemukan');
+
+      // Simpan ke localStorage untuk struk
+      const details = calculateEarningsDetails(order.price || 0, order.fee_percent, order.tax_percent);
+      const orderForStorage = {
+        id: orderId,
+        customer_name: order.customer_name,
+        customer_photo: order.photoURL,
+        pickup_address: order.pickup_address,
+        destination_address: order.destination_address,
+        price: order.price,
+        distance_meters: order.distance_meters,
+        duration_seconds: order.duration_seconds,
+        status: order.status,
+        transport_type: order.transport_type,
+        created_at: order.created_at,
+        completed_at: order.completed_at,
+        fee_percent: order.fee_percent || feePersen,
+        tax_percent: order.tax_percent || pajakPersen,
+        net_earnings: details.net,
+        fee_amount: details.fee,
+        tax_amount: details.tax,
+        total_deduction: details.totalPotongan
+      };
+      localStorage.setItem('jego_driver_last_order_detail', JSON.stringify(orderForStorage));
+
+      const price = order.price || 0;
+      const durasi = order.duration_seconds ? `${Math.round(order.duration_seconds/60)} menit` : '-';
+      const jarak = order.distance_meters ? (order.distance_meters/1000).toFixed(1) + ' km' : '-';
+
+      let ratingHtml = '<span>⭐ Belum dinilai</span>';
+      try {
+        const ratingSnap = await database.ref(`ratings/${orderId}/customer_rating`).once('value');
+        const ratingData = ratingSnap.val();
+        if (ratingData && ratingData.rating) {
+          const stars = '★'.repeat(ratingData.rating) + '☆'.repeat(5 - ratingData.rating);
+          ratingHtml = `<span class="stars">${stars}</span> ${ratingData.rating} bintang`;
+        }
+      } catch(e) {}
+
+      let offerTime = '-';
+      if (order.driver_offers && driverId && order.driver_offers[driverId]) {
+        offerTime = order.driver_offers[driverId].offered_at || order.driver_offers[driverId].accepted_at;
+      }
+
+      body.innerHTML = `
+        <div class="detail-card" style="padding:0; overflow:hidden;">
+          <div id="detailMap" class="map-detail" style="height:220px; width:100%;"></div>
+        </div>
+        <div class="detail-card">
+          <div class="customer-profile-detail">
+            <img class="customer-avatar" src="${order.photoURL || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'}">
+            <div>
+              <div class="customer-name-detail">${escapeHtml(order.customer_name || 'Customer')}</div>
+              <div class="driver-rating" style="margin-top:4px;">${ratingHtml}</div>
+            </div>
+          </div>
+          <div class="route-detail">
+            <div class="point"><div class="marker">A</div><div>${escapeHtml(order.pickup_address || '-')}</div></div>
+            <div class="point"><div class="marker b">B</div><div>${escapeHtml(order.destination_address || '-')}</div></div>
+          </div>
+          <div class="info-grid">
+            <div class="info-item"><div class="info-label">Durasi</div><div class="info-value">${durasi}</div></div>
+            <div class="info-item"><div class="info-label">Jarak</div><div class="info-value">${jarak}</div></div>
+            <div class="info-item"><div class="info-label">Harga</div><div class="info-value" style="color:var(--success);">${formatRupiah(price)}</div></div>
+            <div class="info-item"><div class="info-label">Status</div><div class="info-value">${order.status === 'completed' ? '✅ Selesai' : '❌ Dibatalkan'}</div></div>
+          </div>
+          <div class="breakdown-box">
+            <div class="break-row"><span>💰 Pendapatan Bersih Driver</span><strong>${formatRupiah(details.net)}</strong></div>
+            <div class="break-row"><span>📉 Fee aplikasi (${details.feePercent}%)</span><span>${formatRupiah(details.fee)}</span></div>
+            <div class="break-row"><span>📊 PPN ${details.taxPercent}% dari fee</span><span>${formatRupiah(details.tax)}</span></div>
+            <div class="break-row"><span>📋 Total potongan</span><span>${formatRupiah(details.totalPotongan)}</span></div>
+            <div class="break-row" style="border-top:1px solid var(--border); margin-top:8px; padding-top:8px;"><span>💵 Total dibayar customer</span><strong>${formatRupiah(price)}</strong></div>
+          </div>
+          <div class="timeline-detail">
+            <div class="timeline-item"><div class="timeline-time">${formatDateTime(order.created_at)}</div><div class="timeline-desc">Order dibuat</div></div>
+            <div class="timeline-item"><div class="timeline-time">${formatDateTime(offerTime)}</div><div class="timeline-desc">Penawaran diterima</div></div>
+            <div class="timeline-item"><div class="timeline-time">${formatDateTime(order.trip_started_at)}</div><div class="timeline-desc">Perjalanan dimulai</div></div>
+            <div class="timeline-item"><div class="timeline-time">${formatDateTime(order.arrived_at)}</div><div class="timeline-desc">Tiba di tujuan</div></div>
+            <div class="timeline-item"><div class="timeline-time">${formatDateTime(order.completed_at || order.updated_at)}</div><div class="timeline-desc">Selesai</div></div>
+          </div>
+        </div>
+      `;
+
+      setTimeout(() => {
+        if (currentDetailMap) currentDetailMap.remove();
+        const mapContainer = document.getElementById('detailMap');
+        if (mapContainer && order.pickup_lat && order.pickup_lng && order.dest_lat && order.dest_lng) {
+          currentDetailMap = L.map(mapContainer).setView([order.pickup_lat, order.pickup_lng], 13);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
+            maxZoom: 19
+          }).addTo(currentDetailMap);
+          L.marker([order.pickup_lat, order.pickup_lng]).bindPopup('📍 Penjemputan').addTo(currentDetailMap);
+          L.marker([order.dest_lat, order.dest_lng]).bindPopup('🏁 Tujuan').addTo(currentDetailMap);
+          const bounds = L.latLngBounds([[order.pickup_lat, order.pickup_lng], [order.dest_lat, order.dest_lng]]);
+          currentDetailMap.fitBounds(bounds, { padding: [50,50] });
+        } else if (mapContainer) {
+          mapContainer.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-secondary);">🗺️ Lokasi tidak tersedia</div>';
+        }
+      }, 150);
+    } catch(err) {
+      body.innerHTML = `<div class="empty-state">⚠️ Gagal memuat detail: ${err.message}</div>`;
+    }
+  }
+
+  function handlePopState(event) {
+    if (isHandlingPopState) return;
+    const overlay = document.getElementById('detailOverlay');
+    if (overlay.classList.contains('active')) {
+      isHandlingPopState = true;
+      if (currentDetailMap) {
+        currentDetailMap.remove();
+        currentDetailMap = null;
+      }
+      overlay.classList.remove('active');
+      setTimeout(() => { isHandlingPopState = false; }, 100);
+    }
+  }
+
+  function createOrderCard(order) {
+    const div = document.createElement('div');
+    div.className = 'order-item';
+    const isKurir = (order.transport_type || '').includes('kurir');
+    const distanceKm = order.distance_meters ? (order.distance_meters/1000).toFixed(1) : '-';
+    const durasi = order.duration_seconds ? `${Math.round(order.duration_seconds/60)} mnt` : '-';
+    const statusText = order.status === 'completed' ? 'Selesai' : 'Dibatalkan';
+    const statusClass = order.status === 'completed' ? 'status-completed' : 'status-cancelled';
+    div.innerHTML = `
+      <div class="order-header">
+        <div class="customer-name">${escapeHtml(order.customer_name || 'Customer')} ${isKurir ? '<span class="kurir-badge">📦 KURIR</span>' : ''}</div>
+        <span class="status-badge ${statusClass}">${statusText}</span>
+      </div>
+      <div class="route-info">
+        <div class="route-point"><div class="point-marker point-marker-a">A</div><div class="point-address">${escapeHtml(order.pickup_address || '-')}</div></div>
+        <div class="route-point"><div class="point-marker point-marker-b">B</div><div class="point-address">${escapeHtml(order.destination_address || '-')}</div></div>
+      </div>
+      <div class="order-details">
+        <div class="detail-item"><span class="detail-value">${durasi}</span><div class="detail-label">Durasi</div></div>
+        <div class="detail-item"><span class="detail-value">${distanceKm} km</span><div class="detail-label">Jarak</div></div>
+        <div class="detail-item"><span class="detail-value price-highlight">${formatRupiah(order.price || 0)}</span><div class="detail-label">Harga</div></div>
+      </div>
+      <div class="order-meta"><span>${formatTime(order.completed_at || order.created_at)}</span><span>${order.transport_type || '-'}</span></div>
+    `;
+    div.addEventListener('click', () => showOrderDetail(order.id));
+    return div;
+  }
+
+  async function loadHistoryData() {
+    if (!checkDriverData()) {
+      document.getElementById('ordersList').innerHTML = `<div class="login-required"><h3>🔐 Login Diperlukan</h3><button class="login-btn" style="background:var(--primary);border:none;padding:12px 24px;border-radius:40px;color:white;font-weight:bold;margin-top:12px;cursor:pointer;" onclick="window.location.href='loginDriver.html'">Login Driver</button></div>`;
+      return;
+    }
+    await loadFeeSettings();
+    const ordersListDiv = document.getElementById('ordersList');
+    ordersListDiv.innerHTML = `<div class="loading"><div class="spinner"></div><p>Memuat data...</p></div>`;
+
+    try {
+      const snapshot = await database.ref('orders').once('value');
+      const all = snapshot.val();
+      let orders = [];
+      if (all) {
+        Object.entries(all).forEach(([id, order]) => {
+          if (order.driver_id === driverId && (order.status === 'completed' || order.status === 'cancelled')) {
+            orders.push({ id, ...order });
+          }
+        });
+      }
+      let filtered = [...orders];
+      if (currentFilter === 'completed') filtered = filtered.filter(o => o.status === 'completed');
+      else if (currentFilter === 'cancelled') filtered = filtered.filter(o => o.status === 'cancelled');
+      else if (currentFilter === 'this_week') filtered = filtered.filter(o => isThisWeek(new Date(o.completed_at || o.created_at)));
+      else if (currentFilter === 'this_month') filtered = filtered.filter(o => isThisMonth(new Date(o.completed_at || o.created_at)));
+
+      filtered.sort((a,b) => new Date(b.completed_at || b.created_at) - new Date(a.completed_at || a.created_at));
+
+      if (filtered.length === 0) {
+        ordersListDiv.innerHTML = '<div class="empty-state">📭 Tidak ada order sesuai filter</div>';
+        return;
+      }
+
+      const grouped = {};
+      filtered.forEach(order => {
+        const key = formatDateKey(order.completed_at || order.created_at);
+        if (!grouped[key]) grouped[key] = [];
+        grouped[key].push(order);
+      });
+      const sortedDates = Object.keys(grouped).sort((a,b) => {
+        const [dA, mA, yA] = a.split('/'); const [dB, mB, yB] = b.split('/');
+        return new Date(`${yA}-${mA}-${dA}`) - new Date(`${yB}-${mB}-${dB}`);
+      }).reverse();
+
+      ordersListDiv.innerHTML = '';
+      sortedDates.forEach(date => {
+        const header = document.createElement('div');
+        header.className = 'date-header';
+        header.innerHTML = `<span>📅 ${date}</span><span>${grouped[date].length} order</span>`;
+        ordersListDiv.appendChild(header);
+        grouped[date].forEach(order => ordersListDiv.appendChild(createOrderCard(order)));
+      });
+    } catch(err) {
+      console.error(err);
+      ordersListDiv.innerHTML = '<div class="empty-state">⚠️ Gagal memuat data. Coba lagi nanti.</div>';
+    }
+  }
+
+  function changeFilter(filter) {
+    currentFilter = filter;
+    document.querySelectorAll('.filter-option').forEach(opt => {
+      if (opt.dataset.filter === filter) opt.classList.add('active');
+      else opt.classList.remove('active');
+    });
+    loadHistoryData();
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const closeBtn = document.getElementById('closeDetailBtn');
+    if (closeBtn) closeBtn.addEventListener('click', (e) => { e.preventDefault(); closeDetail(); });
+    const overlay = document.getElementById('detailOverlay');
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) closeDetail(); });
+    window.addEventListener('popstate', handlePopState);
+    document.querySelectorAll('.filter-option').forEach(opt => {
+      opt.addEventListener('click', () => changeFilter(opt.dataset.filter));
+    });
+    loadHistoryData();
+  });
+</script>
+</body>
+</html>
