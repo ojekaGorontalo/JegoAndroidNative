@@ -1196,6 +1196,10 @@ const STORAGE_TRACKING = 'jego_location_tracking';
 const STORAGE_AUTOBID = 'jego_autobid_enabled';
 const STORAGE_ACCEPT_KURIR = 'jego_accept_kurir';
 
+function isAndroidAvailable() {
+  return typeof Android !== 'undefined' && Android !== null;
+}
+
 function loadStoredSettings() {
   locationTrackingEnabled = localStorage.getItem(STORAGE_TRACKING) === 'true';
   updateTrackingButton();
@@ -2272,21 +2276,23 @@ function toggleLocationTracking() {
   locationTrackingEnabled = !locationTrackingEnabled;
   localStorage.setItem(STORAGE_TRACKING, locationTrackingEnabled);
   updateTrackingButton();
-  
-  if (locationTrackingEnabled && driverLocation.latitude) {
-  // Reset lastSent agar posisi saat ini langsung dikirim
-  lastSentLat = null;
-  lastSentLng = null;
-  // Panggil updateDriverLocation dengan posisi terakhir
-  updateDriverLocation({ coords: { latitude: driverLocation.latitude, longitude: driverLocation.longitude } });
-}
+
+  // 🆕 Mulai/hentikan service Android
+  if (isAndroidAvailable()) {
+    if (locationTrackingEnabled) {
+      Android.startDriverTracking();
+      console.log('📍 Service tracking dimulai dari tombol');
+    } else {
+      Android.stopDriverTracking();
+      console.log('⏹️ Service tracking dihentikan dari tombol');
+    }
+  }
 
   if (globalCurrentUid) {
     database.ref('drivers/' + globalCurrentUid).update({
       tracking_enabled: locationTrackingEnabled,
       last_update: new Date().toISOString()
     }).catch(console.error);
-    
     database.ref(`driver_locations/${globalCurrentUid}`).update({
       tracking_enabled: locationTrackingEnabled,
       last_update: new Date().toISOString()
@@ -2565,42 +2571,47 @@ if (modePenumpangBtn) {
     const konfirmasi = confirm('Beralih ke mode penumpang akan mengeluarkan Anda dari akun driver. Lanjutkan?');
     if (konfirmasi) {
       try {
+        // 🆕 Hentikan service tracking sebelum beralih ke customer
+        if (typeof Android !== 'undefined' && Android !== null) {
+          Android.stopDriverTracking();
+          console.log('⏹️ Service tracking dihentikan saat beralih ke mode penumpang');
+        }
+
         const uid = globalCurrentUid;
         if (!uid) throw new Error('UID driver tidak ditemukan.');
 
         // Ambil data driver dan auth
-const driverSnap = await database.ref(`drivers/${uid}`).once('value');
-const driverData = driverSnap.val();
-const emailFromAuth = auth.currentUser?.email || '';
-const phoneFromAuth = auth.currentUser?.phoneNumber || '';
+        const driverSnap = await database.ref(`drivers/${uid}`).once('value');
+        const driverData = driverSnap.val();
+        const emailFromAuth = auth.currentUser?.email || '';
+        const phoneFromAuth = auth.currentUser?.phoneNumber || '';
 
-// Baca data customer yang sudah ada (jika ada)
-const customerSnap = await database.ref(`users/${uid}`).once('value');
-const existingCustomer = customerSnap.val() || {};
+        // Baca data customer yang sudah ada (jika ada)
+        const customerSnap = await database.ref(`users/${uid}`).once('value');
+        const existingCustomer = customerSnap.val() || {};
 
-// Gabungkan: prioritas data yang sudah ada, fallback ke driver/auth
-const customerData = {
-    name: existingCustomer.name || driverData.name || '',
-    email: existingCustomer.email || driverData.email || emailFromAuth,
-    phone: existingCustomer.phone || driverData.phone || phoneFromAuth,
-    address: existingCustomer.address || driverData.address || '',
-    gender: existingCustomer.gender || driverData.gender || '',
-    uid: uid,
-    status: existingCustomer.status || 'active',
-    photoURL: existingCustomer.photoURL || driverData.photoURL || '',
-    rating: existingCustomer.rating || driverData.rating || 5,
-    perjalanan: existingCustomer.perjalanan || driverData.perjalanan || 0,
-    createdAt: existingCustomer.createdAt || new Date().toISOString(),
-    isDriverConverted: true
-};
+        // Gabungkan: prioritas data yang sudah ada, fallback ke driver/auth
+        const customerData = {
+          name: existingCustomer.name || driverData.name || '',
+          email: existingCustomer.email || driverData.email || emailFromAuth,
+          phone: existingCustomer.phone || driverData.phone || phoneFromAuth,
+          address: existingCustomer.address || driverData.address || '',
+          gender: existingCustomer.gender || driverData.gender || '',
+          uid: uid,
+          status: existingCustomer.status || 'active',
+          photoURL: existingCustomer.photoURL || driverData.photoURL || '',
+          rating: existingCustomer.rating || driverData.rating || 5,
+          perjalanan: existingCustomer.perjalanan || driverData.perjalanan || 0,
+          createdAt: existingCustomer.createdAt || new Date().toISOString(),
+          isDriverConverted: true
+        };
 
-// Tulis ulang (overwrite) dengan data tergabung
-await database.ref(`users/${uid}`).update(customerData);
+        // Tulis ulang (overwrite) dengan data tergabung
+        await database.ref(`users/${uid}`).update(customerData);
 
-// Ambil data terbaru untuk session
-const finalCustomerSnap = await database.ref(`users/${uid}`).once('value');
-const finalCustomerData = finalCustomerSnap.val();
-        
+        // Ambil data terbaru untuk session
+        const finalCustomerSnap = await database.ref(`users/${uid}`).once('value');
+        const finalCustomerData = finalCustomerSnap.val();
 
         const sessionCustomer = {
           userId: uid,
@@ -2617,7 +2628,6 @@ const finalCustomerData = finalCustomerSnap.val();
         };
         localStorage.setItem('jego_logged_in_user', JSON.stringify(sessionCustomer));
 
-        
         localStorage.removeItem('jego_logged_in_driver');
         localStorage.removeItem('autobid_offered_orders');
 
@@ -2660,22 +2670,27 @@ window.addEventListener('click', (e) => {
     await fetchMapboxToken().catch(()=>console.warn('Mapbox token tidak tersedia'));
     loadStoredSettings();
     if (globalCurrentUid) {
-      database.ref('drivers/' + globalCurrentUid).once('value').then(snap => {
-        const data = snap.val();
-        if (data) {
-          if (data.tracking_enabled !== undefined) {
-            locationTrackingEnabled = data.tracking_enabled;
-            localStorage.setItem(STORAGE_TRACKING, locationTrackingEnabled);
-            updateTrackingButton();
-          }
-          if (data.autobid_enabled !== undefined) {
-            autobidEnabled = data.autobid_enabled;
-            localStorage.setItem(STORAGE_AUTOBID, autobidEnabled);
-            updateAutobidButton();
-          }
+  database.ref('drivers/' + globalCurrentUid).once('value').then(snap => {
+    const data = snap.val();
+    if (data) {
+      if (data.tracking_enabled !== undefined) {
+        locationTrackingEnabled = data.tracking_enabled;
+        localStorage.setItem(STORAGE_TRACKING, locationTrackingEnabled);
+        updateTrackingButton();
+        // 🆕 Aktifkan service jika tracking ON
+        if (locationTrackingEnabled && isAndroidAvailable()) {
+          Android.startDriverTracking();
+          console.log('📍 Service tracking dimulai otomatis saat login');
         }
-      }).catch(console.error);
+      }
+      if (data.autobid_enabled !== undefined) {
+        autobidEnabled = data.autobid_enabled;
+        localStorage.setItem(STORAGE_AUTOBID, autobidEnabled);
+        updateAutobidButton();
+      }
     }
+  }).catch(console.error);
+}
     loadOrders();
     setTimeout(startGPSMonitoring, 1000);
     await checkPlayerIdAndPrompt();
