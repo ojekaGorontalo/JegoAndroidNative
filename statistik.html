@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Statistik - JeGo Driver</title>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* ===== RESET & VARIABLES ===== */
+        * { margin:0; padding:0; box-sizing:border-box; }
+        :root {
+            --primary: #FF9800;
+            --primary-dark: #E65100;
+            --background: #F8F9FA;
+            --surface: #FFFFFF;
+            --text-primary: #212121;
+            --text-secondary: #6c757d;
+            --border-light: #e9ecef;
+            --card-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            --success: #4CAF50;
+            --warning: #FFC107;
+            --danger: #f44336;
+        }
+        body.dark-mode {
+            --primary: #FFB74D;
+            --primary-dark: #FF9800;
+            --background: #121212;
+            --surface: #1E1E1E;
+            --text-primary: #E0E0E0;
+            --text-secondary: #B0B0B0;
+            --border-light: #333333;
+            --card-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        body {
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            background: var(--background);
+            color: var(--text-primary);
+            transition: background 0.2s, color 0.2s;
+            padding-bottom: 80px;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .app-bar {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .app-bar h1 { font-size:1.4rem; font-weight:600; display:flex; align-items:center; gap:8px; }
+        .settings-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            width: 44px; height:44px;
+            border-radius:30px;
+            color:white;
+            font-size:1.3rem;
+            cursor:pointer;
+            transition:0.2s;
+        }
+        .settings-btn:hover { background:rgba(255,255,255,0.4); }
+        .container { width:100%; padding:0; margin:0; }
+        .stats-card {
+            background: var(--surface);
+            padding:20px;
+            margin-bottom:12px;
+            box-shadow: var(--card-shadow);
+            border:1px solid var(--border-light);
+            border-left:none;
+            border-right:none;
+            transition: all 0.3s ease;
+        }
+        .rating-card { cursor:pointer; }
+        .rating-card:active { transform:scale(0.99); }
+        .clickable-card {
+            cursor:pointer;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+        }
+        .clickable-card:active { transform:scale(0.99); }
+        .priority-area {
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:16px;
+            padding-bottom:12px;
+            border-bottom:1px solid var(--border-light);
+        }
+        .priority-label { display:flex; align-items:center; gap:12px; text-align:left; }
+        .priority-icon { font-size:2rem; width:48px; text-align:center; }
+        .priority-text { flex:1; }
+        .priority-sub { font-size:0.7rem; color:var(--text-secondary); letter-spacing:0.5px; }
+        .priority-name {
+            font-size:1.5rem;
+            font-weight:800;
+            color:var(--primary);
+            line-height:1.2;
+        }
+        .priority-name.essential {
+            font-size:2rem;
+            color:#ff1a1a;
+            text-transform:uppercase;
+            text-shadow:0 0 5px #ff0000,0 0 15px #ff0000,0 0 30px #ff1a1a,0 0 60px #b30000,0 0 90px #ff0000;
+            animation:flame 0.8s infinite alternate;
+            display:inline-block;
+            position:relative;
+        }
+        @keyframes flame {
+            0% { transform:scale(1); filter:brightness(1); text-shadow:0 0 5px #ff0000,0 0 15px #ff1a1a,0 0 30px #ff0000,0 0 50px #8b0000; }
+            100% { transform:scale(1.08); filter:brightness(1.4); text-shadow:0 0 10px #ff0000,0 0 25px #ff1a1a,0 0 50px #ff0000,0 0 80px #ff0000; }
+        }
+        .priority-name.essential::after {
+            content:"";
+            position:absolute;
+            left:50%;
+            bottom:-15px;
+            transform:translateX(-50%);
+            width:120%;
+            height:120%;
+            background:radial-gradient(circle, rgba(255,0,0,0.6), transparent 70%);
+            filter:blur(12px);
+            opacity:0.7;
+            animation:flicker 0.2s infinite alternate;
+            z-index:-1;
+            pointer-events:none;
+        }
+        @keyframes flicker { 0%{opacity:0.3;} 100%{opacity:0.8;} }
+        .priority-info-icon {
+            font-size:1.3rem;
+            color:var(--text-secondary);
+            cursor:pointer;
+            padding:8px;
+            border-radius:30px;
+            transition:0.2s;
+        }
+        .priority-info-icon:hover { background:rgba(0,0,0,0.05); color:var(--primary); }
+        .stats-title { font-size:0.85rem; text-transform:uppercase; color:var(--text-secondary); letter-spacing:0.5px; margin-bottom:12px; }
+        .stats-value { font-size:2rem; font-weight:800; color:var(--primary); line-height:1.2; }
+        .stats-sub { font-size:0.8rem; color:var(--text-secondary); margin-top:4px; }
+        .rating-stars { display:flex; gap:4px; margin-top:8px; }
+        .star { font-size:1.2rem; color:#e0e0e0; }
+        .star.active { color:#FFB300; }
+        .arrow-right { font-size:1.5rem; color:var(--text-secondary); margin-left:12px; }
+        .balance-row { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; }
+        .balance-left { flex:1; }
+        .btn-topup {
+            background:var(--primary);
+            border:none;
+            padding:10px 20px;
+            border-radius:40px;
+            color:white;
+            font-weight:600;
+            cursor:pointer;
+            transition:0.2s;
+            display:flex;
+            align-items:center;
+            gap:8px;
+        }
+        .btn-topup:hover { background:var(--primary-dark); transform:translateY(-2px); }
+        .bottom-nav {
+            position:fixed;
+            bottom:0;
+            left:0;
+            width:100%;
+            background:var(--surface);
+            display:flex;
+            justify-content:space-around;
+            align-items:center;
+            padding:10px 16px 20px;
+            box-shadow:0 -2px 10px rgba(0,0,0,0.05);
+            border-top:1px solid var(--border-light);
+            z-index:100;
+        }
+        .bottom-nav-item {
+            flex:1;
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            gap:4px;
+            text-decoration:none;
+            color:var(--text-secondary);
+            font-size:0.7rem;
+            font-weight:500;
+            transition:0.2s;
+            padding:6px 0;
+            border-radius:30px;
+        }
+        .bottom-nav-item i { font-size:1.4rem; }
+        .bottom-nav-item.active { color:var(--primary); }
+        .bottom-nav-item span { font-size:0.85rem; font-weight:700; }
+        .modal-settings {
+            display:none;
+            position:fixed;
+            top:0; left:0; width:100%; height:100%;
+            background:rgba(0,0,0,0.8);
+            z-index:200;
+            align-items:center;
+            justify-content:center;
+        }
+        .modal-settings.active { display:flex; }
+        .modal-content-full {
+            background:var(--surface);
+            width:90%;
+            max-width:400px;
+            border-radius:32px;
+            padding:24px;
+            box-shadow:0 20px 40px rgba(0,0,0,0.3);
+        }
+        .modal-header {
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:24px;
+            padding-bottom:12px;
+            border-bottom:1px solid var(--border-light);
+        }
+        .modal-header h3 { font-size:1.3rem; color:var(--primary); }
+        .close-modal { background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--text-secondary); }
+        .setting-item {
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            padding:14px 0;
+            border-bottom:1px solid var(--border-light);
+        }
+        .setting-label { font-weight:500; }
+        .toggle-switch {
+            position:relative;
+            display:inline-block;
+            width:50px;
+            height:24px;
+        }
+        .toggle-switch input { opacity:0; width:0; height:0; }
+        .toggle-slider {
+            position:absolute;
+            cursor:pointer;
+            top:0; left:0; right:0; bottom:0;
+            background:#ccc;
+            transition:.4s;
+            border-radius:24px;
+        }
+        .toggle-slider:before {
+            position:absolute;
+            content:"";
+            height:18px;
+            width:18px;
+            left:3px;
+            bottom:3px;
+            background:white;
+            transition:.4s;
+            border-radius:50%;
+        }
+        input:checked + .toggle-slider { background-color:var(--primary); }
+        input:checked + .toggle-slider:before { transform:translateX(26px); }
+        .mode-group { display:flex; gap:16px; align-items:center; }
+        .mode-group label { display:flex; align-items:center; gap:6px; cursor:pointer; }
+        .mode-group input { margin:0; }
+        .spinner {
+            width:40px;
+            height:40px;
+            border:4px solid rgba(0,0,0,0.1);
+            border-radius:50%;
+            border-top-color:var(--primary);
+            animation:spin 1s ease-in-out infinite;
+            margin:0 auto 12px;
+        }
+        @keyframes spin { to { transform:rotate(360deg); } }
+        .loading-container { text-align:center; padding:60px 20px; }
+        /* Notifikasi order */
+        .order-notif-card {
+            position:fixed;
+            bottom:90px;
+            right:16px;
+            width:320px;
+            max-width:calc(100% - 32px);
+            background:var(--surface);
+            border-radius:20px;
+            box-shadow:0 8px 24px rgba(0,0,0,0.2);
+            z-index:1000;
+            overflow:hidden;
+            border-left:5px solid var(--primary);
+            animation:slideInRight 0.3s ease;
+        }
+        @keyframes slideInRight { from { transform:translateX(120%); opacity:0; } to { transform:translateX(0); opacity:1; } }
+        .notif-header {
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            background:var(--primary);
+            padding:10px 12px;
+            color:white;
+            font-weight:bold;
+        }
+        .notif-body { padding:12px; }
+        .notif-customer { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+        .notif-customer img { width:40px; height:40px; border-radius:50%; object-fit:cover; border:2px solid var(--primary); }
+        .notif-info { flex:1; }
+        .notif-info h4 { margin:0; font-size:0.95rem; }
+        .notif-info small { font-size:0.7rem; color:var(--text-secondary); }
+        .notif-detail { font-size:0.8rem; margin-bottom:12px; padding:8px; background:var(--border-light); border-radius:12px; }
+        .notif-detail p { margin:4px 0; }
+        .notif-progress { margin:10px 0; }
+        .progress-bar-custom { width:100%; height:6px; background:#e0e0e0; border-radius:10px; overflow:hidden; }
+        .progress-fill { width:100%; height:100%; background:linear-gradient(to right, var(--primary), var(--primary-dark)); transition:width 0.3s linear; }
+        .countdown-text { font-size:0.7rem; text-align:center; margin-top:4px; color:var(--text-secondary); }
+        .notif-actions { display:flex; gap:8px; margin-top:10px; }
+        .notif-actions button {
+            flex:1;
+            padding:8px;
+            border:none;
+            border-radius:30px;
+            font-weight:bold;
+            cursor:pointer;
+            background:var(--primary);
+            color:white;
+        }
+        .notif-actions button:disabled { background:#ccc; cursor:not-allowed; }
+        .notif-close { background:none; border:none; color:white; font-size:1.2rem; cursor:pointer; }
+        .toast-notification {
+            position:fixed;
+            bottom:70px;
+            left:50%;
+            transform:translateX(-50%);
+            background-color:#333;
+            color:white;
+            padding:10px 20px;
+            border-radius:30px;
+            font-size:0.8rem;
+            z-index:2000;
+            white-space:nowrap;
+            box-shadow:0 2px 10px rgba(0,0,0,0.2);
+            animation:fadeInOut 2.5s ease forwards;
+        }
+        .toast-notification.warning { background-color:#f44336; }
+        .toast-notification.success { background-color:#4CAF50; }
+        .toast-notification.info { background-color:#FF9800; }
+        @keyframes fadeInOut {
+            0% { opacity:0; transform:translateX(-50%) translateY(20px); }
+            15% { opacity:1; transform:translateX(-50%) translateY(0); }
+            85% { opacity:1; transform:translateX(-50%) translateY(0); }
+            100% { opacity:0; transform:translateX(-50%) translateY(20px); }
+        }
+        @media (max-width:500px) {
+            .priority-name { font-size:1.2rem; }
+            .priority-name.essential { font-size:1.5rem; }
+            .priority-icon { font-size:1.5rem; width:36px; }
+            .stats-value { font-size:1.6rem; }
+            .order-notif-card { width:calc(100% - 32px); left:16px; right:16px; bottom:80px; }
+        }
+        .web-app-badge {
+            position:fixed;
+            bottom:5px;
+            left:5px;
+            font-size:9px;
+            color:rgba(0,0,0,0.3);
+            background:transparent;
+            z-index:9999;
+            pointer-events:none;
+        }
+        body.dark-mode .web-app-badge { color:rgba(255,255,255,0.3); }
+    </style>
+</head>
+<body>
+<script>
+  (function(){
+    try {
+      const theme = localStorage.getItem('jego_driver_theme');
+      if (theme === 'dark') document.body.classList.add('dark-mode');
+    } catch(e) {}
+  })();
+</script>
+
+<div class="app-bar">
+    <h1><i class="fas fa-chart-line"></i> Statistik</h1>
+    <button class="settings-btn" id="settingsBtn"><i class="fas fa-cog"></i></button>
+</div>
+
+<div class="container" id="mainContent">
+    <div class="stats-card loading-container">
+        <div class="spinner"></div>
+        <p>Memuat data statistik...</p>
+    </div>
+</div>
+
+<div class="bottom-nav">
+    <a href="index.html" class="bottom-nav-item" id="navHome">
+        <i class="fas fa-car"></i>
+        <span>Permintaan</span>
+    </a>
+    <a href="statistik.html" class="bottom-nav-item active" id="navStats">
+        <i class="fas fa-chart-line"></i>
+        <span>Statistik</span>
+    </a>
+</div>
+
+<!-- Modal Settings -->
+<div id="settingsModal" class="modal-settings">
+    <div class="modal-content-full">
+        <div class="modal-header">
+            <h3><i class="fas fa-sliders-h"></i> Pengaturan</h3>
+            <button class="close-modal" id="closeModalBtn">&times;</button>
+        </div>
+        <div class="setting-item">
+            <span class="setting-label"><i class="fas fa-volume-up"></i> Suara permintaan</span>
+            <label class="toggle-switch"><input type="checkbox" id="tripSoundToggle"><span class="toggle-slider"></span></label>
+        </div>
+        <div class="setting-item">
+            <span class="setting-label"><i class="fas fa-link"></i> Rantai permintaan</span>
+            <label class="toggle-switch"><input type="checkbox" id="requestChainToggle"><span class="toggle-slider"></span></label>
+        </div>
+        <div class="setting-item">
+            <span class="setting-label"><i class="fas fa-keyboard"></i> Tombol pintasan</span>
+            <label class="toggle-switch"><input type="checkbox" id="shortcutToggle"><span class="toggle-slider"></span></label>
+        </div>
+        <div class="setting-item">
+            <span class="setting-label"><i class="fas fa-moon"></i> Mode gelap</span>
+            <div class="mode-group">
+                <label><input type="radio" name="darkMode" value="light"> Terang</label>
+                <label><input type="radio" name="darkMode" value="dark"> Gelap</label>
+            </div>
+        </div>
+        <div style="margin-top:20px; text-align:center; font-size:0.7rem; color:var(--text-secondary);">
+            Perubahan akan langsung diterapkan
+        </div>
+    </div>
+</div>
+
+<script>
+// ================================================================
+// KONFIGURASI FIREBASE
+// ================================================================
+const firebaseConfig = {
+    apiKey: "AIzaSyCD0pgeZio-LdKqYDtWxcdXcZwyL4ngYQI",
+    authDomain: "jego-35a2b.firebaseapp.com",
+    databaseURL: "https://jego-35a2b-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "jego-35a2b",
+    storageBucket: "jego-35a2b.firebasestorage.app",
+    messagingSenderId: "600037007040",
+    appId: "1:600037007040:web:ac3243ad9b472647ffd725"
+};
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.database();
+
+// ================================================================
+// VARIABEL GLOBAL
+// ================================================================
+let currentDriverUid = null;
+let driverDataCache = null;           // untuk caching data driver
+let feePersen = 0, pajakPersen = 0;
+let feeCacheTime = 0;
+const FEE_CACHE_TTL = 60000; // 1 menit
+
+// Untuk notifikasi & auto-bid
+let lastNotifiedOrderIds = new Set();
+let isWaitingConfirmation = false;
+let driverLocation = { lat: null, lng: null };
+let autobidEnabled = false;
+const STORAGE_AUTOBID = 'jego_autobid_enabled';
+let countdownInterval = null;
+let currentOrderId = null;
+let ordersListenerRef = null;         // untuk melepas listener child_added
+let driverBalanceListener = null;
+let driverRatingListener = null;
+let driverOrdersListener = null;
+
+// Throttle GPS
+let gpsWatchId = null;
+let lastGpsUpdate = 0;
+const GPS_THROTTLE_MS = 5000; // update setiap 5 detik
+
+// ================================================================
+// FUNGSI UTILITY
+// ================================================================
+function formatRupiah(amount) {
+    return 'Rp ' + (parseInt(amount) || 0).toLocaleString('id-ID');
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m]));
+}
+
+function calculateDistance(lat1, lon1, lat2, lon2) {
+    if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) * Math.sin(dLon/2)**2;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+}
+
+function isVehicleTypeMatch(driverType, orderType) {
+    if (!driverType || !orderType) return false;
+    driverType = driverType.toLowerCase();
+    orderType = orderType.toLowerCase();
+    if (driverType === orderType) return true;
+    if (orderType.includes('kurir')) {
+        if (driverType === 'motor' && orderType === 'kurir_motor') return true;
+        if (driverType === 'bentor' && orderType === 'kurir_bentor') return true;
+    }
+    return false;
+}
+
+function showToast(msg, type = 'info') {
+    const existing = document.querySelector('.toast-notification');
+    if (existing) existing.remove();
+    const toast = document.createElement('div');
+    toast.className = `toast-notification ${type}`;
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 2500);
+}
+
+// ================================================================
+// CACHE POTONGAN (FEE & PAJAK) - Hanya baca sekali setiap 1 menit
+// ================================================================
+async function getFeeSettings() {
+    const now = Date.now();
+    if (feeCacheTime && (now - feeCacheTime) < FEE_CACHE_TTL) {
+        return { feePersen, pajakPersen };
+    }
+    try {
+        const [potonganSnap, pajakSnap] = await Promise.all([
+            db.ref('data-jego/potongan').once('value'),
+            db.ref('data-jego/pajak').once('value')
+        ]);
+        feePersen = parseFloat(potonganSnap.val()) || 0;
+        pajakPersen = parseFloat(pajakSnap.val()) || 0;
+        feeCacheTime = now;
+    } catch(e) { console.warn('Gagal ambil potongan:', e); }
+    return { feePersen, pajakPersen };
+}
+
+async function hitungPotongan(harga) {
+    await getFeeSettings();
+    const potonganRupiah = harga * (feePersen / 100);
+    const pajakRupiah = potonganRupiah * (pajakPersen / 100);
+    return { total: potonganRupiah + pajakRupiah, feePersen, pajakPersen };
+}
+
+// ================================================================
+// AMBIL DATA DRIVER DENGAN CACHE
+// ================================================================
+async function getDriverData(uid) {
+    if (driverDataCache) return driverDataCache;
+    const snap = await db.ref(`drivers/${uid}`).once('value');
+    const data = snap.val();
+    if (data) {
+        driverDataCache = {
+            uid,
+            fullName: data.fullName || data.name || 'Driver',
+            plateNumber: data.plateNumber || '',
+            vehicleType: data.vehicleType || 'motor',
+            rating: data.rating || 0,
+            perjalanan: data.perjalanan || 0,
+            profilePhotoUrl: data.profilePhotoUrl || data.fotoProfilURL || '',
+            balance: data.balance || 0
+        };
+    }
+    return driverDataCache;
+}
+
+// ================================================================
+// RENDER UI UTAMA (HANYA SAAT PERUBAHAN PENTING)
+// ================================================================
+async function renderMainContent() {
+    if (!currentDriverUid) return;
+    const driver = await getDriverData(currentDriverUid);
+    if (!driver) {
+        document.getElementById('mainContent').innerHTML = '<div class="stats-card loading-container"><p>Gagal memuat data.</p></div>';
+        return;
+    }
+
+    // ===== HEMAT BANDWIDTH: Ambil langsung dari daily_earnings (tidak query orders) =====
+    const today = new Date().toLocaleDateString('id-ID', {
+  timeZone: 'Asia/Makassar',  // WITA (Gorontalo)
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit'
+}).split('/').reverse().join('-'); // hasil "2026-07-18"
+    const dailySnap = await db.ref(`drivers/${currentDriverUid}/daily_earnings/${today}`).once('value');
+    const totalGross = dailySnap.val() || 0;
+
+    // Ambil jumlah order selesai hari ini dari driver_earnings_history (hanya hitung jumlah, tanpa ambil semua data)
+    let completedCount = 0;
+    try {
+        const historySnap = await db.ref(`driver_earnings_history/${currentDriverUid}`).once('value');
+        const history = historySnap.val() || {};
+        for (let key in history) {
+            const entry = history[key];
+            if (entry.completed_at && entry.completed_at.split('T')[0] === today) {
+                completedCount++;
+            }
+        }
+    } catch(e) { console.warn('Gagal hitung jumlah order hari ini:', e); }
+
+    const rating = driver.rating || 0;
+    const balance = driver.balance || 0;
+    let priority = 'Basic';
+    if (rating >= 4.5) priority = 'Essential';
+    else if (rating >= 4.0) priority = 'Regular';
+    else if (rating >= 3.0) priority = 'Standard';
+
+    const iconMap = {
+        'Essential': '<i class="fas fa-crown" style="color:#FFD700;"></i>',
+        'Regular': '<i class="fas fa-check-circle" style="color:#4CAF50;"></i>',
+        'Standard': '<i class="fas fa-car" style="color:#2196F3;"></i>',
+        'Basic': '<i class="fas fa-shield-alt" style="color:#9E9E9E;"></i>'
+    };
+
+    const html = `
+        <div class="stats-card rating-card" id="ratingCard">
+            <div class="priority-area">
+                <div class="priority-label">
+                    <div class="priority-icon">${iconMap[priority] || iconMap.Basic}</div>
+                    <div class="priority-text">
+                        <div class="priority-sub">Prioritas</div>
+                        <div class="priority-name ${priority === 'Essential' ? 'essential' : ''}">${priority}</div>
+                    </div>
+                </div>
+                <div class="priority-info-icon" id="priorityInfoIcon">
+                    <i class="fas fa-question-circle"></i>
+                </div>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <div class="stats-title">⭐ Rating Driver</div>
+                    <div class="stats-value">${rating.toFixed(1)} / 5.0</div>
+                    <div id="ratingStars" class="rating-stars"></div>
+                </div>
+                <div class="arrow-right"><i class="fas fa-chevron-right"></i></div>
+            </div>
+        </div>
+        <div class="stats-card clickable-card" id="earningsCard">
+            <div>
+                <div class="stats-title">📅 Pendapatan Hari Ini</div>
+                <div class="stats-value">${formatRupiah(totalGross)}</div>
+                <div class="stats-sub">${completedCount} order selesai</div>
+            </div>
+            <div class="arrow-right"><i class="fas fa-chevron-right"></i></div>
+        </div>
+        <div class="stats-card">
+            <div class="stats-title">💰 Saldo Dompet</div>
+            <div class="balance-row">
+                <div class="balance-left">
+                    <div class="stats-value">${formatRupiah(balance)}</div>
+                </div>
+                <button class="btn-topup" id="topupBtn"><i class="fas fa-plus-circle"></i> Top Up</button>
+            </div>
+        </div>
+    `;
+
+    const container = document.getElementById('mainContent');
+    container.innerHTML = html;
+
+    // Render bintang
+    const starsContainer = document.getElementById('ratingStars');
+    if (starsContainer) {
+        starsContainer.innerHTML = '';
+        const fullStars = Math.floor(rating);
+        const halfStar = (rating % 1) >= 0.5;
+        for (let i=1; i<=5; i++) {
+            const star = document.createElement('span');
+            star.className = 'star';
+            if (i <= fullStars) star.classList.add('active');
+            else if (halfStar && i === fullStars+1) star.classList.add('active');
+            star.innerHTML = '★';
+            starsContainer.appendChild(star);
+        }
+    }
+
+    // Event listeners
+    document.getElementById('ratingCard')?.addEventListener('click', (e) => {
+        if (e.target.closest('#priorityInfoIcon')) return;
+        window.location.href = 'penilaianLayanan.html';
+    });
+    document.getElementById('priorityInfoIcon')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        window.location.href = 'penjelasan_prioritas.html';
+    });
+    document.getElementById('earningsCard')?.addEventListener('click', () => {
+        window.location.href = 'pendapatan.html';
+    });
+    document.getElementById('topupBtn')?.addEventListener('click', () => {
+        window.location.href = 'payment.html';
+    });
+}
+
+// ================================================================
+// LISTENER OPTIMASI: HANYA DENGARKAN PERUBAHAN RATING & BALANCE
+// ================================================================
+function setupOptimizedListeners(uid) {
+    if (driverBalanceListener) { driverBalanceListener.off(); driverBalanceListener = null; }
+    if (driverRatingListener) { driverRatingListener.off(); driverRatingListener = null; }
+
+    driverBalanceListener = db.ref(`drivers/${uid}/balance`).on('value', (snap) => {
+        if (driverDataCache) {
+            driverDataCache.balance = snap.val() || 0;
+            renderMainContent();
+        }
+    });
+
+    driverRatingListener = db.ref(`drivers/${uid}/rating`).on('value', (snap) => {
+        if (driverDataCache) {
+            driverDataCache.rating = snap.val() || 0;
+            renderMainContent();
+        }
+    });
+}
+
+// ================================================================
+// LISTENER ORDER DRIVER (UNTUK UPDATE STATUS ORDER)
+// ================================================================
+function setupDriverOrdersListener(uid) {
+    if (driverOrdersListener) { driverOrdersListener.off(); driverOrdersListener = null; }
+    driverOrdersListener = db.ref('orders')
+        .orderByChild('driver_id')
+        .equalTo(uid)
+        .limitToLast(20)
+        .on('child_changed', (snap) => {
+            renderMainContent();
+        });
+}
+
+// ================================================================
+// SISTEM NOTIFIKASI ORDER (OPTIMASI: child_added dengan filter)
+// ================================================================
+function startListeningOrders(uid) {
+    if (ordersListenerRef) { ordersListenerRef.off(); ordersListenerRef = null; }
+    ordersListenerRef = db.ref('orders').on('child_added', async (snap) => {
+        const order = snap.val();
+        const orderId = snap.key;
+        if (!order || order.status !== 'waiting') return;
+        if (lastNotifiedOrderIds.has(orderId)) return;
+        if (isWaitingConfirmation) return;
+
+        const driver = driverDataCache;
+        if (!driver) return;
+        if (!driverLocation.lat || !driverLocation.lng) return;
+
+        const dist = calculateDistance(driverLocation.lat, driverLocation.lng, order.pickup_lat, order.pickup_lng);
+        if (dist === null || dist > 3) return;
+
+        if (!isVehicleTypeMatch(driver.vehicleType, order.transport_type || order.vehicle || 'motor')) return;
+
+        const activeCheck = await checkDriverActiveOrder(uid);
+        if (activeCheck) return;
+
+        lastNotifiedOrderIds.add(orderId);
+        currentOrderId = orderId;
+
+        if (autobidEnabled && !(order.transport_type || '').toLowerCase().includes('kurir')) {
+            const success = await sendOffer(orderId, order, true);
+            if (success) {
+                createNotifCard(order, dist, true);
+            }
+        } else {
+            createNotifCard(order, dist, false);
+        }
+    });
+}
+
+async function checkDriverActiveOrder(uid) {
+    const snap = await db.ref('orders')
+        .orderByChild('driver_id')
+        .equalTo(uid)
+        .limitToLast(5)
+        .once('value');
+    const orders = snap.val() || {};
+    const activeStatuses = ['accepted','on_the_way','arrived','on_trip'];
+    for (let id in orders) {
+        if (activeStatuses.includes(orders[id].status)) return true;
+    }
+    return false;
+}
+
+// ================================================================
+// KIRIM PENAWARAN
+// ================================================================
+async function sendOffer(orderId, orderData, isAuto = false) {
+    if (isWaitingConfirmation) {
+        if (!isAuto) showToast('Sedang memproses order lain', 'warning');
+        return false;
+    }
+    const driver = driverDataCache;
+    if (!driver) return false;
+
+    const snapBal = await db.ref(`drivers/${driver.uid}/balance`).once('value');
+    const freshBalance = snapBal.val() || 0;
+    const potongan = await hitungPotongan(orderData.price || 0);
+    if (freshBalance < potongan.total) {
+        showToast(`Saldo tidak cukup (Rp ${freshBalance.toLocaleString()}). Top up dulu.`, 'warning');
+        return false;
+    }
+
+    const orderCheck = await db.ref(`orders/${orderId}`).once('value');
+    if (!orderCheck.exists() || orderCheck.val().status !== 'waiting') {
+        showToast('Order sudah tidak tersedia', 'warning');
+        removeNotifCard();
+        return false;
+    }
+
+    const offerData = {
+        driver_id: driver.uid,
+        driver_name: driver.fullName,
+        driver_plate: driver.plateNumber,
+        driver_type: driver.vehicleType,
+        driver_rating: driver.rating || 5,
+        driver_trips: driver.perjalanan || 0,
+        driver_photo: driver.profilePhotoUrl || '',
+        offered_at: new Date().toISOString(),
+        status: 'offered',
+        bid_price: orderData.price,
+        bid_percent: 0,
+        bid_requested: true,
+        expired_at: Date.now() + 30000
+    };
+
+    try {
+        await db.ref(`orders/${orderId}/driver_offers/${driver.uid}`).set(offerData);
+        if (!isAuto) showToast('Penawaran terkirim, menunggu konfirmasi...', 'info');
+        startCountdown(orderId, driver.uid, orderData);
+        return true;
+    } catch(err) {
+        showToast('Gagal kirim penawaran: ' + err.message, 'error');
+        return false;
+    }
+}
+
+// ================================================================
+// COUNTDOWN + LISTENER KONFIRMASI
+// ================================================================
+function startCountdown(orderId, driverId, orderData) {
+    isWaitingConfirmation = true;
+    let timeLeft = 30;
+    const notifCard = document.querySelector('.order-notif-card');
+    if (notifCard) {
+        const progressFill = notifCard.querySelector('.progress-fill');
+        const countdownSpan = notifCard.querySelector('.countdown-text span');
+        const ambilBtn = notifCard.querySelector('.notif-ambil-btn');
+        if (ambilBtn) ambilBtn.disabled = true;
+        if (countdownInterval) clearInterval(countdownInterval);
+        countdownInterval = setInterval(() => {
+            timeLeft--;
+            if (progressFill) progressFill.style.width = (timeLeft/30)*100 + '%';
+            if (countdownSpan) countdownSpan.innerText = timeLeft + ' detik';
+            if (timeLeft <= 0) {
+                clearInterval(countdownInterval);
+                countdownInterval = null;
+                db.ref(`orders/${orderId}/driver_offers/${driverId}`).remove().then(() => {
+                    showToast('Waktu habis, penawaran dibatalkan', 'warning');
+                    removeNotifCard();
+                    isWaitingConfirmation = false;
+                }).catch(() => removeNotifCard());
+            }
+        }, 1000);
+    } else {
+        if (countdownInterval) clearInterval(countdownInterval);
+        countdownInterval = setInterval(async () => {
+            timeLeft--;
+            if (timeLeft <= 0) {
+                clearInterval(countdownInterval);
+                countdownInterval = null;
+                await db.ref(`orders/${orderId}/driver_offers/${driverId}`).remove();
+                isWaitingConfirmation = false;
+                showToast('Waktu habis, penawaran dibatalkan', 'warning');
+            }
+        }, 1000);
+    }
+
+    const orderListener = db.ref(`orders/${orderId}`).on('value', (snap) => {
+        const order = snap.val();
+        if (!order) return;
+        if (order.status === 'accepted' && order.driver_id === driverId) {
+            clearInterval(countdownInterval);
+            db.ref(`orders/${orderId}`).off('value', orderListener);
+            showToast('✅ Customer menerima penawaran! Mengalihkan...', 'success');
+            localStorage.setItem('jego_driver_active_order', orderId);
+            setTimeout(() => {
+                window.location.href = 'orderAccepted.html?id=' + orderId;
+            }, 1000);
+        } else if (order.status !== 'waiting') {
+            clearInterval(countdownInterval);
+            db.ref(`orders/${orderId}`).off('value', orderListener);
+            removeNotifCard();
+            isWaitingConfirmation = false;
+            showToast('Order sudah tidak tersedia', 'warning');
+        }
+    });
+
+    const rejectListener = db.ref(`orders/${orderId}/driver_offers/${driverId}/status`).on('value', (snap) => {
+        if (snap.val() === 'rejected') {
+            clearInterval(countdownInterval);
+            db.ref(`orders/${orderId}`).off('value', orderListener);
+            db.ref(`orders/${orderId}/driver_offers/${driverId}/status`).off('value', rejectListener);
+            removeNotifCard();
+            isWaitingConfirmation = false;
+            showToast('Customer menolak penawaran Anda', 'warning');
+        }
+    });
+}
+
+function removeNotifCard() {
+    const card = document.querySelector('.order-notif-card');
+    if (card) card.remove();
+    if (countdownInterval) clearInterval(countdownInterval);
+    isWaitingConfirmation = false;
+    currentOrderId = null;
+}
+
+// ================================================================
+// NOTIFIKASI CARD
+// ================================================================
+function createNotifCard(order, dist, isAutoSent) {
+    removeNotifCard();
+    const card = document.createElement('div');
+    card.className = 'order-notif-card';
+    card.innerHTML = `
+        <div class="notif-header">
+            <span>🚖 Order Baru</span>
+            <button class="notif-close">&times;</button>
+        </div>
+        <div class="notif-body">
+            <div class="notif-customer">
+                <img src="${order.photoURL || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3135/3135715.png'">
+                <div class="notif-info">
+                    <h4>${escapeHtml(order.customer_name || 'Customer')}</h4>
+                    <small>⭐ ${(order.passenger_rating || 0).toFixed(1)}</small>
+                </div>
+            </div>
+            <div class="notif-detail">
+                <p><strong>📍 Jemput:</strong> ${escapeHtml(order.pickup_address || '-')}</p>
+                <p><strong>🏁 Tujuan:</strong> ${escapeHtml(order.destination_address || '-')}</p>
+                <p><strong>💰 Harga:</strong> Rp ${(order.price || 0).toLocaleString()}</p>
+                <p><strong>📏 Jarak driver:</strong> ${dist.toFixed(1)} km</p>
+            </div>
+            <div class="notif-progress" style="display: ${isAutoSent ? 'block' : 'none'};">
+                <div class="progress-bar-custom"><div class="progress-fill" style="width:100%"></div></div>
+                <div class="countdown-text">⏳ <span>30 detik</span></div>
+            </div>
+            <div class="notif-actions" style="display: ${isAutoSent ? 'none' : 'flex'};">
+                <button class="notif-ambil-btn">Ambil Order</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(card);
+    card.querySelector('.notif-close').onclick = () => removeNotifCard();
+    if (!isAutoSent) {
+        const ambilBtn = card.querySelector('.notif-ambil-btn');
+        ambilBtn.onclick = async () => {
+            if (isWaitingConfirmation) {
+                showToast('Sedang memproses order lain', 'warning');
+                return;
+            }
+            ambilBtn.disabled = true;
+            ambilBtn.innerText = 'Mengirim...';
+            const success = await sendOffer(order.id, order, false);
+            if (!success) {
+                ambilBtn.disabled = false;
+                ambilBtn.innerText = 'Ambil Order';
+            } else {
+                card.querySelector('.notif-progress').style.display = 'block';
+                ambilBtn.style.display = 'none';
+            }
+        };
+    }
+}
+
+// ================================================================
+// GEOLOKASI DENGAN THROTTLE
+// ================================================================
+function initGPS() {
+    if (!navigator.geolocation) return;
+    if (gpsWatchId) return;
+    gpsWatchId = navigator.geolocation.watchPosition(
+        (pos) => {
+            const now = Date.now();
+            if (now - lastGpsUpdate < GPS_THROTTLE_MS) return;
+            lastGpsUpdate = now;
+            driverLocation.lat = pos.coords.latitude;
+            driverLocation.lng = pos.coords.longitude;
+        },
+        (err) => console.warn('GPS error:', err),
+        { enableHighAccuracy: false, timeout: 15000, maximumAge: 30000 }
+    );
+}
+
+// ================================================================
+// SETTINGS MODAL
+// ================================================================
+function loadSettings() {
+    document.getElementById('tripSoundToggle').checked = localStorage.getItem('jego_trip_sound') === 'true';
+    document.getElementById('requestChainToggle').checked = localStorage.getItem('jego_request_chain') === 'true';
+    document.getElementById('shortcutToggle').checked = localStorage.getItem('jego_shortcut') === 'true';
+    const theme = localStorage.getItem('jego_driver_theme');
+    if (theme === 'dark') document.querySelector('input[name="darkMode"][value="dark"]').checked = true;
+    else document.querySelector('input[name="darkMode"][value="light"]').checked = true;
+}
+
+function initSettingsListeners() {
+    document.getElementById('tripSoundToggle').addEventListener('change', (e) => localStorage.setItem('jego_trip_sound', e.target.checked));
+    document.getElementById('requestChainToggle').addEventListener('change', (e) => localStorage.setItem('jego_request_chain', e.target.checked));
+    document.getElementById('shortcutToggle').addEventListener('change', (e) => localStorage.setItem('jego_shortcut', e.target.checked));
+    document.querySelectorAll('input[name="darkMode"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                const theme = e.target.value;
+                localStorage.setItem('jego_driver_theme', theme);
+                document.body.classList.toggle('dark-mode', theme === 'dark');
+            }
+        });
+    });
+}
+
+const modalSettings = document.getElementById('settingsModal');
+document.getElementById('settingsBtn').onclick = () => { loadSettings(); modalSettings.classList.add('active'); };
+document.getElementById('closeModalBtn').onclick = () => modalSettings.classList.remove('active');
+modalSettings.addEventListener('click', (e) => { if (e.target === modalSettings) modalSettings.classList.remove('active'); });
+
+// ================================================================
+// VISIBILITY API - HENTIKAN LISTENER SAAT HILANG
+// ================================================================
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        if (driverBalanceListener) { driverBalanceListener.off(); driverBalanceListener = null; }
+        if (driverRatingListener) { driverRatingListener.off(); driverRatingListener = null; }
+        if (driverOrdersListener) { driverOrdersListener.off(); driverOrdersListener = null; }
+        if (ordersListenerRef) { ordersListenerRef.off(); ordersListenerRef = null; }
+        if (gpsWatchId) { navigator.geolocation.clearWatch(gpsWatchId); gpsWatchId = null; }
+    } else {
+        if (currentDriverUid) {
+            setupOptimizedListeners(currentDriverUid);
+            setupDriverOrdersListener(currentDriverUid);
+            startListeningOrders(currentDriverUid);
+            initGPS();
+        }
+    }
+});
+
+// ================================================================
+// AUTH DAN INISIALISASI
+// ================================================================
+auth.onAuthStateChanged(async (user) => {
+    if (!user) {
+        window.location.href = 'loginDriver.html';
+        return;
+    }
+    const snap = await db.ref(`drivers/${user.uid}`).once('value');
+    if (!snap.exists()) {
+        await auth.signOut();
+        window.location.href = 'loginDriver.html';
+        return;
+    }
+    currentDriverUid = user.uid;
+    await getDriverData(currentDriverUid);
+
+    const autobidSnap = await db.ref(`drivers/${currentDriverUid}/autobid_enabled`).once('value');
+    autobidEnabled = autobidSnap.exists() ? autobidSnap.val() === true : false;
+    localStorage.setItem(STORAGE_AUTOBID, autobidEnabled);
+
+    await renderMainContent();
+
+    setupOptimizedListeners(currentDriverUid);
+    setupDriverOrdersListener(currentDriverUid);
+    startListeningOrders(currentDriverUid);
+    initGPS();
+
+    initSettingsListeners();
+    loadSettings();
+});
+
+// ================================================================
+// CLEANUP
+// ================================================================
+window.addEventListener('beforeunload', () => {
+    if (driverBalanceListener) driverBalanceListener.off();
+    if (driverRatingListener) driverRatingListener.off();
+    if (driverOrdersListener) driverOrdersListener.off();
+    if (ordersListenerRef) ordersListenerRef.off();
+    if (gpsWatchId) navigator.geolocation.clearWatch(gpsWatchId);
+    if (countdownInterval) clearInterval(countdownInterval);
+});
+</script>
+</body>
+</html>
