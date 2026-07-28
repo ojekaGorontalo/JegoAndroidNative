@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Pusat Bantuan - JeGo</title>
+    <style>
+        /* ========== LIGHT MODE (DEFAULT) ========== */
+        :root {
+            --primary: #FF6D00;
+            --primary-dark: #E65100;
+            --primary-light: #FFB74D;
+            --secondary: #FF9800;
+            --dark: #212121;
+            --gray: #757575;
+            --gray-light: #E0E0E0;
+            --light: #F5F5F5;
+            --white: #FFFFFF;
+            --background: #F8F9FA;
+            --surface: #FFFFFF;
+            --text-primary: #212121;
+            --text-secondary: #757575;
+            --border-light: #E0E0E0;
+            --info-bg: #FFF4E5;
+            --info-text: #5a3a1a;
+            --icon-bg: rgba(255,109,0,0.12);
+            --shadow: 0 8px 20px rgba(0,0,0,0.05);
+        }
+
+        /* ========== DARK MODE OVERRIDES ========== */
+        body.dark-mode {
+            --primary: #FFB74D;
+            --primary-dark: #FF9800;
+            --primary-light: #FFA726;
+            --secondary: #FF7043;
+            --dark: #E0E0E0;
+            --gray: #BDBDBD;
+            --gray-light: #424242;
+            --light: #2C2C2C;
+            --white: #1E1E1E;
+            --background: #121212;
+            --surface: #2C2C2C;
+            --text-primary: #FFFFFF;
+            --text-secondary: #B0B0B0;
+            --border-light: #333333;
+            --info-bg: #3a2a1a;
+            --info-text: #ffcc80;
+            --icon-bg: rgba(255,109,0,0.25);
+            --shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
+            background: var(--background);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: var(--text-primary);
+        }
+
+        /* Status bar + App Bar (sama seperti halaman lain) */
+        .status-bar {
+            padding-top: env(safe-area-inset-top, 20px);
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+        }
+        .app-bar {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .back-button {
+            background: rgba(255,255,255,0.2);
+            width: 40px;
+            height: 40px;
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 24px;
+            color: white;
+            text-decoration: none;
+        }
+        .back-button:active {
+            background: rgba(255,255,255,0.4);
+        }
+        .app-bar-title {
+            font-size: 1.35rem;
+            font-weight: 600;
+            color: white;
+            flex: 1;
+        }
+
+        .main-container {
+            flex: 1;
+            padding: 24px 20px 40px;
+            max-width: 600px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .hero {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .hero-icon {
+            font-size: 64px;
+            background: var(--icon-bg);
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+        }
+        .hero h1 {
+            font-size: 1.8rem;
+            color: var(--primary-dark);
+            margin-bottom: 8px;
+        }
+        .hero p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .card-menu {
+            background: var(--surface);
+            border-radius: 28px;
+            padding: 8px;
+            box-shadow: var(--shadow);
+            margin-top: 12px;
+            border: 1px solid var(--border-light);
+        }
+        .cs-option {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            padding: 18px 20px;
+            border-radius: 24px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: var(--surface);
+            margin-bottom: 8px;
+            text-decoration: none;
+            color: inherit;
+        }
+        .cs-option:active {
+            background: var(--light);
+            transform: scale(0.98);
+        }
+        .cs-icon {
+            width: 56px;
+            height: 56px;
+            background: var(--icon-bg);
+            border-radius: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }
+        .cs-info {
+            flex: 1;
+        }
+        .cs-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        .cs-desc {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            line-height: 1.3;
+        }
+        .arrow {
+            color: var(--gray-light);
+            font-size: 22px;
+        }
+
+        .info-box {
+            background: var(--info-bg);
+            border-radius: 20px;
+            padding: 16px 20px;
+            margin-top: 30px;
+            text-align: center;
+            border-left: 5px solid var(--primary);
+        }
+        .info-box p {
+            font-size: 0.85rem;
+            color: var(--info-text);
+        }
+    </style>
+</head>
+<body>
+
+<div class="status-bar"></div>
+<div class="app-bar">
+    <div class="app-bar-title">Pusat Bantuan</div>
+</div>
+
+<div class="main-container">
+    <div class="hero">
+        <div class="hero-icon">💬</div>
+        <h1>Ada yang bisa kami bantu?</h1>
+        <p>Pilih saluran favoritmu untuk mendapatkan bantuan cepat dari tim JeGo.</p>
+    </div>
+
+    <div class="card-menu">
+        <!-- Tombol 1: Chat Bot -->
+        <a href="chat_bot.html" class="cs-option" id="chatBotBtn">
+            <div class="cs-icon">🤖</div>
+            <div class="cs-info">
+                <div class="cs-title">Chat Bot JeGo</div>
+                <div class="cs-desc">Tanya jawab instan 24 jam, solusi cepat tanpa antri.</div>
+            </div>
+            <div class="arrow">›</div>
+        </a>
+
+        <!-- Tombol 2: Email -->
+        <a href="mailto:cs.jego.app@gmail.com?subject=Bantuan%20JeGo&body=Halo%20tim%20JeGo,%20saya%20ingin%20bertanya%20mengenai..." class="cs-option" id="emailBtn">
+            <div class="cs-icon">📧</div>
+            <div class="cs-info">
+                <div class="cs-title">Email CS</div>
+                <div class="cs-desc">Kirim keluhan atau pertanyaan detail, kami balas maksimal 1x24 jam.</div>
+            </div>
+            <div class="arrow">›</div>
+        </a>
+
+        <!-- Tombol 3: Live Chat -->
+        <a href="live_chat.html" class="cs-option" id="liveChatBtn">
+            <div class="cs-icon">💬</div>
+            <div class="cs-info">
+                <div class="cs-title">Live Chat</div>
+                <div class="cs-desc">Obrolan real-time dengan agen kami (Jam operasional 08.00 - 21.00).</div>
+            </div>
+            <div class="arrow">›</div>
+        </a>
+    </div>
+
+    <div class="info-box">
+        <p>📌 Butuh bantuan darurat? Hubungi langsung <strong>+62 823-1164-0444</strong> (WhatsApp)</p>
+        <p style="margin-top: 8px;">✨ Tim JeGo siap memberikan pengalaman terbaik untukmu.</p>
+    </div>
+</div>
+
+<script>
+    // ========== DARK MODE - MENGIKUTI LOCALSTORAGE (TANPA TOMBOL) ==========
+    function applyDarkModeFromLocalStorage() {
+        const isDarkMode = localStorage.getItem('jego_dark_mode') === 'true';
+        if (isDarkMode) {
+            document.body.classList.add('dark-mode');
+        } else {
+            document.body.classList.remove('dark-mode');
+        }
+    }
+    applyDarkModeFromLocalStorage();
+</script>
+</body>
+</html>
