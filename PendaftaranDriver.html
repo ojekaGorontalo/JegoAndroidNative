@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Daftar Driver - JeGo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-database-compat.js"></script>
+    <style>
+        /* ===== CSS SAMA PERSIS ===== */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        :root { --primary: #FF9800; --secondary: #FF5722; --light: #f5f5f5; --dark: #343a40; --success: #4CAF50; }
+        body { background-color: var(--light); color: var(--dark); line-height: 1.6; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        header { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; padding: 20px 0; text-align: center; border-radius: 0 0 20px 20px; }
+        .logo { font-size: 28px; font-weight: 700; }
+        .form-card { background: white; border-radius: 20px; padding: 30px 25px; margin-top: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        h1 { font-size: 24px; color: var(--primary); margin-bottom: 8px; }
+        .subtitle { color: #666; font-size: 14px; margin-bottom: 25px; text-align: center; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 14px; }
+        input, select, textarea { width: 100%; padding: 14px 15px; border: 1px solid #ddd; border-radius: 12px; font-size: 16px; transition: 0.2s; font-family: 'Poppins', sans-serif; }
+        textarea { resize: vertical; min-height: 80px; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(255,152,0,0.1); }
+        .btn { width: 100%; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border: none; padding: 14px; border-radius: 40px; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 0.2s; margin-top: 10px; }
+        .btn:hover { transform: translateY(-2px); }
+        .btn-outline { background: transparent; border: 2px solid var(--primary); color: var(--primary); margin-top: 10px; }
+        .btn-outline:hover { background: var(--primary); color: white; }
+        .info-box { background: #fff3e0; border-left: 4px solid var(--primary); padding: 15px; border-radius: 12px; margin: 20px 0; font-size: 14px; }
+        .loading { display: inline-block; width: 20px; height: 20px; border: 2px solid #fff; border-top: 2px solid var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; margin-left: 10px; vertical-align: middle; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        footer { text-align: center; padding: 30px 20px; font-size: 12px; color: #999; }
+        .upload-area { margin-top: 10px; position: relative; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .photo-preview { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary); background: #f0f0f0; }
+        .upload-btn { background: var(--primary); color: white; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 12px; border: none; }
+        .upload-btn:disabled { background: #ccc; cursor: not-allowed; }
+        .upload-status { font-size: 12px; color: #666; }
+        .privacy-checkbox { display: flex; align-items: flex-start; gap: 12px; margin: 20px 0; font-size: 14px; }
+        .privacy-checkbox input { width: 18px; height: 18px; margin-top: 2px; flex-shrink: 0; accent-color: var(--primary); }
+        .privacy-checkbox label { display: inline; font-weight: 400; margin: 0; line-height: 1.4; }
+        .privacy-link { color: var(--primary); text-decoration: none; font-weight: 500; cursor: pointer; }
+        .privacy-link:hover { text-decoration: underline; }
+        .required-star { color: #f44336; margin-left: 4px; }
+        .password-wrapper { position: relative; }
+        .password-wrapper input { padding-right: 50px; }
+        .toggle-password { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 20px; cursor: pointer; padding: 5px; color: #888; transition: 0.2s; }
+        .toggle-password:hover { color: var(--primary); }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(3px); display: none; align-items: center; justify-content: center; z-index: 9999; }
+        .modal-overlay.active { display: flex; }
+        .modal-box { background: white; border-radius: 24px; max-width: 90%; width: 400px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); animation: fadeIn 0.3s ease; overflow: hidden; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .modal-header { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; padding: 20px; text-align: center; }
+        .modal-header h2 { margin: 0; font-size: 22px; }
+        .modal-body { padding: 30px 20px 20px; text-align: center; }
+        .modal-body p { font-size: 16px; margin-bottom: 16px; line-height: 1.6; }
+        .modal-body .highlight { font-weight: 600; color: var(--primary); }
+        .modal-body .small-text { font-size: 14px; color: #666; }
+        .modal-footer { padding: 0 20px 25px; }
+        @media (max-width: 480px) { .container { padding: 15px; } .form-card { padding: 20px; } }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">🚗 JeGo Driver</div>
+            <div style="font-size: 14px; opacity: 0.9;">Gabung jadi mitra – mudah & cepat</div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="form-card">
+            <h1>Pendaftaran Driver</h1>
+            <div class="subtitle">Isi semua data berikut untuk menjadi driver JeGo</div>
+
+            <form id="driverForm">
+                <div class="form-group">
+                    <label>Nama Lengkap <span class="required-star">*</span></label>
+                    <input type="text" id="fullName" placeholder="Contoh: Ahmad Wijaya" required>
+                </div>
+                <div class="form-group">
+                    <label>Email (akan jadi username login) <span class="required-star">*</span></label>
+                    <input type="email" id="email" placeholder="email@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label>Password <span class="required-star">*</span></label>
+                    <div class="password-wrapper">
+                        <input type="password" id="password" placeholder="Minimal 6 karakter" minlength="6" required>
+                        <button type="button" class="toggle-password" data-target="password">👁️</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Konfirmasi Password <span class="required-star">*</span></label>
+                    <div class="password-wrapper">
+                        <input type="password" id="confirmPassword" placeholder="Ulangi password" minlength="6" required>
+                        <button type="button" class="toggle-password" data-target="confirmPassword">👁️</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Nomor WhatsApp / HP <span class="required-star">*</span></label>
+                    <input type="tel" id="phone" placeholder="08123456789" required>
+                </div>
+                <div class="form-group">
+                    <label>Tanggal Lahir <span class="required-star">*</span></label>
+                    <input type="date" id="dob" required>
+                </div>
+                <div class="form-group">
+                    <label>Jenis Kendaraan (wajib) <span class="required-star">*</span></label>
+                    <select id="vehicleType" required>
+                        <option value="">Pilih Jenis Kendaraan</option>
+                        <option value="motor">Motor</option>
+                        <option value="mobil">Mobil</option>
+                        <option value="bentor">Bentor</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Merk Kendaraan <span class="required-star">*</span></label>
+                    <input type="text" id="vehicleBrand" placeholder="Contoh: Honda, Toyota, Yamaha" required>
+                </div>
+                <div class="form-group">
+                    <label>Tahun Kendaraan <span class="required-star">*</span></label>
+                    <input type="number" id="vehicleYear" placeholder="Contoh: 2020" min="1980" max="2026" required>
+                </div>
+                <div class="form-group">
+                    <label>Nomor Plat Kendaraan <span class="required-star">*</span></label>
+                    <input type="text" id="plateNumber" placeholder="Contoh: DM 1234 AB" required>
+                </div>
+                <div class="form-group">
+                    <label>Alamat Lengkap <span class="required-star">*</span></label>
+                    <textarea id="address" rows="3" placeholder="Contoh: Jl. HB Jassin, Dulalowo Timur, Kota Tengah, Kota Gorontalo." required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Foto Profil <span class="required-star">*</span></label>
+                    <div class="upload-area">
+                        <img id="photoPreview" class="photo-preview" src="https://www.gravatar.com/avatar/?d=mp" alt="Preview">
+                        <input type="file" id="photoFile" accept="image/*" style="display: none;">
+                        <button type="button" class="upload-btn" id="uploadPhotoBtn">📷 Upload Foto</button>
+                        <div id="uploadStatus" class="upload-status"></div>
+                    </div>
+                </div>
+
+                <div class="privacy-checkbox">
+                    <input type="checkbox" id="privacyConsent" required>
+                    <label for="privacyConsent">
+                        Saya telah membaca dan menyetujui 
+                        <span class="privacy-link" id="privacyLink">kebijakan privasi</span> 
+                        serta memahami penggunaan data pribadi pada aplikasi JeGo.
+                    </label>
+                </div>
+
+                <div class="info-box">
+                    ⚡ Dengan mendaftar, Anda setuju untuk mengikuti aturan JeGo. Data akan diverifikasi oleh admin. Pendaftaran GRATIS!
+                </div>
+                <button type="submit" id="submitBtn" class="btn">Daftar Sekarang</button>
+            </form>
+        </div>
+        <footer>© 2026 JeGo - Solusi Transportasi & Kurir</footer>
+    </div>
+
+    <!-- Modal Verifikasi -->
+    <div id="verificationModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2>✅ Pendaftaran Berhasil</h2>
+            </div>
+            <div class="modal-body">
+                <p>Akun Anda akan <span class="highlight">diverifikasi oleh admin</span> dalam <strong>1–2 hari kerja</strong>.</p>
+                <p class="small-text">Anda akan diberitahu melalui email/notifikasi setelah akun aktif.<br>
+                Mohon tunggu dan <strong>jangan login</strong> sebelum diverifikasi.</p>
+            </div>
+            <div class="modal-footer">
+                <button id="closeVerificationBtn" class="btn">Kembali ke login</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== KONFIGURASI FIREBASE ==========
+        const firebaseConfig = {
+            apiKey: "AIzaSyCD0pgeZio-LdKqYDtWxcdXcZwyL4ngYQI",
+            authDomain: "jego-35a2b.firebaseapp.com",
+            databaseURL: "https://jego-35a2b-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "jego-35a2b",
+            storageBucket: "jego-35a2b.firebasestorage.app",
+            messagingSenderId: "600037007040",
+            appId: "1:600037007040:web:ac3243ad9b472647ffd725"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+
+        // ========== DOM REFS ==========
+        const form = document.getElementById('driverForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const fullName = document.getElementById('fullName');
+        const email = document.getElementById('email');
+        const password = document.getElementById('password');
+        const confirmPassword = document.getElementById('confirmPassword');
+        const phone = document.getElementById('phone');
+        const dob = document.getElementById('dob');
+        const vehicleTypeSelect = document.getElementById('vehicleType');
+        const vehicleBrand = document.getElementById('vehicleBrand');
+        const vehicleYear = document.getElementById('vehicleYear');
+        const plateNumberInput = document.getElementById('plateNumber');
+        const addressInput = document.getElementById('address');
+        const photoFile = document.getElementById('photoFile');
+        const uploadPhotoBtn = document.getElementById('uploadPhotoBtn');
+        const photoPreview = document.getElementById('photoPreview');
+        const uploadStatus = document.getElementById('uploadStatus');
+        const privacyCheckbox = document.getElementById('privacyConsent');
+        const verificationModal = document.getElementById('verificationModal');
+        const closeVerificationBtn = document.getElementById('closeVerificationBtn');
+
+        let uploadedFile = null;
+        let isUploading = false;
+
+        // ========== AMBIL API KEY IMGBB ==========
+        async function getImgBBKey() {
+            try {
+                const snap = await database.ref('data-jego/imgBBapiKey').once('value');
+                const key = snap.val();
+                if (!key) {
+                    console.warn('⚠️ imgBB API Key tidak ditemukan di Firebase');
+                }
+                return key;
+            } catch(e) {
+                console.error('Gagal ambil API Key imgBB:', e);
+                return null;
+            }
+        }
+
+        // ========== UPLOAD FOTO KE IMGBB ==========
+        async function uploadToImgBB(file) {
+            const apiKey = await getImgBBKey();
+            if (!apiKey) throw new Error('API Key imgBB tidak ditemukan. Hubungi admin.');
+
+            const formData = new FormData();
+            formData.append('key', apiKey);
+            formData.append('image', file);
+
+            const response = await fetch('https://api.imgbb.com/1/upload', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+            if (!result.success) {
+                throw new Error(result.error?.message || 'Gagal upload ke imgBB');
+            }
+            return result.data.url;
+        }
+
+        // ========== ONE SIGNAL ==========
+        async function initOneSignal() {
+            if (typeof median === 'undefined' || !median.onesignal) {
+                console.warn("⚠️ Median OneSignal tidak tersedia");
+                return null;
+            }
+            try {
+                if (median.onesignal.setConsentGiven) await median.onesignal.setConsentGiven(true);
+                await median.onesignal.register();
+                if (median.onesignal.promptForPushNotificationsWithUserResponse) {
+                    await median.onesignal.promptForPushNotificationsWithUserResponse();
+                }
+                await new Promise(r => setTimeout(r, 8000));
+                let playerId = null;
+                for (let i = 0; i < 3; i++) {
+                    const info = await median.onesignal.onesignalInfo();
+                    playerId = info?.userId || info?.oneSignalUserId || info?.subscription?.id;
+                    if (playerId) break;
+                    await new Promise(r => setTimeout(r, 5000));
+                }
+                return playerId;
+            } catch (err) {
+                console.error("OneSignal error:", err);
+                return null;
+            }
+        }
+
+        // ========== HELPER: FORMAT NOMOR ==========
+        function formatPhoneNumber(phone) {
+            let cleaned = phone.replace(/\D/g, '');
+            if (cleaned.startsWith('0')) cleaned = '+62' + cleaned.substring(1);
+            else if (cleaned.startsWith('62')) cleaned = '+' + cleaned;
+            else if (!cleaned.startsWith('+')) cleaned = '+62' + cleaned;
+            return cleaned;
+        }
+
+        // ========== CEK NOMOR TERDAFTAR ==========
+        async function isPhoneRegistered(phoneFormatted) {
+            const phoneKey = phoneFormatted.replace(/\+/g, '_');
+            const snapshot = await database.ref(`phone_check_drivers/${phoneKey}`).once('value');
+            return snapshot.exists();
+        }
+
+        // ========== EVENT UPLOAD FOTO ==========
+        uploadPhotoBtn.addEventListener('click', () => {
+            if (isUploading) return;
+            photoFile.click();
+        });
+
+        photoFile.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (!file.type.startsWith('image/')) {
+                alert('⚠️ Hanya file gambar yang diperbolehkan!');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = (ev) => { photoPreview.src = ev.target.result; };
+            reader.readAsDataURL(file);
+
+            uploadedFile = file;
+            uploadStatus.innerHTML = '📸 Foto siap diupload';
+        });
+
+        // ========== REGISTRASI DRIVER ==========
+        async function registerDriver(data) {
+            // 1. Buat user di Firebase Auth
+            const userCredential = await auth.createUserWithEmailAndPassword(data.email, data.password);
+            const uid = userCredential.user.uid;
+
+            // 2. Upload foto ke imgBB
+            let photoURL = '';
+            if (data.photoFile) {
+                uploadStatus.innerHTML = '📤 Mengupload ke imgBB...';
+                photoURL = await uploadToImgBB(data.photoFile);
+                console.log('✅ Foto terupload ke imgBB:', photoURL);
+                uploadStatus.innerHTML = '✅ Foto berhasil diupload';
+            }
+
+            // 3. OneSignal playerId
+            let playerId = null;
+            try {
+                playerId = await initOneSignal();
+                if (playerId) {
+                    await database.ref(`driver_locations/${uid}`).update({
+                        playerId: playerId,
+                        uid: uid,
+                        tracking_enabled: false,
+                        last_update: new Date().toISOString()
+                    });
+                }
+            } catch (err) {
+                console.warn('⚠️ Gagal minta izin notifikasi:', err);
+            }
+
+            // 4. Simpan data driver (status: pending)
+            const driverRecord = {
+                uid: uid,
+                name: data.fullName,
+                email: data.email,
+                phone: data.phoneFormatted,
+                address: data.address,
+                vehicle_type: data.vehicleType.toLowerCase(),
+                vehicle_brand: data.vehicleBrand,
+                vehicle_year: data.vehicleYear,
+                plate_number: data.plateNumber,
+                date_of_birth: data.dob,
+                photoURL: photoURL,
+                status: 'pending',
+                role: 'driver',
+                balance: 0,
+                rating: 5,
+                perjalanan: 0,
+                registered_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            };
+            await database.ref(`drivers/${uid}`).set(driverRecord);
+
+            // 5. Simpan pengecekan nomor HP
+            const phoneKey = data.phoneFormatted.replace(/\+/g, '_');
+            await database.ref(`phone_check_drivers/${phoneKey}`).set(uid);
+
+            // ===== UPDATE STATISTICS (node stats/daily) =====
+            // Menambahkan pendingDrivers, bukan totalDrivers, karena driver belum diverifikasi.
+            try {
+                await database.ref('stats/daily').transaction(daily => {
+                    if (!daily) daily = {};
+                    // Increment pendingDrivers
+                    daily.pendingDrivers = (daily.pendingDrivers || 0) + 1;
+                    // Update timestamp
+                    daily.updatedAt = new Date().toISOString();
+                    return daily;
+                });
+                console.log('✅ Statistik pending driver berhasil diperbarui');
+            } catch (statErr) {
+                console.warn('⚠️ Gagal update statistik pending:', statErr);
+            }
+
+            // 6. Local storage
+            const driverLocal = {
+                uid: uid,
+                name: data.fullName,
+                phone: data.phoneFormatted,
+                email: data.email,
+                address: data.address,
+                vehicleType: data.vehicleType.toLowerCase(),
+                vehicleBrand: data.vehicleBrand,
+                vehicleYear: data.vehicleYear,
+                plateNumber: data.plateNumber,
+                dateOfBirth: data.dob,
+                photoURL: photoURL,
+                status: 'pending',
+                balance: 0,
+                rating: 5
+            };
+            localStorage.setItem('jego_logged_in_driver', JSON.stringify(driverLocal));
+
+            return { uid, playerId };
+        }
+
+        // ========== SUBMIT FORM ==========
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (submitBtn.disabled) return;
+
+            if (!privacyCheckbox.checked) {
+                alert('⚠️ Anda harus menyetujui kebijakan privasi untuk melanjutkan pendaftaran.');
+                return;
+            }
+
+            const nameVal = fullName.value.trim();
+            const emailVal = email.value.trim();
+            const passVal = password.value;
+            const confirmPassVal = confirmPassword.value;
+            const phoneVal = phone.value.trim();
+            const dobVal = dob.value;
+            const vehicleVal = vehicleTypeSelect.value;
+            const brandVal = vehicleBrand.value.trim();
+            const yearVal = parseInt(vehicleYear.value);
+            const plateVal = plateNumberInput.value.trim().toUpperCase();
+            const addressVal = addressInput.value.trim();
+
+            if (!nameVal || !emailVal || !passVal || !confirmPassVal || !phoneVal || !dobVal || !vehicleVal || !brandVal || !yearVal || !plateVal || !addressVal) {
+                alert('⚠️ Semua field wajib diisi!');
+                return;
+            }
+            if (passVal.length < 6) {
+                alert('⚠️ Password minimal 6 karakter.');
+                return;
+            }
+            if (passVal !== confirmPassVal) {
+                alert('⚠️ Password dan konfirmasi password tidak cocok!');
+                return;
+            }
+            if (!emailVal.includes('@')) {
+                alert('⚠️ Email tidak valid.');
+                return;
+            }
+            const phoneDigits = phoneVal.replace(/\D/g, '');
+            if (phoneDigits.length < 9 || phoneDigits.length > 15) {
+                alert('⚠️ Nomor HP tidak valid (minimal 9 digit).');
+                return;
+            }
+            if (!vehicleVal) {
+                alert('⚠️ Pilih jenis kendaraan terlebih dahulu.');
+                return;
+            }
+            if (yearVal < 1980 || yearVal > new Date().getFullYear()) {
+                alert('⚠️ Tahun kendaraan tidak valid (1980 - sekarang).');
+                return;
+            }
+            if (!uploadedFile) {
+                alert('⚠️ Silakan upload foto profil terlebih dahulu.');
+                return;
+            }
+
+            const formattedPhone = formatPhoneNumber(phoneVal);
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = 'Memproses... <span class="loading"></span>';
+
+            try {
+                const phoneExists = await isPhoneRegistered(formattedPhone);
+                if (phoneExists) {
+                    throw new Error('Nomor HP sudah terdaftar sebagai driver. Gunakan nomor lain.');
+                }
+
+                await registerDriver({
+                    fullName: nameVal,
+                    email: emailVal,
+                    password: passVal,
+                    phoneFormatted: formattedPhone,
+                    dob: dobVal,
+                    vehicleType: vehicleVal,
+                    vehicleBrand: brandVal,
+                    vehicleYear: yearVal,
+                    plateNumber: plateVal,
+                    address: addressVal,
+                    photoFile: uploadedFile
+                });
+
+                // Jika berhasil sampai sini, tampilkan modal sukses
+                verificationModal.classList.add('active');
+
+                // Reset form
+                form.reset();
+                uploadedFile = null;
+                photoPreview.src = 'https://www.gravatar.com/avatar/?d=mp';
+                uploadStatus.innerHTML = '';
+                privacyCheckbox.checked = false;
+
+            } catch (err) {
+                console.error(err);
+                let pesan = err.message;
+                if (err.code === 'auth/email-already-in-use') pesan = 'Email sudah terdaftar. Gunakan email lain.';
+                else if (err.code === 'auth/weak-password') pesan = 'Password terlalu lemah. Gunakan minimal 6 karakter.';
+                alert('⚠️ ' + pesan);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Daftar Sekarang';
+            }
+        });
+
+        closeVerificationBtn.addEventListener('click', function() {
+            window.location.href = 'logindriver.html';
+        });
+
+        document.getElementById('privacyLink').addEventListener('click', (e) => {
+            e.preventDefault();
+            window.location.href = 'privasi.html';
+        });
+    </script>
+</body>
+</html>
