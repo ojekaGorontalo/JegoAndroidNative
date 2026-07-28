@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Akun Saya - JeGo</title>
+    <!-- Firebase SDKs: Auth + Database -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <style>
+        /* ========== VARIABLES LIGHT MODE (DEFAULT) ========== */
+        :root {
+            --primary: #FF9800;
+            --primary-dark: #E65100;
+            --primary-light: #FFB74D;
+            --secondary: #FF5722;
+            --accent: #FFC107;
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --success: #4CAF50;
+            --danger: #f44336;
+            --warning: #FFC107;
+            --info: #2196F3;
+            --gray: #9E9E9E;
+            --gray-light: #E0E0E0;
+            --surface: #FFFFFF;
+            --background: #f5f5f5;
+            --text-primary: #212121;
+            --text-secondary: #5f6368;
+            --border-color: #e0e0e0;
+        }
+
+        /* ========== DARK MODE OVERRIDES ========== */
+        body.dark-mode {
+            --primary: #FFB74D;
+            --primary-dark: #FF9800;
+            --primary-light: #FFA726;
+            --secondary: #FF7043;
+            --accent: #FFD54F;
+            --light: #2C2C2C;
+            --dark: #F5F5F5;
+            --success: #66BB6A;
+            --danger: #EF5350;
+            --warning: #FFCA28;
+            --info: #42A5F5;
+            --gray: #BDBDBD;
+            --gray-light: #424242;
+            --surface: #1E1E1E;
+            --background: #121212;
+            --text-primary: #FFFFFF;
+            --text-secondary: #B0B0B0;
+            --border-color: #333333;
+        }
+
+        /* Reset & Global */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text-primary);
+            line-height: 1.4;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 15px;
+            flex: 1;
+        }
+
+        /* Header dengan gradasi */
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 8px 0;
+            border-radius: 0 0 15px 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            min-height: 56px;
+            display: flex;
+            align-items: center;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            flex-wrap: wrap;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 1.4rem;
+            margin-bottom: 0;
+            color: white;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .header-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 40px;
+            padding: 8px 18px;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+            display: inline-block;
+            text-align: center;
+            font-size: 0.85rem;
+        }
+        .header-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .content-wrapper {
+            width: 100%;
+            padding: 0;
+        }
+
+        .content {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        .profile-section, .account-details {
+            width: 100%;
+            background: var(--surface);
+            border-radius: 24px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-color);
+        }
+
+        h2 {
+            color: var(--primary);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--accent);
+            font-size: 1.4rem;
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .avatar {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.6rem;
+            font-weight: bold;
+            margin-right: 20px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .avatar:hover {
+            transform: scale(1.03);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+        #avatarInitials {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: white;
+        }
+        .avatar-edit-icon {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            background: var(--accent);
+            color: #333;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            border: 2px solid var(--surface);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        .profile-info h3 {
+            font-size: 1.4rem;
+            margin-bottom: 5px;
+            cursor: pointer;
+            color: var(--text-primary);
+        }
+        .profile-info h3:hover {
+            color: var(--primary);
+        }
+        .profile-info p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 30px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-top: 8px;
+        }
+        .status-success {
+            background-color: rgba(76, 175, 80, 0.15);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+        .status-pending {
+            background-color: rgba(255, 193, 7, 0.15);
+            color: var(--warning);
+            border: 1px solid var(--warning);
+        }
+        .status-deleted {
+            background-color: rgba(244, 67, 54, 0.15);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+
+        .detail-item {
+            margin-bottom: 15px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .detail-label {
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+        }
+        .detail-value {
+            font-size: 1rem;
+            color: var(--text-primary);
+            word-break: break-word;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 40px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex: 1;
+            min-width: 130px;
+            text-align: center;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        .btn-primary {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.05);
+            box-shadow: 0 6px 14px rgba(0,0,0,0.15);
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            background-color: var(--surface);
+            margin-top: 30px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* Alert */
+        .alert {
+            padding: 14px 18px;
+            border-radius: 20px;
+            margin: 20px 0;
+            display: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .alert-success {
+            background: rgba(76, 175, 80, 0.15);
+            border-left: 4px solid var(--success);
+            color: var(--success);
+        }
+        .alert-danger {
+            background: rgba(244, 67, 54, 0.15);
+            border-left: 4px solid var(--danger);
+            color: var(--danger);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: var(--surface);
+            border-radius: 28px;
+            padding: 0;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 35px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            animation: modalFade 0.2s ease;
+        }
+        @keyframes modalFade {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .modal-header {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            color: white;
+            padding: 20px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.8rem;
+            cursor: pointer;
+            color: white;
+            opacity: 0.8;
+            transition: 0.2s;
+        }
+        .close-modal:hover {
+            opacity: 1;
+        }
+        .modal-body {
+            padding: 24px;
+        }
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            padding: 16px 24px 24px;
+            border-top: 1px solid var(--border-color);
+        }
+        .modal-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 40px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.85rem;
+            transition: 0.2s;
+        }
+        .modal-btn-cancel {
+            background: var(--light);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+        .modal-btn-confirm {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Form & upload */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .form-group input[type="text"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1.5px solid var(--border-color);
+            border-radius: 40px;
+            font-size: 1rem;
+            background: var(--light);
+            color: var(--text-primary);
+            transition: 0.2s;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .photo-preview {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 10px auto;
+            border: 3px solid var(--primary);
+            background: var(--light);
+            display: block;
+        }
+        .upload-area {
+            text-align: center;
+            margin-top: 8px;
+        }
+        .upload-btn {
+            background: var(--primary);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 40px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            border: none;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+        .upload-btn:disabled {
+            background: var(--gray);
+            cursor: not-allowed;
+        }
+        .loading-small {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 2px solid #fff;
+            border-top: 2px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 640px) {
+            .container { padding: 12px; }
+            .profile-header { flex-direction: column; text-align: center; }
+            .avatar { margin-right: 0; margin-bottom: 15px; width: 90px; height: 90px; }
+            .profile-section, .account-details { padding: 20px 16px; }
+            .action-buttons { flex-direction: column; }
+            .btn { width: 100%; }
+            .header-content { flex-direction: column; gap: 12px; }
+            .header-actions { width: 100%; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="container">
+        <div class="header-content">
+            <div class="logo-container">
+                <h1>JeGo - Akun Saya</h1>
+            </div>
+            <div class="header-actions">
+                <!-- Tombol dark mode dihapus, mode mengikuti localStorage -->
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="content-wrapper">
+    <div class="container">
+        <div id="successAlert" class="alert alert-success">✅ Informasi berhasil diperbarui!</div>
+        <div id="errorAlert" class="alert alert-danger">❌ Terjadi kesalahan. Silakan coba lagi.</div>
+
+        <div class="content">
+            <!-- Profil -->
+            <section class="profile-section">
+                <h2>Profil Saya</h2>
+                <div class="profile-header">
+                    <div class="avatar" id="userAvatar">
+                        <img id="avatarImage" src="" alt="Foto Profil" style="display: none;">
+                        <div id="avatarInitials"></div>
+                        <div class="avatar-edit-icon">✏️</div>
+                    </div>
+                    <div class="profile-info">
+                        <h3 id="userName">-</h3>
+                        <p id="userEmail">-</p>
+                        <div class="status-badge" id="userStatus"></div>
+                    </div>
+                </div>
+                <div class="detail-item"><div class="detail-label">Nomor Telepon</div><div class="detail-value" id="userPhone">-</div></div>
+                <div class="detail-item"><div class="detail-label">Email</div><div class="detail-value" id="userEmailDetail">-</div></div>
+                <div class="detail-item"><div class="detail-label">Alamat</div><div class="detail-value" id="userAddress">-</div></div>
+                <div class="detail-item"><div class="detail-label">User ID</div><div class="detail-value" id="userUid">-</div></div>
+                <div class="detail-item"><div class="detail-label">Tanggal Bergabung</div><div class="detail-value" id="joinDate">-</div></div>
+                <div class="detail-item"><div class="detail-label">Rating</div><div class="detail-value" id="userRating">-</div></div>
+                <div class="detail-item"><div class="detail-label">Jumlah Perjalanan</div><div class="detail-value" id="userPerjalanan">-</div></div>
+            </section>
+
+            <!-- Aksi Akun -->
+            <section class="account-details">
+                <h2>Detail Akun</h2>
+                <div class="action-buttons">
+                    <button class="btn btn-danger" id="deleteAccountBtn">Hapus Akun</button>
+                    <button class="btn btn-primary" id="logoutBtn">Logout</button>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+
+<footer>
+    <div class="container">
+        <p>&copy; 2026 JeGo - Transportasi & Ekspedisi</p>
+    </div>
+</footer>
+
+<!-- Modal Konfirmasi Hapus -->
+<div id="deleteAccountModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title" style="color: white;">Konfirmasi Penghapusan</div>
+            <button class="close-modal" id="closeModal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p><strong>⚠️ Tindakan ini tidak dapat dibatalkan!</strong></p>
+            <p>Dengan menghapus akun Anda:</p>
+            <ul style="margin:10px 0 10px 20px; color: var(--text-secondary);">
+                <li>Status akun akan diubah menjadi <strong>delete_account</strong></li>
+                <li>Anda tidak dapat login kembali dengan akun ini</li>
+                <li>Semua data akan dihapus permanen</li>
+            </ul>
+            <p>Apakah Anda yakin ingin melanjutkan?</p>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn modal-btn-cancel" id="cancelDelete">Batal</button>
+            <button class="modal-btn modal-btn-confirm" id="confirmDelete" style="background: var(--danger);">Ya, Hapus Akun</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Logout -->
+<div id="logoutModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title">Konfirmasi Logout</div>
+            <button class="close-modal" id="closeLogoutModal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p>Apakah Anda yakin ingin logout dari akun JeGo?</p>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn modal-btn-cancel" id="cancelLogout">Batal</button>
+            <button class="modal-btn modal-btn-confirm" id="confirmLogout">Ya, Logout</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Edit Profil -->
+<div id="editProfileModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title">Edit Profil</div>
+            <button class="close-modal" id="closeEditModal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>Nama Lengkap</label>
+                <input type="text" id="editName" placeholder="Masukkan nama Anda">
+            </div>
+            <div class="form-group">
+                <label>Foto Profil</label>
+                <div style="display: flex; flex-direction: column; align-items: center;">
+                    <img id="photoPreview" class="photo-preview" src="" alt="Preview">
+                    <div class="upload-area">
+                        <input type="file" id="photoFile" accept="image/*" style="display: none;">
+                        <button type="button" class="upload-btn" id="uploadPhotoBtn">📷 Upload Foto Baru</button>
+                        <div id="uploadStatus" style="margin-top: 8px; font-size: 0.75rem; color: var(--text-secondary);"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn modal-btn-cancel" id="cancelEdit">Batal</button>
+            <button class="modal-btn modal-btn-confirm" id="saveEdit">Simpan Perubahan</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ========== KONFIGURASI FIREBASE ==========
+    const FIREBASE_CONFIG = {
+        apiKey: "AIzaSyCD0pgeZio-LdKqYDtWxcdXcZwyL4ngYQI",
+        authDomain: "jego-35a2b.firebaseapp.com",
+        databaseURL: "https://jego-35a2b-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "jego-35a2b",
+        storageBucket: "jego-35a2b.firebasestorage.app",
+        messagingSenderId: "600037007040",
+        appId: "1:600037007040:web:ac3243ad9b472647ffd725"
+    };
+
+    if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+    const auth = firebase.auth();
+    const database = firebase.database();
+
+    // DOM Elements
+    const userName = document.getElementById('userName');
+    const userEmail = document.getElementById('userEmail');
+    const userEmailDetail = document.getElementById('userEmailDetail');
+    const userPhone = document.getElementById('userPhone');
+    const userAddress = document.getElementById('userAddress');
+    const userUid = document.getElementById('userUid');
+    const userStatus = document.getElementById('userStatus');
+    const joinDate = document.getElementById('joinDate');
+    const userAvatar = document.getElementById('userAvatar');
+    const avatarImage = document.getElementById('avatarImage');
+    const avatarInitials = document.getElementById('avatarInitials');
+    const userRating = document.getElementById('userRating');
+    const userPerjalanan = document.getElementById('userPerjalanan');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const successAlert = document.getElementById('successAlert');
+    const errorAlert = document.getElementById('errorAlert');
+    const deleteAccountBtn = document.getElementById('deleteAccountBtn');
+    const deleteAccountModal = document.getElementById('deleteAccountModal');
+    const closeModal = document.getElementById('closeModal');
+    const cancelDelete = document.getElementById('cancelDelete');
+    const confirmDelete = document.getElementById('confirmDelete');
+    const logoutModal = document.getElementById('logoutModal');
+    const closeLogoutModal = document.getElementById('closeLogoutModal');
+    const cancelLogout = document.getElementById('cancelLogout');
+    const confirmLogout = document.getElementById('confirmLogout');
+    const editProfileModal = document.getElementById('editProfileModal');
+    const closeEditModal = document.getElementById('closeEditModal');
+    const cancelEdit = document.getElementById('cancelEdit');
+    const saveEdit = document.getElementById('saveEdit');
+    const editName = document.getElementById('editName');
+    const photoFile = document.getElementById('photoFile');
+    const uploadPhotoBtn = document.getElementById('uploadPhotoBtn');
+    const photoPreview = document.getElementById('photoPreview');
+    const uploadStatus = document.getElementById('uploadStatus');
+
+    let currentUserData = null;
+    let currentUid = null;
+    let newPhotoURL = null;
+    let isUploading = false;
+
+    // ========== DARK MODE - MENGIKUTI LOCALSTORAGE ==========
+    function applyDarkModeFromLocalStorage() {
+        const isDarkMode = localStorage.getItem('jego_dark_mode') === 'true';
+        if (isDarkMode) {
+            document.body.classList.add('dark-mode');
+        } else {
+            document.body.classList.remove('dark-mode');
+        }
+    }
+
+    // ========== HELPER ==========
+    function showAlert(el, msg, isSuccess = true) {
+        if (msg) el.textContent = msg;
+        el.style.display = 'block';
+        setTimeout(() => el.style.display = 'none', 4000);
+    }
+
+    function getInitials(name) {
+        if (!name || name === '-') return 'U';
+        return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+    }
+
+    function formatDate(dateString) {
+        if (!dateString) return '-';
+        try {
+            return new Date(dateString).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+        } catch { return '-'; }
+    }
+
+    // ========== KONVERSI FILE KE BASE64 DENGAN KOMPRESI ==========
+    function fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function compressImage(file, maxWidth = 300, maxHeight = 300, quality = 0.7) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+                    if (width > height) {
+                        if (width > maxWidth) {
+                            height *= maxWidth / width;
+                            width = maxWidth;
+                        }
+                    } else {
+                        if (height > maxHeight) {
+                            width *= maxHeight / height;
+                            height = maxHeight;
+                        }
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    resolve(canvas.toDataURL('image/jpeg', quality));
+                };
+                img.onerror = reject;
+                img.src = e.target.result;
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
+
+    // ========== TAMPILKAN DATA USER ==========
+    function displayUserData(data) {
+        if (!data) return;
+        currentUserData = data;
+        userName.textContent = data.name || '-';
+        userEmail.textContent = data.email || '-';
+        userEmailDetail.textContent = data.email || '-';
+        userPhone.textContent = data.phone || '-';
+        userAddress.textContent = data.address || '-';
+        userUid.textContent = currentUid || '-';
+        const rating = data.rating !== undefined ? parseFloat(data.rating).toFixed(1) : '0.0';
+        userRating.textContent = `${rating} ⭐`;
+        userPerjalanan.textContent = (data.perjalanan || 0) + ' kali';
+        joinDate.textContent = data.createdAt ? formatDate(data.createdAt) : '-';
+
+        const status = data.status || 'active';
+        let statusText = 'AKTIF', statusClass = 'status-success';
+        if (status === 'delete_account') { statusText = 'AKUN DIHAPUS'; statusClass = 'status-deleted'; }
+        else if (status === 'pending') { statusText = 'MENUNGGU VERIFIKASI'; statusClass = 'status-pending'; }
+        userStatus.textContent = statusText;
+        userStatus.className = `status-badge ${statusClass}`;
+
+        // Tampilkan foto (Base64 atau URL)
+        if (data.photoURL && data.photoURL.trim() !== '') {
+            avatarImage.src = data.photoURL;
+            avatarImage.style.display = 'block';
+            avatarInitials.style.display = 'none';
+        } else {
+            avatarImage.style.display = 'none';
+            avatarInitials.style.display = 'flex';
+            avatarInitials.textContent = getInitials(data.name);
+        }
+        deleteAccountBtn.style.display = (status === 'delete_account') ? 'none' : 'block';
+    }
+
+    // ========== LOGOUT ==========
+    async function logoutUser() {
+        try {
+            await auth.signOut();
+            localStorage.removeItem('jego_logged_in_user');
+            window.location.href = 'loginUser.html';
+        } catch (err) {
+            console.error(err);
+            showAlert(errorAlert, 'Gagal logout, coba lagi.', false);
+        }
+    }
+
+    // ========== HAPUS AKUN ==========
+    async function deleteAccount(uid) {
+        try {
+            await database.ref(`users/${uid}`).update({
+                status: 'delete_account',
+                deleted_at: new Date().toISOString()
+            });
+            await auth.signOut();
+            localStorage.removeItem('jego_logged_in_user');
+            showAlert(successAlert, 'Akun berhasil dihapus. Redirecting...', true);
+            setTimeout(() => window.location.href = 'loginUser.html', 2000);
+        } catch (err) {
+            console.error(err);
+            showAlert(errorAlert, 'Gagal menghapus akun: ' + err.message, false);
+        }
+    }
+
+    // ========== EDIT PROFIL MODAL ==========
+    function openEditProfile() {
+        if (!currentUserData) return;
+        editName.value = currentUserData.name || '';
+        newPhotoURL = null;
+        uploadStatus.innerHTML = '';
+        photoPreview.src = currentUserData.photoURL || '';
+        editProfileModal.style.display = 'flex';
+    }
+
+    function closeEditProfileModal() {
+        editProfileModal.style.display = 'none';
+        photoFile.value = '';
+        newPhotoURL = null;
+        uploadStatus.innerHTML = '';
+        isUploading = false;
+    }
+
+    // ========== EVENT UPLOAD FOTO ==========
+    uploadPhotoBtn.addEventListener('click', () => {
+        if (isUploading) return;
+        photoFile.click();
+    });
+
+    photoFile.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (!file.type.startsWith('image/')) {
+            showAlert(errorAlert, 'Hanya file gambar yang diperbolehkan!', false);
+            return;
+        }
+
+        // Batasi ukuran file maksimal 2MB (agar Base64 tidak terlalu besar)
+        if (file.size > 2 * 1024 * 1024) {
+            showAlert(errorAlert, 'Ukuran file maksimal 2MB!', false);
+            return;
+        }
+
+        isUploading = true;
+        uploadPhotoBtn.disabled = true;
+        uploadPhotoBtn.innerHTML = 'Memproses... <span class="loading-small"></span>';
+        uploadStatus.innerHTML = 'Mengompres & konversi ke Base64...';
+
+        try {
+            // Kompres gambar terlebih dahulu (max 300x300, quality 0.7)
+            const compressedBase64 = await compressImage(file, 300, 300, 0.7);
+            photoPreview.src = compressedBase64;
+            newPhotoURL = compressedBase64; // Simpan Base64 terkompresi
+            uploadStatus.innerHTML = '✅ Foto siap disimpan';
+            showAlert(successAlert, 'Foto berhasil diproses!', true);
+        } catch (err) {
+            console.error(err);
+            uploadStatus.innerHTML = '❌ Gagal memproses foto.';
+            showAlert(errorAlert, err.message, false);
+            photoPreview.src = currentUserData?.photoURL || '';
+            newPhotoURL = null;
+        } finally {
+            isUploading = false;
+            uploadPhotoBtn.disabled = false;
+            uploadPhotoBtn.innerHTML = '📷 Upload Foto Baru';
+            setTimeout(() => {
+                if (uploadStatus.innerHTML !== '❌ Gagal memproses foto.') {
+                    uploadStatus.innerHTML = '';
+                }
+            }, 3000);
+        }
+    });
+
+    // ========== SAVE EDIT PROFIL ==========
+    saveEdit.addEventListener('click', async () => {
+        const newName = editName.value.trim();
+        if (!newName) {
+            showAlert(errorAlert, 'Nama tidak boleh kosong!', false);
+            return;
+        }
+
+        const nameChanged = (newName !== currentUserData.name);
+        const photoChanged = (newPhotoURL !== null && newPhotoURL !== currentUserData.photoURL);
+
+        if (!nameChanged && !photoChanged) {
+            closeEditProfileModal();
+            return;
+        }
+
+        saveEdit.disabled = true;
+        saveEdit.innerHTML = 'Menyimpan...';
+
+        try {
+            const updates = {};
+            if (nameChanged) updates.name = newName;
+            if (photoChanged) updates.photoURL = newPhotoURL; // Base64
+
+            await database.ref(`users/${currentUid}`).update(updates);
+
+            const updatedData = { ...currentUserData, ...updates };
+            displayUserData(updatedData);
+
+            // Perbarui localStorage
+            const session = JSON.parse(localStorage.getItem('jego_logged_in_user') || '{}');
+            const newSession = { ...session, ...updates };
+            localStorage.setItem('jego_logged_in_user', JSON.stringify(newSession));
+
+            showAlert(successAlert, 'Profil berhasil diperbarui!', true);
+            closeEditProfileModal();
+        } catch (err) {
+            console.error(err);
+            showAlert(errorAlert, 'Gagal menyimpan: ' + err.message, false);
+        } finally {
+            saveEdit.disabled = false;
+            saveEdit.innerHTML = 'Simpan Perubahan';
+        }
+    });
+
+    // ========== EVENT LISTENER MODAL ==========
+    userAvatar.addEventListener('click', openEditProfile);
+    userName.addEventListener('click', openEditProfile);
+    closeEditModal.addEventListener('click', closeEditProfileModal);
+    cancelEdit.addEventListener('click', closeEditProfileModal);
+    window.addEventListener('click', (e) => {
+        if (e.target === editProfileModal) closeEditProfileModal();
+        if (e.target === deleteAccountModal) deleteAccountModal.style.display = 'none';
+        if (e.target === logoutModal) logoutModal.style.display = 'none';
+    });
+
+    logoutBtn.addEventListener('click', () => logoutModal.style.display = 'flex');
+    deleteAccountBtn.addEventListener('click', () => deleteAccountModal.style.display = 'flex');
+    closeModal.addEventListener('click', () => deleteAccountModal.style.display = 'none');
+    cancelDelete.addEventListener('click', () => deleteAccountModal.style.display = 'none');
+    closeLogoutModal.addEventListener('click', () => logoutModal.style.display = 'none');
+    cancelLogout.addEventListener('click', () => logoutModal.style.display = 'none');
+    confirmLogout.addEventListener('click', () => { logoutModal.style.display = 'none'; logoutUser(); });
+    confirmDelete.addEventListener('click', async () => {
+        if (!currentUid) return;
+        deleteAccountModal.style.display = 'none';
+        await deleteAccount(currentUid);
+    });
+
+    // ========== INISIALISASI ==========
+    document.addEventListener('DOMContentLoaded', async () => {
+        applyDarkModeFromLocalStorage();
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                window.location.href = 'loginUser.html';
+                return;
+            }
+            currentUid = user.uid;
+            try {
+                const snapshot = await database.ref(`users/${currentUid}`).once('value');
+                let data = snapshot.val();
+                if (!data) throw new Error('Data user tidak ditemukan');
+                if (data.status === 'delete_account') {
+                    await auth.signOut();
+                    localStorage.removeItem('jego_logged_in_user');
+                    alert('Akun telah dihapus. Silakan daftar ulang.');
+                    window.location.href = 'registrasi_jego.html';
+                    return;
+                }
+                displayUserData(data);
+                const session = {
+                    userId: currentUid, uid: currentUid, name: data.name, phone: data.phone,
+                    email: data.email, address: data.address, gender: data.gender,
+                    status: data.status, photoURL: data.photoURL, rating: data.rating,
+                    perjalanan: data.perjalanan
+                };
+                localStorage.setItem('jego_logged_in_user', JSON.stringify(session));
+            } catch (err) {
+                console.error(err);
+                showAlert(errorAlert, 'Gagal memuat data user. Silakan logout dan login ulang.', false);
+            }
+        });
+    });
+</script>
+</body>
+</html>
