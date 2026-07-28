@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+  <title>Kompensasi Driver - JeGo</title>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #F5F5F5;
+      font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+    }
+
+    .native-container {
+      width: 100%;
+      max-width: 100%;
+      background: #F5F5F5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #FF9800, #F57C00);
+      padding: 20px 20px;
+      color: white;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .header p {
+      font-size: 0.8rem;
+      opacity: 0.9;
+      margin-top: 4px;
+    }
+
+    .card {
+      background: white;
+      margin: 0 0 12px 0;
+      padding: 20px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .balance-card {
+      background: #FFF3E0;
+      margin: 12px 0;
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .balance-label {
+      font-size: 0.8rem;
+      color: #E65100;
+      font-weight: 500;
+    }
+
+    .balance-amount {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #2E7D32;
+      line-height: 1.2;
+    }
+
+    .kompensasi-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .kompensasi-item {
+      background: white;
+      border-radius: 20px;
+      padding: 16px;
+      border: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      transition: 0.2s;
+    }
+
+    .kompensasi-info {
+      flex: 1;
+    }
+
+    .kompensasi-nominal {
+      font-weight: 800;
+      color: #2E7D32;
+      font-size: 1.2rem;
+    }
+
+    .kompensasi-meta {
+      font-size: 0.7rem;
+      color: #64748b;
+      margin-top: 6px;
+      line-height: 1.4;
+    }
+
+    .btn-klaim {
+      background: #FF9800;
+      border: none;
+      padding: 8px 20px;
+      border-radius: 40px;
+      color: white;
+      font-weight: bold;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: 0.2s;
+      min-width: 130px;
+    }
+
+    .btn-klaim:active {
+      transform: scale(0.96);
+      background: #F57C00;
+    }
+
+    .btn-primary-solid {
+      background: #2E7D32;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 40px;
+      font-weight: bold;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .btn-primary-solid:active {
+      transform: scale(0.96);
+      background: #1B5E20;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #94a3b8;
+      background: white;
+      border-radius: 20px;
+    }
+
+    .loading-state {
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .spinner {
+      border: 3px solid #e2e8f0;
+      border-top-color: #FF9800;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 12px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .toast-message {
+      position: fixed;
+      bottom: 24px;
+      left: 20px;
+      right: 20px;
+      background: #1E293B;
+      color: white;
+      text-align: center;
+      padding: 12px;
+      border-radius: 40px;
+      font-size: 0.85rem;
+      opacity: 0;
+      transition: opacity 0.2s;
+      z-index: 1100;
+      pointer-events: none;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 0.7rem;
+      color: #888;
+      background: #F5F5F5;
+    }
+  </style>
+</head>
+<body>
+<div class="native-container">
+  <div class="header">
+    <h1>💰 Kompensasi Driver</h1>
+    <p>Kompensasi dari penggunaan saldo bonus oleh customer</p>
+  </div>
+
+  <div style="padding: 0 0px;">
+    <div class="balance-card">
+      <div>
+        <div class="balance-label">Total Kompensasi Belum Diambil</div>
+        <div class="balance-amount" id="totalPendingKompensasi">Rp 0</div>
+      </div>
+      <button id="claimAllBtn" class="btn-primary-solid">Ambil Semua</button>
+    </div>
+
+    <div class="card">
+      <div style="font-weight: 600; margin-bottom: 12px;">📋 Daftar Kompensasi Pending</div>
+      <div id="kompensasiList" class="kompensasi-list">
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Memuat data...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    JeGo - Jasa Ekspedisi Gorontalo © 2026
+  </footer>
+</div>
+
+<div id="toast" class="toast-message"></div>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCD0pgeZio-LdKqYDtWxcdXcZwyL4ngYQI",
+    authDomain: "jego-35a2b.firebaseapp.com",
+    databaseURL: "https://jego-35a2b-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "jego-35a2b",
+    storageBucket: "jego-35a2b.firebasestorage.app",
+    appId: "1:600037007040:web:ac3243ad9b472647ffd725"
+  };
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const database = firebase.database();
+
+  let currentDriver = null;
+
+  function showToast(msg) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.style.opacity = '1';
+    setTimeout(() => toast.style.opacity = '0', 2500);
+  }
+
+  function formatRupiah(amount) {
+    return 'Rp ' + (parseInt(amount) || 0).toLocaleString('id-ID');
+  }
+
+  async function loadKompensasi() {
+    if (!currentDriver) return;
+    const kompensasiRef = database.ref(`driver_bonus/${currentDriver.uid}`);
+    const snapshot = await kompensasiRef.once('value');
+    const kompensasiData = snapshot.val();
+    const container = document.getElementById('kompensasiList');
+    const totalSpan = document.getElementById('totalPendingKompensasi');
+
+    if (!kompensasiData) {
+      container.innerHTML = '<div class="empty-state">✨ Belum ada kompensasi dari customer</div>';
+      totalSpan.innerText = 'Rp 0';
+      return;
+    }
+
+    let pendingTotal = 0;
+    let html = '';
+    for (let key in kompensasiData) {
+      const item = kompensasiData[key];
+      if (item.status !== 'pending') continue;
+      pendingTotal += item.amount;
+      html += `
+        <div class="kompensasi-item" data-id="${key}">
+          <div class="kompensasi-info">
+            <div class="kompensasi-nominal">${formatRupiah(item.amount)}</div>
+            <div class="kompensasi-meta">
+              Order: ${item.orderId}<br>
+              Customer: ${item.customerName || item.customerId}<br>
+              ${new Date(item.createdAt).toLocaleString('id-ID')}
+            </div>
+          </div>
+          <button class="btn-klaim" data-id="${key}">Ambil Kompensasi</button>
+        </div>
+      `;
+    }
+
+    if (pendingTotal === 0) {
+      container.innerHTML = '<div class="empty-state">✨ Tidak ada kompensasi pending</div>';
+    } else {
+      container.innerHTML = html;
+    }
+    totalSpan.innerText = formatRupiah(pendingTotal);
+
+    document.querySelectorAll('.btn-klaim').forEach(btn => {
+      btn.removeEventListener('click', handleClaim);
+      btn.addEventListener('click', handleClaim);
+    });
+  }
+
+  async function handleClaim(e) {
+    const btn = e.currentTarget;
+    const kompensasiId = btn.dataset.id;
+    await claimKompensasi(kompensasiId, btn);
+  }
+
+  async function claimKompensasi(kompensasiId, btnElement) {
+    if (!currentDriver) return;
+    const kompensasiRef = database.ref(`driver_bonus/${currentDriver.uid}/${kompensasiId}`);
+    const snap = await kompensasiRef.once('value');
+    const kompensasi = snap.val();
+    if (!kompensasi || kompensasi.status !== 'pending') {
+      showToast('Kompensasi sudah tidak tersedia');
+      return;
+    }
+    const amount = kompensasi.amount;
+    if (!confirm(`Ambil kompensasi ${formatRupiah(amount)} ke saldo Anda?`)) return;
+
+    btnElement.disabled = true;
+    btnElement.innerText = 'Memproses...';
+
+    try {
+      // ========== PERBAIKAN: Tambah ke node drivers, bukan users ==========
+      const balanceRef = database.ref(`drivers/${currentDriver.uid}/balance`);
+      await balanceRef.transaction(currentBalance => (currentBalance || 0) + amount);
+      // ====================================================================
+
+      await kompensasiRef.update({
+        status: 'claimed',
+        claimedAt: new Date().toISOString()
+      });
+
+      await database.ref(`balance_history/${currentDriver.uid}`).push({
+        type: 'kompensasi_claim',
+        amount: amount,
+        kompensasiId: kompensasiId,
+        orderId: kompensasi.orderId,
+        customerId: kompensasi.customerId,
+        timestamp: new Date().toISOString()
+      });
+
+      showToast(`✅ ${formatRupiah(amount)} telah masuk ke saldo Anda`);
+      loadKompensasi();
+    } catch (err) {
+      console.error(err);
+      showToast('Gagal mengambil kompensasi: ' + err.message);
+      btnElement.disabled = false;
+      btnElement.innerText = 'Ambil Kompensasi';
+    }
+  }
+
+  async function claimAllKompensasi() {
+    if (!currentDriver) return;
+    const kompensasiRef = database.ref(`driver_bonus/${currentDriver.uid}`);
+    const snapshot = await kompensasiRef.once('value');
+    const kompensasiData = snapshot.val();
+    if (!kompensasiData) {
+      showToast('Tidak ada kompensasi yang bisa diambil');
+      return;
+    }
+    let pendingIds = [];
+    let totalAmount = 0;
+    for (let key in kompensasiData) {
+      if (kompensasiData[key].status === 'pending') {
+        pendingIds.push(key);
+        totalAmount += kompensasiData[key].amount;
+      }
+    }
+    if (pendingIds.length === 0) {
+      showToast('Semua kompensasi sudah diambil');
+      return;
+    }
+    if (!confirm(`Ambil semua kompensasi (${pendingIds.length} item) total ${formatRupiah(totalAmount)}?`)) return;
+
+    for (let id of pendingIds) {
+      const ref = database.ref(`driver_bonus/${currentDriver.uid}/${id}`);
+      const snap = await ref.once('value');
+      const komp = snap.val();
+      if (komp && komp.status === 'pending') {
+        await ref.update({ status: 'claimed', claimedAt: new Date().toISOString() });
+        // ========== PERBAIKAN: Tambah ke node drivers ==========
+        const balanceRef = database.ref(`drivers/${currentDriver.uid}/balance`);
+        await balanceRef.transaction(cur => (cur || 0) + komp.amount);
+        // ========================================================
+        await database.ref(`balance_history/${currentDriver.uid}`).push({
+          type: 'kompensasi_claim_bulk',
+          amount: komp.amount,
+          kompensasiId: id,
+          timestamp: new Date().toISOString()
+        });
+      }
+    }
+    showToast(`✅ Semua kompensasi berhasil diambil! Total ${formatRupiah(totalAmount)}`);
+    loadKompensasi();
+  }
+
+  auth.onAuthStateChanged(async (user) => {
+    if (user) {
+      const driverData = await database.ref(`drivers/${user.uid}`).once('value');
+      if (!driverData.exists()) {
+        alert('Akun ini bukan driver. Halaman ini hanya untuk driver.');
+        window.location.href = 'index.html';
+        return;
+      }
+      currentDriver = user;
+      loadKompensasi();
+      document.getElementById('claimAllBtn').addEventListener('click', claimAllKompensasi);
+    } else {
+      window.location.href = 'loginDriver.html';
+    }
+  });
+</script>
+</body>
+</html>
