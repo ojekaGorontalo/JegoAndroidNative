@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <title>Akun Driver - JeGo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <!-- Firebase SDKs (Auth + Database) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <style>
+    /* ========== FULL LEBAR TANPA CELAH ========== */
+    :root { --primary: #FF9800; --secondary: #FF5722; --accent: #FFC107; --light: #f8f9fa; --dark: #343a40; --success: #4CAF50; --danger: #f44336; --warning: #FFC107; --info: #2196F3; --gray: #9E9E9E; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+      background-color: white;
+      color: #333; 
+      line-height: 1.4; 
+      font-size: 0.85rem; 
+      padding: 0;
+    }
+    .header { 
+      background: linear-gradient(135deg, var(--primary), var(--secondary)); 
+      color: white; 
+      padding: 15px 20px; 
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2); 
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between; 
+      position: sticky; 
+      top: 0; 
+      z-index: 100;
+    }
+    .logo-container { display: flex; align-items: center; }
+    .logo { width: 40px; height: 40px; background-color: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 10px; font-weight: bold; font-size: 16px; color: var(--primary); }
+    .header-title { font-size: 1.2rem; font-weight: 600; }
+    .container { max-width: 100%; padding: 0; margin: 0; }
+    .form-container { background: white; border-radius: 0; padding: 0; box-shadow: none; max-width: 100%; margin: 0; }
+    .profile-card { background: white; border-radius: 0; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 0; text-align: center; position: relative; }
+    .info-cards-container { display: grid; grid-template-columns: 1fr; gap: 0; margin-bottom: 0; }
+    @media (min-width: 768px) { .info-cards-container { grid-template-columns: 1fr 1fr; } }
+    .info-card { background: white; border-radius: 0; padding: 20px; box-shadow: none; border-top: 1px solid #f0f0f0; }
+    .action-buttons { padding: 20px; border-top: 1px solid #f0f0f0; display: flex; flex-direction: column; gap: 12px; }
+    .profile-photo-container { position: relative; display: inline-block; margin-bottom: 15px; }
+    .profile-photo { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 4px solid var(--accent); box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+    .priority-badge { display: inline-block; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; margin: 8px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.15); letter-spacing: 0.5px; color: white; }
+    .priority-badge.basic { background: linear-gradient(135deg, var(--gray), #757575); }
+    .priority-badge.standard { background: linear-gradient(135deg, var(--info), #1976d2); }
+    .priority-badge.regular { background: linear-gradient(135deg, var(--success), #388e3c); }
+    .priority-badge.essential { background: linear-gradient(135deg, var(--warning), #ff8f00); color: #333; }
+    #priorityBadgeSmall { position: absolute; bottom: 0px; right: 0px; padding: 4px 10px; font-size: 0.7rem; border-radius: 12px; font-weight: 700; }
+    .balance-container { background: linear-gradient(135deg, var(--info), #0d8dd9); color: white; border-radius: 10px; padding: 15px; margin: 15px 0; box-shadow: 0 4px 12px rgba(0,0,0,0.1); cursor: pointer; transition: all 0.3s ease; }
+    .balance-container:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.2); }
+    .balance-label { font-size: 0.85rem; margin-bottom: 5px; opacity: 0.9; }
+    .balance-amount { font-size: 1.5rem; font-weight: 700; margin-bottom: 5px; }
+    .commission-info { font-size: 0.75rem; opacity: 0.9; margin-top: 5px; }
+    .profile-rating { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 15px; cursor: pointer; padding: 8px; border-radius: 8px; transition: background-color 0.3s; }
+    .profile-rating:hover { background-color: rgba(255, 152, 0, 0.1); }
+    .rating-stars { display: flex; gap: 2px; }
+    .star { color: #ddd; font-size: 1.1rem; }
+    .star.filled { color: #ffc107; }
+    .rating-value { font-weight: 600; color: var(--dark); }
+    .rating-count { color: #666; font-size: 0.8rem; }
+    .profile-stats { display: flex; justify-content: center; gap: 20px; margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; flex-wrap: wrap; }
+    .stat-item { display: flex; flex-direction: column; align-items: center; cursor: pointer; padding: 8px 12px; border-radius: 8px; transition: background-color 0.3s; flex: 1; min-width: 100px; }
+    .stat-item:hover { background-color: rgba(255, 152, 0, 0.05); }
+    .stat-value { font-weight: 700; font-size: 1.1rem; color: var(--primary); }
+    .stat-label { font-size: 0.75rem; color: #666; margin-top: 2px; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .card-title { font-size: 1rem; font-weight: 600; color: var(--primary); display: flex; align-items: center; gap: 8px; }
+    .toggle-btn { background: none; border: none; color: var(--primary); cursor: pointer; padding: 5px; border-radius: 4px; transition: background 0.3s; }
+    .toggle-btn:hover { background: rgba(255, 152, 0, 0.1); }
+    .card-content { transition: all 0.3s ease; }
+    .card-content.collapsed { display: none; }
+    .info-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f0f0f0; align-items: center; }
+    .info-item:last-child { border-bottom: none; }
+    .info-label { font-weight: 600; color: #555; font-size: 0.85rem; }
+    .info-value { color: #333; text-align: right; font-size: 0.85rem; max-width: 60%; word-break: break-word; display: flex; align-items: center; gap: 8px; }
+    .copy-btn { background: none; border: none; color: var(--primary); cursor: pointer; padding: 4px; border-radius: 4px; transition: all 0.3s; display: flex; align-items: center; justify-content: center; }
+    .copy-btn:hover { background-color: rgba(255,152,0,0.1); transform: scale(1.1); }
+    .submit-btn { background: linear-gradient(to right, var(--primary), var(--secondary)); color: white; border: none; border-radius: 8px; padding: 12px 25px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.15); width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .submit-btn.btn-danger { background: linear-gradient(to right, var(--danger), #d32f2f); }
+    .status-badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
+    .status-active { background-color: rgba(76,175,80,0.1); color: var(--success); border: 1px solid var(--success); }
+    .status-pending { background-color: rgba(255,193,7,0.1); color: var(--warning); border: 1px solid var(--warning); }
+    .status-rejected { background-color: rgba(244,67,54,0.1); color: var(--danger); border: 1px solid var(--danger); }
+    .status-blocked { background-color: rgba(158,158,158,0.1); color: var(--gray); border: 1px solid var(--gray); }
+    .status-pending-delete { background-color: rgba(255,152,0,0.1); color: #FF9800; border: 1px solid #FF9800; }
+    .delete-warning { background: #fff3e0; border-left: 4px solid #FF9800; padding: 12px 15px; border-radius: 10px; margin: 10px 0 15px; font-size: 0.8rem; text-align: left; display: flex; align-items: center; gap: 10px; }
+    .delete-warning a { color: #FF9800; font-weight: 600; text-decoration: none; }
+    .delete-warning a:hover { text-decoration: underline; }
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; visibility: hidden; transition: all 0.3s ease; }
+    .modal-overlay.active { opacity: 1; visibility: visible; }
+    .modal { background-color: white; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); transform: translateY(-20px); transition: transform 0.3s ease; overflow: hidden; }
+    .modal-overlay.active .modal { transform: translateY(0); }
+    .modal-header { padding: 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e9ecef; }
+    .modal-title { display: flex; align-items: center; font-size: 1.2rem; font-weight: 600; margin: 0; }
+    .modal-icon { width: 24px; height: 24px; margin-right: 10px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }
+    .modal-icon.success { background-color: var(--success); }
+    .modal-icon.error { background-color: var(--danger); }
+    .modal-icon.warning { background-color: var(--warning); }
+    .modal-icon.info { background-color: var(--info); }
+    .close-btn-modal { background: none; border: none; font-size: 24px; cursor: pointer; color: #6c757d; line-height: 1; padding: 0; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: all 0.3s; }
+    .close-btn-modal:hover { background-color: #f8f9fa; color: var(--dark); }
+    .modal-body { padding: 20px; font-size: 16px; line-height: 1.5; }
+    .modal-footer { padding: 15px 20px; display: flex; justify-content: flex-end; border-top: 1px solid #e9ecef; background-color: #f8f9fa; }
+    .modal-btn { padding: 10px 20px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.3s; font-size: 15px; }
+    .modal-btn.confirm { background-color: var(--primary); color: white; margin-left: 10px; }
+    .modal-btn.cancel { background-color: #6c757d; color: white; }
+    .loading-modal .modal-body { display: block !important; padding: 20px !important; }
+    .loading-spinner { display: none !important; }
+    .loading-text { font-size: 0.9rem !important; color: #FF9800 !important; font-weight: 500 !important; margin: 0 !important; }
+    .modal-overlay .modal.loading-modal { background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-width: 200px; text-align: center; }
+    .form-group { margin-bottom: 15px; text-align: left; }
+    .form-group label { display: block; font-weight: 500; margin-bottom: 5px; font-size: 14px; }
+    .form-group input, .form-group select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 12px; font-size: 16px; }
+    .btn-save { background: #4CAF50; color: white; border: none; padding: 12px; border-radius: 40px; font-weight: 600; width: 100%; cursor: pointer; }
+    .btn-save:hover { background: #388E3C; }
+    .btn-logout-modal { background: #dc3545; color: white; border: none; padding: 12px; border-radius: 40px; font-weight: 600; width: 100%; cursor: pointer; margin-top: 10px; }
+    .btn-logout-modal:hover { background: #c82333; }
+    .status-msg { margin-top: 15px; padding: 10px; border-radius: 8px; }
+    .status-msg.success { background: #e8f5e9; color: #2e7d32; }
+    .status-msg.error { background: #ffebee; color: #c62828; }
+    .hidden { display: none; }
+    @media (max-width: 768px) { .info-item { flex-direction: column; gap: 5px; align-items: flex-start; } .info-value { text-align: left; max-width: 100%; width: 100%; justify-content: space-between; } .profile-stats { gap: 10px; } .stat-item { min-width: 80px; padding: 6px 8px; } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo-container"><div class="logo">JG</div><div class="header-title">Akun Driver - JeGo</div></div>
+  </div>
+  <div class="container">
+    <div class="form-container">
+      <div class="profile-card" id="profileCard">
+        <div class="profile-photo-container">
+          <img id="profilePhoto" class="profile-photo" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Foto Profil">
+          <div class="priority-badge basic" id="priorityBadgeSmall">Basic</div>
+        </div>
+        <div class="profile-name" id="profileName">-</div>
+        <div class="profile-vehicle" id="profileVehicle">-</div>
+        <div class="balance-container" id="balanceContainer">
+          <div class="balance-label">Saldo Deposit</div>
+          <div class="balance-amount" id="balanceAmount">Rp 0</div>
+          <div class="commission-info">Potongan Komisi: <span id="commissionRate">0%</span></div>
+        </div>
+        <div class="profile-rating" id="ratingClickable">
+          <div class="rating-stars" id="ratingStars"></div>
+          <div class="rating-value" id="ratingValue">0.0</div>
+          <div class="rating-count" id="ratingCount">(0 rating)</div>
+        </div>
+        <div class="profile-stats">
+          <div class="stat-item" id="todayEarningsStat">
+            <div class="stat-value" id="todayEarnings">Rp 0</div>
+            <div class="stat-label">Pendapatan Hari Ini</div>
+          </div>
+          <div class="stat-item" id="totalEarningsStat">
+            <div class="stat-value" id="totalEarnings">Rp 0</div>
+            <div class="stat-label">Total Pendapatan</div>
+          </div>
+        </div>
+      </div>
+      <div class="info-cards-container">
+        <div class="info-card">
+          <div class="card-header"><div class="card-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>Informasi Pribadi</div><button class="toggle-btn" data-target="personalInfo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></button></div>
+          <div class="card-content" id="personalInfo">
+            <div class="info-item"><div class="info-label">Nama Lengkap</div><div class="info-value" id="fullName">-</div></div>
+            <div class="info-item"><div class="info-label">Email</div><div class="info-value" id="email">-</div></div>
+            <div class="info-item"><div class="info-label">No. Telepon</div><div class="info-value" id="phoneNumberContainer"><span id="phoneNumber">-</span><button class="copy-btn" data-copy-target="phoneNumber" title="Salin nomor telepon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button></div></div>
+            <div class="info-item"><div class="info-label">Alamat</div><div class="info-value" id="address">-</div></div>
+          </div>
+        </div>
+        <div class="info-card">
+          <div class="card-header"><div class="card-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7" cy="17" r="2"></circle><circle cx="17" cy="17" r="2"></circle><path d="M5 17H3v-6l2-5h9l4 5h3v6h-2m-8 0H9m4 0h2"></path></svg>Informasi Kendaraan</div><button class="toggle-btn" data-target="vehicleInfo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></button></div>
+          <div class="card-content" id="vehicleInfo">
+            <div class="info-item"><div class="info-label">Jenis Kendaraan</div><div class="info-value" id="vehicleType">-</div></div>
+            <div class="info-item"><div class="info-label">Merek Kendaraan</div><div class="info-value" id="vehicleBrand">-</div></div>
+            <div class="info-item"><div class="info-label">Plat Nomor</div><div class="info-value" id="plateNumber">-</div></div>
+          </div>
+        </div>
+        <div class="info-card">
+          <div class="card-header"><div class="card-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>Informasi Akun</div><button class="toggle-btn" data-target="accountInfo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></button></div>
+          <div class="card-content" id="accountInfo">
+            <div class="info-item"><div class="info-label">ID Driver</div><div class="info-value" id="driverIdContainer"><span id="driverId">-</span><button class="copy-btn" data-copy-target="driverId" title="Salin ID Driver"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button></div></div>
+            <div class="info-item"><div class="info-label">Tanggal Daftar</div><div class="info-value" id="registrationDate">-</div></div>
+            <div class="info-item"><div class="info-label">Status Akun</div><div class="info-value" id="verificationStatus"><span class="status-badge status-pending">-</span></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="action-buttons">
+        <button class="submit-btn btn-danger" id="logoutBtn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16,17 21,12 16,7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>Logout</button>
+        <button class="submit-btn btn-danger" id="deleteAccountBtn" style="background: linear-gradient(to right, #f44336, #d32f2f);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M8 6V4h8v2"></path><rect x="6" y="10" width="12" height="12" rx="1"></rect><line x1="10" y1="14" x2="10" y2="18"></line><line x1="14" y1="14" x2="14" y2="18"></line></svg>Hapus Akun</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Notifikasi Umum -->
+  <div id="modalOverlay" class="modal-overlay"><div id="modal" class="modal"><div class="modal-header"><h3 class="modal-title"><span id="modalIcon" class="modal-icon">!</span><span id="modalTitleText">Judul</span></h3><button id="modalCloseBtn" class="close-btn-modal">&times;</button></div><div class="modal-body"><p id="modalMessage">Pesan</p></div><div class="modal-footer"><button id="modalCancelBtn" class="modal-btn cancel" style="display:none;">Batal</button><button id="modalConfirmBtn" class="modal-btn confirm">OK</button></div></div></div>
+
+  <!-- Modal Verifikasi Data (untuk melengkapi data) -->
+  <div id="verifyModal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title"><span class="modal-icon warning">!</span> Data Belum Lengkap</h3>
+        <button id="verifyCloseBtn" class="close-btn-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Anda perlu melengkapi data berikut sebelum dapat menggunakan aplikasi.</p>
+        <form id="verifyForm">
+          <div class="form-group">
+            <label>Tanggal Lahir</label>
+            <input type="date" id="verifyDob" required>
+          </div>
+          <div class="form-group">
+            <label>Merk Kendaraan</label>
+            <input type="text" id="verifyVehicleBrand" placeholder="Contoh: Honda, Toyota" required>
+          </div>
+          <div class="form-group">
+            <label>Tahun Kendaraan</label>
+            <input type="number" id="verifyVehicleYear" placeholder="2020" min="1980" max="2026" required>
+          </div>
+          <button type="submit" class="btn-save">Simpan Data</button>
+          <button type="button" id="verifyLogoutBtn" class="btn-logout-modal">Logout</button>
+        </form>
+        <div id="verifyStatus" class="status-msg hidden"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="loadingModal" class="modal-overlay">
+    <div class="modal loading-modal" style="max-width: 200px; text-align: center;">
+      <div class="modal-body"><p id="loadingText" class="loading-text">Memuat data...</p></div>
+    </div>
+  </div>
+
+  <script>
+    // ================= FIREBASE =================
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyCD0pgeZio-LdKqYDtWxcdXcZwyL4ngYQI",
+      authDomain: "jego-35a2b.firebaseapp.com",
+      databaseURL: "https://jego-35a2b-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "jego-35a2b",
+      storageBucket: "jego-35a2b.firebasestorage.app",
+      messagingSenderId: "600037007040",
+      appId: "1:600037007040:web:ac3243ad9b472647ffd725"
+    };
+    if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+    const auth = firebase.auth();
+    const database = firebase.database();
+
+    let currentDriverData = null;
+
+    // ================= MODAL NOTIFIKASI UMUM =================
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modal = document.getElementById('modal');
+    const modalIcon = document.getElementById('modalIcon');
+    const modalTitleText = document.getElementById('modalTitleText');
+    const modalMessage = document.getElementById('modalMessage');
+    const modalCloseBtn = document.getElementById('modalCloseBtn');
+    const modalConfirmBtn = document.getElementById('modalConfirmBtn');
+    const modalCancelBtn = document.getElementById('modalCancelBtn');
+
+    function showPopup(title, message, type = 'info', options = {}) {
+      modalTitleText.textContent = title;
+      modalMessage.innerHTML = message;
+      modal.className = 'modal ' + type;
+      modalIcon.className = 'modal-icon ' + type;
+      modalIcon.textContent = type === 'success' ? '✓' : type === 'error' ? '✗' : type === 'warning' ? '!' : 'i';
+      modalConfirmBtn.textContent = options.confirmText || 'OK';
+      modalCancelBtn.style.display = options.showCancel ? 'inline-block' : 'none';
+      if (options.showCancel) modalCancelBtn.textContent = options.cancelText || 'Batal';
+      modalConfirmBtn.onclick = () => { hidePopup(); if (options.onConfirm) options.onConfirm(); };
+      modalCancelBtn.onclick = () => { hidePopup(); if (options.onCancel) options.onCancel(); };
+      modalCloseBtn.onclick = () => { hidePopup(); if (options.onCancel) options.onCancel(); };
+      modalOverlay.classList.add('active');
+      if (options.autoHide) setTimeout(() => hidePopup(), options.autoHideDelay || 3000);
+    }
+    function hidePopup() { modalOverlay.classList.remove('active'); }
+
+    function showLoading(msg) { document.getElementById('loadingText').textContent = msg; document.getElementById('loadingModal').classList.add('active'); }
+    function hideLoading() { document.getElementById('loadingModal').classList.remove('active'); }
+
+    // ================= MODAL VERIFIKASI DATA =================
+    const verifyModal = document.getElementById('verifyModal');
+    const verifyForm = document.getElementById('verifyForm');
+    const verifyDob = document.getElementById('verifyDob');
+    const verifyVehicleBrand = document.getElementById('verifyVehicleBrand');
+    const verifyVehicleYear = document.getElementById('verifyVehicleYear');
+    const verifyStatus = document.getElementById('verifyStatus');
+    const verifyLogoutBtn = document.getElementById('verifyLogoutBtn');
+    const verifyCloseBtn = document.getElementById('verifyCloseBtn');
+
+    function showVerifyModal() { verifyModal.classList.add('active'); }
+    function hideVerifyModal() { verifyModal.classList.remove('active'); }
+
+    // ================= FUNGSI UTAMA =================
+    function formatCurrency(amount) { return 'Rp ' + (parseInt(amount) || 0).toLocaleString('id-ID'); }
+    function formatDate(dateString) { if (!dateString) return '-'; try { return new Date(dateString).toLocaleDateString('id-ID'); } catch { return '-'; } }
+    function getVehicleTypeText(t) { const map = { 'motor':'Motor','bentor':'Bentor','mobil':'Mobil','kurir_motor':'Kurir Motor','kurir_bentor':'Kurir Bentor' }; return map[t] || t; }
+    function getStatusBadge(status) {
+      const text = { 'active':'Aktif','accepted':'Diterima','pending':'Menunggu','rejected':'Ditolak','blocked':'Diblokir','delete_akun_driver':'Penghapusan Akun (30 hari)' }[status] || status;
+      const cls = { 'active':'status-active','accepted':'status-active','pending':'status-pending','rejected':'status-rejected','blocked':'status-blocked','delete_akun_driver':'status-pending-delete' }[status] || 'status-pending';
+      return `<span class="status-badge ${cls}">${text}</span>`;
+    }
+    function generateStarRating(rating) { let html = ''; for (let i=1; i<=5; i++) html += `<span class="star ${i<=rating ? 'filled' : ''}">★</span>`; return html; }
+    function getPriorityBadge(rating) { if (rating>=4.5) return { level:'Essential', class:'priority-badge essential' }; if (rating>=4.0) return { level:'Regular', class:'priority-badge regular' }; if (rating>=3.0) return { level:'Standard', class:'priority-badge standard' }; return { level:'Basic', class:'priority-badge basic' }; }
+
+    // Cek kelengkapan data (date_of_birth, vehicle_brand, vehicle_year)
+    function checkDataCompleteness(data) {
+      const required = ['date_of_birth', 'vehicle_brand', 'vehicle_year'];
+      for (let field of required) {
+        const val = data[field];
+        if (val === undefined || val === null || val === '' || val === 0) return false;
+      }
+      return true;
+    }
+
+    // ========== TAMPILKAN DARI LOCALSTORAGE (CEPAT) ==========
+    function displayFromLocalStorage() {
+      const driverDataStr = localStorage.getItem('jego_logged_in_driver');
+      if (!driverDataStr) return false;
+      try {
+        const localData = JSON.parse(driverDataStr);
+        document.getElementById('profilePhoto').src = localData.photoURL || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
+        document.getElementById('profileName').textContent = localData.name || '-';
+        document.getElementById('profileVehicle').textContent = `${getVehicleTypeText(localData.vehicleType)} - ${localData.vehicleBrand || ''}`;
+        document.getElementById('fullName').textContent = localData.name || '-';
+        document.getElementById('email').textContent = localData.email || '-';
+        document.getElementById('phoneNumber').textContent = localData.phone || '-';
+        document.getElementById('address').textContent = localData.address || '-';
+        document.getElementById('vehicleType').textContent = getVehicleTypeText(localData.vehicleType);
+        document.getElementById('vehicleBrand').textContent = localData.vehicleBrand || '-';
+        document.getElementById('plateNumber').textContent = localData.plateNumber || '-';
+        document.getElementById('driverId').textContent = localData.uid || '-';
+        document.getElementById('registrationDate').textContent = formatDate(localData.registered_at || localData.dateOfBirth);
+        document.getElementById('verificationStatus').innerHTML = getStatusBadge(localData.status || 'pending');
+        const rating = localData.rating || 0;
+        document.getElementById('ratingStars').innerHTML = generateStarRating(rating);
+        document.getElementById('ratingValue').textContent = rating.toFixed(1);
+        document.getElementById('ratingCount').textContent = `(0 rating)`;
+        const priority = getPriorityBadge(rating);
+        const badge = document.getElementById('priorityBadgeSmall');
+        badge.textContent = priority.level;
+        badge.className = priority.class;
+        document.getElementById('balanceAmount').textContent = formatCurrency(localData.balance || 0);
+        return true;
+      } catch(e) {
+        console.error('Gagal baca localStorage:', e);
+        return false;
+      }
+    }
+
+    // ========== AMBIL EARNINGS DARI FIREBASE ==========
+    async function loadEarnings(uid) {
+      try {
+        // Ambil total earnings
+        const totalSnap = await database.ref(`drivers/${uid}/total_earnings`).once('value');
+        const totalEarnings = totalSnap.val() || 0;
+        document.getElementById('totalEarnings').textContent = formatCurrency(totalEarnings);
+        
+        // Ambil earnings hari ini
+        const today = new Date().toLocaleDateString('id-ID', {
+  timeZone: 'Asia/Makassar',  // WITA (Gorontalo)
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit'
+}).split('/').reverse().join('-'); // hasil "2026-07-18"
+        const dailySnap = await database.ref(`drivers/${uid}/daily_earnings/${today}`).once('value');
+        const todayEarnings = dailySnap.val() || 0;
+        document.getElementById('todayEarnings').textContent = formatCurrency(todayEarnings);
+        
+      } catch (err) {
+        console.error('Gagal memuat earnings:', err);
+        document.getElementById('totalEarnings').textContent = 'Rp 0';
+        document.getElementById('todayEarnings').textContent = 'Rp 0';
+      }
+    }
+
+    // ========== LOAD DARI FIREBASE (UPDATE) ==========
+    async function loadDriverData(uid) {
+      displayFromLocalStorage();
+
+      showLoading('Memuat data terbaru...');
+      try {
+        const snapshot = await database.ref(`drivers/${uid}`).once('value');
+        const data = snapshot.val();
+        if (!data) throw new Error('Data driver tidak ditemukan');
+        currentDriverData = { ...data, uid: uid };
+
+        if (!checkDataCompleteness(currentDriverData)) {
+          hideLoading();
+          showVerifyModal();
+          verifyDob.value = currentDriverData.date_of_birth || '';
+          verifyVehicleBrand.value = currentDriverData.vehicle_brand || '';
+          verifyVehicleYear.value = currentDriverData.vehicle_year || '';
+          verifyStatus.classList.add('hidden');
+          verifyStatus.textContent = '';
+          return;
+        }
+
+        displayProfile(currentDriverData);
+        await loadBalanceAndCommission(uid);
+        await loadEarnings(uid);
+        updateRatingDisplay();
+        if (currentDriverData.status === 'delete_akun_driver') showDeleteWarning(); else removeDeleteWarning();
+        hideLoading();
+      } catch (err) {
+        hideLoading();
+        showPopup('Error', 'Gagal memuat data: ' + err.message, 'error');
+      }
+    }
+
+    function displayProfile(data) {
+      document.getElementById('profilePhoto').src = data.photoURL || data.fotoProfilURL || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
+      document.getElementById('profileName').textContent = data.name || '-';
+      document.getElementById('profileVehicle').textContent = `${getVehicleTypeText(data.vehicle_type)} - ${data.vehicle_brand || ''}`;
+      document.getElementById('fullName').textContent = data.name || '-';
+      document.getElementById('email').textContent = data.email || '-';
+      document.getElementById('phoneNumber').textContent = data.phone || '-';
+      document.getElementById('address').textContent = data.address || '-';
+      document.getElementById('vehicleType').textContent = getVehicleTypeText(data.vehicle_type);
+      document.getElementById('vehicleBrand').textContent = data.vehicle_brand || '-';
+      document.getElementById('plateNumber').textContent = data.plate_number || '-';
+      document.getElementById('driverId').textContent = data.uid || '-';
+      document.getElementById('registrationDate').textContent = formatDate(data.registered_at || data.createdAt);
+      document.getElementById('verificationStatus').innerHTML = getStatusBadge(data.status || 'pending');
+    }
+
+    function updateRatingDisplay() {
+      const rating = currentDriverData?.rating || 0;
+      const count = currentDriverData?.ratingCount || 0;
+      document.getElementById('ratingStars').innerHTML = generateStarRating(rating);
+      document.getElementById('ratingValue').textContent = rating.toFixed(1);
+      document.getElementById('ratingCount').textContent = `(${count} rating)`;
+      const priority = getPriorityBadge(rating);
+      const badge = document.getElementById('priorityBadgeSmall');
+      badge.textContent = priority.level;
+      badge.className = priority.class;
+    }
+
+    async function loadBalanceAndCommission(uid) {
+      try {
+        const balanceSnap = await database.ref(`drivers/${uid}/balance`).once('value');
+        const potonganSnap = await database.ref('data-jego/potongan').once('value');
+        const potongan = potonganSnap.val() !== null ? potonganSnap.val() : 0;
+        document.getElementById('balanceAmount').textContent = formatCurrency(balanceSnap.val() || 0);
+        document.getElementById('commissionRate').textContent = potongan + '%';
+      } catch(e) { console.error(e); }
+    }
+
+    function showDeleteWarning() {
+      let warningDiv = document.getElementById('deleteWarning');
+      if (!warningDiv) {
+        warningDiv = document.createElement('div');
+        warningDiv.id = 'deleteWarning';
+        warningDiv.className = 'delete-warning';
+        warningDiv.innerHTML = `<span>⚠️</span><span>Akun Anda sedang dalam proses penghapusan. Anda memiliki waktu 30 hari untuk membatalkan. <a href="hapus_akun.html">Lihat detail</a></span>`;
+        document.querySelector('.profile-photo-container').insertAdjacentElement('afterend', warningDiv);
+      }
+    }
+    function removeDeleteWarning() { const w = document.getElementById('deleteWarning'); if (w) w.remove(); }
+
+    function logout() {
+      showPopup('Konfirmasi Logout', 'Apakah Anda yakin ingin logout?', 'warning', {
+        showCancel: true, confirmText: 'Ya, Logout', cancelText: 'Batal',
+        onConfirm: async () => { await auth.signOut(); localStorage.removeItem('jego_logged_in_driver'); window.location.href = 'loginDriver.html'; }
+      });
+    }
+
+    // ================= EVENT LISTENER VERIFIKASI =================
+    verifyForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const uid = auth.currentUser ? auth.currentUser.uid : null;
+      if (!uid) { alert('Anda harus login.'); return; }
+
+      const dob = verifyDob.value;
+      const brand = verifyVehicleBrand.value.trim();
+      const year = parseInt(verifyVehicleYear.value);
+
+      if (!dob || !brand || !year) {
+        verifyStatus.textContent = 'Semua field harus diisi!';
+        verifyStatus.className = 'status-msg error';
+        verifyStatus.classList.remove('hidden');
+        return;
+      }
+      if (year < 1980 || year > new Date().getFullYear()) {
+        verifyStatus.textContent = 'Tahun kendaraan tidak valid (1980 - sekarang).';
+        verifyStatus.className = 'status-msg error';
+        verifyStatus.classList.remove('hidden');
+        return;
+      }
+
+      try {
+        await database.ref(`drivers/${uid}`).update({
+          date_of_birth: dob,
+          vehicle_brand: brand,
+          vehicle_year: year
+        });
+        verifyStatus.textContent = '✅ Data berhasil disimpan!';
+        verifyStatus.className = 'status-msg success';
+        verifyStatus.classList.remove('hidden');
+        setTimeout(() => {
+          hideVerifyModal();
+          loadDriverData(uid);
+        }, 1500);
+      } catch (err) {
+        verifyStatus.textContent = 'Gagal menyimpan: ' + err.message;
+        verifyStatus.className = 'status-msg error';
+        verifyStatus.classList.remove('hidden');
+      }
+    });
+
+    verifyLogoutBtn.addEventListener('click', () => {
+      auth.signOut();
+      localStorage.removeItem('jego_logged_in_driver');
+      window.location.href = 'loginDriver.html';
+    });
+
+    verifyCloseBtn.addEventListener('click', () => {
+      verifyLogoutBtn.click();
+    });
+
+    // ================= DOM READY =================
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.toggle-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const target = document.getElementById(btn.dataset.target);
+          target.classList.toggle('collapsed');
+          const icon = btn.querySelector('svg');
+          if (icon) icon.style.transform = target.classList.contains('collapsed') ? 'rotate(-90deg)' : 'rotate(0deg)';
+        });
+      });
+      document.querySelectorAll('.copy-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const text = document.getElementById(btn.dataset.copyTarget).textContent;
+          navigator.clipboard.writeText(text).then(() => showPopup('Sukses', 'Disalin!', 'success', { autoHide: true, autoHideDelay: 1500 })).catch(() => alert('Gagal menyalin'));
+        });
+      });
+      document.getElementById('logoutBtn').addEventListener('click', logout);
+      document.getElementById('balanceContainer').addEventListener('click', () => { window.location.href = 'payment.html'; });
+      document.getElementById('totalEarningsStat').addEventListener('click', () => { window.location.href = 'pendapatan.html'; });
+      document.getElementById('todayEarningsStat').addEventListener('click', () => { window.location.href = 'pendapatan.html'; });
+      document.getElementById('ratingClickable').addEventListener('click', () => { window.location.href = 'penilaianLayanan.html'; });
+      document.getElementById('deleteAccountBtn').addEventListener('click', () => { window.location.href = 'hapus_akun.html'; });
+      modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) hidePopup(); });
+
+      displayFromLocalStorage();
+    });
+
+    // ================= AUTH STATE =================
+    auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        await loadDriverData(user.uid);
+      } else {
+        localStorage.removeItem('jego_logged_in_driver');
+        window.location.href = 'loginDriver.html';
+      }
+    });
+  </script>
+</body>
+</html>
