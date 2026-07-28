@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Klaim Refund Bonus - JeGo Customer</title>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <style>
+    /* ========== LIGHT MODE (DEFAULT) ========== */
+    :root {
+      --primary: #FF9800;
+      --primary-dark: #E65100;
+      --secondary: #F57C00;
+      --surface: #FFFFFF;
+      --background: #F1F5F9;
+      --text-primary: #212121;
+      --text-secondary: #5f6368;
+      --border-light: #e2e8f0;
+      --card-bg: #F8FAFC;
+      --amount-color: #2E7D32;
+      --meta-color: #64748b;
+      --empty-color: #94a3b8;
+      --toast-bg: #1E293B;
+      --toast-text: white;
+      --claimed-bg: #CBD5E1;
+      --claimed-text: #475569;
+    }
+
+    /* ========== DARK MODE OVERRIDES ========== */
+    body.dark-mode {
+      --primary: #FFB74D;
+      --primary-dark: #FF9800;
+      --secondary: #FF7043;
+      --surface: #1E1E1E;
+      --background: #121212;
+      --text-primary: #FFFFFF;
+      --text-secondary: #B0B0B0;
+      --border-light: #333333;
+      --card-bg: #2C2C2C;
+      --amount-color: #8bc34a;
+      --meta-color: #9e9e9e;
+      --empty-color: #757575;
+      --toast-bg: #2c2c2c;
+      --toast-text: #eee;
+      --claimed-bg: #424242;
+      --claimed-text: #cccccc;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', system-ui;
+      transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s;
+    }
+
+    body {
+      background: var(--background);
+      padding: 20px;
+      color: var(--text-primary);
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: var(--surface);
+      border-radius: 32px;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    }
+
+    .header {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 1.5rem;
+    }
+
+    .refund-list {
+      padding: 0 16px 20px;
+    }
+
+    .refund-item {
+      background: var(--card-bg);
+      border-radius: 20px;
+      padding: 12px;
+      margin-bottom: 12px;
+      border: 1px solid var(--border-light);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .refund-info {
+      flex: 1;
+    }
+
+    .refund-amount {
+      font-weight: 800;
+      color: var(--amount-color);
+      font-size: 1.1rem;
+    }
+
+    .refund-meta {
+      font-size: 0.7rem;
+      color: var(--meta-color);
+      margin-top: 4px;
+    }
+
+    .claim-btn {
+      background: var(--primary);
+      border: none;
+      padding: 6px 16px;
+      border-radius: 40px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .claim-btn:active {
+      transform: scale(0.96);
+    }
+
+    .claimed {
+      background: var(--claimed-bg);
+      color: var(--claimed-text);
+      pointer-events: none;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 40px;
+      color: var(--empty-color);
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-secondary);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      right: 20px;
+      background: var(--toast-bg);
+      color: var(--toast-text);
+      text-align: center;
+      padding: 12px;
+      border-radius: 40px;
+      opacity: 0;
+      transition: 0.2s;
+      z-index: 1100;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>💰 Klaim Refund Bonus</h1>
+    <p style="font-size: 0.8rem; opacity: 0.9;">Driver membatalkan order, bonus Anda dapat diklaim kembali</p>
+  </div>
+  <div id="refundList" class="refund-list">
+    <div class="loading">Memuat data refund...</div>
+  </div>
+</div>
+<div id="toast" class="toast"></div>
+
+<script>
+  // ========== DARK MODE - MENGIKUTI LOCALSTORAGE (TANPA TOMBOL) ==========
+  function applyDarkModeFromLocalStorage() {
+    const isDarkMode = localStorage.getItem('jego_dark_mode') === 'true';
+    if (isDarkMode) {
+      document.body.classList.add('dark-mode');
+    } else {
+      document.body.classList.remove('dark-mode');
+    }
+  }
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCD0pgeZio-LdKqYDtWxcdXcZwyL4ngYQI",
+    authDomain: "jego-35a2b.firebaseapp.com",
+    databaseURL: "https://jego-35a2b-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "jego-35a2b",
+    storageBucket: "jego-35a2b.firebasestorage.app",
+    appId: "1:600037007040:web:ac3243ad9b472647ffd725"
+  };
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const database = firebase.database();
+
+  let currentUser = null;
+
+  function showToast(msg) {
+    let toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.style.opacity = '1';
+    setTimeout(() => toast.style.opacity = '0', 2500);
+  }
+
+  function formatRupiah(num) { return 'Rp ' + (num || 0).toLocaleString('id-ID'); }
+
+  async function loadRefunds() {
+    if (!currentUser) return;
+    const refundRef = database.ref(`customer_refund_pending/${currentUser.uid}`);
+    const snapshot = await refundRef.once('value');
+    const refunds = snapshot.val();
+    const container = document.getElementById('refundList');
+
+    if (!refunds) {
+      container.innerHTML = '<div class="empty">📭 Tidak ada refund pending</div>';
+      return;
+    }
+
+    let html = '';
+    for (let key in refunds) {
+      const item = refunds[key];
+      if (item.status !== 'pending') continue;
+      html += `
+        <div class="refund-item" data-id="${key}">
+          <div class="refund-info">
+            <div class="refund-amount">${formatRupiah(item.amount)}</div>
+            <div class="refund-meta">
+              Order: ${item.orderId}<br>
+              Driver: ${item.driverName}<br>
+              ${new Date(item.createdAt).toLocaleString()}
+            </div>
+          </div>
+          <button class="claim-btn" data-id="${key}">Klaim ke Saldo Bonus</button>
+        </div>
+      `;
+    }
+    if (html === '') {
+      container.innerHTML = '<div class="empty">📭 Tidak ada refund pending</div>';
+    } else {
+      container.innerHTML = html;
+      document.querySelectorAll('.claim-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          const refundId = btn.dataset.id;
+          await claimRefund(refundId, btn);
+        });
+      });
+    }
+  }
+
+  async function claimRefund(refundId, btnElement) {
+    if (!currentUser) return;
+    const refundRef = database.ref(`customer_refund_pending/${currentUser.uid}/${refundId}`);
+    const snap = await refundRef.once('value');
+    const refund = snap.val();
+    if (!refund || refund.status !== 'pending') {
+      showToast('Refund sudah tidak tersedia');
+      return;
+    }
+    const amount = refund.amount;
+    if (!confirm(`Klaim refund ${formatRupiah(amount)} ke saldo bonus Anda?`)) return;
+
+    btnElement.disabled = true;
+    btnElement.innerText = 'Memproses...';
+
+    try {
+      // Tambahkan ke saldo bonus customer
+      const bonusRef = database.ref(`users/${currentUser.uid}/referral_bonus_total`);
+      await bonusRef.transaction(current => (current || 0) + amount);
+
+      // Tandai refund sebagai claimed
+      await refundRef.update({
+        status: 'claimed',
+        claimedAt: new Date().toISOString()
+      });
+
+      showToast(`✅ ${formatRupiah(amount)} telah ditambahkan ke saldo bonus Anda`);
+      loadRefunds(); // refresh
+    } catch (err) {
+      console.error(err);
+      showToast('Gagal klaim: ' + err.message);
+      btnElement.disabled = false;
+      btnElement.innerText = 'Klaim ke Saldo Bonus';
+    }
+  }
+
+  // Terapkan dark mode sebelum auth state
+  applyDarkModeFromLocalStorage();
+
+  auth.onAuthStateChanged(async (user) => {
+    if (user) {
+      currentUser = user;
+      loadRefunds();
+    } else {
+      window.location.href = 'loginUser.html';
+    }
+  });
+</script>
+</body>
+</html>
