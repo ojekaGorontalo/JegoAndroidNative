@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Dokumen - JeGo Driver</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --text-primary: #212529;
+            --text-secondary: #6c757d;
+            --border: #dee2e6;
+            --card-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            --primary: #FF9800;
+            --primary-hover: #e68900;
+        }
+
+        body.dark {
+            --bg-primary: #121212;
+            --bg-secondary: #1e1e1e;
+            --text-primary: #e9ecef;
+            --text-secondary: #adb5bd;
+            --border: #343a40;
+            --card-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.3);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            transition: background-color 0.3s ease, color 0.2s ease;
+            padding-bottom: 30px;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary), #FFB74D);
+            padding: 15px 20px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            flex: 1;
+        }
+        .back-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* Container & Card */
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px 16px;
+        }
+        .doc-card {
+            background: var(--bg-primary);
+            border-radius: 16px;
+            margin-bottom: 20px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+        .doc-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .doc-item:last-child {
+            border-bottom: none;
+        }
+        .doc-item:hover {
+            background-color: var(--bg-secondary);
+        }
+        .doc-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .doc-left i {
+            width: 24px;
+            font-size: 1.3rem;
+            color: var(--primary);
+        }
+        .doc-left span {
+            font-weight: 500;
+            font-size: 1rem;
+        }
+        .doc-right {
+            color: var(--text-secondary);
+        }
+        .doc-right i {
+            font-size: 0.8rem;
+            margin-left: 8px;
+        }
+        .footer-note {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <button class="back-btn" id="backBtn"><i class="fas fa-arrow-left"></i></button>
+    <h1 id="headerTitle"><i class="fas fa-file-alt"></i> Dokumen Legal</h1>
+    <div style="width: 36px;"></div>
+</div>
+
+<div class="container">
+    <div class="doc-card">
+        <div class="doc-item" id="syaratKetentuan">
+            <div class="doc-left">
+                <i class="fas fa-file-contract"></i>
+                <span id="termsLabel">Syarat & Ketentuan</span>
+            </div>
+            <div class="doc-right">
+                <i class="fas fa-chevron-right"></i>
+            </div>
+        </div>
+        <div class="doc-item" id="kebijakanPrivasi">
+            <div class="doc-left">
+                <i class="fas fa-lock"></i>
+                <span id="privacyLabel">Kebijakan Privasi</span>
+            </div>
+            <div class="doc-right">
+                <i class="fas fa-chevron-right"></i>
+            </div>
+        </div>
+        <div class="doc-item" id="hakCipta">
+            <div class="doc-left">
+                <i class="fas fa-copyright"></i>
+                <span id="licenseLabel">Hak Cipta & Lisensi</span>
+            </div>
+            <div class="doc-right">
+                <i class="fas fa-chevron-right"></i>
+            </div>
+        </div>
+    </div>
+    <div class="footer-note" id="footerText">
+        Dokumen ini berlaku untuk aplikasi JeGo Driver
+    </div>
+</div>
+
+<script>
+    // ======================= BAHASA (bilingual) =======================
+    const translations = {
+        id: {
+            headerTitle: "Dokumen Legal",
+            termsLabel: "Syarat & Ketentuan",
+            privacyLabel: "Kebijakan Privasi",
+            licenseLabel: "Hak Cipta & Lisensi",
+            footerText: "Dokumen ini berlaku untuk aplikasi JeGo Driver"
+        },
+        en: {
+            headerTitle: "Legal Documents",
+            termsLabel: "Terms & Conditions",
+            privacyLabel: "Privacy Policy",
+            licenseLabel: "Copyright & License",
+            footerText: "This document applies to the JeGo Driver application"
+        }
+    };
+
+    let currentLanguage = localStorage.getItem('jego_driver_lang') || 'id';
+
+    function applyLanguage() {
+        const t = translations[currentLanguage] || translations.id;
+        document.getElementById('headerTitle').innerHTML = `<i class="fas fa-file-alt"></i> ${t.headerTitle}`;
+        document.getElementById('termsLabel').innerText = t.termsLabel;
+        document.getElementById('privacyLabel').innerText = t.privacyLabel;
+        document.getElementById('licenseLabel').innerText = t.licenseLabel;
+        document.getElementById('footerText').innerText = t.footerText;
+    }
+
+    // ======================= DARK MODE =======================
+    function applyTheme() {
+        const savedTheme = localStorage.getItem('jego_driver_theme');
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark');
+        } else {
+            document.body.classList.remove('dark');
+        }
+    }
+
+    // ======================= INIT =======================
+    function init() {
+        applyTheme();
+        applyLanguage();
+        
+        // Sinkronisasi perubahan dari halaman lain
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'jego_driver_theme') applyTheme();
+            if (e.key === 'jego_driver_lang') {
+                currentLanguage = localStorage.getItem('jego_driver_lang') || 'id';
+                applyLanguage();
+            }
+        });
+    }
+
+    init();
+
+    // ======================= NAVIGASI =======================
+    document.getElementById('backBtn').addEventListener('click', () => {
+        window.history.back();
+    });
+
+    document.getElementById('syaratKetentuan').addEventListener('click', () => {
+        window.location.href = 'ketentuan.html';
+    });
+
+    document.getElementById('kebijakanPrivasi').addEventListener('click', () => {
+        window.location.href = 'privasi.html';
+    });
+
+    document.getElementById('hakCipta').addEventListener('click', () => {
+        window.location.href = 'lisensi.html';
+    });
+</script>
+</body>
+</html>
