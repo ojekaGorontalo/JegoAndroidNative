@@ -1061,7 +1061,7 @@
             const driverSnap = await firebaseDatabase.ref(`drivers/${uid}`).once('value');
             if (!driverSnap.exists()) {
                 showGlobalLoading(false);
-                window.location.href = '../lengkapiData.html';
+                window.location.href = 'lengkapiData.html';
                 return;
             }
 
@@ -1069,7 +1069,7 @@
             const isComplete = driverData.vehicle_type && driverData.plate_number && driverData.phone && driverData.address;
             if (!isComplete) {
                 showGlobalLoading(false);
-                window.location.href = '../lengkapiData.html';
+                window.location.href = 'lengkapiData.html';
                 return;
             }
 
