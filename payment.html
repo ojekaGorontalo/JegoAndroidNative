@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <title>Isi Saldo Deposit - JeGo Driver</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <!-- QRCode.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    :root {
+      --primary: #FF9800;
+      --primary-dark: #F57C00;
+      --secondary: #FF5722;
+      --accent: #FFC107;
+      --light: #f8f9fa;
+      --dark: #1e2a3e;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --info: #3b82f6;
+      --gray: #64748b;
+      --gray-light: #e2e8f0;
+      --bg: #f1f5f9;
+      --card-bg: #ffffff;
+      --text-primary: #1e2a3e;
+      --border: #eef2f6;
+    }
+
+    /* Dark Mode */
+    body.dark-mode {
+      --primary: #FFB74D;
+      --primary-dark: #FF9800;
+      --bg: #121212;
+      --card-bg: #1e1e1e;
+      --text-primary: #e9ecef;
+      --gray: #adb5bd;
+      --gray-light: #2c2c2c;
+      --border: #343a40;
+      --dark: #e9ecef;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: var(--text-primary);
+      line-height: 1.5;
+      font-size: 0.875rem;
+      min-height: 100vh;
+      padding-bottom: 20px;
+      transition: background 0.2s, color 0.2s;
+    }
+    .header {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      padding: 16px 20px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: white;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+    .container { max-width: 100%; padding: 0; margin: 0; }
+    .card {
+      background: var(--card-bg);
+      border-radius: 28px;
+      padding: 20px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+      margin-bottom: 20px;
+      border: 1px solid var(--border);
+      transition: background 0.2s, border 0.2s;
+    }
+    .card-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .form-group { margin-bottom: 20px; }
+    .form-label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary); }
+    .form-input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid var(--gray-light);
+      border-radius: 20px;
+      font-size: 0.9rem;
+      transition: all 0.3s;
+      background: var(--card-bg);
+      color: var(--text-primary);
+    }
+    .form-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(255,152,0,0.1);
+    }
+    .btn {
+      padding: 14px;
+      border-radius: 40px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      box-shadow: 0 4px 10px rgba(255,152,0,0.3);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(255,152,0,0.4); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .btn-whatsapp { background: #25D366; color: white; box-shadow: 0 4px 10px rgba(37,211,102,0.3); }
+    .btn-whatsapp:hover { background: #20b859; transform: translateY(-2px); }
+    .btn-download {
+      background: var(--info);
+      color: white;
+      box-shadow: 0 4px 10px rgba(59,130,246,0.3);
+    }
+    .btn-download:hover { background: #2563eb; transform: translateY(-2px); }
+    .btn-copy { background: var(--bg); color: var(--text-primary); box-shadow: none; margin-top: 12px; width: auto; padding: 8px 16px; }
+    .btn-copy:hover { background: var(--gray-light); }
+    .amount-display {
+      text-align: center;
+      padding: 24px;
+      background: linear-gradient(135deg, var(--info), #1e40af);
+      color: white;
+      border-radius: 24px;
+      margin: 20px 0;
+    }
+    .amount-label { font-size: 0.8rem; opacity: 0.9; letter-spacing: 1px; }
+    .amount-value { font-size: 2rem; font-weight: 800; margin: 8px 0; }
+    .qrcode-container { text-align: center; padding: 20px; background: var(--card-bg); border-radius: 20px; margin: 20px 0; }
+    #qrcode { display: flex; justify-content: center; margin: 10px 0; min-height: 220px; align-items: center; }
+    #qrcode img, #qrcode canvas { 
+      border-radius: 16px; 
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      max-width: 100%;
+      height: auto;
+    }
+    .qrcode-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .qrcode-actions .btn {
+      width: auto;
+      padding: 10px 20px;
+      font-size: 0.8rem;
+      min-width: 140px;
+    }
+    .steps { margin: 20px 0; }
+    .step { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .step-number { width: 28px; height: 28px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; }
+    .step-text { font-size: 0.85rem; color: var(--text-primary); }
+    .loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      background: var(--card-bg);
+      border-radius: 28px;
+    }
+    .spinner { width: 40px; height: 40px; border: 4px solid rgba(0,0,0,0.1); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .info-box { border-radius: 20px; }
+    body.dark-mode .info-box { background: #2d2a1e !important; border-left-color: var(--warning) !important; color: #e9ecef; }
+    body.dark-mode .info-box p { color: #adb5bd !important; }
+    .timer-section {
+      background: #f0f4ff;
+      padding: 12px 20px;
+      border-radius: 16px;
+      text-align: center;
+      margin: 12px 0;
+      font-weight: 600;
+      color: var(--info);
+    }
+    body.dark-mode .timer-section {
+      background: rgba(59, 130, 246, 0.15);
+      color: #60a5fa;
+    }
+    .timer-section.warning {
+      background: #FFE6E6;
+      color: #D63031;
+    }
+    body.dark-mode .timer-section.warning {
+      background: rgba(255, 107, 107, 0.15);
+      color: #FF6B6B;
+    }
+    .merchant-display {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin: 8px 0;
+      font-size: 0.85rem;
+      color: var(--gray);
+    }
+    .merchant-display i {
+      color: var(--primary);
+    }
+    #qrcodeCanvas canvas {
+      display: block;
+      margin: 0 auto;
+      max-width: 100%;
+      height: auto;
+      border-radius: 16px;
+      background: white;
+      padding: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+  </style>
+</head>
+<body>
+  <!-- Script dark mode -->
+  <script>
+    (function() {
+      try {
+        const theme = localStorage.getItem('jego_driver_theme');
+        if (theme === 'dark') {
+          document.body.classList.add('dark-mode');
+        } else {
+          document.body.classList.remove('dark-mode');
+        }
+      } catch(e) {}
+    })();
+  </script>
+
+  <div class="header">
+    <div class="header-title">Isi Saldo Deposit</div>
+  </div>
+
+  <div class="container">
+    <!-- Form Input Deposit -->
+    <div class="card">
+      <div class="card-title">
+        <span>Jumlah Deposit</span>
+        <button class="btn-copy" id="historyBtn" style="width: auto; padding: 6px 12px; margin: 0;">Riwayat</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nominal Deposit (Rp)</label>
+        <input type="number" id="depositAmount" class="form-input" placeholder="Minimal Rp 25.000" min="25000" step="1000">
+        <div style="font-size: 0.7rem; color: var(--gray); margin-top: 5px;">Minimal Rp 25.000</div>
+      </div>
+      <button class="btn btn-primary" id="generateBtn">
+        Generate Kode Pembayaran
+      </button>
+    </div>
+
+    <!-- Payment Info -->
+    <div id="paymentInfo" style="display: none;">
+      <div class="card">
+        <div class="card-title">Detail Pembayaran</div>
+        <div class="amount-display">
+          <div class="amount-label">Total Tagihan</div>
+          <div class="amount-value" id="paymentAmount">Rp 0</div>
+          <div id="uniqueInfo" style="font-size: 0.8rem;">Angka unik: <span id="uniqueDigits">000</span></div>
+          <button class="btn-copy" id="copyAmountBtn">Salin Jumlah Transfer</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Scan QRIS</div>
+        <div id="timerSection" class="timer-section">
+          <i class="fas fa-clock"></i> Waktu tersisa: <span id="countdown">15:00</span>
+        </div>
+        <div class="qrcode-container" id="qrcodeContainer">
+          <div id="qrcode">
+            <!-- QRIS dinamis akan ditampilkan di sini -->
+          </div>
+          <div id="merchantDisplay" class="merchant-display">
+            <i class="fas fa-store"></i>
+            <span id="displayMerchantName">ASIA PAINTMENT</span>
+          </div>
+          <div class="qrcode-actions">
+            <button class="btn btn-download" id="downloadQrBtn">
+              <i class="fas fa-download"></i> Unduh QRIS
+            </button>
+          </div>
+          <p style="margin-top: 12px; color: var(--gray);">Scan QR Code di atas untuk melakukan pembayaran.</p>
+        </div>
+        <div class="steps">
+          <div class="step"><div class="step-number">1</div><div class="step-text">Buka aplikasi mobile banking atau e-wallet</div></div>
+          <div class="step"><div class="step-number">2</div><div class="step-text">Pilih menu Scan QRIS / Bayar</div></div>
+          <div class="step"><div class="step-number">3</div><div class="step-text">Scan QR Code di atas</div></div>
+          <div class="step"><div class="step-number">4</div><div class="step-text">Masukkan nominal transfer sesuai total tagihan</div></div>
+          <div class="step"><div class="step-number">5</div><div class="step-text">Konfirmasi ke admin via WhatsApp setelah transfer</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Konfirmasi Pembayaran</div>
+        <div class="info-box" style="background: #fef3c7; border-left: 4px solid var(--warning); padding: 16px; border-radius: 20px; margin-bottom: 16px;">
+          <strong style="color: var(--warning);">Perhatian!</strong>
+          <p style="margin-top: 8px;">Transfer sesuai total yang tertera (sudah termasuk angka unik 3 digit).</p>
+        </div>
+        <button class="btn btn-whatsapp" id="whatsappBtn">
+          <i class="fab fa-whatsapp"></i> Konfirmasi ke Admin via WhatsApp
+        </button>
+      </div>
+    </div>
+
+    <div id="loadingState" class="loading" style="display: none;">
+      <div class="spinner"></div>
+      <div style="margin-top: 12px;">Memproses pembayaran...</div>
+    </div>
+  </div>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <script>
+    // ==================== DARK MODE SINKRON ====================
+    const THEME_KEY = 'jego_driver_theme';
+    function applyTheme(theme) {
+      if (theme === 'dark') {
+        document.body.classList.add('dark-mode');
+      } else {
+        document.body.classList.remove('dark-mode');
+      }
+    }
+    function loadTheme() {
+      let theme = localStorage.getItem(THEME_KEY);
+      if (theme !== 'dark' && theme !== 'light') {
+        theme = 'light';
+        localStorage.setItem(THEME_KEY, theme);
+      }
+      applyTheme(theme);
+    }
+    window.addEventListener('storage', (e) => {
+      if (e.key === THEME_KEY) loadTheme();
+    });
+
+    // ==================== FIREBASE CONFIG ====================
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyCD0pgeZio-LdKqYDtWxcdXcZwyL4ngYQI",
+      authDomain: "jego-35a2b.firebaseapp.com",
+      databaseURL: "https://jego-35a2b-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "jego-35a2b",
+      storageBucket: "jego-35a2b.firebasestorage.app",
+      messagingSenderId: "600037007040",
+      appId: "1:600037007040:web:ac3243ad9b472647ffd725"
+    };
+
+    let database, auth;
+    let isFirebaseInitialized = false;
+    try {
+      if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+      database = firebase.database();
+      auth = firebase.auth();
+      isFirebaseInitialized = true;
+      console.log('Firebase berhasil diinisialisasi');
+    } catch (error) {
+      console.error('Error inisialisasi Firebase:', error);
+    }
+
+    // ==================== QRIS STATIS ====================
+    const QRIS_STRING = '00020101021126650013ID.CO.BCA.WWW011893600014000163408402150008850016340840303UMI51440014ID.CO.QRIS.WWW0215ID10221858786030303UMI5204599953033605802ID5914ASIA PAINTMENT6009GORONTALO61059611962070703A0163041490';
+
+    // ==================== VARIABEL GLOBAL ====================
+    let depositAmount = 0;
+    let uniqueDigits = '000';
+    let uniqueAmount = 0;
+    let paymentId = '';
+    let driverData = {};
+    let currentQRData = null;
+    let countdownInterval = null;
+    let timeLeft = 900; // 15 menit
+
+    // ==================== INISIALISASI ====================
+    document.addEventListener('DOMContentLoaded', async () => {
+      loadTheme();
+      console.log('Halaman Pembayaran dimuat');
+      
+      const loggedInDriver = localStorage.getItem('jego_logged_in_driver');
+      if (!loggedInDriver) {
+        alert('Anda harus login terlebih dahulu!');
+        window.location.href = 'loginDriver.html';
+        return;
+      }
+
+      try {
+        driverData = JSON.parse(loggedInDriver);
+        if (!driverData.uid) throw new Error('UID tidak ditemukan');
+        console.log('Data driver dari localStorage:', driverData);
+      } catch (e) {
+        console.error('Data driver tidak valid:', e);
+        alert('Data login rusak, silakan login ulang.');
+        localStorage.removeItem('jego_logged_in_driver');
+        window.location.href = 'loginDriver.html';
+        return;
+      }
+
+      auth.onAuthStateChanged(async (user) => {
+        if (!user) {
+          alert('Sesi login habis, silakan login ulang.');
+          localStorage.removeItem('jego_logged_in_driver');
+          window.location.href = 'loginDriver.html';
+          return;
+        }
+        if (user.uid !== driverData.uid) {
+          alert('Data tidak cocok, silakan login ulang.');
+          localStorage.removeItem('jego_logged_in_driver');
+          window.location.href = 'loginDriver.html';
+          return;
+        }
+        console.log('Firebase Auth user terverifikasi:', user.uid);
+        initButtons();
+      });
+    });
+
+    function initButtons() {
+      document.getElementById('historyBtn').addEventListener('click', () => window.location.href = 'historyDeposit.html');
+      document.getElementById('generateBtn').addEventListener('click', generatePaymentCode);
+      document.getElementById('copyAmountBtn').addEventListener('click', copyPaymentAmount);
+      document.getElementById('whatsappBtn').addEventListener('click', sendWhatsAppConfirmation);
+      document.getElementById('downloadQrBtn').addEventListener('click', downloadQrImage);
+    }
+
+    // ==================== COUNTDOWN ====================
+    function startCountdown() {
+      timeLeft = 900;
+      updateCountdownDisplay();
+      if (countdownInterval) clearInterval(countdownInterval);
+      countdownInterval = setInterval(() => {
+        timeLeft--;
+        updateCountdownDisplay();
+        
+        if (timeLeft <= 0) {
+          clearInterval(countdownInterval);
+          alert('QR Code telah kedaluwarsa. Silakan refresh halaman.');
+          document.getElementById('qrcode').innerHTML = `
+            <div style="text-align: center; padding: 40px;">
+              <i class="fas fa-clock" style="font-size: 3rem; color: var(--warning); margin-bottom: 16px;"></i>
+              <p style="color: var(--text-secondary); margin-bottom: 16px;">QR Code Kedaluwarsa</p>
+              <button onclick="location.reload()" class="btn btn-primary" style="width: auto; padding: 10px 24px;">
+                <i class="fas fa-redo"></i>
+                <span>Refresh</span>
+              </button>
+            </div>
+          `;
+          document.querySelector('.qrcode-actions').style.display = 'none';
+        }
+      }, 1000);
+    }
+
+    function updateCountdownDisplay() {
+      const minutes = Math.floor(timeLeft / 60);
+      const seconds = timeLeft % 60;
+      const countdownEl = document.getElementById('countdown');
+      countdownEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      
+      const timerSection = document.getElementById('timerSection');
+      if (timeLeft <= 60) {
+        timerSection.classList.add('warning');
+      } else {
+        timerSection.classList.remove('warning');
+      }
+    }
+
+    // ==================== GENERATE PEMBAYARAN ====================
+    async function generatePaymentCode() {
+      const depositInput = document.getElementById('depositAmount');
+      const rawValue = depositInput.value.trim();
+      if (!rawValue) {
+        alert('Masukkan jumlah deposit');
+        depositInput.focus();
+        return;
+      }
+
+      const amount = parseInt(rawValue);
+      if (isNaN(amount) || amount < 25000) {
+        alert('Minimal deposit Rp 25.000');
+        depositInput.focus();
+        return;
+      }
+
+      if (!isFirebaseInitialized || !database) {
+        alert('Firebase tidak tersedia');
+        return;
+      }
+
+      const generateBtn = document.getElementById('generateBtn');
+      generateBtn.disabled = true;
+      generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+      document.getElementById('loadingState').style.display = 'flex';
+
+      try {
+        depositAmount = amount;
+        uniqueDigits = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+        uniqueAmount = depositAmount + parseInt(uniqueDigits);
+        paymentId = 'DEP_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8).toUpperCase();
+
+        await generateQRIS(depositAmount);
+
+        document.getElementById('paymentAmount').innerHTML = formatCurrency(uniqueAmount);
+        document.getElementById('uniqueDigits').innerHTML = uniqueDigits;
+        document.getElementById('paymentInfo').style.display = 'block';
+        document.querySelector('.qrcode-actions').style.display = 'flex';
+
+        document.getElementById('displayMerchantName').textContent = 'ASIA PAINTMENT';
+        document.getElementById('merchantDisplay').style.display = 'flex';
+
+        // ===== SIMPAN KE pending_deposits =====
+        await savePendingDeposit();
+
+        startCountdown();
+
+        alert('Kode pembayaran berhasil dibuat!');
+      } catch (error) {
+        console.error('Gagal generate pembayaran:', error);
+        alert('Gagal membuat pembayaran: ' + error.message);
+        document.getElementById('paymentInfo').style.display = 'none';
+      } finally {
+        generateBtn.disabled = false;
+        generateBtn.innerHTML = 'Generate Kode Pembayaran';
+        document.getElementById('loadingState').style.display = 'none';
+      }
+    }
+
+    // ==================== SIMPAN DEPOSIT KE PENDING_DEPOSITS ====================
+    async function savePendingDeposit() {
+      if (!driverData.uid) throw new Error('UID driver tidak ditemukan');
+      
+      const depositEntry = {
+        driverId: driverData.uid,
+        driverName: driverData.name || driverData.fullName || 'Driver',
+        driverPhone: driverData.phone || '-',
+        amount: depositAmount,
+        uniqueAmount: uniqueAmount,
+        uniqueDigits: uniqueDigits,
+        paymentId: paymentId,
+        status: 'pending',
+        createdAt: firebase.database.ServerValue.TIMESTAMP,
+        expiresAt: Date.now() + (24 * 60 * 60 * 1000) // 24 jam
+      };
+
+      try {
+        const newRef = await database.ref('pending_deposits').push(depositEntry);
+        console.log('✅ Deposit pending tersimpan di pending_deposits dengan key:', newRef.key);
+        return newRef.key;
+      } catch (error) {
+        console.error('❌ Gagal simpan pending deposit:', error);
+        throw error;
+      }
+    }
+
+    // ==================== GENERATE QRIS DINAMIS ====================
+    async function generateQRIS(amount) {
+      try {
+        const qrContainer = document.getElementById('qrcode');
+        qrContainer.innerHTML = '<div style="padding: 20px;"><i class="fas fa-spinner fa-spin fa-2x"></i></div>';
+
+        const response = await fetch(`https://api-mininxd.vercel.app/qris?qris=${QRIS_STRING}&nominal=${uniqueAmount}`);
+        const data = await response.json();
+
+        if (!data || (!data.QR && !data.qr)) {
+          throw new Error('Gagal generate QRIS dari API');
+        }
+
+        const qrString = data.QR || data.qr || data.qris;
+        currentQRData = qrString;
+
+        qrContainer.innerHTML = '';
+        const qrCodeDiv = document.createElement('div');
+        qrCodeDiv.id = 'qrcodeCanvas';
+        qrContainer.appendChild(qrCodeDiv);
+
+        new QRCode(qrCodeDiv, {
+          text: qrString,
+          width: 350,
+          height: 350,
+          colorDark: '#000000',
+          colorLight: '#FFFFFF',
+          correctLevel: QRCode.CorrectLevel.H
+        });
+
+        const canvas = qrCodeDiv.querySelector('canvas');
+        if (canvas) {
+          canvas.style.width = '100%';
+          canvas.style.height = 'auto';
+          canvas.style.maxWidth = '350px';
+          canvas.style.borderRadius = '12px';
+          canvas.style.boxShadow = '0 4px 16px rgba(0,0,0,0.1)';
+          canvas.style.background = '#FFFFFF';
+          canvas.style.padding = '8px';
+        }
+
+        qrContainer.style.opacity = '0';
+        requestAnimationFrame(() => {
+          qrContainer.style.transition = 'opacity 0.4s ease';
+          qrContainer.style.opacity = '1';
+        });
+
+        if (data.merchant) {
+          document.getElementById('displayMerchantName').textContent = data.merchant;
+        }
+
+        return true;
+      } catch (error) {
+        console.error('Error generate QRIS:', error);
+        throw error;
+      }
+    }
+
+    // ==================== DOWNLOAD QRIS ====================
+    function downloadQrImage() {
+      const qrContainer = document.getElementById('qrcode');
+      const canvas = qrContainer.querySelector('canvas');
+      
+      if (!canvas) {
+        alert('QR Code belum dibuat, generate terlebih dahulu!');
+        return;
+      }
+
+      const downloadCanvas = document.createElement('canvas');
+      const size = 600;
+      downloadCanvas.width = size;
+      downloadCanvas.height = size;
+      const ctx = downloadCanvas.getContext('2d');
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, size, size);
+
+      const padding = 40;
+      const qrSize = size - (padding * 2);
+      ctx.drawImage(canvas, padding, padding, qrSize, qrSize);
+
+      const link = document.createElement('a');
+      link.download = `QRIS_JeGo_${depositAmount}_${new Date().toISOString().split('T')[0]}.png`;
+      link.href = downloadCanvas.toDataURL('image/png');
+      link.click();
+      
+      alert('QRIS berhasil diunduh!');
+    }
+
+    // ==================== UTILITY ====================
+    function copyPaymentAmount() {
+      if (!uniqueAmount) {
+        alert('Generate kode pembayaran terlebih dahulu');
+        return;
+      }
+      const text = uniqueAmount.toString();
+      navigator.clipboard.writeText(text)
+        .then(() => alert('Jumlah transfer disalin!'))
+        .catch(() => {
+          const textarea = document.createElement('textarea');
+          textarea.value = text;
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textarea);
+          alert('Jumlah transfer disalin!');
+        });
+    }
+
+    function sendWhatsAppConfirmation() {
+      if (!depositAmount || !uniqueAmount) {
+        alert('Generate kode pembayaran terlebih dahulu');
+        return;
+      }
+      const adminPhone = '6282311640444';
+      const message = `Halo Admin JeGo%0A%0ASaya *${driverData.name || driverData.fullName}* (ID: ${driverData.uid}) telah melakukan deposit.%0A%0ADetail Pembayaran:%0A- Jumlah Deposit: Rp ${depositAmount.toLocaleString('id-ID')}%0A- Total Transfer: Rp ${uniqueAmount.toLocaleString('id-ID')}%0A- Angka Unik: ${uniqueDigits}%0A- Kode Pembayaran: ${paymentId}%0A- Waktu: ${new Date().toLocaleString('id-ID')}%0A%0AMohon segera diproses. Terima kasih.`;
+      const whatsappUrl = `https://wa.me/${adminPhone}?text=${message}`;
+      window.open(whatsappUrl, '_blank');
+      alert('Konfirmasi dikirim!');
+    }
+
+    function formatCurrency(amount) {
+      return 'Rp ' + (amount || 0).toLocaleString('id-ID');
+    }
+  </script>
+</body>
+</html>
