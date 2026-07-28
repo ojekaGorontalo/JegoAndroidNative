@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Live Chat - JeGo Customer</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #FF6D00;
+            --primary-dark: #E65100;
+            --background: #F8F9FA;
+            --surface: #FFFFFF;
+            --text-primary: #212121;
+            --text-secondary: #757575;
+            --border: #E0E0E0;
+            --bubble-user: #FFE0B3;
+            --bubble-cs: #E0E0E0;
+        }
+        body.dark-mode {
+            --background: #121212;
+            --surface: #1E1E1E;
+            --text-primary: #FFFFFF;
+            --text-secondary: #B0B0B0;
+            --border: #333333;
+            --bubble-user: #3a2a1a;
+            --bubble-cs: #2C2C2C;
+        }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--background);
+            color: var(--text-primary);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .app-bar {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .back-btn {
+            background: rgba(255,255,255,0.2);
+            width: 40px;
+            height: 40px;
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+            text-decoration: none;
+            color: white;
+        }
+        .app-bar h2 { flex: 1; font-size: 1.2rem; }
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            padding: 16px;
+        }
+        .messages-area {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 8px;
+        }
+        .message {
+            max-width: 80%;
+            padding: 10px 14px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            word-wrap: break-word;
+        }
+        .message-user {
+            align-self: flex-end;
+            background: var(--bubble-user);
+            color: var(--text-primary);
+            border-bottom-right-radius: 4px;
+        }
+        .message-cs {
+            align-self: flex-start;
+            background: var(--bubble-cs);
+            color: var(--text-primary);
+            border-bottom-left-radius: 4px;
+        }
+        .message-time {
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+            text-align: right;
+        }
+        .input-area {
+            display: flex;
+            gap: 12px;
+            padding: 12px;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+        }
+        .input-area input {
+            flex: 1;
+            padding: 12px 16px;
+            border-radius: 30px;
+            border: 1px solid var(--border);
+            background: var(--background);
+            color: var(--text-primary);
+            outline: none;
+        }
+        .input-area button {
+            background: var(--primary);
+            border: none;
+            width: 48px;
+            height: 48px;
+            border-radius: 30px;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        .empty-chat {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-top: 40px;
+        }
+        .debug-toast {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.8);
+            color: #0f0;
+            font-family: monospace;
+            font-size: 12px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            z-index: 999;
+            max-width: 90%;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+    </style>
+</head>
+<body>
+<div class="app-bar">
+    <a href="cs_jego.html" class="back-btn"><i class="fas fa-arrow-left"></i></a>
+    <h2><i class="fas fa-headset"></i> Live Chat Customer Service</h2>
+</div>
+<div class="chat-container">
+    <div class="messages-area" id="messagesArea">
+        <div class="empty-chat">Mulai kirim pesan ke CS JeGo...</div>
+    </div>
+    <div class="input-area">
+        <input type="text" id="messageInput" placeholder="Tulis komplain atau pertanyaan...">
+        <button id="sendBtn"><i class="fas fa-paper-plane"></i></button>
+    </div>
+</div>
+<div id="debugToast" class="debug-toast"></div>
+
+<script>
+    // ==================== KONFIGURASI FIREBASE ====================
+    const firebaseConfig = {
+        apiKey: "AIzaSyCD0pgeZio-LdKqYDtWxcdXcZwyL4ngYQI",
+        authDomain: "jego-35a2b.firebaseapp.com",
+        databaseURL: "https://jego-35a2b-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "jego-35a2b",
+        storageBucket: "jego-35a2b.firebasestorage.app",
+        messagingSenderId: "600037007040",
+        appId: "1:600037007040:web:ac3243ad9b472647ffd725"
+    };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
+
+    let currentUser = null;
+    let roomId = null;
+    let messagesRef = null;
+
+    // Helper: tampilkan pesan debug sementara
+    function showDebugMsg(msg, isError = false) {
+        const toast = document.getElementById('debugToast');
+        toast.style.backgroundColor = isError ? 'rgba(255,0,0,0.8)' : 'rgba(0,0,0,0.8)';
+        toast.style.color = isError ? '#ffcccc' : '#ccffcc';
+        toast.textContent = msg;
+        toast.style.opacity = '1';
+        setTimeout(() => {
+            toast.style.opacity = '0';
+        }, 4000);
+        console.log(isError ? '❌ ' : '✅ ', msg);
+    }
+
+    function applyDarkMode() {
+        if (localStorage.getItem('jego_dark_mode') === 'true') document.body.classList.add('dark-mode');
+        else document.body.classList.remove('dark-mode');
+    }
+    applyDarkMode();
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, m => m==='&'?'&amp;':m==='<'?'&lt;':'&gt;');
+    }
+
+    function formatTime(timestamp) {
+        if (!timestamp) return '';
+        const d = new Date(timestamp);
+        return d.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+    }
+
+    function loadMessages() {
+        if (!roomId) {
+            showDebugMsg('⚠️ roomId belum siap untuk load messages', false);
+            return;
+        }
+        if (messagesRef) messagesRef.off();
+        messagesRef = db.ref(`chat_rooms/${roomId}/messages`);
+        messagesRef.on('value', (snap) => {
+            const messages = snap.val() || {};
+            const messageList = Object.entries(messages).map(([key, msg]) => ({
+                id: key,
+                text: msg.text,
+                sender: msg.sender,
+                timestamp: msg.timestamp || 0
+            })).sort((a,b) => a.timestamp - b.timestamp);
+            const container = document.getElementById('messagesArea');
+            if (messageList.length === 0) {
+                container.innerHTML = '<div class="empty-chat">Belum ada pesan. Kirim pesan ke CS.</div>';
+                return;
+            }
+            container.innerHTML = messageList.map(msg => `
+                <div class="message ${msg.sender === 'customer' ? 'message-user' : 'message-cs'}">
+                    ${escapeHtml(msg.text)}
+                    <div class="message-time">${formatTime(msg.timestamp)}</div>
+                </div>
+            `).join('');
+            container.scrollTop = container.scrollHeight;
+        }, (error) => {
+            console.error("❌ Gagal mendengarkan pesan:", error);
+            showDebugMsg('Gagal terhubung ke chat: ' + error.message, true);
+        });
+    }
+
+    async function sendMessage(text) {
+        if (!text.trim()) {
+            showDebugMsg('Pesan kosong, tidak dikirim', false);
+            return;
+        }
+        if (!roomId) {
+            showDebugMsg('❌ roomId belum siap, pesan tidak bisa dikirim', true);
+            return;
+        }
+        if (!currentUser) {
+            showDebugMsg('❌ User belum login', true);
+            return;
+        }
+        try {
+            showDebugMsg(`📤 Mengirim pesan ke room ${roomId}...`, false);
+            const newMsgRef = db.ref(`chat_rooms/${roomId}/messages`).push();
+            await newMsgRef.set({
+                text: text.trim(),
+                sender: 'customer',
+                sender_id: currentUser.uid,
+                sender_name: currentUser.displayName || 'Customer',
+                timestamp: Date.now(),
+                read: false
+            });
+            showDebugMsg('✅ Pesan berhasil dikirim ke Firebase', false);
+            await db.ref(`chat_rooms/${roomId}`).update({
+                last_message: text.trim(),
+                last_message_time: Date.now(),
+                last_sender: 'customer'
+            });
+            document.getElementById('messageInput').value = '';
+        } catch (error) {
+            console.error("❌ Gagal mengirim pesan:", error);
+            showDebugMsg('Gagal kirim: ' + error.message, true);
+            if (error.code === 'PERMISSION_DENIED') {
+                showDebugMsg('⚠️ Izin ditolak! Periksa aturan Firebase Database.', true);
+            }
+        }
+    }
+
+    auth.onAuthStateChanged(async (user) => {
+        console.log("Auth state changed:", user ? user.uid : "Tidak ada user");
+        showDebugMsg(user ? `Login sebagai ${user.email}` : 'Belum login, redirect...', false);
+        if (!user) {
+            window.location.href = 'login_customer.html';
+            return;
+        }
+        try {
+            const userSnap = await db.ref(`users/${user.uid}`).once('value');
+            const userData = userSnap.val();
+            console.log("Data user dari database:", userData);
+            if (!userData || userData.role === 'admin') {
+                showDebugMsg('Akun tidak terdaftar sebagai customer. Logout...', true);
+                await auth.signOut();
+                window.location.href = 'login_customer.html';
+                return;
+            }
+            currentUser = user;
+            roomId = `customer_${user.uid}`;
+            showDebugMsg(`Room ID: ${roomId}`, false);
+            
+            // Pastikan node room ada
+            const roomSnap = await db.ref(`chat_rooms/${roomId}`).once('value');
+            if (!roomSnap.exists()) {
+                showDebugMsg('Membuat room chat baru...', false);
+                await db.ref(`chat_rooms/${roomId}`).set({
+                    customer_id: user.uid,
+                    customer_name: userData.name || user.displayName || 'Customer',
+                    created_at: Date.now(),
+                    status: 'open'
+                });
+                showDebugMsg('✅ Room berhasil dibuat', false);
+            } else {
+                showDebugMsg('Room sudah ada, melanjutkan...', false);
+            }
+            loadMessages();
+        } catch (error) {
+            console.error("❌ Error inisialisasi:", error);
+            showDebugMsg('Gagal inisialisasi chat: ' + error.message, true);
+        }
+    });
+
+    document.getElementById('sendBtn').onclick = () => {
+        const input = document.getElementById('messageInput');
+        sendMessage(input.value);
+    };
+    document.getElementById('messageInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendMessage(e.target.value);
+    });
+</script>
+</body>
+</html>
