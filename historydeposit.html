@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Riwayat Transaksi Saldo - JeGo Driver</title>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #FF9800;
+      --primary-dark: #F57C00;
+      --bg: #f1f5f9;
+      --card-bg: #ffffff;
+      --text-primary: #1e2a3e;
+      --text-secondary: #64748b;
+      --border: #e2e8f0;
+      --success-light: #dcfce7;
+      --success-dark: #15803d;
+      --danger-light: #fee2e2;
+      --danger-dark: #b91c1c;
+      --warning-light: #fff3cd;
+      --warning-dark: #b45309;
+    }
+    body.dark-mode {
+      --bg: #121212;
+      --card-bg: #1e1e1e;
+      --text-primary: #e9ecef;
+      --text-secondary: #adb5bd;
+      --border: #343a40;
+      --success-light: #14532d;
+      --success-dark: #bbf7d0;
+      --danger-light: #7f1d1d;
+      --danger-dark: #fecaca;
+      --warning-light: #2d2a1e;
+      --warning-dark: #fde68a;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      transition: background 0.2s, color 0.2s;
+      padding: 0;
+    }
+    .header {
+      background: var(--card-bg);
+      padding: 16px 20px;
+      border-radius: 28px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      border: 1px solid var(--border);
+    }
+    .back-btn {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 40px;
+      padding: 8px 16px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.8rem;
+      color: var(--text-primary);
+    }
+    .title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--primary);
+      flex: 1;
+    }
+    .container {
+      max-width: 100%;
+      margin: 0;
+      padding: 0 16px 20px;
+    }
+    .card {
+      background: var(--card-bg);
+      border-radius: 24px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+      border: 1px solid var(--border);
+    }
+    .transaction-item {
+      border-bottom: 1px solid var(--border);
+      padding: 16px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 8px;
+      cursor: pointer;
+      transition: background 0.15s;
+      border-radius: 8px;
+      padding-left: 8px;
+      padding-right: 8px;
+    }
+    .transaction-item:hover {
+      background: var(--bg);
+    }
+    .transaction-item:last-child { border-bottom: none; }
+    .transaction-type {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 30px;
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+    .type-add { background: var(--success-light); color: var(--success-dark); }
+    .type-deduct { background: var(--danger-light); color: var(--danger-dark); }
+    .type-pending { background: var(--warning-light); color: var(--warning-dark); }
+    .type-expired { background: #e2e8f0; color: #475569; }
+    body.dark-mode .type-expired { background: #334155; color: #cbd5e1; }
+    .amount { font-weight: 800; font-size: 1rem; }
+    .amount.plus { color: var(--success-dark); }
+    .amount.minus { color: var(--danger-dark); }
+    .amount.pending { color: var(--warning-dark); }
+    .amount.expired { color: #64748b; }
+    .meta { font-size: 0.7rem; color: var(--text-secondary); margin-top: 4px; }
+    .balance-info { font-size: 0.75rem; background: var(--bg); padding: 6px 10px; border-radius: 16px; display: inline-block; }
+    .empty-history {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-secondary);
+    }
+    .loading {
+      display: flex;
+      justify-content: center;
+      padding: 40px;
+    }
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.active {
+      display: flex;
+    }
+    .modal-content {
+      background: var(--card-bg);
+      border-radius: 28px;
+      max-width: 480px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 24px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+      position: relative;
+    }
+    .modal-close {
+      position: absolute;
+      top: 12px;
+      right: 16px;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--text-secondary);
+    }
+    .modal-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: var(--primary);
+    }
+    .modal-detail-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9rem;
+    }
+    .modal-detail-item:last-child { border-bottom: none; }
+    .modal-detail-label { color: var(--text-secondary); }
+    .modal-detail-value { font-weight: 600; }
+    .qris-container {
+      background: white;
+      border-radius: 16px;
+      padding: 16px;
+      margin: 16px 0;
+      text-align: center;
+    }
+    .qris-container canvas {
+      max-width: 100%;
+      height: auto;
+      border-radius: 12px;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 40px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-secondary {
+      background: var(--bg);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      padding: 10px 16px;
+      border-radius: 40px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 8px;
+    }
+    .btn-secondary:hover { background: var(--border); }
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 30px;
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+    .status-confirmed { background: var(--success-light); color: var(--success-dark); }
+    .status-expired { background: #e2e8f0; color: #475569; }
+    body.dark-mode .status-expired { background: #334155; color: #cbd5e1; }
+    .status-pending { background: var(--warning-light); color: var(--warning-dark); }
+  </style>
+</head>
+<body>
+<script>
+  (function() {
+    try {
+      const theme = localStorage.getItem('jego_driver_theme');
+      if (theme === 'dark') {
+        document.body.classList.add('dark-mode');
+      } else {
+        document.body.classList.remove('dark-mode');
+      }
+    } catch(e) {}
+  })();
+</script>
+<div class="container">
+  <div class="header">
+    <button class="back-btn" onclick="window.location.href='payment.html'">← Kembali</button>
+    <div class="title">📜 Riwayat Mutasi Saldo</div>
+  </div>
+  <div class="card" id="historyContainer">
+    <div class="loading"><div class="spinner"></div></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="detailModal">
+  <div class="modal-content">
+    <button class="modal-close" id="modalClose">&times;</button>
+    <div class="modal-title" id="modalTitle">Detail Transaksi</div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+  const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyCD0pgeZio-LdKqYDtWxcdXcZwyL4ngYQI",
+    authDomain: "jego-35a2b.firebaseapp.com",
+    databaseURL: "https://jego-35a2b-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "jego-35a2b",
+    storageBucket: "jego-35a2b.firebasestorage.app",
+    messagingSenderId: "600037007040",
+    appId: "1:600037007040:web:ac3243ad9b472647ffd725"
+  };
+  if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+  const database = firebase.database();
+  const auth = firebase.auth();
+
+  const loggedInDriver = localStorage.getItem('jego_logged_in_driver');
+  if (!loggedInDriver) {
+    alert('Anda harus login terlebih dahulu!');
+    window.location.href = 'loginDriver.html';
+  }
+  let driverUid = null;
+  let driverData = null;
+  try {
+    driverData = JSON.parse(loggedInDriver);
+    driverUid = driverData.uid;
+    if (!driverUid) throw new Error();
+  } catch(e) {
+    alert('Data login rusak, silakan login ulang');
+    localStorage.removeItem('jego_logged_in_driver');
+    window.location.href = 'loginDriver.html';
+  }
+
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'jego_driver_theme') {
+      const theme = e.newValue;
+      if (theme === 'dark') document.body.classList.add('dark-mode');
+      else document.body.classList.remove('dark-mode');
+    }
+  });
+
+  auth.onAuthStateChanged(async (user) => {
+    if (!user || user.uid !== driverUid) {
+      alert('Sesi login tidak valid, silakan login ulang');
+      localStorage.removeItem('jego_logged_in_driver');
+      window.location.href = 'loginDriver.html';
+      return;
+    }
+    await loadHistory();
+  });
+
+  async function loadHistory() {
+    const container = document.getElementById('historyContainer');
+    container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+    try {
+      // 1. Ambil dari driver_balance_logs
+      const logsSnap = await database.ref(`driver_balance_logs/${driverUid}`).orderByChild('timestamp').once('value');
+      const logs = logsSnap.val() || {};
+      
+      // 2. Ambil dari pending_deposits
+      const pendingSnap = await database.ref('pending_deposits').orderByChild('driverId').equalTo(driverUid).once('value');
+      const pendings = pendingSnap.val() || {};
+      console.log('Data pending dari Firebase:', pendings);
+
+      const itemsMap = new Map();
+
+      // Masukkan dari logs
+      Object.entries(logs).forEach(([key, val]) => {
+        val._source = 'logs';
+        val._id = key;
+        const uniqueKey = val.paymentId || key;
+        if (!itemsMap.has(uniqueKey) || (itemsMap.get(uniqueKey).status === 'pending' && val.status !== 'pending')) {
+          itemsMap.set(uniqueKey, val);
+        }
+      });
+
+      // Masukkan dari pending_deposits
+      Object.entries(pendings).forEach(([key, val]) => {
+        if (val.driverId === driverUid) {
+          // Set default untuk field yang mungkin tidak ada (kompatibilitas data lama)
+          val._source = 'pending';
+          val._id = key;
+          val.timestamp = val.timestamp || val.createdAt || Date.now();
+          val.type = val.type || 'deposit_request';
+          val.status = val.status || 'pending';
+          val.amount = val.amount || 0;
+          val.uniqueAmount = val.uniqueAmount || 0;
+          val.uniqueDigits = val.uniqueDigits || '000';
+          val.paymentId = val.paymentId || key;
+
+          const uniqueKey = val.paymentId || key;
+          const existing = itemsMap.get(uniqueKey);
+          if (!existing || existing.status === 'pending') {
+            itemsMap.set(uniqueKey, val);
+          }
+        }
+      });
+
+      let items = Array.from(itemsMap.values());
+      items.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+      if (!items.length) {
+        container.innerHTML = '<div class="empty-history">✨ Belum ada riwayat transaksi saldo</div>';
+        return;
+      }
+
+      let html = '';
+      for (const item of items) {
+        let typeLabel = '', typeClass = '', amountClass = '', amountValue = 0;
+        let extraInfo = '';
+
+        if (item.type === 'deposit_request') {
+          if (item.status === 'confirmed') {
+            typeLabel = '✅ Deposit Dikonfirmasi';
+            typeClass = 'type-add';
+            amountClass = 'plus';
+          } else if (item.status === 'expired') {
+            typeLabel = '⏰ Deposit Kadaluarsa';
+            typeClass = 'type-expired';
+            amountClass = 'expired';
+          } else {
+            typeLabel = '⏳ Deposit Menunggu Konfirmasi';
+            typeClass = 'type-pending';
+            amountClass = 'pending';
+          }
+          amountValue = item.amount;
+          extraInfo = `<div class="meta">🧾 Total transfer: ${formatRupiah(item.uniqueAmount)} (kode ${item.uniqueDigits})</div>`;
+        } 
+        else if (item.type === 'topup_admin' || (item.amount > 0 && item.type !== 'deposit_request')) {
+          typeLabel = '➕ Tambah Saldo';
+          typeClass = 'type-add';
+          amountClass = 'plus';
+          amountValue = Math.abs(item.amount);
+        } 
+        else if (item.type === 'deduct' || item.amount < 0) {
+          typeLabel = '➖ Kurangi Saldo';
+          typeClass = 'type-deduct';
+          amountClass = 'minus';
+          amountValue = Math.abs(item.amount);
+        }
+        else {
+          typeLabel = '📝 Transaksi';
+          typeClass = 'type-pending';
+          amountClass = 'pending';
+          amountValue = item.amount || 0;
+        }
+
+        const dateStr = item.timestamp ? new Date(item.timestamp).toLocaleString('id-ID') : '-';
+        const noteHtml = item.note ? `<div class="meta">📝 ${escapeHtml(item.note)}</div>` : '';
+        const sourceLabel = item._source === 'pending' ? ' (dari pending)' : '';
+        
+        html += `
+          <div class="transaction-item" data-item='${JSON.stringify(item).replace(/'/g, "&#39;")}'>
+            <div>
+              <span class="transaction-type ${typeClass}">${typeLabel}</span>
+              <div class="meta">${dateStr}${sourceLabel}</div>
+              ${noteHtml}
+              ${extraInfo}
+            </div>
+            <div style="text-align: right;">
+              <div class="amount ${amountClass}">${formatRupiah(amountValue)}</div>
+              ${item.new_balance !== undefined ? `<div class="balance-info">Saldo akhir: ${formatRupiah(item.new_balance)}</div>` : ''}
+            </div>
+          </div>
+        `;
+      }
+      container.innerHTML = html;
+
+      document.querySelectorAll('.transaction-item').forEach(el => {
+        el.addEventListener('click', function() {
+          const itemData = JSON.parse(this.dataset.item);
+          showDetailModal(itemData);
+        });
+      });
+
+    } catch (err) {
+      console.error(err);
+      container.innerHTML = `<div class="empty-history">❌ Gagal memuat riwayat: ${err.message}</div>`;
+    }
+  }
+
+  function showDetailModal(item) {
+    const modal = document.getElementById('detailModal');
+    const body = document.getElementById('modalBody');
+    const title = document.getElementById('modalTitle');
+
+    let statusText = '—', statusClass = '';
+    if (item.type === 'deposit_request') {
+      if (item.status === 'confirmed') {
+        statusText = '✅ Dikonfirmasi';
+        statusClass = 'status-confirmed';
+      } else if (item.status === 'expired') {
+        statusText = '⏰ Kadaluarsa';
+        statusClass = 'status-expired';
+      } else {
+        statusText = '⏳ Menunggu Konfirmasi';
+        statusClass = 'status-pending';
+      }
+    } else {
+      statusText = 'Selesai';
+      statusClass = 'status-confirmed';
+    }
+
+    const amount = item.amount || 0;
+    const uniqueAmount = item.uniqueAmount || 0;
+    const uniqueDigits = item.uniqueDigits || '-';
+    const dateStr = item.timestamp ? new Date(item.timestamp).toLocaleString('id-ID') : '-';
+    const note = item.note || '-';
+
+    const isExpired = (item.type === 'deposit_request' && item.status === 'expired');
+
+    let qrisHtml = '';
+    if (isExpired) {
+      qrisHtml = `
+        <div class="qris-container" id="qrisContainer">
+          <div id="qrisCanvas"></div>
+          <div style="font-size:0.75rem; color:var(--text-secondary); margin-top:8px;">
+            QRIS untuk deposit ulang Rp ${formatRupiah(uniqueAmount)}
+          </div>
+        </div>
+        <button class="btn-primary" id="btnAjukanUlang">
+          <i class="fas fa-redo"></i> Ajukan Deposit Ulang
+        </button>
+      `;
+    }
+
+    body.innerHTML = `
+      <div class="modal-detail-item">
+        <span class="modal-detail-label">Status</span>
+        <span class="status-badge ${statusClass}">${statusText}</span>
+      </div>
+      <div class="modal-detail-item">
+        <span class="modal-detail-label">Tanggal</span>
+        <span class="modal-detail-value">${dateStr}</span>
+      </div>
+      ${item.type === 'deposit_request' ? `
+        <div class="modal-detail-item">
+          <span class="modal-detail-label">Jumlah Deposit</span>
+          <span class="modal-detail-value">${formatRupiah(amount)}</span>
+        </div>
+        <div class="modal-detail-item">
+          <span class="modal-detail-label">Total Transfer</span>
+          <span class="modal-detail-value">${formatRupiah(uniqueAmount)}</span>
+        </div>
+        <div class="modal-detail-item">
+          <span class="modal-detail-label">Kode Unik</span>
+          <span class="modal-detail-value">${uniqueDigits}</span>
+        </div>
+      ` : `
+        <div class="modal-detail-item">
+          <span class="modal-detail-label">Nominal</span>
+          <span class="modal-detail-value">${formatRupiah(amount)}</span>
+        </div>
+      `}
+      <div class="modal-detail-item">
+        <span class="modal-detail-label">Catatan</span>
+        <span class="modal-detail-value" style="font-weight:400; word-break:break-word;">${escapeHtml(note)}</span>
+      </div>
+      ${item.new_balance !== undefined ? `
+        <div class="modal-detail-item">
+          <span class="modal-detail-label">Saldo Akhir</span>
+          <span class="modal-detail-value">${formatRupiah(item.new_balance)}</span>
+        </div>
+      ` : ''}
+      ${qrisHtml}
+    `;
+
+    title.textContent = `📄 Detail Transaksi`;
+
+    modal.classList.add('active');
+
+    if (isExpired) {
+      generateQRIS(uniqueAmount);
+    }
+
+    const btnAjukan = document.getElementById('btnAjukanUlang');
+    if (btnAjukan) {
+      btnAjukan.addEventListener('click', function() {
+        window.location.href = `payment.html?amount=${item.amount}`;
+      });
+    }
+  }
+
+  const QRIS_STRING = '00020101021126650013ID.CO.BCA.WWW011893600014000163408402150008850016340840303UMI51440014ID.CO.QRIS.WWW0215ID10221858786030303UMI5204599953033605802ID5914ASIA PAINTMENT6009GORONTALO61059611962070703A0163041490';
+
+  async function generateQRIS(nominal) {
+    const container = document.getElementById('qrisCanvas');
+    if (!container) return;
+    container.innerHTML = '<div style="padding:20px;"><i class="fas fa-spinner fa-spin fa-2x"></i></div>';
+
+    try {
+      const response = await fetch(`https://api-mininxd.vercel.app/qris?qris=${QRIS_STRING}&nominal=${nominal}`);
+      const data = await response.json();
+      if (!data || (!data.QR && !data.qr)) {
+        throw new Error('Gagal generate QRIS');
+      }
+      const qrString = data.QR || data.qr || data.qris;
+      container.innerHTML = '';
+      const qrDiv = document.createElement('div');
+      qrDiv.id = 'qrcodeCanvasTemp';
+      container.appendChild(qrDiv);
+      new QRCode(qrDiv, {
+        text: qrString,
+        width: 250,
+        height: 250,
+        colorDark: '#000000',
+        colorLight: '#FFFFFF',
+        correctLevel: QRCode.CorrectLevel.H
+      });
+      const canvas = qrDiv.querySelector('canvas');
+      if (canvas) {
+        canvas.style.maxWidth = '100%';
+        canvas.style.height = 'auto';
+        canvas.style.borderRadius = '12px';
+      }
+    } catch (err) {
+      container.innerHTML = `<p style="color:red;">Gagal muat QRIS: ${err.message}</p>`;
+    }
+  }
+
+  document.getElementById('modalClose').addEventListener('click', function() {
+    document.getElementById('detailModal').classList.remove('active');
+  });
+  document.getElementById('detailModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+      this.classList.remove('active');
+    }
+  });
+
+  function formatRupiah(amount) {
+    return 'Rp ' + (amount || 0).toLocaleString('id-ID');
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+      if (m === '&') return '&amp;';
+      if (m === '<') return '&lt;';
+      if (m === '>') return '&gt;';
+      return m;
+    });
+  }
+
+  (function() {
+    const params = new URLSearchParams(window.location.search);
+    const amountParam = params.get('amount');
+    if (amountParam) {
+      localStorage.setItem('jego_deposit_prefill', amountParam);
+    }
+  })();
+</script>
+</body>
+</html>
