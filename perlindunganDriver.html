@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Perlindungan Driver - JeGo</title>
+  <!-- Font Awesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary: #FF9800;
+      --primary-dark: #E68900;
+      --secondary: #FFB74D;
+      --accent: #FF5722;
+      --dark: #2c3e50;
+      --light: #f8f9fa;
+      --gray: #6c757d;
+      --border: #e9ecef;
+      --shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--light);
+      color: #1e2a3a;
+      padding-bottom: 30px;
+    }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow);
+    }
+    .back-btn {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1.3rem;
+      color: white;
+      transition: 0.2s;
+    }
+    .back-btn:hover {
+      background: rgba(255,255,255,0.3);
+    }
+    .header h1 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    /* Container */
+    .container {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 20px 18px;
+    }
+
+    /* Card style */
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 18px 20px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow);
+      transition: 0.2s;
+    }
+    .card-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--primary-dark);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-left: 4px solid var(--primary);
+      padding-left: 12px;
+    }
+    .card-title i {
+      font-size: 1.3rem;
+      color: var(--primary);
+    }
+
+    /* Grid kontak darurat */
+    .emergency-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-top: 10px;
+    }
+    .emergency-item {
+      flex: 1;
+      min-width: 120px;
+      background: #fff5e8;
+      border-radius: 16px;
+      padding: 12px;
+      text-align: center;
+      transition: 0.2s;
+    }
+    .emergency-item i {
+      font-size: 2rem;
+      color: var(--primary);
+      margin-bottom: 8px;
+    }
+    .emergency-item h4 {
+      font-size: 0.9rem;
+      margin-bottom: 6px;
+    }
+    .emergency-item .number {
+      font-weight: bold;
+      font-size: 1rem;
+      color: var(--accent);
+    }
+    .call-btn {
+      background: var(--accent);
+      border: none;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 30px;
+      font-size: 0.7rem;
+      margin-top: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: 0.2s;
+    }
+    .call-btn:hover {
+      background: #e64a19;
+    }
+
+    /* List perlindungan */
+    .protection-list {
+      list-style: none;
+      margin-top: 8px;
+    }
+    .protection-list li {
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.95rem;
+    }
+    .protection-list li:last-child {
+      border-bottom: none;
+    }
+    .protection-list li i {
+      width: 28px;
+      color: var(--primary);
+      font-size: 1.2rem;
+      text-align: center;
+    }
+    .protection-list li strong {
+      color: var(--dark);
+    }
+
+    /* Tips kecelakaan */
+    .step-list {
+      margin-top: 10px;
+      padding-left: 20px;
+    }
+    .step-list li {
+      margin-bottom: 12px;
+      line-height: 1.4;
+    }
+    .badge-step {
+      display: inline-block;
+      background: var(--primary);
+      color: white;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      text-align: center;
+      font-size: 0.7rem;
+      font-weight: bold;
+      margin-right: 8px;
+    }
+
+    /* Tombol aksi */
+    .action-buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      flex: 1;
+      padding: 12px;
+      border-radius: 40px;
+      font-weight: 600;
+      text-align: center;
+      cursor: pointer;
+      transition: 0.2s;
+      border: none;
+      font-size: 0.9rem;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+    .btn-outline {
+      background: transparent;
+      border: 1.5px solid var(--primary);
+      color: var(--primary);
+    }
+    .btn-outline:hover {
+      background: rgba(255,152,0,0.1);
+    }
+
+    footer {
+      text-align: center;
+      font-size: 0.7rem;
+      color: var(--gray);
+      margin-top: 30px;
+      padding: 15px;
+    }
+
+    /* Responsive */
+    @media (max-width: 500px) {
+      .container {
+        padding: 15px;
+      }
+      .card {
+        padding: 15px;
+      }
+      .emergency-item {
+        min-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <button class="back-btn" onclick="goBack()"><i class="fas fa-arrow-left"></i></button>
+  <h1><i class="fas fa-shield-alt"></i> Perlindungan Driver</h1>
+</div>
+
+<div class="container">
+  <!-- Kontak Darurat -->
+  <div class="card">
+    <div class="card-title">
+      <i class="fas fa-phone-alt"></i> 
+      <span>Hubungan Darurat</span>
+    </div>
+    <div class="emergency-grid">
+      <div class="emergency-item">
+        <i class="fas fa-ambulance"></i>
+        <h4>Ambulans / Medis</h4>
+        <div class="number">118 / 119</div>
+        <button class="call-btn" onclick="callNumber('tel:118')"><i class="fas fa-phone"></i> Panggil</button>
+      </div>
+      <div class="emergency-item">
+        <i class="fas fa-police"></i>
+        <h4>Kepolisian</h4>
+        <div class="number">110</div>
+        <button class="call-btn" onclick="callNumber('tel:110')"><i class="fas fa-phone"></i> Panggil</button>
+      </div>
+      <div class="emergency-item">
+        <i class="fas fa-shield-alt"></i>
+        <h4>Nomor Darurat</h4>
+        <div class="number">112</div>
+        <button class="call-btn" onclick="callNumber('tel:112')"><i class="fas fa-phone"></i> Panggil</button>
+      </div>
+    </div>
+    <div class="action-buttons" style="margin-top: 15px;">
+      <button class="btn btn-primary" onclick="shareLocation()"><i class="fas fa-location-dot"></i> Bagikan Lokasi Darurat</button>
+    </div>
+  </div>
+
+  <!-- Bagaimana agar terlindungi -->
+  <div class="card">
+    <div class="card-title">
+      <i class="fas fa-lock"></i>
+      <span>Bagaimana agar terlindungi</span>
+    </div>
+    <ul class="protection-list">
+      <li><i class="fas fa-bell"></i> <strong>Dukungan keselamatan proaktif</strong> – Sistem memantau perjalanan dan memberi notifikasi jika terjadi anomali.</li>
+      <li><i class="fas fa-id-card"></i> <strong>Verifikasi pengemudi & penumpang</strong> – Setiap akun terverifikasi untuk kepercayaan bersama.</li>
+      <li><i class="fas fa-user-secret"></i> <strong>Melindungi privasi Anda</strong> – Nomor telepon dan detail pribadi tidak ditampilkan secara publik.</li>
+      <li><i class="fas fa-car-side"></i> <strong>Tetap aman di setiap perjalanan</strong> – Fitur bagikan perjalanan, tombol darurat dalam aplikasi.</li>
+    </ul>
+  </div>
+
+  <!-- Langkah saat Kecelakaan -->
+  <div class="card">
+    <div class="card-title">
+      <i class="fas fa-car-crash"></i>
+      <span>Jika terjadi Kecelakaan</span>
+    </div>
+    <ul class="step-list">
+      <li><span class="badge-step">1</span> Tetap tenang dan pastikan keselamatan diri & penumpang.</li>
+      <li><span class="badge-step">2</span> Hubungi layanan darurat (112 / 118 / 110).</li>
+      <li><span class="badge-step">3</span> Dokumentasikan kejadian (foto posisi kendaraan, cedera, dan sekitar).</li>
+      <li><span class="badge-step">4</span> Laporkan ke JeGo melalui <strong>Dukungan Keselamatan</strong> di aplikasi.</li>
+      <li><span class="badge-step">5</span> Jangan mengakui kesalahan sebelum pihak berwajib dan asuransi datang.</li>
+      <li><span class="badge-step">6</span> Hubungi kontak pribadi atau keluarga untuk pendampingan.</li>
+    </ul>
+    <div class="action-buttons">
+      <button class="btn btn-outline" onclick="window.location.href='feedback.html'"><i class="fas fa-flag"></i> Laporkan Insiden</button>
+      <button class="btn btn-primary" onclick="openSupport()"><i class="fas fa-headset"></i> Dukungan Keselamatan</button>
+    </div>
+  </div>
+
+  <!-- Dukungan tambahan -->
+  <div class="card">
+    <div class="card-title">
+      <i class="fas fa-hand-holding-heart"></i>
+      <span>Dukungan & Bantuan</span>
+    </div>
+    <p style="margin-bottom: 12px;">Tim JeGo siap membantu 24/7. Gunakan fitur chat darurat atau hubungi call center kami.</p>
+    <div class="action-buttons">
+      <button class="btn btn-outline" onclick="window.location.href='https://wa.me/6282311640444?text=Halo%20JeGo%2C%20saya%20membutuhkan%20bantuan%20keselamatan'"><i class="fab fa-whatsapp"></i> WhatsApp Darurat</button>
+      <button class="btn btn-outline" onclick="callNumber('tel:1500123')"><i class="fas fa-phone-alt"></i> Call Center</button>
+    </div>
+  </div>
+  <footer>
+    <i class="fas fa-shield-heart"></i> JeGo berkomitmen menjaga keselamatan Anda | Versi 1.0
+  </footer>
+</div>
+
+<script>
+  function goBack() {
+    window.history.back();
+  }
+
+  function callNumber(phoneLink) {
+    window.location.href = phoneLink;
+  }
+
+  function shareLocation() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(position => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+        if (navigator.share) {
+          navigator.share({
+            title: 'Lokasi Darurat Saya',
+            text: 'Saya membutuhkan bantuan, lokasi saya saat ini:',
+            url: mapsUrl
+          }).catch(() => {
+            alert('Salin lokasi: ' + mapsUrl);
+          });
+        } else {
+          prompt('Bagikan lokasi darurat ini:', mapsUrl);
+        }
+      }, () => {
+        alert('Gagal mendapatkan lokasi. Pastikan GPS aktif.');
+      });
+    } else {
+      alert('Browser tidak mendukung geolokasi.');
+    }
+  }
+
+  function openSupport() {
+    // Bisa diarahkan ke halaman chat support atau nomor darurat khusus
+    window.location.href = 'https://wa.me/6282311640444?text=Saya%20membutuhkan%20dukungan%20keselamatan%20JeGo';
+  }
+</script>
+</body>
+</html>
