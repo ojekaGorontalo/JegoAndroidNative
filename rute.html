@@ -2376,39 +2376,37 @@
 
     // ==================== INISIALISASI ====================
     window.onload = async () => {
-        applyDarkMode();
+    applyDarkMode();
 
-        const tokenOk = await fetchMapboxToken();
-        if (!tokenOk) return;
-        mapboxgl.accessToken = mapboxAccessToken;
+    const tokenOk = await fetchMapboxToken();
+    if (!tokenOk) return;
+    mapboxgl.accessToken = mapboxAccessToken;
 
-        const loggedIn = await checkUserSession().catch(() => false);
-        if (!loggedIn) return;
+    const loggedIn = await checkUserSession().catch(() => false);
+    if (!loggedIn) return;
 
-        // Ambil data kendaraan dari Firebase untuk overlay
-        await fetchTransportData();
+    await fetchTransportData();
+    await initMap(); // inisialisasi peta dulu
 
-        const orderActive = await cekOrderAktifDanRedirect();
-        await initMap();
+    // 1. SELALU coba isi pickup dari GPS
+    const transportLoaded = await loadSelectedTransport();
+    if (!transportLoaded) {
+        openVehicleOverlay();
+    } else {
+        await autoFillPickupLocation(); // 🟢 GPS dipanggil setiap kali
+    }
 
-        if (orderActive) {
-            const loaded = await loadWaitingOrderData();
-            if (!loaded) {
-                const transportLoaded = await loadSelectedTransport();
-                if (!transportLoaded) {
-                    openVehicleOverlay();
-                } else {
-                    await autoFillPickupLocation();
-                }
-            }
-        } else {
-            const transportLoaded = await loadSelectedTransport();
-            if (!transportLoaded) {
-                openVehicleOverlay();
-            } else {
-                await autoFillPickupLocation();
-            }
-        }
+    // 2. Cek order aktif, jika ada, timpa data (prioritas lebih tinggi)
+    const orderActive = await cekOrderAktifDanRedirect();
+    if (orderActive) {
+        const loaded = await loadWaitingOrderData();
+        // jika berhasil, data order akan menggantikan pickup/dest dari GPS
+    }
+
+    // 3. Jika rute sudah lengkap, update rute
+    if (pickupCoord && destCoord) {
+        await updateRoute();
+    }
 
         // Event listeners
         document.getElementById('useMapPickBtn').addEventListener('click', confirmMapPick);
