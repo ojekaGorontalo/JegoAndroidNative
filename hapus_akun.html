@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Hapus Akun - JeGo Driver</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-database-compat.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.5;
+            padding: 0; /* hilangkan padding body agar full */
+        }
+        .container {
+            max-width: 100%; /* FULL LEBAR */
+            margin: 0 auto;
+        }
+        .card {
+            background: white;
+            border-radius: 0; /* hilangkan border-radius agar full */
+            box-shadow: none; /* optional, hilangkan bayangan */
+            overflow: hidden;
+            margin-bottom: 0;
+        }
+        /* opsional: jika ingin tetap ada bayangan tipis, bisa dipertahankan */
+        .card {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .header {
+            background: linear-gradient(135deg, #FF9800, #FF5722);
+            color: white;
+            padding: 24px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+        .header p {
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+        .content {
+            padding: 28px 24px;
+            max-width: 900px; /* batasi lebar teks agar tidak terlalu lebar, opsional */
+            margin: 0 auto;
+        }
+        /* sisanya sama seperti sebelumnya */
+        .warning-box {
+            background: #fff8e7;
+            border-left: 5px solid #FF9800;
+            padding: 16px 20px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+        }
+        .warning-box h3 {
+            color: #FF5722;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.1rem;
+        }
+        .info-list {
+            background: #f8f9fc;
+            border-radius: 20px;
+            padding: 8px 0;
+            margin: 24px 0;
+            list-style: none;
+        }
+        .info-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 14px 20px;
+            border-bottom: 1px solid #eef2f6;
+        }
+        .info-list li:last-child {
+            border-bottom: none;
+        }
+        .info-icon {
+            font-size: 1.3rem;
+            min-width: 32px;
+            text-align: center;
+        }
+        .info-text strong {
+            color: #FF5722;
+            display: inline-block;
+            margin-bottom: 2px;
+        }
+        .info-text {
+            flex: 1;
+            font-size: 0.9rem;
+            line-height: 1.45;
+        }
+        .timer-box {
+            background: #e8f5e9;
+            border-radius: 20px;
+            padding: 18px;
+            text-align: center;
+            margin: 24px 0;
+        }
+        .timer-box .days {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #2e7d32;
+            line-height: 1;
+        }
+        .timer-box .label {
+            font-size: 0.85rem;
+            margin-top: 6px;
+            color: #2e7d32;
+        }
+        .timer-box .date {
+            font-size: 0.7rem;
+            margin-top: 8px;
+            color: #555;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+            width: auto;
+        }
+        .status-active {
+            background: #e3f2fd;
+            color: #1976d2;
+            border: 1px solid #1976d2;
+        }
+        .status-pending-delete {
+            background: #fff3e0;
+            color: #FF9800;
+            border: 1px solid #FF9800;
+        }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #f44336, #d32f2f);
+            color: white;
+        }
+        .btn-warning {
+            background: linear-gradient(135deg, #FF9800, #FF5722);
+            color: white;
+        }
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #FF9800;
+            color: #FF9800;
+        }
+        .btn-outline:hover {
+            background: #FF9800;
+            color: white;
+            transform: translateY(-2px);
+        }
+        .btn-danger:hover, .btn-warning:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 14px rgba(0,0,0,0.15);
+        }
+        .text-muted {
+            color: #6c757d;
+            font-size: 0.75rem;
+            text-align: center;
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 18px;
+        }
+        footer {
+            text-align: center;
+            padding: 16px;
+            font-size: 0.7rem;
+            color: #aaa;
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: 0.3s;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal {
+            background: white;
+            border-radius: 28px;
+            max-width: 380px;
+            width: 90%;
+            padding: 24px;
+            text-align: center;
+            box-shadow: 0 20px 35px rgba(0,0,0,0.2);
+        }
+        .modal h3 {
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+        .modal p {
+            font-size: 0.9rem;
+            color: #555;
+            margin-bottom: 20px;
+        }
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+        }
+        .modal-buttons button {
+            flex: 1;
+            padding: 10px;
+            border-radius: 40px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .text-center {
+            text-align: center;
+        }
+        @media (max-width: 600px) {
+            .content {
+                padding: 20px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="card">
+        <div class="header">
+            <h1>🗑️ Hapus Akun Permanen</h1>
+            <p>Ketahui konsekuensi sebelum melanjutkan</p>
+        </div>
+        <div class="content" id="contentArea">
+            <div class="text-center">
+                <span id="statusBadge" class="status-badge status-active">Memuat...</span>
+            </div>
+            <div id="mainInfo">
+                <!-- Konten dinamis -->
+            </div>
+            <div id="actionButtons"></div>
+            <div class="text-muted">
+                ⏱️ Proses ini memerlukan verifikasi keamanan. Anda akan logout setelah permintaan diproses.
+            </div>
+        </div>
+    </div>
+    <footer>© 2026 JeGo - Solusi Transportasi & Kurir</footer>
+</div>
+
+<!-- Modal Konfirmasi -->
+<div id="modal" class="modal-overlay">
+    <div class="modal">
+        <h3 id="modalTitle">Konfirmasi</h3>
+        <p id="modalMessage">Apakah Anda yakin?</p>
+        <div class="modal-buttons">
+            <button id="modalCancelBtn" style="background:#e9ecef; color:#333;">Batal</button>
+            <button id="modalConfirmBtn" style="background:#FF9800; color:white;">Ya, Lanjutkan</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Firebase Config (sama seperti sebelumnya, tidak diubah)
+    const firebaseConfig = {
+        apiKey: "AIzaSyCD0pgeZio-LdKqYDtWxcdXcZwyL4ngYQI",
+        authDomain: "jego-35a2b.firebaseapp.com",
+        databaseURL: "https://jego-35a2b-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "jego-35a2b",
+        storageBucket: "jego-35a2b.firebasestorage.app",
+        messagingSenderId: "600037007040",
+        appId: "1:600037007040:web:ac3243ad9b472647ffd725"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
+
+    const statusBadge = document.getElementById('statusBadge');
+    const mainInfoDiv = document.getElementById('mainInfo');
+    const actionDiv = document.getElementById('actionButtons');
+    const modalOverlay = document.getElementById('modal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalMessage = document.getElementById('modalMessage');
+    const modalConfirm = document.getElementById('modalConfirmBtn');
+    const modalCancel = document.getElementById('modalCancelBtn');
+
+    let currentUid = null;
+
+    function showModal(title, msg, onConfirm) {
+        modalTitle.innerText = title;
+        modalMessage.innerText = msg;
+        modalOverlay.classList.add('active');
+        const confirmHandler = () => {
+            modalOverlay.classList.remove('active');
+            modalConfirm.removeEventListener('click', confirmHandler);
+            modalCancel.removeEventListener('click', cancelHandler);
+            if (onConfirm) onConfirm();
+        };
+        const cancelHandler = () => {
+            modalOverlay.classList.remove('active');
+            modalConfirm.removeEventListener('click', confirmHandler);
+            modalCancel.removeEventListener('click', cancelHandler);
+        };
+        modalConfirm.addEventListener('click', confirmHandler);
+        modalCancel.addEventListener('click', cancelHandler);
+    }
+
+    function getRemainingDays(requestTimestamp) {
+        const now = Date.now();
+        const diff = requestTimestamp + (30 * 24 * 60 * 60 * 1000) - now;
+        if (diff <= 0) return 0;
+        return Math.ceil(diff / (1000 * 60 * 60 * 24));
+    }
+
+    function renderPage(driverData) {
+        const status = driverData.status;
+        const deletionReq = driverData.deletion_requested_at || null;
+        const isPendingDelete = (status === 'delete_akun_driver' && deletionReq);
+
+        if (isPendingDelete) {
+            statusBadge.className = 'status-badge status-pending-delete';
+            statusBadge.innerText = '⏳ Penghapusan Akun dalam Proses (30 hari)';
+        } else {
+            statusBadge.className = 'status-badge status-active';
+            statusBadge.innerText = '✅ Akun Aktif';
+        }
+
+        let infoHtml = `
+            <div class="warning-box">
+                <h3>⚠️ Peringatan Penting</h3>
+                <p>Penghapusan akun bersifat <strong>permanen</strong> setelah masa tenggang 30 hari. Semua data Anda akan dihapus dari sistem JeGo dan tidak dapat dipulihkan.</p>
+            </div>
+            <ul class="info-list">
+                <li>
+                    <div class="info-icon">📌</div>
+                    <div class="info-text"><strong>Masa Tenggang 30 Hari</strong><br>Akun akan berstatus "delete_akun_driver". Anda masih bisa login dan membatalkan penghapusan kapan saja selama 30 hari.</div>
+                </li>
+                <li>
+                    <div class="info-icon">🔒</div>
+                    <div class="info-text"><strong>Setelah 30 Hari</strong><br>Seluruh data pribadi (nama, email, nomor telepon, KTP, foto profil, riwayat perjalanan, saldo) akan dihapus <strong>permanen</strong> dari database.</div>
+                </li>
+                <li>
+                    <div class="info-icon">🚫</div>
+                    <div class="info-text"><strong>Larang Daftar Ulang</strong><br>Email dan nomor telepon yang pernah terdaftar <strong>tidak dapat digunakan kembali</strong> untuk mendaftar sebagai driver atau pelanggan JeGo.</div>
+                </li>
+                <li>
+                    <div class="info-icon">💸</div>
+                    <div class="info-text"><strong>Saldo & Komisi</strong><br>Pastikan saldo deposit Anda Rp 0 sebelum mengajukan penghapusan. Saldo tidak dapat ditarik setelah proses penghapusan dimulai.</div>
+                </li>
+                <li>
+                    <div class="info-icon">📅</div>
+                    <div class="info-text"><strong>Otomatis Logout</strong><br>Setelah mengajukan penghapusan, Anda akan logout dan harus login kembali jika ingin membatalkan dalam masa tenggang.</div>
+                </li>
+            </ul>
+        `;
+
+        if (isPendingDelete) {
+            const remaining = getRemainingDays(deletionReq);
+            infoHtml += `
+                <div class="timer-box">
+                    <div class="days">${remaining} Hari</div>
+                    <div class="label">Sisa masa tenggang sebelum penghapusan permanen</div>
+                    <div class="date">Tanggal pengajuan: ${new Date(deletionReq).toLocaleDateString('id-ID')}</div>
+                </div>
+                <div class="warning-box" style="background:#eef2fa;">
+                    <h3>💡 Batalkan Penghapusan</h3>
+                    <p>Jika Anda berubah pikiran, Anda dapat membatalkan permohonan hapus akun. Akun akan kembali aktif seperti semula tanpa kehilangan data.</p>
+                </div>
+            `;
+        } else {
+            infoHtml += `
+                <div class="warning-box" style="background:#ffebee; border-left-color:#f44336;">
+                    <h3>❗ Konsekuensi Penghapusan</h3>
+                    <p>Setelah Anda mengajukan penghapusan, Anda masih memiliki <strong>30 hari</strong> untuk membatalkan. Lewat dari itu, data akan dihapus permanen dan Anda tidak bisa mendaftar lagi dengan data yang sama.</p>
+                </div>
+            `;
+        }
+
+        mainInfoDiv.innerHTML = infoHtml;
+
+        if (isPendingDelete) {
+            actionDiv.innerHTML = `
+                <button id="cancelDeleteBtn" class="btn btn-warning">↩️ Batalkan Penghapusan Akun</button>
+                <button id="backBtn" class="btn btn-outline">← Kembali ke Profil</button>
+            `;
+            document.getElementById('cancelDeleteBtn').addEventListener('click', () => {
+                showModal('Batalkan Penghapusan', 'Apakah Anda yakin ingin membatalkan permohonan hapus akun? Akun Anda akan kembali aktif seperti semula.', async () => {
+                    await cancelDeletion();
+                });
+            });
+        } else {
+            actionDiv.innerHTML = `
+                <button id="requestDeleteBtn" class="btn btn-danger">🗑️ Ajukan Penghapusan Akun</button>
+                <button id="backBtn" class="btn btn-outline">← Kembali ke Profil</button>
+            `;
+            document.getElementById('requestDeleteBtn').addEventListener('click', () => {
+                showModal('Ajukan Penghapusan Akun', 
+                    'Dengan mengajukan penghapusan, Anda menyetujui bahwa:\n\n' +
+                    '1. Akun akan berstatus "delete_akun_driver" selama 30 hari.\n' +
+                    '2. Anda masih bisa login dan membatalkan permintaan.\n' +
+                    '3. Setelah 30 hari, semua data dihapus permanen dan email/telepon tidak bisa dipakai lagi.\n\n' +
+                    'Lanjutkan?', 
+                    async () => {
+                        await requestDeletion();
+                    });
+            });
+        }
+        document.getElementById('backBtn').addEventListener('click', () => {
+            window.location.href = 'akun.html';
+        });
+    }
+
+    async function requestDeletion() {
+        if (!currentUid) return;
+        const now = Date.now();
+        try {
+            await db.ref(`drivers/${currentUid}`).update({
+                status: 'delete_akun_driver',
+                deletion_requested_at: now,
+                updated_at: new Date().toISOString()
+            });
+            const driverLocal = JSON.parse(localStorage.getItem('jego_logged_in_driver') || '{}');
+            driverLocal.status = 'delete_akun_driver';
+            localStorage.setItem('jego_logged_in_driver', JSON.stringify(driverLocal));
+            
+            alert('Permohonan hapus akun telah diajukan. Anda akan logout dalam 3 detik.');
+            setTimeout(async () => {
+                await auth.signOut();
+                localStorage.removeItem('jego_logged_in_driver');
+                window.location.href = 'loginDriver.html';
+            }, 3000);
+        } catch (err) {
+            console.error(err);
+            alert('Gagal mengajukan penghapusan: ' + err.message);
+        }
+    }
+
+    async function cancelDeletion() {
+        if (!currentUid) return;
+        try {
+            await db.ref(`drivers/${currentUid}`).update({
+                status: 'active',
+                deletion_requested_at: null,
+                updated_at: new Date().toISOString()
+            });
+            const driverLocal = JSON.parse(localStorage.getItem('jego_logged_in_driver') || '{}');
+            driverLocal.status = 'active';
+            localStorage.setItem('jego_logged_in_driver', JSON.stringify(driverLocal));
+            
+            alert('Penghapusan akun telah dibatalkan. Akun Anda kembali aktif.');
+            window.location.reload();
+        } catch (err) {
+            console.error(err);
+            alert('Gagal membatalkan penghapusan: ' + err.message);
+        }
+    }
+
+    async function loadDriver() {
+        const user = auth.currentUser;
+        if (!user) {
+            window.location.href = 'loginDriver.html';
+            return;
+        }
+        currentUid = user.uid;
+        try {
+            const snapshot = await db.ref(`drivers/${currentUid}`).once('value');
+            const data = snapshot.val();
+            if (!data) throw new Error('Data driver tidak ditemukan');
+            renderPage(data);
+        } catch (err) {
+            console.error(err);
+            mainInfoDiv.innerHTML = `<div class="warning-box" style="border-left-color:#f44336;">Gagal memuat data: ${err.message}</div>`;
+        }
+    }
+
+    auth.onAuthStateChanged((user) => {
+        if (user) {
+            loadDriver();
+        } else {
+            window.location.href = 'loginDriver.html';
+        }
+    });
+</script>
+</body>
+</html>
