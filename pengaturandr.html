@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Pengaturan Driver - JeGo</title>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* VARIABEL CSS (LIGHT MODE DEFAULT) */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --text-primary: #212529;
+            --text-secondary: #6c757d;
+            --border: #dee2e6;
+            --card-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            --primary: #FF9800;
+            --primary-hover: #e68900;
+            --danger: #dc3545;
+            --danger-hover: #c82333;
+        }
+
+        /* DARK MODE */
+        body.dark {
+            --bg-primary: #121212;
+            --bg-secondary: #1e1e1e;
+            --text-primary: #e9ecef;
+            --text-secondary: #adb5bd;
+            --border: #343a40;
+            --card-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.3);
+            --primary: #FF9800;
+            --primary-hover: #e68900;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            transition: background-color 0.3s ease, color 0.2s ease;
+            padding-bottom: 30px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary), #FFB74D);
+            padding: 15px 20px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            flex: 1;
+        }
+        .back-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px 16px;
+        }
+        .setting-card {
+            background: var(--bg-primary);
+            border-radius: 16px;
+            margin-bottom: 20px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+        .setting-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+        .setting-item:hover {
+            background-color: var(--bg-secondary);
+        }
+        .setting-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .setting-left i {
+            width: 24px;
+            font-size: 1.3rem;
+            color: var(--primary);
+        }
+        .setting-left span {
+            font-weight: 500;
+            font-size: 1rem;
+        }
+        .setting-right {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        .setting-right i {
+            font-size: 0.8rem;
+            margin-left: 8px;
+        }
+        .version-text {
+            font-size: 0.85rem;
+            font-weight: normal;
+            color: var(--text-secondary);
+        }
+        .logout-btn {
+            color: var(--danger);
+        }
+        .logout-btn i {
+            color: var(--danger);
+        }
+        
+        /* MODAL */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            width: 85%;
+            max-width: 340px;
+            border-radius: 24px;
+            padding: 24px 20px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            animation: fadeIn 0.2s ease;
+        }
+        .modal-content h3 {
+            margin-bottom: 12px;
+            font-size: 1.4rem;
+        }
+        .modal-content p {
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            color: var(--text-secondary);
+        }
+        .dark-mode-option {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border);
+        }
+        .dark-mode-option span {
+            font-weight: 500;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 52px;
+            height: 26px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.3s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: var(--primary);
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .modal-btn {
+            padding: 8px 18px;
+            border: none;
+            border-radius: 30px;
+            font-weight: 600;
+            cursor: pointer;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            transition: 0.2s;
+        }
+        .modal-btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        .footer-note {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95);}
+            to { opacity: 1; transform: scale(1);}
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <button class="back-btn" id="backBtn"><i class="fas fa-arrow-left"></i></button>
+    <h1>Pengaturan</h1>
+    <div style="width: 36px;"></div>
+</div>
+
+<div class="container" id="settingsContainer">
+    <div class="setting-card">
+        <div class="setting-item" id="darkModeSetting">
+            <div class="setting-left">
+                <i class="fas fa-moon"></i>
+                <span>Mode Gelap</span>
+            </div>
+            <div class="setting-right">
+                <span id="darkModeStatus">Nonaktif</span>
+                <i class="fas fa-chevron-right"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="setting-card">
+        <div class="setting-item" id="legalitasSetting">
+            <div class="setting-left">
+                <i class="fas fa-file-alt"></i>
+                <span>Data Legalitas</span>
+            </div>
+            <div class="setting-right">
+                <i class="fas fa-chevron-right"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="setting-card">
+        <div class="setting-item" style="cursor: default;">
+            <div class="setting-left">
+                <i class="fas fa-code-branch"></i>
+                <span>Versi Aplikasi</span>
+            </div>
+            <div class="setting-right version-text" id="appVersion">
+                Memuat...
+            </div>
+        </div>
+    </div>
+
+    <div class="setting-card">
+        <div class="setting-item" id="logoutSetting">
+            <div class="setting-left logout-btn">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Keluar</span>
+            </div>
+            <div class="setting-right">
+                <i class="fas fa-chevron-right"></i>
+            </div>
+        </div>
+        <div class="setting-item" id="deleteAccountSetting">
+            <div class="setting-left" style="color: var(--danger);">
+                <i class="fas fa-trash-alt"></i>
+                <span>Hapus Akun</span>
+            </div>
+            <div class="setting-right">
+                <i class="fas fa-chevron-right"></i>
+            </div>
+        </div>
+    </div>
+    <div class="footer-note">JeGo Driver © 2025</div>
+</div>
+
+<!-- MODAL DARK MODE -->
+<div id="darkModeModal" class="modal">
+    <div class="modal-content">
+        <i class="fas fa-moon" style="font-size: 2.5rem; color: var(--primary); margin-bottom: 8px;"></i>
+        <h3>Mode Gelap</h3>
+        <p>Aktifkan mode gelap untuk kenyamanan mata saat berkendara malam hari atau di lingkungan minim cahaya. Pengaturan akan disimpan secara otomatis.</p>
+        <div class="dark-mode-option">
+            <span><i class="fas fa-adjust"></i> Mode Gelap</span>
+            <label class="switch">
+                <input type="checkbox" id="darkModeToggle">
+                <span class="slider"></span>
+            </label>
+        </div>
+        <div class="modal-buttons">
+            <button class="modal-btn" id="closeDarkModal">Tutup</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL KONFIRMASI LOGOUT -->
+<div id="confirmLogoutModal" class="modal confirm-modal">
+    <div class="modal-content">
+        <i class="fas fa-question-circle" style="font-size: 2.5rem; color: var(--primary);"></i>
+        <h3>Yakin Keluar?</h3>
+        <p>Anda akan keluar dari akun driver dan kembali ke halaman login.</p>
+        <div class="modal-buttons">
+            <button class="modal-btn" id="cancelLogoutBtn">Tidak</button>
+            <button class="modal-btn modal-btn-primary" id="confirmLogoutBtn">Ya, Keluar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ======================= FIREBASE INIT =======================
+    const firebaseConfig = {
+        apiKey: "AIzaSyCD0pgeZio-LdKqYDtWxcdXcZwyL4ngYQI",
+        authDomain: "jego-35a2b.firebaseapp.com",
+        databaseURL: "https://jego-35a2b-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "jego-35a2b",
+        storageBucket: "jego-35a2b.firebasestorage.app",
+        messagingSenderId: "600037007040",
+        appId: "1:600037007040:web:ac3243ad9b472647ffd725"
+    };
+    
+    let database, auth;
+    try {
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        database = firebase.database();
+        auth = firebase.auth();
+        console.log("Firebase siap (pengaturan)");
+    } catch(e) { console.error(e); }
+
+    // ======================= DARK MODE =======================
+    function updateDarkModeStatus() {
+        const isDark = document.body.classList.contains('dark');
+        const statusSpan = document.getElementById('darkModeStatus');
+        if (statusSpan) {
+            statusSpan.innerText = isDark ? "Aktif" : "Nonaktif";
+        }
+    }
+
+    function initTheme() {
+        const savedTheme = localStorage.getItem('jego_driver_theme');
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark');
+            if (darkModeToggle) darkModeToggle.checked = true;
+        } else {
+            document.body.classList.remove('dark');
+            if (darkModeToggle) darkModeToggle.checked = false;
+        }
+        updateDarkModeStatus();
+    }
+    
+    function setTheme(isDark) {
+        if (isDark) {
+            document.body.classList.add('dark');
+            localStorage.setItem('jego_driver_theme', 'dark');
+        } else {
+            document.body.classList.remove('dark');
+            localStorage.setItem('jego_driver_theme', 'light');
+        }
+        updateDarkModeStatus();
+        // Trigger storage event untuk halaman lain (index.html dll)
+        window.dispatchEvent(new StorageEvent('storage', { key: 'jego_driver_theme', newValue: isDark ? 'dark' : 'light' }));
+    }
+
+    // ======================= VERSI APLIKASI =======================
+    async function loadAppVersion() {
+        const versionElement = document.getElementById('appVersion');
+        if (!versionElement) return;
+        versionElement.innerText = 'Memuat...';
+        try {
+            const snapshot = await database.ref('data-jego/Version').once('value');
+            const version = snapshot.val();
+            if (version) {
+                versionElement.innerText = `v${version}`;
+            } else {
+                versionElement.innerText = '1.0.0';
+            }
+        } catch (err) {
+            console.warn("Gagal ambil versi:", err);
+            versionElement.innerText = '1.0.0';
+        }
+    }
+
+    // ======================= LOGOUT =======================
+    function performLogout() {
+        auth.signOut().then(() => {
+            localStorage.removeItem('jego_logged_in_driver');
+            localStorage.removeItem('autobid_offered_orders');
+            localStorage.removeItem('jego_driver_active_order');
+            window.location.href = 'loginDriver.html';
+        }).catch((error) => {
+            console.error("Logout gagal:", error);
+            alert("Gagal keluar, silakan coba lagi.");
+        });
+    }
+
+    // ======================= EVENT LISTENER =======================
+    document.addEventListener('DOMContentLoaded', () => {
+        initTheme();
+        
+        // Ambil versi aplikasi setelah auth state
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                loadAppVersion();
+            } else {
+                document.getElementById('appVersion').innerText = 'Login diperlukan';
+            }
+        });
+        
+        // Back button
+        document.getElementById('backBtn').addEventListener('click', () => window.history.back());
+        
+        // Dark mode modal
+        const darkModeSetting = document.getElementById('darkModeSetting');
+        const darkModal = document.getElementById('darkModeModal');
+        const closeDarkModal = document.getElementById('closeDarkModal');
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        
+        darkModeSetting.addEventListener('click', () => {
+            darkModeToggle.checked = document.body.classList.contains('dark');
+            darkModal.style.display = 'flex';
+        });
+        darkModeToggle.addEventListener('change', (e) => setTheme(e.target.checked));
+        closeDarkModal.addEventListener('click', () => darkModal.style.display = 'none');
+        
+        // Legalitas
+        document.getElementById('legalitasSetting').addEventListener('click', () => {
+            window.location.href = 'documents.html';
+        });
+        
+        // Logout
+        const logoutSetting = document.getElementById('logoutSetting');
+        const confirmModal = document.getElementById('confirmLogoutModal');
+        const cancelLogout = document.getElementById('cancelLogoutBtn');
+        const confirmLogout = document.getElementById('confirmLogoutBtn');
+        logoutSetting.addEventListener('click', () => confirmModal.style.display = 'flex');
+        cancelLogout.addEventListener('click', () => confirmModal.style.display = 'none');
+        confirmLogout.addEventListener('click', () => {
+            confirmModal.style.display = 'none';
+            performLogout();
+        });
+        
+        // Hapus Akun
+        document.getElementById('deleteAccountSetting').addEventListener('click', () => {
+            window.location.href = 'hapus_akun.html';
+        });
+        
+        // Tutup modal jika klik luar
+        window.addEventListener('click', (e) => {
+            if (e.target === darkModal) darkModal.style.display = 'none';
+            if (e.target === confirmModal) confirmModal.style.display = 'none';
+        });
+        
+        // Sinkronisasi perubahan tema dari halaman lain (storage event)
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'jego_driver_theme') {
+                initTheme();
+            }
+        });
+    });
+</script>
+</body>
+</html>
