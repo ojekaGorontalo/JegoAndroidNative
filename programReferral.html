@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+  <title>Program Referral - JeGo</title>
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <style>
+    /* ========== LIGHT MODE (DEFAULT) ========== */
+    :root {
+      --primary: #FF9800;
+      --primary-dark: #E65100;
+      --primary-light: #FFB74D;
+      --secondary: #F57C00;
+      --accent: #FFC107;
+      --surface: #FFFFFF;
+      --background: #F5F5F5;
+      --text-primary: #212121;
+      --text-secondary: #5f6368;
+      --border-light: #E0E0E0;
+      --card-shadow: none;
+      --bonus-bg: #E8F5E9;
+      --bonus-text: #2E7D32;
+      --info-bg: #E3F2FD;
+      --info-text: #0D47A1;
+      --invite-bg: #FFF8E1;
+      --invite-border: #FF9800;
+      --friend-list-bg: #FAFAFA;
+      --badge-bg: #4CAF50;
+      --badge-text: white;
+      --btn-back-bg: #e0e0e0;
+      --btn-back-text: #333;
+      --footer-text: #888;
+    }
+
+    /* ========== DARK MODE OVERRIDES ========== */
+    body.dark-mode {
+      --primary: #FFB74D;
+      --primary-dark: #FF9800;
+      --primary-light: #FFA726;
+      --secondary: #FF7043;
+      --accent: #FFD54F;
+      --surface: #1E1E1E;
+      --background: #121212;
+      --text-primary: #FFFFFF;
+      --text-secondary: #B0B0B0;
+      --border-light: #333333;
+      --bonus-bg: #1e3a1e;
+      --bonus-text: #8bc34a;
+      --info-bg: #1a2c3a;
+      --info-text: #81d4fa;
+      --invite-bg: #3a2a1a;
+      --invite-border: #FFB74D;
+      --friend-list-bg: #2C2C2C;
+      --badge-bg: #2E7D32;
+      --badge-text: #e0e0e0;
+      --btn-back-bg: #424242;
+      --btn-back-text: #e0e0e0;
+      --footer-text: #9e9e9e;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s;
+    }
+
+    body {
+      background: var(--background);
+      font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
+      padding: 0;
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text-primary);
+    }
+
+    .native-container {
+      width: 100%;
+      max-width: 100%;
+      background: var(--background);
+      min-height: 100vh;
+    }
+
+    .header {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      padding: 24px 20px;
+      text-align: center;
+      color: white;
+    }
+
+    .header h1 {
+      font-size: 1.7rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .header p {
+      font-size: 0.85rem;
+      opacity: 0.9;
+      margin-top: 6px;
+    }
+
+    .content-full {
+      padding: 0;
+    }
+
+    .native-card {
+      background: var(--surface);
+      border-radius: 0;
+      margin: 0 0 12px 0;
+      padding: 20px;
+      box-shadow: none;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .referral-code {
+      font-size: 1.8rem;
+      font-weight: bold;
+      letter-spacing: 2px;
+      background: var(--primary);
+      color: white;
+      display: inline-block;
+      padding: 10px 25px;
+      border-radius: 50px;
+      margin: 10px 0;
+    }
+
+    .copy-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 8px 20px;
+      border-radius: 40px;
+      font-size: 0.9rem;
+      font-weight: bold;
+      cursor: pointer;
+      margin-left: 10px;
+      transition: 0.2s;
+    }
+
+    .copy-btn:active {
+      transform: scale(0.96);
+    }
+
+    .bonus-box {
+      background: var(--bonus-bg);
+      border-radius: 20px;
+      padding: 16px;
+      margin-top: 16px;
+      text-align: center;
+    }
+
+    .bonus-amount {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--bonus-text);
+    }
+
+    .info-text {
+      background: var(--info-bg);
+      border-radius: 20px;
+      padding: 16px;
+      margin: 0 0 12px 0;
+      font-size: 0.9rem;
+      line-height: 1.4;
+      color: var(--info-text);
+    }
+
+    .info-text ul {
+      margin-left: 20px;
+      margin-top: 8px;
+    }
+
+    .info-text li {
+      margin-bottom: 8px;
+    }
+
+    .invite-text {
+      background: var(--invite-bg);
+      border-radius: 20px;
+      padding: 16px;
+      margin: 12px 0;
+      text-align: center;
+      font-weight: 500;
+      border-left: 4px solid var(--invite-border);
+      color: var(--text-primary);
+    }
+
+    .btn-share-wa {
+      background: #25D366;
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: 40px;
+      font-size: 1rem;
+      font-weight: bold;
+      width: 100%;
+      cursor: pointer;
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: 0.2s;
+    }
+
+    .btn-share-wa:active {
+      transform: scale(0.97);
+      background: #128C7E;
+    }
+
+    .friend-list {
+      list-style: none;
+      margin-top: 10px;
+      max-height: 250px;
+      overflow-y: auto;
+    }
+
+    .friend-list li {
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border-light);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      background: var(--badge-bg);
+      color: var(--badge-text);
+      padding: 4px 12px;
+      border-radius: 30px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .btn-back {
+      display: block;
+      background: var(--btn-back-bg);
+      text-align: center;
+      padding: 14px;
+      border-radius: 40px;
+      color: var(--btn-back-text);
+      text-decoration: none;
+      font-weight: 600;
+      margin: 16px 0 20px 0;
+      transition: 0.2s;
+    }
+
+    .btn-back:active {
+      background: #ccc;
+    }
+
+    .loading, .error-msg {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-secondary);
+    }
+
+    .spinner {
+      border: 3px solid var(--border-light);
+      border-top: 3px solid var(--primary);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 15px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    footer {
+      text-align: center;
+      padding: 16px;
+      font-size: 0.7rem;
+      color: var(--footer-text);
+      background: var(--background);
+    }
+  </style>
+</head>
+<body>
+<div class="native-container">
+  <div class="header">
+    <h1>🎁 Program Referral JeGo</h1>
+    <p>Dapatkan bonus 0.5% dari setiap perjalanan teman yang kamu ajak!</p>
+  </div>
+
+  <div id="loadingState" class="loading">
+    <div class="spinner"></div>
+    <p>Memuat data referral...</p>
+  </div>
+
+  <div id="mainContent" style="display: none;" class="content-full">
+    <!-- Card 1: Kode & Bonus -->
+    <div class="native-card">
+      <div style="font-weight: 600; margin-bottom: 5px;">Kode Referral ANDA</div>
+      <div>
+        <span class="referral-code" id="myReferralCode">-</span>
+        <button class="copy-btn" id="copyReferralBtn">📋 Salin</button>
+      </div>
+      <div class="bonus-box">
+        <div style="font-size: 0.8rem;">Total Bonus Terkumpul</div>
+        <div class="bonus-amount" id="totalBonus">Rp 0</div>
+        <div style="font-size: 0.7rem; margin-top: 6px;">* Otomatis ditambahkan setiap teman selesai perjalanan</div>
+      </div>
+      <div class="invite-text">
+        🤝 <strong>Ajak teman anda untuk menggunakan JeGo</strong><br>
+        Aplikasi lokal Gorontalo. Bagikan kode referral anda ke pengguna baru!
+      </div>
+      <button class="btn-share-wa" id="shareWaBtn">
+        📱 Bagikan ke WhatsApp
+      </button>
+    </div>
+
+    <!-- Penjelasan Cara Kerja -->
+    <div class="native-card">
+      <div class="info-text">
+        <strong>📌 Bagaimana cara kerja referral?</strong>
+        <ul>
+          <li>1. Bagikan kode referral Anda ke teman.</li>
+          <li>2. Teman mendaftar menggunakan kode Anda.</li>
+          <li>3. Setiap kali teman menyelesaikan perjalanan (Motor/Bentor/Mobil), Anda mendapat bonus 0.5% dari nilai order.</li>
+          <li>4. Bonus langsung ditambahkan ke akun Anda dan bisa digunakan untuk perjalanan Anda sendiri (potong biaya).</li>
+          <li>5. Bonus akan terus diberikan selama program referral masih berlangsung dan teman Anda aktif menggunakan JeGo. JeGo berhak mengubah atau menghentikan program sewaktu-waktu.</li>
+        </ul>
+        <span style="font-size: 0.7rem; display: block; margin-top: 10px;">* Berlaku untuk order transportasi saja (bukan kurir).</span>
+      </div>
+    </div>
+
+    <!-- Contoh Bonus -->
+    <div class="native-card">
+      <div style="font-weight: 700; margin-bottom: 12px;">📊 Contoh Bonus yang Anda Dapatkan</div>
+      <div style="margin-bottom: 8px;">🔹 Teman order Rp10.000 → bonus Anda = <strong>Rp50</strong></div>
+      <div style="margin-bottom: 8px;">🔹 Teman order Rp25.000 → bonus Anda = <strong>Rp125</strong></div>
+      <div style="margin-bottom: 8px;">🔹 Teman order Rp50.000 → bonus Anda = <strong>Rp250</strong></div>
+      <div style="margin-bottom: 8px;">🔹 Teman order Rp100.000 → bonus Anda = <strong>Rp500</strong></div>
+      <div style="margin-bottom: 8px;">🔹 Teman order Rp200.000 → bonus Anda = <strong>Rp1.000</strong></div>
+      <div style="margin-top: 12px; font-size: 0.75rem; color: var(--text-secondary);">Semakin sering teman Anda bepergian, semakin besar bonus yang Anda kumpulkan!</div>
+    </div>
+
+    <!-- Daftar teman yang diajak -->
+    <div class="native-card">
+      <div style="font-weight: 700; margin-bottom: 12px;">👥 Teman yang sudah bergabung via kode Anda</div>
+      <div id="referredFriendsList" style="background: var(--friend-list-bg); border-radius: 16px; padding: 0 12px;">Memuat...</div>
+    </div>
+
+    <!-- Tombol Klaim Refund -->
+    <div class="native-card">
+      <a href="customer_refund.html" style="display: block; background: #FF5722; color: white; text-align: center; padding: 14px; border-radius: 40px; text-decoration: none; font-weight: bold; transition: 0.2s;">
+        💰 Klaim Refund Bonus
+      </a>
+      <p style="font-size: 0.7rem; text-align: center; margin-top: 8px; color: var(--text-secondary);">
+        Jika driver membatalkan perjalanan, bonus Anda akan tersedia di sini untuk diklaim kembali.
+      </p>
+    </div>
+    
+    <footer>
+      JeGo - Jasa Ekspedisi Gorontalo © 2026
+    </footer>
+  </div>
+</div>
+
+<script>
+  // ========== DARK MODE - MENGIKUTI LOCALSTORAGE (TANPA TOMBOL) ==========
+  function applyDarkModeFromLocalStorage() {
+    const isDarkMode = localStorage.getItem('jego_dark_mode') === 'true';
+    if (isDarkMode) {
+      document.body.classList.add('dark-mode');
+    } else {
+      document.body.classList.remove('dark-mode');
+    }
+  }
+
+  const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyCD0pgeZio-LdKqYDtWxcdXcZwyL4ngYQI",
+    authDomain: "jego-35a2b.firebaseapp.com",
+    databaseURL: "https://jego-35a2b-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "jego-35a2b",
+    storageBucket: "jego-35a2b.firebasestorage.app",
+    messagingSenderId: "600037007040",
+    appId: "1:600037007040:web:ac3243ad9b472647ffd725"
+  };
+  if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+  const auth = firebase.auth();
+  const database = firebase.database();
+
+  function formatRupiah(amount) {
+    return 'Rp ' + (parseInt(amount) || 0).toLocaleString('id-ID');
+  }
+
+  async function loadReferralData(uid) {
+    try {
+      const userSnap = await database.ref(`users/${uid}`).once('value');
+      const user = userSnap.val();
+      if (!user) throw new Error('Data user tidak ditemukan');
+      
+      // Ambil kode referral dengan fallback
+      let referralCode = user.referral_code;
+      if (!referralCode) {
+        const codeSnap = await database.ref(`referralCodes/${uid}`).once('value');
+        referralCode = codeSnap.val();
+        if (!referralCode) {
+          referralCode = uid.substring(0, 8).toUpperCase();
+          console.warn('Kode referral tidak ditemukan, gunakan sementara:', referralCode);
+        }
+      }
+      document.getElementById('myReferralCode').innerText = referralCode;
+      document.getElementById('totalBonus').innerText = formatRupiah(user.referral_bonus_total || 0);
+      
+      // Ambil daftar teman dari referralUsage
+      const usageSnap = await database.ref(`referralUsage/${uid}`).once('value');
+      const referred = usageSnap.val();
+      const container = document.getElementById('referredFriendsList');
+      if (!referred || Object.keys(referred).length === 0) {
+        container.innerHTML = '<div style="padding: 15px; text-align: center; color: var(--text-secondary);">Belum ada teman yang mendaftar pakai kode Anda.</div>';
+        return;
+      }
+      
+      let html = '<ul class="friend-list">';
+      for (let [referredUid, data] of Object.entries(referred)) {
+        const shortId = referredUid.substring(0, 8) + '...';
+        const totalBonus = data.totalBonusAccumulated || 0;
+        const lastBonus = data.lastBonusAt ? new Date(data.lastBonusAt).toLocaleDateString('id-ID') : '-';
+        html += `
+          <li>
+            <div>
+              <strong>${shortId}</strong>
+              <div style="font-size:0.7rem; color: var(--text-secondary);">Bergabung: ${data.registeredAt ? new Date(data.registeredAt).toLocaleDateString('id-ID') : '-'}</div>
+            </div>
+            <div>
+              <span class="badge">💰 ${formatRupiah(totalBonus)}</span>
+              <div style="font-size:0.6rem; text-align:right; color: var(--text-secondary);">Terakhir: ${lastBonus}</div>
+            </div>
+          </li>
+        `;
+      }
+      html += '</ul>';
+      container.innerHTML = html;
+    } catch (err) {
+      console.error(err);
+      document.getElementById('referredFriendsList').innerHTML = '<div class="error-msg">Gagal memuat data referral.</div>';
+    }
+  }
+
+  // Salin kode referral
+  document.getElementById('copyReferralBtn')?.addEventListener('click', () => {
+    const code = document.getElementById('myReferralCode').innerText;
+    if (code && code !== '-' && code !== 'Tidak tersedia') {
+      navigator.clipboard.writeText(code);
+      alert('Kode referral disalin!');
+    } else {
+      alert('Kode referral belum tersedia.');
+    }
+  });
+
+  // Tombol Bagikan ke WhatsApp
+  document.getElementById('shareWaBtn')?.addEventListener('click', () => {
+    const codeElem = document.getElementById('myReferralCode');
+    const code = codeElem ? codeElem.innerText : '';
+    if (!code || code === '-' || code === 'Tidak tersedia') {
+      alert('Kode referral belum tersedia. Silakan coba lagi nanti.');
+      return;
+    }
+    const message = `Halo! Ayo gunakan JeGo, aplikasi transportasi lokal Gorontalo. Pakai kode referral saya: ${code}. Dapatkan bonus untuk perjalanan pertamamu!\n\nDownload aplikasi: https://play.google.com/store/apps/details?id=co.median.android.abekdjw`;
+    const waUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(waUrl, '_blank');
+  });
+
+  // Inisialisasi: terapkan dark mode dari localStorage, lalu auth state
+  applyDarkModeFromLocalStorage();
+
+  auth.onAuthStateChanged(async (user) => {
+    const loadingDiv = document.getElementById('loadingState');
+    const mainDiv = document.getElementById('mainContent');
+    if (!user) {
+      loadingDiv.innerHTML = '<div class="error-msg">Anda belum login. Silakan login terlebih dahulu.<br><a href="loginUser.html" style="color:var(--primary);">Login</a></div>';
+      return;
+    }
+    try {
+      await loadReferralData(user.uid);
+      loadingDiv.style.display = 'none';
+      mainDiv.style.display = 'block';
+    } catch (err) {
+      loadingDiv.innerHTML = '<div class="error-msg">Gagal memuat data. Silakan refresh halaman.</div>';
+      console.error(err);
+    }
+  });
+</script>
+</body>
+</html>
