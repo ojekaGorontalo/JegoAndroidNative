@@ -1113,6 +1113,9 @@ try {
     .catch(err => console.warn('Gagal set persistence:', err));
   
   console.log('✅ Firebase berhasil diinisialisasi');
+} catch (error) {
+  console.error('❌ Error inisialisasi Firebase:', error);
+}
 
 // ========== FUNGSI UNTUK MENERIMA FCM TOKEN DARI ANDROID ==========
 window.updateFCMToken = function(token) {
@@ -1122,40 +1125,26 @@ window.updateFCMToken = function(token) {
     }
     console.log('📩 FCM Token diterima dari Android:', token.substring(0, 20) + '...');
 
-    // Tunggu hingga UID driver tersedia
     if (!globalCurrentUid) {
         console.warn('⚠️ Belum ada UID driver, token FCM ditunda.');
-        // Simpan token sementara di localStorage
         localStorage.setItem('pending_fcm_token', token);
         return;
     }
 
-    // Simpan token ke Firebase di node driver
     const updates = {
         fcmToken: token,
         last_fcm_update: new Date().toISOString()
     };
 
-    // Simpan di node drivers
     database.ref('drivers/' + globalCurrentUid).update(updates)
-        .then(() => {
-            console.log('✅ FCM token berhasil disimpan di drivers/' + globalCurrentUid);
-        })
-        .catch(err => {
-            console.error('❌ Gagal simpan token di drivers:', err);
-        });
+        .then(() => console.log('✅ FCM token tersimpan di drivers'))
+        .catch(err => console.error('❌ Gagal simpan token di drivers:', err));
 
-    // Simpan di node driver_locations (untuk akses cepat)
     database.ref('driver_locations/' + globalCurrentUid).update(updates)
-        .then(() => {
-            console.log('✅ FCM token berhasil disimpan di driver_locations/' + globalCurrentUid);
-        })
-        .catch(err => {
-            console.error('❌ Gagal simpan token di driver_locations:', err);
-        });
+        .then(() => console.log('✅ FCM token tersimpan di driver_locations'))
+        .catch(err => console.error('❌ Gagal simpan token di driver_locations:', err));
 };
 
-// Jika ada token yang tertunda saat UID belum siap, cek dan kirim ulang saat UID tersedia
 function processPendingFCMToken() {
     const pendingToken = localStorage.getItem('pending_fcm_token');
     if (pendingToken && globalCurrentUid) {
@@ -1165,7 +1154,7 @@ function processPendingFCMToken() {
     }
 }
 
-// Variabel global (tetap sama)
+// Variabel global
 let ordersRef = null, ordersListener = null;
 let modalMap = null;
 let currentSelectedOrder = null;
@@ -1193,10 +1182,10 @@ let lastSentLat = null;
 let lastSentLng = null;
 
 // ==================== STATE UNTUK OPTIMASI LISTENER ====================
-let orderMap = new Map();
-let ordersChildListeners = {};
-let isInitialLoad = true;
-const MAX_DISTANCE_KM = 20;
+let orderMap = new Map();                 // Semua order waiting yang diterima dari Firebase
+let ordersChildListeners = {};            // Referensi untuk child listener agar bisa di-off
+let isInitialLoad = true;                // Flag untuk membedakan inisialisasi vs perubahan baru
+const MAX_DISTANCE_KM = 20;              // Batas jarak maksimal driver ke pickup
 
 // ========== FUNGSI RADAR ==========
 function startRadarMessages() {
