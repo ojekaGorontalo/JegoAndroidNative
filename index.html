@@ -1113,11 +1113,59 @@ try {
     .catch(err => console.warn('Gagal set persistence:', err));
   
   console.log('✅ Firebase berhasil diinisialisasi');
-} catch (error) {
-  console.error('❌ Error inisialisasi Firebase:', error);
+
+// ========== FUNGSI UNTUK MENERIMA FCM TOKEN DARI ANDROID ==========
+window.updateFCMToken = function(token) {
+    if (!token) {
+        console.warn('⚠️ Token FCM kosong, lewati penyimpanan.');
+        return;
+    }
+    console.log('📩 FCM Token diterima dari Android:', token.substring(0, 20) + '...');
+
+    // Tunggu hingga UID driver tersedia
+    if (!globalCurrentUid) {
+        console.warn('⚠️ Belum ada UID driver, token FCM ditunda.');
+        // Simpan token sementara di localStorage
+        localStorage.setItem('pending_fcm_token', token);
+        return;
+    }
+
+    // Simpan token ke Firebase di node driver
+    const updates = {
+        fcmToken: token,
+        last_fcm_update: new Date().toISOString()
+    };
+
+    // Simpan di node drivers
+    database.ref('drivers/' + globalCurrentUid).update(updates)
+        .then(() => {
+            console.log('✅ FCM token berhasil disimpan di drivers/' + globalCurrentUid);
+        })
+        .catch(err => {
+            console.error('❌ Gagal simpan token di drivers:', err);
+        });
+
+    // Simpan di node driver_locations (untuk akses cepat)
+    database.ref('driver_locations/' + globalCurrentUid).update(updates)
+        .then(() => {
+            console.log('✅ FCM token berhasil disimpan di driver_locations/' + globalCurrentUid);
+        })
+        .catch(err => {
+            console.error('❌ Gagal simpan token di driver_locations:', err);
+        });
+};
+
+// Jika ada token yang tertunda saat UID belum siap, cek dan kirim ulang saat UID tersedia
+function processPendingFCMToken() {
+    const pendingToken = localStorage.getItem('pending_fcm_token');
+    if (pendingToken && globalCurrentUid) {
+        console.log('📩 Memproses token FCM tertunda...');
+        window.updateFCMToken(pendingToken);
+        localStorage.removeItem('pending_fcm_token');
+    }
 }
 
-// Variabel global
+// Variabel global (tetap sama)
 let ordersRef = null, ordersListener = null;
 let modalMap = null;
 let currentSelectedOrder = null;
@@ -1145,10 +1193,10 @@ let lastSentLat = null;
 let lastSentLng = null;
 
 // ==================== STATE UNTUK OPTIMASI LISTENER ====================
-let orderMap = new Map();                 // Semua order waiting yang diterima dari Firebase
-let ordersChildListeners = {};            // Referensi untuk child listener agar bisa di-off
-let isInitialLoad = true;                // Flag untuk membedakan inisialisasi vs perubahan baru
-const MAX_DISTANCE_KM = 20;              // Batas jarak maksimal driver ke pickup
+let orderMap = new Map();
+let ordersChildListeners = {};
+let isInitialLoad = true;
+const MAX_DISTANCE_KM = 20;
 
 // ========== FUNGSI RADAR ==========
 function startRadarMessages() {
@@ -2574,6 +2622,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log('🔐 Driver terautentikasi dengan UID:', user.uid);
     globalCurrentUid = user.uid;
     loadDriverNotifications();
+    processPendingFCMToken();
 
     const driverSnapshot = await database.ref(`drivers/${user.uid}`).once('value');
     const driverDataDB = driverSnapshot.val();
