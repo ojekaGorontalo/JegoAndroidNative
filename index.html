@@ -1492,7 +1492,8 @@ function loadOrders() {
     isInitialLoad = true;
 
     // ---- child_added ----
-    const childAddedHandler = (snapshot) => {
+    // ---- child_added ----
+const childAddedHandler = (snapshot) => {
     const orderId = snapshot.key;
     const orderData = snapshot.val();
     if (!orderData) {
@@ -1507,39 +1508,74 @@ function loadOrders() {
     // Simpan di map
     orderMap.set(orderId, orderData);
 
-        // Jika bukan inisialisasi awal, proses order baru
-        if (!isInitialLoad) {
-            if (isOrderVisible(orderData)) {
-                // Tambahkan ke DOM
-                addOrderToDOM(orderData);
+    // Jika bukan inisialisasi awal, proses order baru
+    if (!isInitialLoad) {
+        if (isOrderVisible(orderData)) {
+            addOrderToDOM(orderData);
 
-                // Logika suara dan auto-bid (seperti sebelumnya)
-                const dist = calculateDistance(
-                    driverLocation.latitude,
-                    driverLocation.longitude,
-                    orderData.pickup_lat,
-                    orderData.pickup_lng
-                );
-                if (dist !== null && dist < 3 && locationTrackingEnabled && !isWaitingForConfirmation) {
-    // Cek apakah GPS aktif (hijau)
-    const gpsDot = document.getElementById('gpsDot');
-    const isGpsActive = gpsDot && gpsDot.classList.contains('gps-active');
-    if (isGpsActive) {
-        const isKurir = (orderData.transport_type || '').includes('kurir');
-        const fromAuto = (autobidEnabled && !isKurir);
-        showOrderDetail({ orderId: orderId, orderData: orderData }, fromAuto, true);
-    } else {
-        // GPS belum aktif, tidak kirim penawaran otomatis, hanya tampilkan di list
-        console.log('GPS masih pakai cache, tidak kirim penawaran otomatis untuk order', orderId);
-    }
-}
-
-                // Putar suara beep
-                const beepSound = document.getElementById('beekSound');
-                if (beepSound) beepSound.play().catch(e => console.log('Audio error:', e));
+            // 🔥 Ambil lokasi terakhir dari Android Service
+            let loc = null;
+            if (typeof Android !== 'undefined') {
+                try {
+                    const locJson = Android.getLastKnownLocation();
+                    if (locJson !== 'null') {
+                        loc = JSON.parse(locJson);
+                        console.log('📍 Lokasi dari Android Service:', loc);
+                    }
+                } catch (e) {
+                    console.warn('Gagal ambil lokasi dari Android:', e);
+                }
             }
+            // Fallback ke driverLocation dari cache GPS HTML
+            if (!loc || !loc.lat || !loc.lng) {
+                loc = { lat: driverLocation.latitude, lng: driverLocation.longitude };
+                console.log('📍 Lokasi fallback dari cache HTML:', loc);
+            }
+
+            if (loc && loc.lat && loc.lng) {
+                // Update driverLocation di memori
+                driverLocation.latitude = loc.lat;
+                driverLocation.longitude = loc.lng;
+
+                // 🔥 Kirim lokasi ke Firebase SEKALI (hanya saat ada order baru)
+                if (globalCurrentUid) {
+                    database.ref('drivers/' + globalCurrentUid).update({
+                        latitude: loc.lat,
+                        longitude: loc.lng,
+                        last_update: new Date().toISOString()
+                    }).catch(console.error);
+                    database.ref('driver_locations/' + globalCurrentUid).update({
+                        latitude: loc.lat,
+                        longitude: loc.lng,
+                        tracking_enabled: locationTrackingEnabled,
+                        autobid_enabled: autobidEnabled,
+                        last_update: new Date().toISOString()
+                    }).catch(console.error);
+                }
+
+                // Hitung jarak ke order
+                const dist = calculateDistance(
+                    loc.lat, loc.lng,
+                    orderData.pickup_lat, orderData.pickup_lng
+                );
+
+                if (dist !== null && dist < 3 && locationTrackingEnabled && !isWaitingForConfirmation) {
+                    const isKurir = (orderData.transport_type || '').includes('kurir');
+                    const fromAuto = (autobidEnabled && !isKurir);
+                    showOrderDetail({ orderId: orderId, orderData: orderData }, fromAuto, true);
+                }
+            } else {
+                console.warn('⚠️ Lokasi tidak tersedia, lewati penawaran untuk order', orderId);
+            }
+
+            const beepSound = document.getElementById('beekSound');
+            if (beepSound) beepSound.play().catch(e => console.log('Audio error:', e));
         }
-    };
+    }
+};
+
+    const beepSound = document.getElementById('beekSound');
+    if (beepSound) beepSound.play().catch(e => console.log('Audio error:', e));
 
     // ---- child_changed ----
     const childChangedHandler = (snapshot) => {
