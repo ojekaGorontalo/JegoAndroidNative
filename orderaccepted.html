@@ -822,50 +822,43 @@
 
   function startCall() {
     if (isCallInProgress) {
-      showToast('Panggilan sedang berlangsung');
-      return;
+        showToast('Panggilan sedang berlangsung');
+        return;
     }
     if (!orderId || !driverUid) {
-      showToast('Data order belum siap');
-      return;
+        showToast('Data order belum siap');
+        return;
     }
 
-    // Tampilkan modal konfirmasi sebelum mulai panggilan
     showConfirmPopup(
-      '📞 Panggilan Suara',
-      'Anda akan menghubungi customer melalui panggilan suara (VoIP). Lanjutkan?',
-      async function() {
-        isCallInProgress = true;
-        const channelName = `jego-${orderId}`;
-        const uid = parseInt(driverUid.replace(/\D/g, '').slice(0, 8) || Math.floor(Math.random() * 100000));
+        '📞 Panggilan Suara',
+        'Anda akan menghubungi customer melalui panggilan suara (VoIP). Lanjutkan?',
+        async function() {
+            isCallInProgress = true;
+            const channelName = `jego-${orderId}`;
+            const uid = parseInt(driverUid.replace(/\D/g, '').slice(0, 8) || Math.floor(Math.random() * 100000));
 
-        try {
-          let token = await getAgoraToken(channelName, uid);
-          if (!token) {
-            // Hardcode token jika belum ada Cloud Function
-            // Ganti dengan token yang di-generate dari https://agora-token.vercel.app/
-            // Pastikan channelName dan uid sesuai
-            token = "YOUR_GENERATED_TOKEN_HERE"; 
-            if (token === "YOUR_GENERATED_TOKEN_HERE") {
-              showToast('Token tidak tersedia. Pastikan Cloud Function berjalan atau hardcode token.');
-              isCallInProgress = false;
-              updateCallUI('idle');
-              return;
+            try {
+                let token = await getAgoraToken(channelName, uid);
+                if (!token) {
+                    showToast('Token tidak tersedia. Pastikan Cloud Function berjalan.');
+                    isCallInProgress = false;
+                    updateCallUI('idle');
+                    return;
+                }
+                await startCallInternal(channelName, uid, token);
+            } catch (err) {
+                console.error(err);
+                showToast('Gagal memulai panggilan: ' + err.message);
+                isCallInProgress = false;
+                updateCallUI('idle');
             }
-          }
-          await startCallInternal(channelName, uid, token);
-        } catch (err) {
-          console.error(err);
-          showToast('Gagal memulai panggilan: ' + err.message);
-          isCallInProgress = false;
-          updateCallUI('idle');
+        },
+        function() {
+            showToast('Panggilan dibatalkan');
         }
-      },
-      function() {
-        showToast('Panggilan dibatalkan');
-      }
     );
-  }
+}
 
   async function endCall() {
     if (localAudioTrack) {
