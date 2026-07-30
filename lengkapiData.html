@@ -24,17 +24,38 @@
             --danger: #f44336;
         }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #FFF3E0, #FFE0B2);
-            min-height: 100vh;
-            padding: 0;
-            margin: 0;
-        }
-        .container {
-            max-width: 100%;
-            margin: 0;
-            padding: 0;
-        }
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #FFF3E0, #FFE0B2);
+    min-height: 100vh;
+    padding: 0;
+    margin: 0;
+    user-select: none !important;          /* ← TAMBAHKAN INI */
+    -webkit-user-select: none !important;  /* ← TAMBAHKAN INI */
+    -moz-user-select: none !important;    /* ← TAMBAHKAN INI */
+    -ms-user-select: none !important;     /* ← TAMBAHKAN INI */
+}
+
+/* ===== CEGAH COPY DI DROPDOWN ===== */
+select, option {
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+}
+
+/* Input & textarea tetap bisa copy (untuk kebutuhan form) */
+input, textarea {
+    user-select: text !important;
+    -webkit-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+}
+
+.container {
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+}
         .card {
             background: white;
             border-radius: 0;
