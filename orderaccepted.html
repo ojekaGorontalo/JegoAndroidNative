@@ -765,12 +765,11 @@ async function checkMicrophonePermission() {
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         stream.getTracks().forEach(track => track.stop());
+        console.log('✅ Izin mikrofon diberikan');
         return true;
     } catch (error) {
-        console.warn('Izin mikrofon ditolak:', error);
-        if (error.message && error.message.includes('Permission denied')) {
-            showToast('⚠️ Izin mikrofon diperlukan. Aktifkan di pengaturan aplikasi.');
-        }
+        console.error('❌ Izin mikrofon ditolak:', error);
+        showToast('⚠️ Izin mikrofon diperlukan. Aktifkan di pengaturan aplikasi.');
         return false;
     }
 }
