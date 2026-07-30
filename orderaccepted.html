@@ -10,86 +10,508 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    body { font-family: 'Segoe UI', 'Roboto', system-ui, sans-serif; background: #F1F5F9; height: 100vh; overflow: hidden; }
-    .app-container { display: flex; flex-direction: column; height: 100vh; width: 100%; background: #FFFFFF; position: relative; }
-    .app-header { background: linear-gradient(135deg, #FF9800, #F57C00); padding: 18px 20px; color: white; flex-shrink: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 10; display: flex; justify-content: space-between; align-items: center; }
-    .app-header h1 { font-size: 1.35rem; font-weight: 600; display: flex; align-items: center; gap: 8px; }
-    .map-area { width: 100%; height: 35vh; min-height: 220px; background: #e9ecef; position: relative; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px; overflow: hidden; flex-shrink: 0; }
+    body {
+      font-family: 'Segoe UI', 'Roboto', system-ui, sans-serif;
+      background: linear-gradient(145deg, #f5f7fa 0%, #e9edf2 100%);
+      height: 100vh;
+      overflow: hidden;
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+    }
+    .app-container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      width: 100%;
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      position: relative;
+      box-shadow: 0 0 30px rgba(0,0,0,0.05);
+    }
+    .app-header {
+      background: linear-gradient(135deg, #FF9800, #F57C00);
+      padding: 18px 20px;
+      color: white;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .app-header h1 {
+      font-size: 1.35rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .map-area {
+      width: 100%;
+      height: 35vh;
+      min-height: 220px;
+      background: #e9ecef;
+      position: relative;
+      border-bottom-left-radius: 24px;
+      border-bottom-right-radius: 24px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
     #orderMap { width: 100%; height: 100%; position: relative; z-index: 1; }
-    .map-float-btn { position: absolute; bottom: 16px; right: 16px; background: linear-gradient(95deg, #FF9800, #F57C00); color: white; border: none; border-radius: 48px; padding: 12px 20px; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); cursor: pointer; z-index: 9999; transition: all 0.2s ease; pointer-events: auto; touch-action: manipulation; }
+    .map-float-btn {
+      position: absolute;
+      bottom: 16px;
+      right: 16px;
+      background: linear-gradient(95deg, #FF9800, #F57C00);
+      color: white;
+      border: none;
+      border-radius: 48px;
+      padding: 12px 20px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      cursor: pointer;
+      z-index: 9999;
+      transition: all 0.2s ease;
+      pointer-events: auto;
+      touch-action: manipulation;
+    }
     .map-float-btn:active { transform: scale(0.96); }
-    .scroll-content { flex: 1; overflow-y: auto; padding: 16px 20px 120px 20px; padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px)); background: #FFFFFF; }
-    .status-chip { background: #FFF3E0; border-radius: 40px; padding: 8px 18px; display: inline-flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.8rem; color: #E65100; margin-bottom: 20px; }
-    .customer-card { background: white; border-radius: 28px; padding: 16px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); border: 1px solid #f0f0f0; }
-    .profile-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-    .customer-left { display: flex; align-items: center; gap: 16px; flex: 1; }
-    .customer-photo { width: 64px; height: 64px; border-radius: 32px; object-fit: cover; border: 2px solid #FF9800; background: #fff; }
-    .customer-info h3 { font-size: 1.1rem; font-weight: 700; color: #1e293b; }
-    .rating { display: flex; align-items: center; gap: 6px; margin: 4px 0; font-size: 0.8rem; }
+    .scroll-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 20px 120px 20px;
+      padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px));
+      background: transparent;
+    }
+    .status-chip {
+      background: #FFF3E0;
+      border-radius: 40px;
+      padding: 8px 18px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 0.8rem;
+      color: #E65100;
+      margin-bottom: 20px;
+    }
+    .customer-card {
+      background: white;
+      border-radius: 28px;
+      padding: 16px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+      border: 1px solid #f0f0f0;
+    }
+    .profile-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .customer-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex: 1;
+    }
+    .customer-photo {
+      width: 64px;
+      height: 64px;
+      border-radius: 32px;
+      object-fit: cover;
+      border: 2px solid #FF9800;
+      background: #fff;
+    }
+    .customer-info h3 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #1e293b;
+    }
+    .rating {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 4px 0;
+      font-size: 0.8rem;
+    }
     .stars { color: #FFB800; letter-spacing: 2px; }
-    .phone-action { display: flex; align-items: center; gap: 12px; margin-top: 6px; flex-wrap: wrap; }
-    .phone-number { font-size: 0.85rem; color: #475569; }
-    .call-button { background: #EFF6FF; border: none; padding: 5px 12px; border-radius: 40px; font-size: 0.7rem; font-weight: 500; color: #2563EB; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
-    .price-large { text-align: right; margin-bottom: 4px; }
-    .price-label { font-size: 0.7rem; color: #64748b; margin-bottom: 2px; }
-    .price-value { font-size: 1.5rem; font-weight: 800; color: #2E7D32; line-height: 1.2; }
-    .bonus-info { margin-top: 8px; padding-top: 8px; border-top: 1px dashed #e2e8f0; display: flex; justify-content: flex-end; }
-    .bonus-text { display: flex; flex-direction: column; align-items: flex-end; font-size: 0.7rem; color: #f97316; line-height: 1.5; text-align: right; word-break: break-word; }
-    .original-price { text-decoration: line-through; font-size: 0.9rem; color: #94a3b8; margin-right: 6px; }
-    .distance-small { text-align: right; margin-top: 6px; }
-    .distance-label { font-size: 0.6rem; color: #64748b; }
-    .distance-value { font-size: 0.85rem; font-weight: 600; color: #1e293b; }
-    .route-card { background: #F8FAFC; border-radius: 24px; padding: 16px; margin-bottom: 20px; }
-    .section-title { font-size: 0.75rem; text-transform: uppercase; font-weight: 600; color: #FF9800; margin-bottom: 12px; letter-spacing: 0.5px; }
-    .route-item { display: flex; gap: 12px; margin-bottom: 16px; }
-    .route-marker { width: 28px; height: 28px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; flex-shrink: 0; }
+    .phone-action {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 6px;
+      flex-wrap: wrap;
+    }
+    .phone-number {
+      font-size: 0.85rem;
+      color: #475569;
+    }
+    .call-button {
+      background: #EFF6FF;
+      border: none;
+      padding: 5px 12px;
+      border-radius: 40px;
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: #2563EB;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+    .price-large {
+      text-align: right;
+      margin-bottom: 4px;
+    }
+    .price-label {
+      font-size: 0.7rem;
+      color: #64748b;
+      margin-bottom: 2px;
+    }
+    .price-value {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #2E7D32;
+      line-height: 1.2;
+    }
+    .bonus-info {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px dashed #e2e8f0;
+      display: flex;
+      justify-content: flex-end;
+    }
+    .bonus-text {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      font-size: 0.7rem;
+      color: #f97316;
+      line-height: 1.5;
+      text-align: right;
+      word-break: break-word;
+    }
+    .original-price {
+      text-decoration: line-through;
+      font-size: 0.9rem;
+      color: #94a3b8;
+      margin-right: 6px;
+    }
+    .distance-small {
+      text-align: right;
+      margin-top: 6px;
+    }
+    .distance-label {
+      font-size: 0.6rem;
+      color: #64748b;
+    }
+    .distance-value {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #1e293b;
+    }
+    .route-card {
+      background: #F8FAFC;
+      border-radius: 24px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+    .section-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: #FF9800;
+      margin-bottom: 12px;
+      letter-spacing: 0.5px;
+    }
+    .route-item {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .route-marker {
+      width: 28px;
+      height: 28px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 0.8rem;
+      flex-shrink: 0;
+    }
     .pickup-marker { background: #4CAF50; color: white; }
     .via-marker { background: #2196F3; color: white; }
     .dest-marker { background: #FF9800; color: white; }
-    .route-address { font-weight: 500; font-size: 0.9rem; color: #0f172a; cursor: pointer; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 4px; }
+    .route-address {
+      font-weight: 500;
+      font-size: 0.9rem;
+      color: #0f172a;
+      cursor: pointer;
+      text-decoration: underline;
+      text-decoration-style: dotted;
+      text-underline-offset: 4px;
+    }
     .route-address:active { opacity: 0.7; }
-    .action-bar { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255,255,255,0.96); backdrop-filter: blur(10px); padding: 12px 20px 28px 20px; border-top: 1px solid #edf2f7; box-shadow: 0 -4px 20px rgba(0,0,0,0.05); display: flex; justify-content: space-between; gap: 12px; z-index: 20; pointer-events: none; }
-    .action-btn { flex: 1; padding: 12px; border-radius: 48px; font-weight: 700; font-size: 1rem; border: none; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.1); pointer-events: auto; touch-action: manipulation; position: relative; }
+    .action-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(255,255,255,0.96);
+      backdrop-filter: blur(10px);
+      padding: 12px 20px 28px 20px;
+      border-top: 1px solid #edf2f7;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      z-index: 20;
+      pointer-events: none;
+    }
+    .action-btn {
+      flex: 1;
+      padding: 12px;
+      border-radius: 48px;
+      font-weight: 700;
+      font-size: 1rem;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      pointer-events: auto;
+      touch-action: manipulation;
+      position: relative;
+    }
     .action-btn:active { transform: scale(0.97); }
-    .btn-primary { background: linear-gradient(95deg, #FF9800, #F57C00); color: white; }
+    .btn-primary {
+      background: linear-gradient(95deg, #FF9800, #F57C00);
+      color: white;
+    }
     .btn-danger { background: #f44336; color: white; }
-    .badge-unread { position: absolute; top: -6px; right: -6px; background: #ef4444; color: white; font-size: 0.7rem; font-weight: 700; min-width: 20px; height: 20px; border-radius: 20px; display: flex; align-items: center; justify-content: center; padding: 0 5px; box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4); transform: scale(1); transition: transform 0.2s; }
+    .badge-unread {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      background: #ef4444;
+      color: white;
+      font-size: 0.7rem;
+      font-weight: 700;
+      min-width: 20px;
+      height: 20px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 5px;
+      box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
+      transform: scale(1);
+      transition: transform 0.2s;
+    }
     .badge-unread.hidden { display: none; }
-    .modal-overlay { display: none; position: fixed; top:0;left:0;width:100%;height:100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(3px); z-index: 1000; align-items: center; justify-content: center; }
-    .modal-card { background: white; width: 85%; max-width: 320px; border-radius: 32px; padding: 24px; text-align: center; }
-    .rating-stars { display: flex; justify-content: center; gap: 8px; font-size: 2rem; margin: 12px 0; }
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top:0;left:0;width:100%;height:100%;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-card {
+      background: white;
+      width: 85%;
+      max-width: 320px;
+      border-radius: 32px;
+      padding: 24px;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+      animation: modalFade 0.25s ease;
+    }
+    @keyframes modalFade {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .modal-card h3 {
+      margin-bottom: 12px;
+      color: #1e293b;
+      font-size: 1.2rem;
+    }
+    .modal-card p {
+      color: #475569;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      margin-bottom: 16px;
+    }
+    .modal-btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 40px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: 0.2s;
+      flex: 1;
+    }
+    .modal-btn:active { transform: scale(0.97); }
+    .modal-btn-cancel {
+      background: #e2e8f0;
+      color: #1e293b;
+    }
+    .modal-btn-confirm {
+      background: linear-gradient(135deg, #FF9800, #F57C00);
+      color: white;
+    }
+    .modal-btn-danger {
+      background: #f44336;
+      color: white;
+    }
+    .rating-stars {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      font-size: 2rem;
+      margin: 12px 0;
+    }
     .rating-star { cursor: pointer; color: #CBD5E1; }
     .rating-star.active { color: #FFB800; }
-    .preset-btn { background: #F1F5F9; border: none; border-radius: 40px; padding: 6px 12px; font-size: 0.7rem; margin: 4px; }
-    .toast { position: fixed; bottom: 100px; left: 20px; right: 20px; background: #1E293B; color: white; text-align: center; padding: 12px; border-radius: 40px; opacity: 0; transition: 0.2s; z-index: 1100; }
-    .chat-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 2000; display: none; flex-direction: column; }
+    .preset-btn {
+      background: #F1F5F9;
+      border: none;
+      border-radius: 40px;
+      padding: 6px 12px;
+      font-size: 0.7rem;
+      margin: 4px;
+      cursor: pointer;
+    }
+    .toast {
+      position: fixed;
+      bottom: 100px;
+      left: 20px;
+      right: 20px;
+      background: #1E293B;
+      color: white;
+      text-align: center;
+      padding: 12px;
+      border-radius: 40px;
+      opacity: 0;
+      transition: 0.2s;
+      z-index: 1100;
+      pointer-events: none;
+    }
+    .chat-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: white;
+      z-index: 2000;
+      display: none;
+      flex-direction: column;
+    }
     .chat-overlay.open { display: flex; }
-    .chat-header { background: linear-gradient(135deg, #FF9800, #F57C00); color: white; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; flex-shrink: 0; }
-    .chat-header button { background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
-    .chat-messages { flex: 1; overflow-y: auto; padding: 12px; background: #ECE5DD; display: flex; flex-direction: column; }
+    .chat-header {
+      background: linear-gradient(135deg, #FF9800, #F57C00);
+      color: white;
+      padding: 12px 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+    .chat-header button {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+    }
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      background: #ECE5DD;
+      display: flex;
+      flex-direction: column;
+    }
     .message.driver { background: #DCF8C6; align-self: flex-end; }
     .message.customer { background: white; align-self: flex-start; }
-    .message { max-width: 80%; padding: 6px 10px; border-radius: 18px; margin-bottom: 6px; font-size: 13px; word-wrap: break-word; position: relative; }
+    .message {
+      max-width: 80%;
+      padding: 6px 10px;
+      border-radius: 18px;
+      margin-bottom: 6px;
+      font-size: 13px;
+      word-wrap: break-word;
+      position: relative;
+    }
     .message .tick {
       font-size: 0.7rem;
       margin-left: 4px;
       color: #9e9e9e;
     }
-    .message .tick.delivered {
-      color: #4fc3f7;
+    .message .tick.delivered { color: #4fc3f7; }
+    .message .tick.read { color: #2196f3; }
+    .message small {
+      font-size: 9px;
+      color: #888;
+      display: block;
+      text-align: right;
+      margin-top: 3px;
     }
-    .message .tick.read {
-      color: #2196f3;
+    .chat-input-area {
+      display: flex;
+      padding: 8px 12px;
+      background: white;
+      border-top: 1px solid #ddd;
+      gap: 8px;
+      flex-shrink: 0;
     }
-    .message small { font-size: 9px; color: #888; display: block; text-align: right; margin-top: 3px; }
-    .chat-input-area { display: flex; padding: 8px 12px; background: white; border-top: 1px solid #ddd; gap: 8px; flex-shrink: 0; }
-    .chat-input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 25px; font-size: 13px; outline: none; }
+    .chat-input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 25px;
+      font-size: 13px;
+      outline: none;
+    }
     .chat-input:focus { border-color: #FF9800; }
-    .chat-send { background: #FF9800; color: white; border: none; border-radius: 25px; padding: 0 18px; font-weight: bold; cursor: pointer; }
+    .chat-send {
+      background: #FF9800;
+      color: white;
+      border: none;
+      border-radius: 25px;
+      padding: 0 18px;
+      font-weight: bold;
+      cursor: pointer;
+    }
     .chat-send:active { transform: scale(0.96); }
-    .spinner { border: 3px solid #FFE0B2; border-top-color: #FF9800; border-radius: 50%; width: 40px; height: 40px; animation: spin 0.8s linear infinite; margin: 0 auto; }
+    .spinner {
+      border: 3px solid #FFE0B2;
+      border-top-color: #FF9800;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto;
+    }
     @keyframes spin { to { transform: rotate(360deg); } }
-    
     .delivery-card {
       background: #FFF8E1;
       border-radius: 24px;
@@ -108,6 +530,13 @@
     .vehicle-marker {
       background: transparent !important;
       border: none !important;
+    }
+    /* Tambahan untuk input/textarea agar tetap bisa copy jika perlu */
+    input, textarea {
+      user-select: text !important;
+      -webkit-user-select: text !important;
+      -moz-user-select: text !important;
+      -ms-user-select: text !important;
     }
   </style>
 </head>
@@ -180,8 +609,6 @@
           <div><div class="route-address" id="destinationAddress">-</div><span style="font-size:0.7rem; color:#64748b;">Lokasi Tujuan</span></div>
         </div>
       </div>
-
-      <!-- KARTU INFO KURIR -->
       <div class="delivery-card" id="deliveryInfoCard" style="display: none;">
         <div class="section-title">📦 Data Pengiriman</div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; font-size: 0.85rem;">
@@ -203,7 +630,19 @@
 </div>
 
 <!-- Modal Rating -->
-<div id="ratingModal" class="modal-overlay"><div class="modal-card"><h3>Beri Rating Customer</h3><div class="rating-stars" id="ratingStars"><span data-rating="1">☆</span><span data-rating="2">☆</span><span data-rating="3">☆</span><span data-rating="4">☆</span><span data-rating="5">☆</span></div><div id="ratingPresetsContainer"></div><textarea id="ratingComment" placeholder="Komentar (opsional)" style="width:100%; margin:12px 0; padding:8px; border-radius:16px; border:1px solid #ddd;"></textarea><div style="display:flex; gap:8px;"><button class="modal-cancel" style="flex:1; background:#e2e8f0; border:none; padding:10px; border-radius:40px;" onclick="closeRatingModal()">Batal</button><button class="modal-submit" style="flex:1; background:#FF9800; border:none; color:white; border-radius:40px;" onclick="submitRating()">Kirim</button></div></div></div>
+<div id="ratingModal" class="modal-overlay"><div class="modal-card"><h3>Beri Rating Customer</h3><div class="rating-stars" id="ratingStars"><span data-rating="1">☆</span><span data-rating="2">☆</span><span data-rating="3">☆</span><span data-rating="4">☆</span><span data-rating="5">☆</span></div><div id="ratingPresetsContainer"></div><textarea id="ratingComment" placeholder="Komentar (opsional)" style="width:100%; margin:12px 0; padding:8px; border-radius:16px; border:1px solid #ddd;"></textarea><div style="display:flex; gap:8px;"><button class="modal-btn modal-btn-cancel" onclick="closeRatingModal()">Batal</button><button class="modal-btn modal-btn-confirm" onclick="submitRating()">Kirim</button></div></div></div>
+
+<!-- Modal Konfirmasi Custom -->
+<div id="confirmModal" class="modal-overlay">
+  <div class="modal-card">
+    <h3 id="confirmTitle">Konfirmasi</h3>
+    <p id="confirmMessage">Apakah Anda yakin?</p>
+    <div style="display:flex; gap:8px; margin-top:16px;">
+      <button id="confirmNo" class="modal-btn modal-btn-cancel" style="flex:1;">Batal</button>
+      <button id="confirmYes" class="modal-btn modal-btn-confirm" style="flex:1;">Ya</button>
+    </div>
+  </div>
+</div>
 
 <div id="toast" class="toast"></div>
 
@@ -248,7 +687,7 @@
   let driverMarker = null;
   let autoWelcomeSent = false;
 
-  // ==================== TAMBAHKAN DI SINI ====================
+  // ==================== LOCATION TRACKING ====================
   let lastSentLat = null;
   let lastSentLng = null;
   const LOCATION_THRESHOLD_KM = 0.05; // 50 meter
@@ -263,7 +702,6 @@
     return R * c;
   }
 
-  // ==================== LOCATION TRACKING ====================
   let locationWatchId = null;
   let isLocationTracking = false;
 
@@ -304,7 +742,6 @@
       return;
     }
     if (isLocationTracking) return;
-    
     isLocationTracking = true;
     console.log("📍 Memulai pengiriman lokasi realtime (threshold 50m)...");
 
@@ -312,14 +749,10 @@
       (position) => {
         const { latitude, longitude, heading, speed } = position.coords;
         if (!driverUid) return;
-        
-        // Selalu perbarui marker di peta
         updateDriverMarker(latitude, longitude, heading || 0);
-
-        // Cek threshold jarak terhadap posisi terakhir yang dikirim
         let shouldUpdate = false;
         if (lastSentLat === null || lastSentLng === null) {
-          shouldUpdate = true; // Kirim pertama kali
+          shouldUpdate = true;
         } else {
           const dist = calculateDistance(lastSentLat, lastSentLng, latitude, longitude);
           if (dist !== null && dist > LOCATION_THRESHOLD_KM) {
@@ -328,9 +761,7 @@
             console.log(`⏭️ Lokasi tidak berubah signifikan (${dist?.toFixed(3)} km), lewati update.`);
           }
         }
-
         if (shouldUpdate) {
-          // Update ke Firebase
           database.ref(`driver_locations/${driverUid}`).update({
             latitude: latitude,
             longitude: longitude,
@@ -339,8 +770,6 @@
             timestamp: Date.now(),
             orderId: orderId
           }).catch(err => console.warn("Gagal update lokasi:", err));
-
-          // Simpan posisi terakhir yang dikirim
           lastSentLat = latitude;
           lastSentLng = longitude;
           console.log(`📍 Lokasi dikirim: ${latitude}, ${longitude}`);
@@ -357,7 +786,6 @@
     );
   }
 
-  // ===== FUNGSI STOP LOCATION TRACKING (di luar) =====
   function stopLocationTracking() {
     if (locationWatchId !== null) {
       navigator.geolocation.clearWatch(locationWatchId);
@@ -371,6 +799,31 @@
   function showToast(msg) { let t = document.getElementById('toast'); t.textContent = msg; t.style.opacity='1'; setTimeout(()=> t.style.opacity='0', 2500); }
   function getDriverData() { return JSON.parse(localStorage.getItem('jego_logged_in_driver') || '{}'); }
   function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
+
+  // ==================== CUSTOM CONFIRM POPUP ====================
+  function showConfirmPopup(title, message, onConfirm, onCancel) {
+    const modal = document.getElementById('confirmModal');
+    document.getElementById('confirmTitle').textContent = title || 'Konfirmasi';
+    document.getElementById('confirmMessage').textContent = message || 'Apakah Anda yakin?';
+    // Reset event listeners
+    const yesBtn = document.getElementById('confirmYes');
+    const noBtn = document.getElementById('confirmNo');
+    // Clone and replace to remove old listeners
+    const newYes = yesBtn.cloneNode(true);
+    const newNo = noBtn.cloneNode(true);
+    yesBtn.parentNode.replaceChild(newYes, yesBtn);
+    noBtn.parentNode.replaceChild(newNo, noBtn);
+    // Set new listeners
+    newYes.onclick = function() {
+      modal.style.display = 'none';
+      if (typeof onConfirm === 'function') onConfirm();
+    };
+    newNo.onclick = function() {
+      modal.style.display = 'none';
+      if (typeof onCancel === 'function') onCancel();
+    };
+    modal.style.display = 'flex';
+  }
 
   async function getPotonganKomisi() {
     try {
@@ -550,65 +1003,48 @@
   // ==================== COMPLETE TRIP (TANPA UPDATE BALANCE) ====================
   async function completeTrip() {
     if (currentStatus !== 'on_trip') { showToast("Perjalanan belum dimulai"); return; }
-    if (confirm("Selesaikan perjalanan ini?")) {
-      try {
-        // 1. Update status order
-        await database.ref('orders/' + orderId).update({ 
-          status: 'completed', 
-          completed_at: new Date().toISOString() 
-        });
-        
-        // 2. Hitung pendapatan
-        const price = orderData.price || 0;
-        
-        // Ambil potongan komisi dan pajak
-        const [potonganSnap, pajakSnap] = await Promise.all([
-          database.ref('data-jego/potongan').once('value'),
-          database.ref('data-jego/pajak').once('value')
-        ]);
-        const potongan = potonganSnap.val() !== null ? potonganSnap.val() : 0;
-        const pajak = pajakSnap.val() !== null ? pajakSnap.val() : 0;
-        
-        const potonganRupiah = price * (potongan / 100);
-        const pajakRupiah = potonganRupiah * (pajak / 100);
-        const totalPotongan = potonganRupiah + pajakRupiah;
-        const driverEarnings = price - totalPotongan;
-        
-        // 3. SIMPAN EARNINGS (HANYA UNTUK STATISTIK, TIDAK UPDATE BALANCE)
-        const driverUid = getDriverData().uid;
-        const today = new Date().toISOString().split('T')[0];
-        
-        // daily_earnings dan total_earnings menyimpan TARIF BRUTO (tidak dikurangi potongan)
-        await database.ref(`drivers/${driverUid}/daily_earnings/${today}`).transaction(current => {
-          return (current || 0) + price;
-        });
-        
-        await database.ref(`drivers/${driverUid}/total_earnings`).transaction(current => {
-          return (current || 0) + price;
-        });
-        
-        // Riwayat earnings disimpan di path yang diizinkan (di dalam drivers)
-        await database.ref(`drivers/${driverUid}/earnings_history/${orderId}`).set({
-          orderId: orderId,
-          amount: driverEarnings,       // yang diterima driver (bersih)
-          originalPrice: price,
-          potongan: potongan,
-          pajak: pajak,
-          totalPotongan: totalPotongan,
-          completed_at: new Date().toISOString(),
-          customer_name: orderData.customer_name || 'Customer'
-        });
-        
-        // TIDAK ADA UPDATE BALANCE DI SINI
-        // Saldo driver dikelola oleh sistem lain (misal setelah pembayaran diverifikasi)
-        
-        showToast("Perjalanan selesai, silakan beri rating");
-        
-      } catch (err) {
-        console.error('Gagal menyimpan earnings:', err);
-        showToast('Gagal menyimpan pendapatan: ' + err.message);
-      }
-    }
+    showConfirmPopup(
+      'Selesaikan Perjalanan',
+      'Apakah Anda yakin ingin menyelesaikan perjalanan ini?',
+      async () => {
+        try {
+          await database.ref('orders/' + orderId).update({ 
+            status: 'completed', 
+            completed_at: new Date().toISOString() 
+          });
+          const price = orderData.price || 0;
+          const [potonganSnap, pajakSnap] = await Promise.all([
+            database.ref('data-jego/potongan').once('value'),
+            database.ref('data-jego/pajak').once('value')
+          ]);
+          const potongan = potonganSnap.val() !== null ? potonganSnap.val() : 0;
+          const pajak = pajakSnap.val() !== null ? pajakSnap.val() : 0;
+          const potonganRupiah = price * (potongan / 100);
+          const pajakRupiah = potonganRupiah * (pajak / 100);
+          const totalPotongan = potonganRupiah + pajakRupiah;
+          const driverEarnings = price - totalPotongan;
+          const driverUid = getDriverData().uid;
+          const today = new Date().toISOString().split('T')[0];
+          await database.ref(`drivers/${driverUid}/daily_earnings/${today}`).transaction(current => (current || 0) + price);
+          await database.ref(`drivers/${driverUid}/total_earnings`).transaction(current => (current || 0) + price);
+          await database.ref(`drivers/${driverUid}/earnings_history/${orderId}`).set({
+            orderId: orderId,
+            amount: driverEarnings,
+            originalPrice: price,
+            potongan: potongan,
+            pajak: pajak,
+            totalPotongan: totalPotongan,
+            completed_at: new Date().toISOString(),
+            customer_name: orderData.customer_name || 'Customer'
+          });
+          showToast("Perjalanan selesai, silakan beri rating");
+        } catch (err) {
+          console.error('Gagal menyimpan earnings:', err);
+          showToast('Gagal menyimpan pendapatan: ' + err.message);
+        }
+      },
+      () => { showToast("Aksi dibatalkan"); }
+    );
   }
 
   async function createPendingRefund(orderId, bonusUsed, driverId, customerId) {
@@ -637,34 +1073,40 @@
         showToast("Perjalanan sudah selesai atau dibatalkan"); 
         return; 
     }
-    if (!confirm("Batalkan perjalanan? Bonus customer akan masuk ke daftar refund yang bisa diklaim customer.")) return;
-    try {
-      const bonusUsed = orderData.bonus_used || 0;
-      const custId = orderData.user_id;
-      const driver = getDriverData();
-      if (bonusUsed > 0 && custId) {
-        await createPendingRefund(orderId, bonusUsed, driver.uid, custId);
-        showToast("Bonus refund telah dicatat, customer dapat mengklaimnya nanti.");
-      }
-      await database.ref('orders/' + orderId).update({ 
-        status: 'cancelled', 
-        cancelled_by: 'driver', 
-        cancelled_at: new Date().toISOString() 
-      });
-      const snapshot = await database.ref(`driver_bonus/${driver.uid}`).orderByChild('orderId').equalTo(orderId).once('value');
-      const updates = {};
-      snapshot.forEach(child => {
-        updates[`${child.key}/status`] = 'refunded';
-      });
-      if (Object.keys(updates).length) {
-        await database.ref(`driver_bonus/${driver.uid}`).update(updates);
-      }
-      showToast("Perjalanan dibatalkan.");
-      setTimeout(() => { window.location.href = 'index.html'; }, 1500);
-    } catch (err) {
-      console.error(err);
-      showToast("Gagal membatalkan: " + err.message);
-    }
+    showConfirmPopup(
+      'Batalkan Perjalanan',
+      'Batalkan perjalanan? Bonus customer akan masuk ke daftar refund yang bisa diklaim customer.',
+      async () => {
+        try {
+          const bonusUsed = orderData.bonus_used || 0;
+          const custId = orderData.user_id;
+          const driver = getDriverData();
+          if (bonusUsed > 0 && custId) {
+            await createPendingRefund(orderId, bonusUsed, driver.uid, custId);
+            showToast("Bonus refund telah dicatat, customer dapat mengklaimnya nanti.");
+          }
+          await database.ref('orders/' + orderId).update({ 
+            status: 'cancelled', 
+            cancelled_by: 'driver', 
+            cancelled_at: new Date().toISOString() 
+          });
+          const snapshot = await database.ref(`driver_bonus/${driver.uid}`).orderByChild('orderId').equalTo(orderId).once('value');
+          const updates = {};
+          snapshot.forEach(child => {
+            updates[`${child.key}/status`] = 'refunded';
+          });
+          if (Object.keys(updates).length) {
+            await database.ref(`driver_bonus/${driver.uid}`).update(updates);
+          }
+          showToast("Perjalanan dibatalkan.");
+          setTimeout(() => { window.location.href = 'index.html'; }, 1500);
+        } catch (err) {
+          console.error(err);
+          showToast("Gagal membatalkan: " + err.message);
+        }
+      },
+      () => { showToast("Aksi dibatalkan"); }
+    );
   }
 
   function updateBonusDisplay() {
@@ -1014,7 +1456,6 @@
     orderData = o;
     customerId = o.user_id;
     
-    // Reset posisi terkirim agar lokasi awal selalu dikirim
     lastSentLat = null;
     lastSentLng = null;
     
