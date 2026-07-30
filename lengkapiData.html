@@ -200,14 +200,14 @@
                 <input type="text" id="fullName" placeholder="Contoh: Ahmad Wijaya" required>
             </div>
 
-            <!-- EMAIL (readonly - diambil dari customer) -->
+            <!-- EMAIL (readonly) -->
             <div class="form-group">
                 <label>Email (tidak dapat diubah) <span class="required-star">*</span></label>
                 <input type="email" id="email" readonly>
                 <div class="note-text">Email akan sama dengan akun customer Anda</div>
             </div>
 
-            <!-- NOMOR TELEPON (readonly - diambil dari customer) -->
+            <!-- NOMOR TELEPON (readonly) -->
             <div class="form-group">
                 <label>Nomor Telepon (WhatsApp) <span class="required-star">*</span></label>
                 <input type="tel" id="phone" readonly>
@@ -340,22 +340,24 @@
         if (customer.address) {
             address.value = customer.address;
         }
-        // Nama tidak diisi otomatis, biarkan user mengisi dengan nama asli
     }
 
-    // ==================== AMBIL API KEY IMGBB ====================
+    // ==================== AMBIL API KEY IMGBB (PATH: data-jego/imgBBapiKey) ====================
     async function fetchImgbbApiKey() {
         try {
-            const snapshot = await database.ref('public_config/imgBBapiKey').once('value');
+            const snapshot = await database.ref('data-jego/imgBBapiKey').once('value');
             const key = snapshot.val();
-            if (key && typeof key === 'string') {
+            console.log('🔑 Raw key from Firebase:', key);
+            if (key && typeof key === 'string' && key.length > 5) {
                 imgbbApiKey = key;
+                console.log('✅ API Key imgBB berhasil dimuat');
                 return true;
             } else {
-                throw new Error('API Key tidak ditemukan');
+                console.warn('⚠️ API Key imgBB tidak ditemukan atau tidak valid');
+                throw new Error('API Key tidak ditemukan di database');
             }
         } catch (err) {
-            console.error('Gagal ambil ApiKey_imgbb:', err);
+            console.error('❌ Gagal ambil ApiKey_imgbb:', err);
             showAlert('Gagal memuat konfigurasi upload foto. Silakan coba lagi nanti.', 'error');
             return false;
         }
@@ -413,21 +415,39 @@
         return new Blob([ab], { type: mimeString });
     }
 
-    // ==================== UPLOAD KE IMGBB ====================
+    // ==================== UPLOAD KE IMGBB (DENGAN RETRY API KEY) ====================
     async function uploadToImgbb(blob) {
-        if (!imgbbApiKey) throw new Error('API Key tidak tersedia');
+        // Jika API Key belum ada, coba ambil ulang
+        if (!imgbbApiKey) {
+            console.warn('⚠️ API Key belum dimuat, mencoba mengambil ulang...');
+            await fetchImgbbApiKey();
+            if (!imgbbApiKey) {
+                throw new Error('API Key tidak tersedia setelah dicoba ulang. Hubungi admin.');
+            }
+        }
+
         const formData = new FormData();
         formData.append('image', blob);
         formData.append('key', imgbbApiKey);
+
+        console.log('📤 Mengupload ke imgBB dengan API Key:', imgbbApiKey.substring(0, 8) + '...');
         const response = await fetch('https://api.imgbb.com/1/upload', {
             method: 'POST',
             body: formData,
             mode: 'cors'
         });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        console.log('📤 Response status:', response.status);
         const result = await response.json();
-        if (result.success) return result.data.url;
-        else throw new Error(result.error?.message || 'Upload gagal');
+        console.log('📤 Result dari imgBB:', result);
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${result.error?.message || 'Unknown error'}`);
+        }
+        if (result.success) {
+            return result.data.url;
+        } else {
+            throw new Error(result.error?.message || 'Upload gagal');
+        }
     }
 
     // ==================== EVENT UPLOAD FOTO ====================
@@ -459,9 +479,10 @@
             const imageUrl = await uploadToImgbb(compressedBlob);
             uploadedPhotoURL = imageUrl;
             uploadStatus.innerHTML = '✅ Foto berhasil diupload!';
+            console.log('✅ Foto uploaded:', imageUrl);
         } catch (err) {
-            console.error(err);
-            uploadStatus.innerHTML = '❌ Gagal upload foto. Silakan coba lagi.';
+            console.error('❌ Upload error:', err);
+            uploadStatus.innerHTML = '❌ Gagal upload foto: ' + err.message;
             uploadedPhotoURL = null;
             photoPreview.src = 'https://via.placeholder.com/80?text=Foto';
         } finally {
@@ -502,11 +523,9 @@
             updated_at: new Date().toISOString()
         };
         await database.ref(`drivers/${uid}`).set(driverRecord);
-        // Simpan pengecekan nomor HP
         const phoneKey = formData.phone.replace(/\+/g, '_');
         await database.ref(`phone_check_drivers/${phoneKey}`).set(uid);
 
-        // ===== UPDATE STATISTICS (sama seperti daftarDriver) =====
         await database.ref('stats/daily').transaction(daily => {
             if (!daily) daily = {};
             daily.pendingDrivers = (daily.pendingDrivers || 0) + 1;
@@ -522,7 +541,6 @@
         e.preventDefault();
         if (submitBtn.disabled) return;
 
-        // ===== VALIDASI =====
         const fullName = fullNameInput.value.trim();
         const email = emailInput.value.trim();
         const phone = phoneInput.value.trim();
@@ -548,13 +566,11 @@
             return;
         }
 
-        // Validasi format nomor HP (sudah +62 dari readonly)
         if (!/^\+62[0-9]{9,12}$/.test(phone)) {
             showAlert('Nomor telepon tidak valid. (harus +62...)', 'error');
             return;
         }
 
-        // ===== AMBIL DATA CUSTOMER =====
         const customer = getCustomerData();
         if (!customer || !customer.uid) {
             showAlert('Sesi tidak valid. Silakan login ulang sebagai customer.', 'error');
@@ -563,7 +579,6 @@
         }
         const uid = customer.uid;
 
-        // ===== PASTIKAN AUTH USER =====
         let firebaseUser = auth.currentUser;
         if (!firebaseUser) {
             await new Promise(resolve => setTimeout(resolve, 500));
@@ -575,7 +590,6 @@
             return;
         }
 
-        // ===== PROSES SIMPAN =====
         submitBtn.disabled = true;
         submitBtn.innerHTML = 'Menyimpan...';
 
@@ -595,7 +609,6 @@
 
             await saveDriverData(uid, formData);
 
-            // ===== BUAT SESSION DRIVER =====
             const driverSession = {
                 uid: uid,
                 name: fullName,
@@ -624,7 +637,7 @@
             }, 2000);
 
         } catch (err) {
-            console.error(err);
+            console.error('❌ Submit error:', err);
             showAlert('Gagal menyimpan data: ' + err.message, 'error');
             submitBtn.disabled = false;
             submitBtn.innerHTML = 'Simpan & Lanjutkan';
@@ -642,10 +655,8 @@
         setReadonlyFields(customer);
         await fetchImgbbApiKey();
 
-        // Jika auth.currentUser belum tersedia
         if (!auth.currentUser) {
             console.warn('Firebase Auth user belum tersedia, refresh mungkin diperlukan.');
-            // Coba reload user
             try {
                 await auth.currentUser?.reload();
             } catch(e) {
