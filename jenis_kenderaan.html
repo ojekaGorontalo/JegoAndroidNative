@@ -1249,45 +1249,47 @@ body.dark-mode .social-icons a:hover {
     }
 
     function setupSidebarActions() {
-        const menuItems = document.querySelectorAll('.sidebar-item');
-        menuItems.forEach(item => {
-            item.addEventListener('click', async (e) => {
-                const link = item.getAttribute('data-link');
-                if (item.id === 'shareToFriend') {
-                    toggleSidebar(false);
-                    shareToWhatsApp();
-                    return;
-                }
-                if (item.id === 'modeDriverBtn') {
-                    e.stopPropagation();
-                    toggleSidebar(false);
-                    await switchToDriver();
-                    return;
-                }
+    const menuItems = document.querySelectorAll('.sidebar-item');
+    menuItems.forEach(item => {
+        item.addEventListener('click', async (e) => {
+            const link = item.getAttribute('data-link');
+            if (item.id === 'shareToFriend') {
                 toggleSidebar(false);
-                if (link === 'profile') {
-                    window.location.href = 'userAccount.html';
-                } else if (link === 'referral') {
-                    window.location.href = 'programReferral.html';
-                } else if (link === 'help') {
-                    window.location.href = 'cs_jego.html';
-                } else if (link === 'about') {
-                    alert('JeGo v1.0 - Aplikasi transportasi & ekspedisi.');
-                } else if (link === 'logout') {
-                    if (firebaseAuth) {
-                        await firebaseAuth.signOut();
-                    }
-                    localStorage.removeItem('jego_logged_in_user');
-                    localStorage.removeItem('current_order_id');
-                    window.location.href = 'loginUser.html';
+                shareToWhatsApp();
+                return;
+            }
+            // Hapus pengecekan id modeDriverBtn di sini (tidak diperlukan lagi)
+            toggleSidebar(false);
+            if (link === 'profile') {
+                window.location.href = 'userAccount.html';
+            } else if (link === 'referral') {
+                window.location.href = 'programReferral.html';
+            } else if (link === 'help') {
+                window.location.href = 'cs_jego.html';
+            } else if (link === 'about') {
+                alert('JeGo v1.0 - Aplikasi transportasi & ekspedisi.');
+            } else if (link === 'logout') {
+                if (firebaseAuth) {
+                    await firebaseAuth.signOut();
                 }
-            });
+                localStorage.removeItem('jego_logged_in_user');
+                localStorage.removeItem('current_order_id');
+                window.location.href = 'loginUser.html';
+            }
         });
+    });
 
-        document.getElementById('menuButton').addEventListener('click', () => toggleSidebar(true));
-        document.getElementById('closeSidebar').addEventListener('click', () => toggleSidebar(false));
-        document.getElementById('sidebarOverlay').addEventListener('click', () => toggleSidebar(false));
-    }
+    // ===== TAMBAHAN: Listener khusus untuk tombol "Mode Pengemudi" =====
+    document.getElementById('modeDriverBtn')?.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        toggleSidebar(false);
+        await switchToDriver();
+    });
+
+    document.getElementById('menuButton').addEventListener('click', () => toggleSidebar(true));
+    document.getElementById('closeSidebar').addEventListener('click', () => toggleSidebar(false));
+    document.getElementById('sidebarOverlay').addEventListener('click', () => toggleSidebar(false));
+}
 
     async function cekOrderAktifDanRedirect() {
         const orderId = localStorage.getItem('current_order_id');
