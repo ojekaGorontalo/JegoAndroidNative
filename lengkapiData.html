@@ -79,6 +79,11 @@
             border-color: var(--primary);
             box-shadow: 0 0 0 3px rgba(255,152,0,0.1);
         }
+        input:read-only {
+            background: #f5f5f5;
+            color: #666;
+            cursor: not-allowed;
+        }
         .upload-area {
             display: flex;
             align-items: center;
@@ -170,6 +175,12 @@
             color: var(--danger);
             margin-left: 4px;
         }
+        .note-text {
+            font-size: 0.75rem;
+            color: #888;
+            margin-top: 4px;
+            font-weight: 400;
+        }
     </style>
 </head>
 <body>
@@ -183,11 +194,33 @@
         <div id="alertBox" class="alert"></div>
 
         <form id="driverForm">
-            <!-- NAMA LENGKAP (WAJIB) -->
+            <!-- NAMA LENGKAP -->
             <div class="form-group">
                 <label>Nama Lengkap (sesuai KTP) <span class="required-star">*</span></label>
                 <input type="text" id="fullName" placeholder="Contoh: Ahmad Wijaya" required>
             </div>
+
+            <!-- EMAIL (readonly - diambil dari customer) -->
+            <div class="form-group">
+                <label>Email (tidak dapat diubah) <span class="required-star">*</span></label>
+                <input type="email" id="email" readonly>
+                <div class="note-text">Email akan sama dengan akun customer Anda</div>
+            </div>
+
+            <!-- NOMOR TELEPON (readonly - diambil dari customer) -->
+            <div class="form-group">
+                <label>Nomor Telepon (WhatsApp) <span class="required-star">*</span></label>
+                <input type="tel" id="phone" readonly>
+                <div class="note-text">Nomor telepon akan sama dengan akun customer Anda</div>
+            </div>
+
+            <!-- TANGGAL LAHIR -->
+            <div class="form-group">
+                <label>Tanggal Lahir <span class="required-star">*</span></label>
+                <input type="date" id="dob" required>
+            </div>
+
+            <!-- JENIS KENDARAAN -->
             <div class="form-group">
                 <label>Jenis Kendaraan <span class="required-star">*</span></label>
                 <select id="vehicleType" required>
@@ -197,22 +230,32 @@
                     <option value="bentor">Bentor</option>
                 </select>
             </div>
-            <div class="form-group">
-                <label>Nomor Plat Kendaraan <span class="required-star">*</span></label>
-                <input type="text" id="plateNumber" placeholder="Contoh: DM 1234 AB" required>
-            </div>
+
+            <!-- MERK KENDARAAN -->
             <div class="form-group">
                 <label>Merek Kendaraan</label>
                 <input type="text" id="vehicleBrand" placeholder="Contoh: Honda Beat, Toyota Avanza">
             </div>
+
+            <!-- TAHUN KENDARAAN -->
+            <div class="form-group">
+                <label>Tahun Kendaraan <span class="required-star">*</span></label>
+                <input type="number" id="vehicleYear" placeholder="Contoh: 2020" min="1980" max="2026" required>
+            </div>
+
+            <!-- PLAT NOMOR -->
+            <div class="form-group">
+                <label>Nomor Plat Kendaraan <span class="required-star">*</span></label>
+                <input type="text" id="plateNumber" placeholder="Contoh: DM 1234 AB" required>
+            </div>
+
+            <!-- ALAMAT -->
             <div class="form-group">
                 <label>Alamat Lengkap <span class="required-star">*</span></label>
                 <textarea id="address" rows="2" placeholder="Masukkan alamat sesuai KTP/domisili" required></textarea>
             </div>
-            <div class="form-group">
-                <label>Nomor Telepon (WhatsApp) <span class="required-star">*</span></label>
-                <input type="tel" id="phone" placeholder="08123456789" required>
-            </div>
+
+            <!-- FOTO PROFIL -->
             <div class="form-group">
                 <label>Foto Profil <span class="required-star">*</span></label>
                 <div class="upload-area">
@@ -234,7 +277,7 @@
 </div>
 
 <script>
-    // Konfigurasi Firebase (sama dengan aplikasi utama)
+    // ==================== KONFIGURASI FIREBASE ====================
     const firebaseConfig = {
         apiKey: "AIzaSyCD0pgeZio-LdKqYDtWxcdXcZwyL4ngYQI",
         authDomain: "jego-35a2b.firebaseapp.com",
@@ -248,27 +291,30 @@
     const database = firebase.database();
     const auth = firebase.auth();
 
-    // DOM elements
+    // ==================== DOM ELEMENTS ====================
     const form = document.getElementById('driverForm');
     const submitBtn = document.getElementById('submitBtn');
     const alertBox = document.getElementById('alertBox');
     const fullNameInput = document.getElementById('fullName');
+    const emailInput = document.getElementById('email');
+    const phoneInput = document.getElementById('phone');
+    const dobInput = document.getElementById('dob');
     const vehicleType = document.getElementById('vehicleType');
-    const plateNumber = document.getElementById('plateNumber');
     const vehicleBrand = document.getElementById('vehicleBrand');
+    const vehicleYear = document.getElementById('vehicleYear');
+    const plateNumber = document.getElementById('plateNumber');
     const address = document.getElementById('address');
-    const phone = document.getElementById('phone');
     const photoFile = document.getElementById('photoFile');
     const uploadPhotoBtn = document.getElementById('uploadPhotoBtn');
     const photoPreview = document.getElementById('photoPreview');
     const uploadStatus = document.getElementById('uploadStatus');
 
+    // ==================== STATE ====================
     let uploadedPhotoURL = null;
     let isUploading = false;
     let imgbbApiKey = null;
-    let currentCustomer = null;
 
-    // Ambil data customer dari localStorage (hanya untuk UID dan referensi)
+    // ==================== AMBIL DATA CUSTOMER ====================
     function getCustomerData() {
         const customerStr = localStorage.getItem('jego_logged_in_user');
         if (!customerStr) return null;
@@ -279,14 +325,25 @@
         }
     }
 
-    // Prefill hanya nomor telepon dan alamat dari customer (opsional, tidak wajib)
-    function prefillFromCustomer(customer) {
-        if (customer.phone) phone.value = customer.phone.replace(/^\+62/, '0');
-        if (customer.address) address.value = customer.address;
-        // Nama tidak diisi otomatis, biarkan user mengisi ulang dengan nama asli
+    // ==================== SET READONLY FIELDS ====================
+    function setReadonlyFields(customer) {
+        if (customer.phone) {
+            let phoneClean = customer.phone.replace(/\D/g, '');
+            if (phoneClean.startsWith('0')) phoneClean = '+62' + phoneClean.substring(1);
+            else if (phoneClean.startsWith('62')) phoneClean = '+' + phoneClean;
+            else if (!phoneClean.startsWith('+')) phoneClean = '+62' + phoneClean;
+            phoneInput.value = phoneClean;
+        }
+        if (customer.email) {
+            emailInput.value = customer.email;
+        }
+        if (customer.address) {
+            address.value = customer.address;
+        }
+        // Nama tidak diisi otomatis, biarkan user mengisi dengan nama asli
     }
 
-    // Ambil API key ImgBB dari database
+    // ==================== AMBIL API KEY IMGBB ====================
     async function fetchImgbbApiKey() {
         try {
             const snapshot = await database.ref('public_config/imgBBapiKey').once('value');
@@ -304,7 +361,7 @@
         }
     }
 
-    // Kompresi gambar (sederhana)
+    // ==================== KOMPRESI GAMBAR ====================
     function compressImage(file, maxSizeKB = 512) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -350,11 +407,13 @@
         const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
         const ab = new ArrayBuffer(byteString.length);
         const ia = new Uint8Array(ab);
-        for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+        for (let i = 0; i < byteString.length; i++) {
+            ia[i] = byteString.charCodeAt(i);
+        }
         return new Blob([ab], { type: mimeString });
     }
 
-    // Upload ke ImgBB
+    // ==================== UPLOAD KE IMGBB ====================
     async function uploadToImgbb(blob) {
         if (!imgbbApiKey) throw new Error('API Key tidak tersedia');
         const formData = new FormData();
@@ -371,11 +430,12 @@
         else throw new Error(result.error?.message || 'Upload gagal');
     }
 
-    // Event upload foto
+    // ==================== EVENT UPLOAD FOTO ====================
     uploadPhotoBtn.addEventListener('click', () => {
         if (isUploading) return;
         photoFile.click();
     });
+
     photoFile.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -384,12 +444,16 @@
             return;
         }
         const reader = new FileReader();
-        reader.onload = (ev) => { photoPreview.src = ev.target.result; };
+        reader.onload = (ev) => {
+            photoPreview.src = ev.target.result;
+        };
         reader.readAsDataURL(file);
+
         isUploading = true;
         uploadPhotoBtn.disabled = true;
         uploadPhotoBtn.innerHTML = 'Mengupload...';
         uploadStatus.innerHTML = 'Sedang mengupload foto...';
+
         try {
             const compressedBlob = await compressImage(file, 512);
             const imageUrl = await uploadToImgbb(compressedBlob);
@@ -407,6 +471,7 @@
         }
     });
 
+    // ==================== ALERT ====================
     function showAlert(msg, type) {
         alertBox.textContent = msg;
         alertBox.className = `alert alert-${type}`;
@@ -414,16 +479,7 @@
         setTimeout(() => alertBox.style.display = 'none', 5000);
     }
 
-    // Format nomor telepon ke +62
-    function formatPhoneNumber(phone) {
-        let cleaned = phone.replace(/\D/g, '');
-        if (cleaned.startsWith('0')) cleaned = '+62' + cleaned.substring(1);
-        else if (cleaned.startsWith('62')) cleaned = '+' + cleaned;
-        else if (!cleaned.startsWith('+')) cleaned = '+62' + cleaned;
-        return cleaned;
-    }
-
-    // Simpan data driver ke Firebase (dengan nama yang diinput, bukan dari customer)
+    // ==================== SIMPAN DATA DRIVER ====================
     async function saveDriverData(uid, formData) {
         const driverRecord = {
             uid: uid,
@@ -434,6 +490,8 @@
             vehicle_type: formData.vehicleType,
             plate_number: formData.plateNumber,
             vehicle_brand: formData.vehicleBrand || '',
+            vehicle_year: formData.vehicleYear,
+            date_of_birth: formData.dob,
             photoURL: formData.photoURL || '',
             status: 'pending',
             role: 'driver',
@@ -444,47 +502,59 @@
             updated_at: new Date().toISOString()
         };
         await database.ref(`drivers/${uid}`).set(driverRecord);
-        // Simpan juga pengecekan nomor HP
+        // Simpan pengecekan nomor HP
         const phoneKey = formData.phone.replace(/\+/g, '_');
         await database.ref(`phone_check_drivers/${phoneKey}`).set(uid);
+
+        // ===== UPDATE STATISTICS (sama seperti daftarDriver) =====
+        await database.ref('stats/daily').transaction(daily => {
+            if (!daily) daily = {};
+            daily.pendingDrivers = (daily.pendingDrivers || 0) + 1;
+            daily.updatedAt = new Date().toISOString();
+            return daily;
+        });
+
         return driverRecord;
     }
 
-    // Submit form
+    // ==================== SUBMIT FORM ====================
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         if (submitBtn.disabled) return;
 
-        // Validasi input
+        // ===== VALIDASI =====
         const fullName = fullNameInput.value.trim();
+        const email = emailInput.value.trim();
+        const phone = phoneInput.value.trim();
+        const dob = dobInput.value;
         const vehType = vehicleType.value;
-        const plate = plateNumber.value.trim().toUpperCase();
         const vehBrand = vehicleBrand.value.trim();
+        const vehYear = parseInt(vehicleYear.value);
+        const plate = plateNumber.value.trim().toUpperCase();
         const addr = address.value.trim();
-        const phoneRaw = phone.value.trim();
 
-        if (!fullName) {
-            showAlert('Nama lengkap harus diisi (sesuai KTP)', 'error');
-            return;
-        }
-        if (!vehType || !plate || !addr || !phoneRaw) {
-            showAlert('Harap isi semua field yang wajib (jenis kendaraan, plat nomor, alamat, nomor telepon)', 'error');
+        if (!fullName || !email || !phone || !dob || !vehType || !plate || !addr || !vehYear) {
+            showAlert('Harap isi semua field yang wajib (termasuk tahun kendaraan dan tanggal lahir)', 'error');
             return;
         }
 
-        // Validasi foto wajib
+        if (isNaN(vehYear) || vehYear < 1980 || vehYear > new Date().getFullYear()) {
+            showAlert('Tahun kendaraan tidak valid (1980 - sekarang)', 'error');
+            return;
+        }
+
         if (!uploadedPhotoURL) {
             showAlert('Foto profil wajib diupload. Silakan upload foto terlebih dahulu.', 'error');
             return;
         }
 
-        const formattedPhone = formatPhoneNumber(phoneRaw);
-        if (!/^\+62[0-9]{9,12}$/.test(formattedPhone)) {
-            showAlert('Nomor telepon tidak valid. Contoh: 08123456789', 'error');
+        // Validasi format nomor HP (sudah +62 dari readonly)
+        if (!/^\+62[0-9]{9,12}$/.test(phone)) {
+            showAlert('Nomor telepon tidak valid. (harus +62...)', 'error');
             return;
         }
 
-        // Ambil data customer dari localStorage (hanya untuk UID dan email)
+        // ===== AMBIL DATA CUSTOMER =====
         const customer = getCustomerData();
         if (!customer || !customer.uid) {
             showAlert('Sesi tidak valid. Silakan login ulang sebagai customer.', 'error');
@@ -492,9 +562,8 @@
             return;
         }
         const uid = customer.uid;
-        const email = customer.email;
 
-        // Pastikan Firebase Auth user ada
+        // ===== PASTIKAN AUTH USER =====
         let firebaseUser = auth.currentUser;
         if (!firebaseUser) {
             await new Promise(resolve => setTimeout(resolve, 500));
@@ -506,6 +575,7 @@
             return;
         }
 
+        // ===== PROSES SIMPAN =====
         submitBtn.disabled = true;
         submitBtn.innerHTML = 'Menyimpan...';
 
@@ -513,26 +583,30 @@
             const formData = {
                 fullName: fullName,
                 email: email,
+                phone: phone,
+                dob: dob,
                 vehicleType: vehType,
-                plateNumber: plate,
                 vehicleBrand: vehBrand,
+                vehicleYear: vehYear,
+                plateNumber: plate,
                 address: addr,
-                phone: formattedPhone,
                 photoURL: uploadedPhotoURL
             };
 
             await saveDriverData(uid, formData);
 
-            // Buat session driver
+            // ===== BUAT SESSION DRIVER =====
             const driverSession = {
                 uid: uid,
                 name: fullName,
-                phone: formattedPhone,
+                phone: phone,
                 email: email,
                 address: addr,
                 vehicleType: vehType,
                 plateNumber: plate,
                 vehicleBrand: vehBrand,
+                vehicleYear: vehYear,
+                dateOfBirth: dob,
                 status: 'pending',
                 rating: 5,
                 perjalanan: 0,
@@ -544,10 +618,11 @@
             localStorage.setItem('jego_logged_in_driver', JSON.stringify(driverSession));
             localStorage.removeItem('jego_logged_in_user');
 
-            showAlert('Data driver berhasil disimpan! Mengalihkan ke halaman driver...', 'success');
+            showAlert('Data driver berhasil disimpan! Mengalihkan ke halaman verifikasi...', 'success');
             setTimeout(() => {
                 window.location.href = 'verifikasi_driver.html';
             }, 2000);
+
         } catch (err) {
             console.error(err);
             showAlert('Gagal menyimpan data: ' + err.message, 'error');
@@ -556,7 +631,7 @@
         }
     });
 
-    // Inisialisasi halaman
+    // ==================== INISIALISASI ====================
     window.onload = async () => {
         const customer = getCustomerData();
         if (!customer) {
@@ -564,10 +639,18 @@
             setTimeout(() => window.location.href = 'loginUser.html', 2000);
             return;
         }
-        prefillFromCustomer(customer);
+        setReadonlyFields(customer);
         await fetchImgbbApiKey();
+
+        // Jika auth.currentUser belum tersedia
         if (!auth.currentUser) {
-            console.warn('Firebase Auth user belum tersedia, mungkin perlu refresh');
+            console.warn('Firebase Auth user belum tersedia, refresh mungkin diperlukan.');
+            // Coba reload user
+            try {
+                await auth.currentUser?.reload();
+            } catch(e) {
+                console.warn('Gagal reload user:', e);
+            }
         }
     };
 </script>
