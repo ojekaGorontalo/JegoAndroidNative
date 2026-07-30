@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, view-fit=cover">
+    <title>Verifikasi Driver - JeGo</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #FFF3E0, #FFE0B2);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 32px;
+            padding: 32px 24px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 35px rgba(0,0,0,0.1);
+        }
+        .icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #E65100;
+            margin-bottom: 12px;
+            font-size: 1.8rem;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 30px;
+            background: #FFF3E0;
+            color: #FF9800;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+        .message {
+            color: #555;
+            line-height: 1.5;
+            margin: 20px 0;
+        }
+        .logout-btn {
+            background: #FF9800;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            width: 100%;
+        }
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0,0,0,0.1);
+            border-radius: 50%;
+            border-top-color: #FF9800;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .hidden { display: none; }
+        .alert {
+            padding: 12px;
+            border-radius: 16px;
+            margin: 15px 0;
+            font-size: 0.9rem;
+        }
+        .alert-error {
+            background: #FFEBEE;
+            color: #c62828;
+        }
+    </style>
+</head>
+<body>
+<div class="card" id="mainCard">
+    <div class="icon" id="statusIcon">⏳</div>
+    <h1 id="statusTitle">Verifikasi Data</h1>
+    <div class="status-badge" id="statusBadge">PENDING</div>
+    <div class="message" id="statusMessage">
+        Data driver Anda sedang dalam proses verifikasi oleh admin.<br>
+        Proses ini membutuhkan waktu 1-2 hari kerja.<br>
+        Anda akan menerima notifikasi setelah status diperbarui.
+    </div>
+    <div id="rejectReason" style="display:none; background:#FFEBEE; padding:12px; border-radius:16px; margin:15px 0; color:#c62828;"></div>
+    <button class="logout-btn" id="logoutBtn">Logout</button>
+    <div id="loadingNotif" style="margin-top:15px; font-size:0.8rem; color:#888;">Mendaftarkan notifikasi...</div>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyCD0pgeZio-LdKqYDtWxcdXcZwyL4ngYQI",
+        authDomain: "jego-35a2b.firebaseapp.com",
+        databaseURL: "https://jego-35a2b-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "jego-35a2b",
+        storageBucket: "jego-35a2b.firebasestorage.app",
+        messagingSenderId: "600037007040",
+        appId: "1:600037007040:web:ac3243ad9b472647ffd725"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    const auth = firebase.auth();
+
+    let driverUid = null;
+    let driverRef = null;
+
+    // Ambil data driver dari localStorage
+    function getDriverData() {
+        const driverStr = localStorage.getItem('jego_logged_in_driver');
+        if (!driverStr) return null;
+        try {
+            return JSON.parse(driverStr);
+        } catch(e) { return null; }
+    }
+
+    // Tampilkan status sesuai data driver
+    function updateUI(status, ketGagal = '') {
+        const iconEl = document.getElementById('statusIcon');
+        const titleEl = document.getElementById('statusTitle');
+        const badgeEl = document.getElementById('statusBadge');
+        const messageEl = document.getElementById('statusMessage');
+        const rejectDiv = document.getElementById('rejectReason');
+
+        if (status === 'accepted' || status === 'active') {
+            iconEl.innerHTML = '✅';
+            titleEl.innerText = 'Akun Disetujui!';
+            badgeEl.innerText = 'AKTIF';
+            badgeEl.style.background = '#E8F5E9';
+            badgeEl.style.color = '#2E7D32';
+            messageEl.innerHTML = 'Selamat! Akun driver Anda telah diverifikasi. Anda akan dialihkan ke halaman utama driver dalam 3 detik.';
+            rejectDiv.style.display = 'none';
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 3000);
+        } 
+        else if (status === 'rejected') {
+            iconEl.innerHTML = '❌';
+            titleEl.innerText = 'Akun Ditolak';
+            badgeEl.innerText = 'DITOLAK';
+            badgeEl.style.background = '#FFEBEE';
+            badgeEl.style.color = '#C62828';
+            messageEl.innerHTML = 'Maaf, pendaftaran driver Anda ditolak oleh admin.';
+            rejectDiv.style.display = 'block';
+            rejectDiv.innerHTML = `<strong>Alasan penolakan:</strong> ${ketGagal || 'Tidak ada keterangan.'}<br><br>Silakan hubungi admin untuk informasi lebih lanjut.`;
+        }
+        else if (status === 'blocked') {
+            iconEl.innerHTML = '🚫';
+            titleEl.innerText = 'Akun Diblokir';
+            badgeEl.innerText = 'DIBLOKIR';
+            badgeEl.style.background = '#FFEBEE';
+            badgeEl.style.color = '#C62828';
+            messageEl.innerHTML = 'Akun driver Anda telah diblokir. Hubungi admin untuk keterangan lebih lanjut.';
+            rejectDiv.style.display = 'block';
+            rejectDiv.innerHTML = `<strong>Alasan pemblokiran:</strong> ${ketGagal || 'Tidak ada keterangan.'}`;
+        }
+        else { // pending
+            iconEl.innerHTML = '⏳';
+            titleEl.innerText = 'Verifikasi Data';
+            badgeEl.innerText = 'PENDING';
+            badgeEl.style.background = '#FFF3E0';
+            badgeEl.style.color = '#FF9800';
+            messageEl.innerHTML = 'Data driver Anda sedang dalam proses verifikasi oleh admin.<br>Proses ini membutuhkan waktu 1-2 hari kerja.<br>Anda akan menerima notifikasi setelah status diperbarui.';
+            rejectDiv.style.display = 'none';
+        }
+    }
+
+    // Setup listener perubahan status di Firebase
+    function listenStatus(uid) {
+        if (driverRef) driverRef.off();
+        driverRef = database.ref(`drivers/${uid}`);
+        driverRef.on('value', (snap) => {
+            const data = snap.val();
+            if (data) {
+                const status = data.status || 'pending';
+                const ketGagal = data.ketGagal || data.rejectionReason || data.blockReason || '';
+                updateUI(status, ketGagal);
+                // update localStorage jika status berubah
+                const driverLocal = getDriverData();
+                if (driverLocal) {
+                    driverLocal.status = status;
+                    localStorage.setItem('jego_logged_in_driver', JSON.stringify(driverLocal));
+                }
+            }
+        });
+    }
+
+    // Inisialisasi OneSignal untuk customer (driver versi customer? tetap pakai median)
+    // Inisialisasi OneSignal dengan polling agar menunggu median siap
+async function initOneSignalForDriver() {
+    // Tunggu hingga median tersedia (maks 10 detik)
+    let attempts = 0;
+    while (typeof median === 'undefined' && attempts < 50) {
+        await new Promise(r => setTimeout(r, 200));
+        attempts++;
+    }
+    if (typeof median === 'undefined' || !median.onesignal) {
+        console.warn("⚠️ Median OneSignal tidak tersedia setelah menunggu");
+        document.getElementById('loadingNotif').innerHTML = '⚠️ Notifikasi tidak tersedia.';
+        return false;
+    }
+    try {
+        if (median.onesignal.setConsentGiven) {
+            await median.onesignal.setConsentGiven(true);
+        }
+        await median.onesignal.register();
+        if (median.onesignal.promptForPushNotificationsWithUserResponse) {
+            await median.onesignal.promptForPushNotificationsWithUserResponse();
+        }
+        await new Promise(r => setTimeout(r, 8000));
+        let playerId = null;
+        for (let i = 0; i < 3; i++) {
+            const info = await median.onesignal.onesignalInfo();
+            playerId = info?.userId || info?.oneSignalUserId || info?.subscription?.id;
+            if (playerId) break;
+            await new Promise(r => setTimeout(r, 5000));
+        }
+        if (playerId && driverUid) {
+            await database.ref(`drivers/${driverUid}`).update({
+                playerId,
+                last_playerid_update: new Date().toISOString()
+            });
+            document.getElementById('loadingNotif').innerHTML = '✅ Notifikasi aktif';
+            return true;
+        }
+        document.getElementById('loadingNotif').innerHTML = '⚠️ Gagal mendapatkan ID notifikasi.';
+        return false;
+    } catch (err) {
+        console.error("OneSignal error:", err);
+        document.getElementById('loadingNotif').innerHTML = '⚠️ Gagal mengaktifkan notifikasi.';
+        return false;
+    }
+}
+
+    // Logout
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+        await auth.signOut();
+        localStorage.removeItem('jego_logged_in_driver');
+        localStorage.removeItem('autobid_offered_orders');
+        window.location.href = 'loginDriver.html';
+    });
+
+        // Main
+    window.onload = async () => {
+        const driver = getDriverData();
+        if (!driver || !driver.uid) {
+            window.location.href = 'loginDriver.html';
+            return;
+        }
+        driverUid = driver.uid;
+        
+        // Langsung tampilkan status dari localStorage
+        updateUI(driver.status || 'pending');
+        // Pasang listener realtime ke Firebase
+        listenStatus(driverUid);
+        // Inisialisasi OneSignal
+        await initOneSignalForDriver();
+    };
+</script>
+</body>
+</html>
