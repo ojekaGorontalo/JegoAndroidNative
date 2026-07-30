@@ -11,6 +11,9 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
     <style>
         * {
             margin: 0;
@@ -296,6 +299,94 @@ input, textarea {
         body.dark-mode .transport-card.selected {
             background: linear-gradient(135deg, #2a2418, #1f1a12);
         }
+        
+        /* ===== MODE PENUMPANG CARD (untuk customer) ===== */
+.mode-penumpang-card {
+    background: linear-gradient(135deg, #FF9800, #FF5722);
+    border-radius: 12px;
+    padding: 10px 12px;
+    margin-top: 10px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+}
+.mode-penumpang-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(255, 152, 0, 0.4);
+}
+.mode-penumpang-card:active {
+    transform: scale(0.98);
+}
+.mode-penumpang-icon {
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: white;
+}
+.mode-penumpang-text {
+    flex: 1;
+}
+.mode-penumpang-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 4px;
+}
+.mode-penumpang-desc {
+    font-size: 0.65rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+.mode-penumpang-arrow {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: white;
+    opacity: 0.8;
+}
+
+/* ===== SOCIAL ICONS ===== */
+.social-icons {
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    width: 100%;
+    margin-top: 16px;
+    margin-bottom: 8px;
+    gap: 12px;
+}
+.social-icons a {
+    flex: 1;
+    text-align: center;
+    font-size: 24px;
+    color: #444;
+    background: #f5f5f5;
+    padding: 10px 0;
+    border-radius: 40px;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+.social-icons a i {
+    font-size: 1.5rem;
+}
+.social-icons a:hover {
+    background: #e0e0e0;
+    transform: translateY(-2px);
+}
+body.dark-mode .social-icons a {
+    background: #2c2c2c;
+    color: #e9ecef;
+}
+body.dark-mode .social-icons a:hover {
+    background: #3a3a3a;
+}
 
         .transport-icon {
             width: 70px;
@@ -837,13 +928,31 @@ input, textarea {
         <p style="font-size:0.8rem; opacity:0.9;">Halo, Customer</p>
     </div>
     <div class="sidebar-menu">
-        <div class="sidebar-item" data-link="profile"><span class="icon">👤</span> Profil Saya</div>
-        <div class="sidebar-item" data-link="referral"><span class="icon">🎁</span> Referral</div>
-        <div class="sidebar-item" data-link="help"><span class="icon">❓</span> Bantuan & Dukungan</div>
-        <div class="sidebar-item" data-link="about"><span class="icon">ℹ️</span> Tentang JeGo</div>
-        <div class="sidebar-item" id="shareToFriend"><span class="icon">📤</span> Bagikan ke teman</div>
-        <div class="sidebar-item" data-link="logout"><span class="icon">🚪</span> Logout</div>
-        <div class="sidebar-item" id="modeDriverBtn"><span class="icon">🚗</span> Mode Pengemudi</div>
+    <div class="sidebar-item" data-link="profile"><span class="icon">👤</span> Profil Saya</div>
+    <div class="sidebar-item" data-link="referral"><span class="icon">🎁</span> Referral</div>
+    <div class="sidebar-item" data-link="help"><span class="icon">❓</span> Bantuan & Dukungan</div>
+    <div class="sidebar-item" data-link="about"><span class="icon">ℹ️</span> Tentang JeGo</div>
+    <div class="sidebar-item" id="shareToFriend"><span class="icon">📤</span> Bagikan ke teman</div>
+    <div class="sidebar-item" data-link="logout"><span class="icon">🚪</span> Logout</div>
+</div>  <!-- ← TUTUP sidebar-menu DI SINI -->
+
+<div class="sidebar-bottom">   <!-- ← PINDAHKAN KE LUAR sidebar-menu -->
+    <div class="menu-section">
+        <div class="mode-penumpang-card" id="modeDriverBtn">
+            <div class="mode-penumpang-icon"><i class="fas fa-exchange-alt"></i></div>
+            <div class="mode-penumpang-text">
+                <div class="mode-penumpang-title">Mode Pengemudi</div>
+                <div class="mode-penumpang-desc">Beralih ke aplikasi pengemudi</div>
+            </div>
+            <div class="mode-penumpang-arrow">›</div>
+        </div>
+    </div>
+    <div class="social-icons">
+        <a href="https://whatsapp.com/channel/0029VbCtkcaEQIaidcHMTy0G" target="_blank"><i class="fab fa-whatsapp"></i></a>
+        <a href="https://www.facebook.com/share/18gp8qJRdM/" target="_blank"><i class="fab fa-facebook"></i></a>
+        <a href="https://www.tiktok.com/@jego.gorontalo" target="_blank"><i class="fab fa-tiktok"></i></a>
+    </div>
+</div>
     </div>
 </div>
 
