@@ -63,13 +63,17 @@
         }
 
         body {
-            background-color: var(--background);
-            color: var(--text-primary);
-            line-height: 1.4;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
+    background-color: var(--background);
+    color: var(--text-primary);
+    line-height: 1.4;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
 
         .container {
             max-width: 1200px;
