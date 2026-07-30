@@ -1291,7 +1291,7 @@
                 }
                 if (!firebaseUser) {
                     showAlert('⚠️ Sesi tidak valid, silakan login ulang', 'error');
-                    setTimeout(() => window.location.href = '../loginUser.html', 2000);
+                    setTimeout(() => window.location.href = 'loginUser.html', 2000);
                     return false;
                 }
                 if (firebaseUser.uid !== currentUser.uid) {
