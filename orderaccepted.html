@@ -748,7 +748,7 @@
   async function getAgoraToken(channelName, uid) {
     try {
       // Coba ambil dari Cloud Function
-      const response = await fetch('https://us-central1-jego-35a2b.cloudfunctions.net/generateAgoraToken', {
+      const response = await fetch('https://asia-southeast1-jego-35a2b.cloudfunctions.net/generateAgoraToken', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ channelName, uid })
