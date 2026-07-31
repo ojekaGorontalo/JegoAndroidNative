@@ -1153,7 +1153,7 @@ body.dark-mode .social-icons a:hover {
         const customerDataStr = localStorage.getItem('jego_logged_in_user');
         if (!customerDataStr) {
             alert('Anda belum login sebagai customer. Silakan login terlebih dahulu.');
-            window.location.href = 'customer/loginUser.html';
+            window.location.href = 'loginUser.html';
             return;
         }
         let customerData;
@@ -1161,13 +1161,13 @@ body.dark-mode .social-icons a:hover {
             customerData = JSON.parse(customerDataStr);
         } catch(e) {
             alert('Data sesi tidak valid. Silakan login ulang.');
-            window.location.href = 'customer/loginUser.html';
+            window.location.href = 'loginUser.html';
             return;
         }
         const uid = customerData.uid;
         if (!uid) {
             alert('UID tidak ditemukan. Silakan login ulang.');
-            window.location.href = '/customer/loginUser.html';
+            window.location.href = 'loginUser.html';
             return;
         }
 
