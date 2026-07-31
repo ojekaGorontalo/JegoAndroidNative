@@ -554,6 +554,50 @@
       display: none;
     }
     .call-status-indicator.active { display: block; }
+
+    /* ========== CALL OVERLAY FULLSCREEN ========== */
+    .call-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 9999;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+    .call-overlay.active { display: flex; }
+    .call-overlay .status-text {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .call-overlay .sub-text {
+      font-size: 1.2rem;
+      opacity: 0.8;
+      margin-bottom: 40px;
+    }
+    .call-overlay .end-call-btn {
+      background: #f44336;
+      border: none;
+      padding: 16px 48px;
+      border-radius: 50px;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: white;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(244, 67, 54, 0.4);
+      transition: transform 0.15s;
+    }
+    .call-overlay .end-call-btn:active { transform: scale(0.95); }
   </style>
 </head>
 <body>
@@ -678,6 +722,13 @@
   </div>
 </div>
 
+<!-- ========== CALL OVERLAY FULLSCREEN ========== -->
+<div id="callOverlay" class="call-overlay">
+  <div class="status-text" id="callOverlayStatus">📞 Memanggil...</div>
+  <div class="sub-text" id="callOverlaySub">Menghubungkan ke customer</div>
+  <button class="end-call-btn" id="callOverlayEndBtn">❌ Akhiri Panggilan</button>
+</div>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
   // ==================== FIREBASE CONFIG ====================
@@ -727,6 +778,16 @@
   function getDriverData() { return JSON.parse(localStorage.getItem('jego_logged_in_driver') || '{}'); }
   function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
 
+  // ==================== CALL OVERLAY ====================
+  function showCallOverlay(status, sub) {
+    document.getElementById('callOverlay').classList.add('active');
+    document.getElementById('callOverlayStatus').innerText = status || '📞 Memanggil...';
+    document.getElementById('callOverlaySub').innerText = sub || 'Menghubungkan ke customer';
+  }
+  function hideCallOverlay() {
+    document.getElementById('callOverlay').classList.remove('active');
+  }
+
   // === FUNGSI DIPANGGIL DARI KOTLIN ===
   window.updateCallStatus = function(status) {
       const btn = document.getElementById('callBtn');
@@ -735,15 +796,19 @@
           btn.className = 'action-btn btn-primary';
           btn.disabled = false;
           document.getElementById('callStatusIndicator').style.display = 'none';
+          hideCallOverlay();
       } else if (status === 'calling') {
           btn.innerHTML = '⏳ Menghubungi...';
           btn.className = 'action-btn btn-primary';
           btn.disabled = true;
+          document.getElementById('callStatusIndicator').style.display = 'none';
+          showCallOverlay('📞 Memanggil...', 'Menghubungkan ke customer');
       } else if (status === 'connected') {
           btn.innerHTML = '🔴 Akhiri Panggilan';
           btn.className = 'action-btn btn-danger';
           btn.disabled = false;
           document.getElementById('callStatusIndicator').style.display = 'block';
+          showCallOverlay('📞 Panggilan Aktif', 'Terhubung dengan customer');
       }
   };
 
@@ -1403,7 +1468,7 @@
     displayOrderUI();
     listenOrder();
     initChat();
-    window.updateCallStatus('idle'); // ✅ Ganti
+    window.updateCallStatus('idle');
 
     if (orderData.status === 'accepted') {
       await sendAutoWelcomeMessage();
@@ -1413,17 +1478,36 @@
 
     // Event listeners
     document.getElementById('mapActionBtn').addEventListener('click', onMapAction);
+    // Tombol Panggil dengan konfirmasi
     document.getElementById('callBtn').addEventListener('click', function() {
         if (this.innerHTML.includes('Akhiri')) {
+            // Langsung akhiri panggilan
             if (typeof Android !== 'undefined' && Android.endVoiceCall) {
                 Android.endVoiceCall();
             }
         } else {
-            if (typeof Android !== 'undefined' && Android.startVoiceCall) {
-                Android.startVoiceCall(orderId, customerId);
-            } else {
-                showToast('Fitur tidak tersedia');
-            }
+            // Tampilkan popup konfirmasi
+            showConfirmPopup(
+                '📞 Panggil Customer',
+                'Anda akan menghubungi customer melalui panggilan suara. Lanjutkan?',
+                function() {
+                    // Ya
+                    if (typeof Android !== 'undefined' && Android.startVoiceCall) {
+                        Android.startVoiceCall(orderId, customerId);
+                    } else {
+                        showToast('Fitur tidak tersedia');
+                    }
+                },
+                function() {
+                    showToast('Panggilan dibatalkan');
+                }
+            );
+        }
+    });
+    // Tombol akhiri di overlay
+    document.getElementById('callOverlayEndBtn').addEventListener('click', function() {
+        if (typeof Android !== 'undefined' && Android.endVoiceCall) {
+            Android.endVoiceCall();
         }
     });
     document.getElementById('chatIconBtn').addEventListener('click', openChat);
