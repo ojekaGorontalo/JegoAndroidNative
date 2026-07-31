@@ -1115,10 +1115,31 @@
   }
 
   function openNavigationDirect(lat, lng) {
-    if (!lat || !lng) { showToast("Koordinat tidak tersedia"); return false; }
-    window.open(`google.navigation:q=${lat},${lng}`, '_blank');
+    if (!lat || !lng) {
+        showToast("Koordinat tidak tersedia");
+        return false;
+    }
+
+    // Tampilkan konfirmasi custom (modal)
+    showConfirmPopup(
+        '🗺️ Navigasi',
+        'Mulai navigasi ke lokasi ini?',
+        function() {
+            // Panggil native Android jika tersedia
+            if (typeof Android !== 'undefined' && Android.startNavigation) {
+                Android.startNavigation(lat, lng);
+            } else {
+                // Fallback ke URL Google Maps
+                var url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
+                window.open(url, '_system');
+            }
+        },
+        function() {
+            showToast('Navigasi dibatalkan');
+        }
+    );
     return true;
-  }
+}
 
   function setupAddressClick() {
     const pickupEl = document.getElementById('pickupAddress');
