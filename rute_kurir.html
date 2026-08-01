@@ -170,8 +170,17 @@
             color: #FF9800; font-weight: 600; padding: 12px 0;
             cursor: pointer; border-top: 1px dashed #ddd; margin-top: 8px;
         }
+
+        /* Harga tawaran di detail sheet */
+        .detail-offer-price {
+            background: #fff3e0; border-radius: 12px; padding: 12px;
+            margin: 12px 0; border-left: 4px solid #FF9800;
+        }
+        .detail-offer-price .label { font-size: 0.8rem; color: #666; }
+        .detail-offer-price .value { font-weight: 700; font-size: 1.1rem; color: #FF9800; }
+
         .order-detail-form {
-            margin-top: 16px; border-top: 1px solid #eee; padding-top: 16px;
+            margin-top: 12px; border-top: 1px solid #eee; padding-top: 16px;
         }
         .order-detail-form .form-group { margin-bottom: 14px; }
         .order-detail-form label {
@@ -234,32 +243,34 @@
         .wp-modal .wp-actions .btn-danger { background: #f44336; color: white; }
         .wp-modal .wp-actions .btn-secondary { background: #f5f5f5; color: #333; }
 
-        /* Driver Offers Overlay (sama seperti rute.html) */
+        /* Driver Offers Overlay */
         #driverOffers {
             position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
             background: rgba(0,0,0,0.5); z-index: 9999;
             display: flex; visibility: hidden; opacity: 0;
             transition: opacity 0.3s ease, visibility 0.3s ease;
             padding: 0; box-sizing: border-box; pointer-events: none;
+            flex-direction: column;
+            justify-content: flex-end;
         }
         #driverOffers.active { visibility: visible; opacity: 1; pointer-events: auto; }
-        #driverOffers > div {
-            background: white; height: 100%; width: 100%;
-            border-radius: 0; overflow: hidden; box-shadow: none;
-            display: flex; flex-direction: column;
+
+        #driverOffers .offers-panel {
+            background: white; width: 100%; max-height: 92vh;
+            border-radius: 28px 28px 0 0;
+            overflow: hidden; display: flex; flex-direction: column;
         }
-        #driverOffers > div > div:first-child {
+        #driverOffers .offers-panel .header {
             padding: 16px 20px; flex-shrink: 0;
             background: linear-gradient(135deg, #FF9800, #FF5722);
             color: white; display: flex; justify-content: space-between; align-items: center;
         }
-        #driverOffers > div > div:first-child strong { font-size: 1.1rem; }
-        #closeDriverOffers {
-            background: none; border: none; font-size: 24px;
-            color: white; cursor: pointer; padding: 4px 8px;
-        }
+        #driverOffers .offers-panel .header strong { font-size: 1.1rem; }
+        /* tombol close di header kita sembunyikan, pakai tombol batal di footer */
+        #driverOffers .offers-panel .header .close-btn { display: none; }
+
         #driverOfferList {
-            flex: 1; max-height: none; overflow-y: auto; padding: 12px;
+            flex: 1; overflow-y: auto; padding: 12px;
         }
         .bid-price-text {
             font-size: 1.2rem; font-weight: bold; color: #FF9800;
@@ -272,13 +283,11 @@
             contain: content; will-change: auto; transition: none;
             transform: translateZ(0); backface-visibility: hidden;
         }
-        body.dark-mode .driver-offer-card { background: #2c2c2c; border-color: #444; }
         .driver-info { display: flex; gap: 12px; align-items: center; }
         .driver-photo { width: 55px; height: 55px; border-radius: 50%; object-fit: cover; border: 2px solid #FF9800; }
         .driver-details { flex: 1; }
         .driver-name { font-weight: 700; font-size: 1rem; }
         .driver-vehicle { font-size: 0.75rem; color: #555; }
-        body.dark-mode .driver-vehicle { color: #aaa; }
         .driver-action-buttons { display: flex; gap: 10px; margin-top: 12px; }
         .accept-btn, .reject-btn {
             flex: 1; padding: 10px; border: none; border-radius: 40px;
@@ -290,19 +299,31 @@
             background: #e0e0e0; border-radius: 10px; overflow: hidden;
             height: 4px; margin-top: 8px; transform: translateZ(0);
         }
-        body.dark-mode .offer-progress-wrapper { background: #444; }
         .offer-progress-bar {
             height: 100%; background: #FF9800; transform-origin: left;
             transform: scaleX(0); transition: none; will-change: transform;
             width: 100%;
         }
 
+        /* Footer untuk driver offers */
+        #driverOffers .offers-footer {
+            padding: 12px 20px 20px;
+            border-top: 1px solid #eee;
+            flex-shrink: 0;
+        }
+        #driverOffers .offers-footer .btn {
+            width: 100%; padding: 14px; border: none; border-radius: 40px;
+            font-weight: 700; font-size: 1rem; cursor: pointer;
+            background: #f44336; color: white;
+        }
+        body.dark-mode #driverOffers .offers-footer .btn { background: #d32f2f; }
+
         /* Dark mode */
         body.dark-mode .bottom-sheet,
         body.dark-mode .search-sheet,
         body.dark-mode .detail-sheet,
         body.dark-mode .wp-modal,
-        body.dark-mode #driverOffers > div {
+        body.dark-mode #driverOffers .offers-panel {
             background: #1e1e1e; color: #fff;
         }
         body.dark-mode .bottom-sheet .body .address-item .content .address { color: #eee; }
@@ -319,6 +340,8 @@
         body.dark-mode .detail-sheet .body .address-card .address { color: #eee; }
         body.dark-mode .detail-sheet .body .waypoint-item { background: #2c2c2c; }
         body.dark-mode .detail-sheet .body .waypoint-item .wp-addr { color: #eee; }
+        body.dark-mode .detail-offer-price { background: #3a2a1a; border-left-color: #FF9800; }
+        body.dark-mode .detail-offer-price .value { color: #FFB74D; }
         body.dark-mode .order-detail-form label { color: #aaa; }
         body.dark-mode .order-detail-form input,
         body.dark-mode .order-detail-form select,
@@ -336,6 +359,9 @@
         body.dark-mode .detail-sheet .header .close-btn { color: #aaa; }
         body.dark-mode .search-sheet .header .back { color: #eee; }
         body.dark-mode .wp-modal .wp-actions .btn-secondary { background: #333; color: #eee; }
+        body.dark-mode .driver-offer-card { background: #2c2c2c; border-left-color: #FF9800; }
+        body.dark-mode .driver-vehicle { color: #aaa; }
+        body.dark-mode #driverOffers .offers-footer { border-top-color: #333; }
 
         /* Map & loading */
         #map { height: 100%; width: 100%; }
@@ -413,7 +439,7 @@
         </div>
     </div>
     <div class="footer">
-        <button class="btn btn-primary" id="nextToDetailBtn">Selanjutnya →</button>
+        <button class="btn btn-primary" id="nextToDetailBtn">📝 Detail Order →</button>
     </div>
 </div>
 
@@ -466,6 +492,12 @@
             <div class="add-wp-btn" id="addWpFromDetail">
                 <span>➕ Tambah perhentian</span>
             </div>
+        </div>
+
+        <!-- Harga Tawaran -->
+        <div class="detail-offer-price" id="detailOfferPrice">
+            <div class="label">💰 Harga tawaran Anda</div>
+            <div class="value" id="detailOfferValue">Rp 0</div>
         </div>
 
         <!-- Form Detail Order -->
@@ -521,14 +553,18 @@
     </div>
 </div>
 
-<!-- ===== DRIVER OFFERS OVERLAY (sama persis dengan rute.html) ===== -->
+<!-- ===== DRIVER OFFERS OVERLAY ===== -->
 <div id="driverOffers">
-    <div>
-        <div>
+    <div class="offers-panel">
+        <div class="header">
             <strong>🏆 Penawaran Driver</strong>
-            <button id="closeDriverOffers">✕</button>
+            <!-- tombol close di header kita sembunyikan, pakai tombol batal di footer -->
+            <button class="close-btn" id="closeDriverOffers">✕</button>
         </div>
         <div id="driverOfferList"></div>
+        <div class="offers-footer">
+            <button class="btn" id="cancelSearchBtn">Batalkan Pencarian</button>
+        </div>
     </div>
 </div>
 
@@ -568,7 +604,7 @@
     // Driver offers
     let currentOrderId = null;
     let offersListener = null;
-    let offerTimers = {};
+    let orderStatusListener = null;
     let offerTimerInterval = null;
     let cleanupInterval = null;
 
@@ -647,55 +683,65 @@
     }
 
     async function fetchTransportData() {
-    // Cek dulu apakah sudah ada dari localStorage
-    const storedTransport = localStorage.getItem('jego_last_transport');
-    if (storedTransport) {
-        try {
-            const parsed = JSON.parse(storedTransport);
-            // Pastikan field yang diperlukan ada
-            if (parsed.type && parsed.icon && parsed.tariff !== undefined) {
-                selectedTransport = {
-                    type: parsed.type,
-                    name: parsed.name || 'Kurir',
-                    icon: parsed.icon,
-                    minimalDistance: parsed.minimalDistance || 4,
-                    minimalPrice: parsed.minimalPrice || 10000,
-                    tariff: parsed.tariff || 2100
-                };
-                console.log('✅ Menggunakan transport dari localStorage:', selectedTransport);
-                return true; // sudah selesai, tidak perlu ambil dari Firebase
-            }
-        } catch(e) {}
-    }
-
-    // Jika tidak ada di localStorage, ambil dari Firebase (seperti sebelumnya)
-    try {
-        const snapshot = await database.ref('data-jego/tarif').once('value');
-        if (!snapshot.exists()) throw new Error();
-        let found = false;
-        snapshot.forEach((child) => {
-            const data = child.val();
-            const name = data.nama;
-            const lower = name.toLowerCase();
-            if (lower.includes('kurir') || lower.includes('send')) {
-                let type = null;
-                if (lower.includes('motor')) type = 'kurir_motor';
-                else if (lower.includes('bentor') || lower.includes('trike')) type = 'kurir_bentor';
-                else if (lower.includes('kurir')) type = 'kurir_motor';
-                if (type) {
+        // Cek dulu apakah sudah ada dari localStorage
+        const storedTransport = localStorage.getItem('jego_last_transport');
+        if (storedTransport) {
+            try {
+                const parsed = JSON.parse(storedTransport);
+                if (parsed.type && parsed.icon && parsed.tariff !== undefined) {
                     selectedTransport = {
-                        type: type,
-                        name: data.nama,
-                        icon: data.icon_url || getDriverIconUrl(type),
-                        minimalDistance: data.minimal_distance || 4,
-                        minimalPrice: data.minimal_price || 10000,
-                        tariff: data.price_per_km || 2100
+                        type: parsed.type,
+                        name: parsed.name || 'Kurir',
+                        icon: parsed.icon,
+                        minimalDistance: parsed.minimalDistance || 4,
+                        minimalPrice: parsed.minimalPrice || 10000,
+                        tariff: parsed.tariff || 2100
                     };
-                    found = true;
+                    console.log('✅ Menggunakan transport dari localStorage:', selectedTransport);
+                    return true;
                 }
+            } catch(e) {}
+        }
+
+        // Jika tidak ada di localStorage, ambil dari Firebase
+        try {
+            const snapshot = await database.ref('data-jego/tarif').once('value');
+            if (!snapshot.exists()) throw new Error();
+            let found = false;
+            snapshot.forEach((child) => {
+                const data = child.val();
+                const name = data.nama;
+                const lower = name.toLowerCase();
+                if (lower.includes('kurir') || lower.includes('send')) {
+                    let type = null;
+                    if (lower.includes('motor')) type = 'kurir_motor';
+                    else if (lower.includes('bentor') || lower.includes('trike')) type = 'kurir_bentor';
+                    else if (lower.includes('kurir')) type = 'kurir_motor';
+                    if (type) {
+                        selectedTransport = {
+                            type: type,
+                            name: data.nama,
+                            icon: data.icon_url || getDriverIconUrl(type),
+                            minimalDistance: data.minimal_distance || 4,
+                            minimalPrice: data.minimal_price || 10000,
+                            tariff: data.price_per_km || 2100
+                        };
+                        found = true;
+                    }
+                }
+            });
+            if (!found) {
+                selectedTransport = {
+                    type: 'kurir_motor',
+                    name: 'Kurir Motor',
+                    icon: 'https://cdn-icons-png.flaticon.com/128/9561/9561688.png',
+                    minimalDistance: 4,
+                    minimalPrice: 10000,
+                    tariff: 2100
+                };
             }
-        });
-        if (!found) {
+            return true;
+        } catch(error) {
             selectedTransport = {
                 type: 'kurir_motor',
                 name: 'Kurir Motor',
@@ -704,20 +750,9 @@
                 minimalPrice: 10000,
                 tariff: 2100
             };
+            return true;
         }
-        return true;
-    } catch(error) {
-        selectedTransport = {
-            type: 'kurir_motor',
-            name: 'Kurir Motor',
-            icon: 'https://cdn-icons-png.flaticon.com/128/9561/9561688.png',
-            minimalDistance: 4,
-            minimalPrice: 10000,
-            tariff: 2100
-        };
-        return true;
     }
-}
 
     function getDriverIconUrl(type) {
         if (type === 'kurir_motor') return 'https://cdn-icons-png.flaticon.com/128/9561/9561688.png';
@@ -994,6 +1029,8 @@
         renderMainSheet();
         updateMap();
         wpModal.classList.remove('open');
+        // Update harga di detail sheet juga
+        updateDetailPriceDisplay();
     }
 
     function getFullAddress(feature) {
@@ -1167,6 +1204,7 @@
         renderMainSheet();
         updateMap();
         renderDetailWaypoints();
+        updateDetailPriceDisplay();
     });
 
     document.getElementById('wpCancelBtn').addEventListener('click', closeWpModal);
@@ -1193,6 +1231,15 @@
         });
     }
 
+    function updateDetailPriceDisplay() {
+        const val = parseInt(document.getElementById('offerInput').value);
+        if (!isNaN(val) && val > 0) {
+            document.getElementById('detailOfferValue').innerText = formatRupiah(val);
+        } else {
+            document.getElementById('detailOfferValue').innerText = formatRupiah(offerPrice || 0);
+        }
+    }
+
     function openDetailSheet() {
         if (!pickup || !pickup.address) {
             showPopup('Perhatian', 'Lengkapi alamat penjemputan.');
@@ -1206,6 +1253,8 @@
         document.getElementById('detailPickup').innerText = pickup.address;
         document.getElementById('detailDest').innerText = destination.address;
         renderDetailWaypoints();
+        // Update harga tawaran di detail sheet
+        updateDetailPriceDisplay();
         detailSheet.classList.add('open');
         mainSheet.classList.remove('open');
         mainSheet.classList.add('closed');
@@ -1242,9 +1291,11 @@
         } else {
             offerPrice = 0;
         }
+        // Update display di detail sheet jika terbuka
+        updateDetailPriceDisplay();
     });
 
-    // ==================== DRIVER OFFERS (sama seperti rute.html) ====================
+    // ==================== DRIVER OFFERS ====================
     function renderOffers(offers) {
         const container = document.getElementById('driverOfferList');
         if (!container) return;
@@ -1305,8 +1356,7 @@
             if (progressBar) {
                 const remaining = Math.max(0, expiredAt - now);
                 const total = 30000;
-                let percent = (remaining / total);
-                percent = Math.min(1, Math.max(0, percent));
+                let percent = Math.min(1, Math.max(0, remaining / total));
                 progressBar.style.transform = `scaleX(${percent})`;
             }
         });
@@ -1343,7 +1393,7 @@
             orderIdToUse = localStorage.getItem('current_order_id');
         }
         if (!orderIdToUse || orderIdToUse === 'null') {
-            showToast('❌ ID order tidak valid', 'error');
+            showPopup('Error', 'ID order tidak valid');
             return;
         }
 
@@ -1356,11 +1406,11 @@
         await database.ref(`orders/${orderIdToUse}/driver_offers/${driverId}/status`).set('accepted');
         await database.ref(`orders/${orderIdToUse}`).update(updateData);
         localStorage.setItem('current_order_id', orderIdToUse);
-        showToast('✅ Driver dipilih, mengalihkan...', 'success');
+        showPopup('Berhasil', 'Driver dipilih, mengalihkan ke halaman tracking...');
         if (orderIdToUse && orderIdToUse !== 'null') {
-            setTimeout(() => { window.location.href = `tracking_customer.html?order_id=${orderIdToUse}`; }, 1000);
+            setTimeout(() => { window.location.href = `tracking_customer.html?order_id=${orderIdToUse}`; }, 1500);
         } else {
-            showToast('❌ ID order tidak valid, tidak bisa redirect ke tracking', 'error');
+            showPopup('Error', 'ID order tidak valid, tidak bisa redirect ke tracking');
         }
     }
 
@@ -1369,12 +1419,109 @@
         await database.ref(`orders/${currentOrderId}/driver_offers/${driverId}/status`).set('rejected');
     }
 
-    function showToast(message, type = 'info') {
-        // Sederhana: gunakan popup atau alert singkat
-        showPopup('Info', message);
+    // ==================== CLEANUP & BATAL ====================
+    function cleanupDriverOffers(showDetail = true) {
+        // Hentikan listener
+        if (offersListener) {
+            database.ref(`orders/${currentOrderId}/driver_offers`).off('value', offersListener);
+            offersListener = null;
+        }
+        if (orderStatusListener) {
+            database.ref(`orders/${currentOrderId}/status`).off('value', orderStatusListener);
+            orderStatusListener = null;
+        }
+        if (offerTimerInterval) { clearInterval(offerTimerInterval); offerTimerInterval = null; }
+        if (cleanupInterval) { clearInterval(cleanupInterval); cleanupInterval = null; }
+
+        document.getElementById('driverOffers').classList.remove('active');
+        currentOrderId = null;
+
+        // Kembali ke detail sheet (bisa diedit)
+        if (showDetail) {
+            // Pastikan detail sheet terbuka, main sheet tertutup
+            detailSheet.classList.add('open');
+            mainSheet.classList.remove('open');
+            mainSheet.classList.add('closed');
+            // Update tampilan detail
+            document.getElementById('detailPickup').innerText = pickup.address;
+            document.getElementById('detailDest').innerText = destination.address;
+            renderDetailWaypoints();
+            updateDetailPriceDisplay();
+            document.getElementById('senderPhone').value = document.getElementById('senderPhone').value || currentUser.phone || '';
+        }
     }
 
-    // ==================== SIMPAN ORDER (dengan data lengkap seperti rute.html) ====================
+    // Tombol batal pencarian (di driver offers)
+    document.getElementById('cancelSearchBtn').addEventListener('click', function() {
+        // Gunakan popup custom
+        showPopup('Batalkan Pencarian?', 'Apakah Anda yakin ingin membatalkan pencarian driver? Data pesanan akan tetap tersimpan dan Anda bisa mengeditnya kembali.',
+            function() {
+                // Jika user klik OK, batalkan
+                if (currentOrderId) {
+                    database.ref(`orders/${currentOrderId}`).update({ status: 'cancelled_by_user' });
+                }
+                cleanupDriverOffers(true);
+                showPopup('Info', 'Pencarian dibatalkan. Anda dapat mengedit pesanan kembali.');
+            }
+        );
+        // Tombol "OK" di popup akan menjalankan callback di atas
+        // Kita perlu menambahkan tombol batal di popup? Sebenarnya popup hanya punya 1 tombol.
+        // Agar lebih baik, kita bisa buat popup dengan 2 tombol: "Ya, Batalkan" dan "Kembali".
+        // Tapi untuk sederhana, kita pakai 1 tombol dengan fungsi konfirmasi seperti di atas.
+        // Namun karena showPopup hanya punya 1 tombol, kita ubah sedikit.
+        // Saya akan override popup dengan custom di bawah.
+        // Karena showPopup di atas hanya punya 1 tombol, kita buat sendiri.
+        // Gunakan fungsi showConfirmPopup
+    });
+
+    // Kita buat fungsi khusus konfirmasi dengan 2 tombol
+    function showConfirmPopup(title, message, onConfirm, onCancel) {
+        const overlay = document.getElementById('popupOverlay');
+        document.getElementById('popupTitle').innerText = title;
+        document.getElementById('popupMessage').innerHTML = message;
+        const btnContainer = document.querySelector('.popup-buttons');
+        // Kosongkan dan buat 2 tombol
+        btnContainer.innerHTML = `
+            <button class="popup-button popup-button-primary" id="confirmYesBtn">Ya, Batalkan</button>
+            <button class="popup-button" id="confirmNoBtn" style="background:#eee;color:#333;">Kembali</button>
+        `;
+        overlay.classList.add('active');
+        document.getElementById('confirmYesBtn').addEventListener('click', function() {
+            overlay.classList.remove('active');
+            if (onConfirm) onConfirm();
+        });
+        document.getElementById('confirmNoBtn').addEventListener('click', function() {
+            overlay.classList.remove('active');
+            if (onCancel) onCancel();
+        });
+        // Reset tombol saat popup ditutup
+        const reset = () => {
+            btnContainer.innerHTML = `<button class="popup-button popup-button-primary" id="popupButton">OK</button>`;
+            document.getElementById('popupButton').addEventListener('click', closePopup);
+        };
+        const closePopup = () => { overlay.classList.remove('active'); reset(); };
+        // Override close event
+        overlay._reset = reset;
+    }
+
+    // Override tombol batal pencarian dengan konfirmasi 2 tombol
+    document.getElementById('cancelSearchBtn').addEventListener('click', function() {
+        showConfirmPopup('Batalkan Pencarian?', 'Apakah Anda yakin ingin membatalkan pencarian driver? Data pesanan akan tetap tersimpan dan Anda bisa mengeditnya kembali.',
+            function() {
+                // Konfirmasi ya
+                if (currentOrderId) {
+                    database.ref(`orders/${currentOrderId}`).update({ status: 'cancelled_by_user' });
+                }
+                cleanupDriverOffers(true);
+                showPopup('Info', 'Pencarian dibatalkan. Anda dapat mengedit pesanan kembali.');
+            },
+            function() {
+                // Batal, tutup popup saja
+            }
+        );
+    });
+
+    // ==================== SIMPAN ORDER ====================
     document.getElementById('saveOrderBtn').addEventListener('click', async function() {
         // Validasi tawaran
         const inputVal = parseInt(document.getElementById('offerInput').value);
@@ -1449,22 +1596,21 @@
             photoURL: currentUser.photoURL || ''
         };
 
-        // Simpan ke Firebase
         showLoading(true);
         try {
             const newOrderRef = database.ref('orders').push();
             await newOrderRef.set(orderData);
             await database.ref(`userOrders/${currentUser.id}/${newOrderRef.key}`).set(true);
-            localStorage.setItem('current_order_id', newOrderRef.key);
+            currentOrderId = newOrderRef.key;
+            localStorage.setItem('current_order_id', currentOrderId);
             showLoading(false);
 
-            closeDetailSheet();
-            // Tampilkan driver offers
+            // Tutup detail sheet, buka driver offers
+            detailSheet.classList.remove('open');
             document.getElementById('driverOffers').classList.add('active');
             document.getElementById('driverOfferList').innerHTML = '<div style="text-align:center; padding:16px;">⏳ Menunggu penawaran driver...</div>';
 
             // Setup listener untuk driver_offers
-            currentOrderId = newOrderRef.key;
             const offersRef = database.ref(`orders/${currentOrderId}/driver_offers`);
             offersListener = offersRef.on('value', (snap) => {
                 renderOffers(snap.val());
@@ -1478,13 +1624,13 @@
 
             // Dengarkan perubahan status order
             const orderStatusRef = database.ref(`orders/${currentOrderId}/status`);
-            orderStatusRef.on('value', (snap) => {
+            orderStatusListener = orderStatusRef.on('value', (snap) => {
                 const status = snap.val();
                 if (status === 'accepted') {
                     // Redirect ke tracking
                     window.location.href = `tracking_customer.html?order_id=${currentOrderId}`;
                 } else if (status === 'cancelled' || status === 'cancelled_by_user') {
-                    cleanupDriverOffers();
+                    cleanupDriverOffers(true);
                 }
             });
 
@@ -1492,29 +1638,6 @@
         } catch(err) {
             showLoading(false);
             showPopup('Error', 'Gagal menyimpan pesanan: ' + err.message);
-        }
-    });
-
-    function cleanupDriverOffers() {
-        if (offersListener) {
-            offersListener.off();
-            offersListener = null;
-        }
-        if (offerTimerInterval) { clearInterval(offerTimerInterval); offerTimerInterval = null; }
-        if (cleanupInterval) { clearInterval(cleanupInterval); cleanupInterval = null; }
-        document.getElementById('driverOffers').classList.remove('active');
-        currentOrderId = null;
-    }
-
-    // Tombol tutup driver offers
-    document.getElementById('closeDriverOffers').addEventListener('click', () => {
-        if (confirm('Batalkan pencarian kurir? Pesanan akan dibatalkan.')) {
-            if (currentOrderId) {
-                database.ref(`orders/${currentOrderId}`).update({ status: 'cancelled_by_user' });
-            }
-            cleanupDriverOffers();
-            mainSheet.classList.remove('closed');
-            mainSheet.classList.add('open');
         }
     });
 
@@ -1536,34 +1659,26 @@
         }, { enableHighAccuracy: true, timeout: 10000 });
     });
 
-    // ==================== KONTAK (dukungan WebView Android + fallback) ====================
-document.getElementById('openContactsBtn').addEventListener('click', function() {
-    // Coba gunakan interface Android jika tersedia
-    if (window.Android && typeof window.Android.pickContact === 'function') {
-        // Panggil method pickContact yang akan memanggil callback window.onContactPicked
-        window.Android.pickContact();
-        return;
-    }
-
-    // Coba untuk iOS (jika ada)
-    if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.pickContact) {
-        window.webkit.messageHandlers.pickContact.postMessage({});
-        return;
-    }
-
-    // Fallback: prompt sederhana (mock)
-    const mockNumber = prompt('Masukkan nomor kontak (mock):', '08123456789');
-    if (mockNumber !== null) {
-        document.getElementById('receiverPhone').value = mockNumber;
-    }
-});
-
-// Callback global untuk menerima hasil dari Android
-window.onContactPicked = function(phoneNumber) {
-    if (phoneNumber) {
-        document.getElementById('receiverPhone').value = phoneNumber;
-    }
-};
+    // ==================== KONTAK ====================
+    document.getElementById('openContactsBtn').addEventListener('click', function() {
+        if (window.Android && typeof window.Android.pickContact === 'function') {
+            window.Android.pickContact();
+            return;
+        }
+        if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.pickContact) {
+            window.webkit.messageHandlers.pickContact.postMessage({});
+            return;
+        }
+        const mockNumber = prompt('Masukkan nomor kontak (mock):', '08123456789');
+        if (mockNumber !== null) {
+            document.getElementById('receiverPhone').value = mockNumber;
+        }
+    });
+    window.onContactPicked = function(phoneNumber) {
+        if (phoneNumber) {
+            document.getElementById('receiverPhone').value = phoneNumber;
+        }
+    };
 
     // ==================== INIT ====================
     window.onload = async () => {
