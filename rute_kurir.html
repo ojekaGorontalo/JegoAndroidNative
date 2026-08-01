@@ -395,6 +395,8 @@
         .popup-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 16px; }
         .popup-button { padding: 10px 20px; border-radius: 40px; border: none; font-weight: 600; cursor: pointer; }
         .popup-button-primary { background: #FF9800; color: white; }
+        .popup-button-secondary { background: #eee; color: #333; }
+        body.dark-mode .popup-button-secondary { background: #444; color: #eee; }
     </style>
 </head>
 <body>
@@ -413,7 +415,9 @@
         <div class="popup-header"><h3 id="popupTitle">Pemberitahuan</h3></div>
         <div class="popup-content">
             <div id="popupMessage">Pesan</div>
-            <div class="popup-buttons"><button class="popup-button popup-button-primary" id="popupButton">OK</button></div>
+            <div class="popup-buttons" id="popupButtons">
+                <button class="popup-button popup-button-primary" id="popupButton">OK</button>
+            </div>
         </div>
     </div>
 </div>
@@ -468,6 +472,7 @@
 </div>
 
 <!-- ===== DETAIL SHEET ===== -->
+<!-- ===== DETAIL SHEET ===== -->
 <div class="detail-sheet" id="detailSheet">
     <div class="header">
         <span>📋 Detail Pengiriman</span>
@@ -492,12 +497,6 @@
             <div class="add-wp-btn" id="addWpFromDetail">
                 <span>➕ Tambah perhentian</span>
             </div>
-        </div>
-
-        <!-- Harga Tawaran -->
-        <div class="detail-offer-price" id="detailOfferPrice">
-            <div class="label">💰 Harga tawaran Anda</div>
-            <div class="value" id="detailOfferValue">Rp 0</div>
         </div>
 
         <!-- Form Detail Order -->
@@ -532,10 +531,16 @@
                 <textarea id="itemDesc" rows="2" placeholder="Catatan tambahan untuk kurir"></textarea>
             </div>
         </div>
+
+        <!-- === KODE BARU: Harga di sini (di bawah deskripsi) === -->
+        <div class="detail-offer-price" id="detailOfferPrice" style="margin-top: 16px;">
+            <div class="label">💰 Harga tawaran Anda</div>
+            <div class="value" id="detailOfferValue">Rp 0</div>
+        </div>
     </div>
     <div class="footer">
         <button class="btn btn-secondary" id="backToMainBtn">← Kembali</button>
-        <button class="btn btn-primary" id="saveOrderBtn">Pesan Sekarang</button>
+        <button class="btn btn-primary" id="saveOrderBtn">Cari Kurir</button>
     </div>
 </div>
 
@@ -558,7 +563,6 @@
     <div class="offers-panel">
         <div class="header">
             <strong>🏆 Penawaran Driver</strong>
-            <!-- tombol close di header kita sembunyikan, pakai tombol batal di footer -->
             <button class="close-btn" id="closeDriverOffers">✕</button>
         </div>
         <div id="driverOfferList"></div>
@@ -619,6 +623,9 @@
         document.getElementById('popupTitle').innerText = title;
         document.getElementById('popupMessage').innerHTML = message;
         const overlay = document.getElementById('popupOverlay');
+        // Reset tombol ke satu tombol default
+        const btnContainer = document.getElementById('popupButtons');
+        btnContainer.innerHTML = `<button class="popup-button popup-button-primary" id="popupButton">OK</button>`;
         overlay.classList.add('active');
         const close = () => {
             overlay.classList.remove('active');
@@ -626,6 +633,26 @@
             document.getElementById('popupButton').removeEventListener('click', close);
         };
         document.getElementById('popupButton').addEventListener('click', close);
+    }
+
+    function showConfirmPopup(title, message, onConfirm, onCancel) {
+        const overlay = document.getElementById('popupOverlay');
+        document.getElementById('popupTitle').innerText = title;
+        document.getElementById('popupMessage').innerHTML = message;
+        const btnContainer = document.getElementById('popupButtons');
+        btnContainer.innerHTML = `
+            <button class="popup-button popup-button-primary" id="confirmYesBtn">Ya</button>
+            <button class="popup-button popup-button-secondary" id="confirmNoBtn">Batal</button>
+        `;
+        overlay.classList.add('active');
+        document.getElementById('confirmYesBtn').addEventListener('click', function() {
+            overlay.classList.remove('active');
+            if (onConfirm) onConfirm();
+        });
+        document.getElementById('confirmNoBtn').addEventListener('click', function() {
+            overlay.classList.remove('active');
+            if (onCancel) onCancel();
+        });
     }
 
     function showLoading(show) {
@@ -683,7 +710,6 @@
     }
 
     async function fetchTransportData() {
-        // Cek dulu apakah sudah ada dari localStorage
         const storedTransport = localStorage.getItem('jego_last_transport');
         if (storedTransport) {
             try {
@@ -703,7 +729,6 @@
             } catch(e) {}
         }
 
-        // Jika tidak ada di localStorage, ambil dari Firebase
         try {
             const snapshot = await database.ref('data-jego/tarif').once('value');
             if (!snapshot.exists()) throw new Error();
@@ -880,7 +905,7 @@
             offerCard.style.display = 'block';
             calculateRouteAndPrice().then(price => {
                 recommendedPrice = price;
-                minOffer = Math.round(price * 0.8 / 1000) * 1000;
+                minOffer = Math.round(price * 0.9 / 1000) * 1000;
                 if (minOffer < selectedTransport.minimalPrice) minOffer = selectedTransport.minimalPrice;
                 document.getElementById('recommendedPrice').innerText = formatRupiah(price);
                 document.getElementById('minOfferHint').innerText = formatRupiah(minOffer);
@@ -1029,7 +1054,6 @@
         renderMainSheet();
         updateMap();
         wpModal.classList.remove('open');
-        // Update harga di detail sheet juga
         updateDetailPriceDisplay();
     }
 
@@ -1043,72 +1067,107 @@
         return fullAddress;
     }
 
-    // ==================== PILIH DI PETA ====================
-    let mapPickMode = false;
-    document.getElementById('pickOnMapBtn').addEventListener('click', () => {
-        closeSearchSheet();
-        mapPickMode = true;
-        showPopup('Pilih di Peta', 'Geser peta sampai pin berada di lokasi yang diinginkan, lalu klik tombol "Gunakan" di pin.');
-        const center = map.getCenter();
-        showMapPin(center.lng, center.lat);
-        map.on('move', onMapMove);
-    });
+   
+    // ==================== PILIH DI PETA (versi baru - dengan tombol OK) ====================
+let mapPickMode = false;
 
-    function showMapPin(lng, lat) {
-        if (window.mapPinMarker) window.mapPinMarker.remove();
-        const el = document.createElement('div');
-        el.style.width = '30px';
-        el.style.height = '30px';
-        el.style.background = '#FF5722';
-        el.style.borderRadius = '50% 50% 50% 0';
-        el.style.transform = 'rotate(-45deg)';
-        el.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
-        el.style.border = '3px solid white';
-        const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' }).setLngLat([lng, lat]).addTo(map);
-        window.mapPinMarker = marker;
-        if (!document.getElementById('mapPickConfirmBtn')) {
-            const btn = document.createElement('button');
-            btn.id = 'mapPickConfirmBtn';
-            btn.innerText = '✅ Gunakan lokasi ini';
-            btn.style.position = 'fixed';
-            btn.style.bottom = '120px';
-            btn.style.left = '50%';
-            btn.style.transform = 'translateX(-50%)';
-            btn.style.background = '#FF9800';
-            btn.style.color = 'white';
-            btn.style.border = 'none';
-            btn.style.borderRadius = '40px';
-            btn.style.padding = '14px 24px';
-            btn.style.fontWeight = '700';
-            btn.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
-            btn.style.zIndex = '3000';
-            btn.addEventListener('click', confirmMapPick);
-            document.body.appendChild(btn);
-        }
-        document.getElementById('mapPickConfirmBtn').style.display = 'block';
-    }
+document.getElementById('pickOnMapBtn').addEventListener('click', () => {
+    closeSearchSheet();
+    // Sembunyikan semua bottom sheet
+    mainSheet.classList.add('closed');
+    detailSheet.classList.remove('open');
 
-    function onMapMove() {
-        if (!mapPickMode) return;
-        const center = map.getCenter();
-        if (window.mapPinMarker) {
-            window.mapPinMarker.setLngLat([center.lng, center.lat]);
-        }
-    }
+    mapPickMode = true;
+    const center = map.getCenter();
+    showPickMapPin(center.lng, center.lat);
 
-    async function confirmMapPick() {
-        if (!mapPickMode) return;
-        const center = map.getCenter();
-        let address = await reverseGeocode(center.lng, center.lat);
-        if (!address || address.trim() === '') address = '(Titik di peta)';
-        const feature = { geometry: { coordinates: [center.lng, center.lat] }, properties: { full_address: address, name: address.split(',')[0] } };
-        selectAddress(feature);
-        mapPickMode = false;
-        if (window.mapPinMarker) { window.mapPinMarker.remove(); window.mapPinMarker = null; }
-        map.off('move', onMapMove);
-        const btn = document.getElementById('mapPickConfirmBtn');
-        if (btn) btn.style.display = 'none';
+    // Hapus event move sebelumnya jika ada
+    map.off('move', onMapMove);
+    // Tambahkan event move untuk update posisi pin
+    map.on('move', onMapMove);
+});
+
+function showPickMapPin(lng, lat) {
+    if (window.mapPinMarker) window.mapPinMarker.remove();
+    
+    // Gunakan emoji 📍 sebagai marker
+    const el = document.createElement('div');
+    el.innerHTML = '📍';
+    el.style.fontSize = '40px';
+    el.style.textShadow = '0 2px 10px rgba(0,0,0,0.4)';
+    el.style.lineHeight = '1';
+    el.style.transform = 'translateY(-15px)';
+    el.style.filter = 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))';
+    
+    const marker = new mapboxgl.Marker({ 
+        element: el, 
+        anchor: 'bottom',
+        offset: [0, 0]
+    }).setLngLat([lng, lat]).addTo(map);
+    window.mapPinMarker = marker;
+    
+    // Hapus tombol "Gunakan" yang lama jika ada
+    const oldBtn = document.getElementById('mapPickConfirmBtn');
+    if (oldBtn) oldBtn.remove();
+    
+    // Buat tombol OK baru
+    const confirmBtn = document.createElement('button');
+    confirmBtn.id = 'mapPickConfirmBtn';
+    confirmBtn.innerText = '✅ OK - Gunakan lokasi ini';
+    confirmBtn.style.position = 'fixed';
+    confirmBtn.style.bottom = '120px';
+    confirmBtn.style.left = '50%';
+    confirmBtn.style.transform = 'translateX(-50%)';
+    confirmBtn.style.background = '#4CAF50';
+    confirmBtn.style.color = 'white';
+    confirmBtn.style.border = 'none';
+    confirmBtn.style.borderRadius = '40px';
+    confirmBtn.style.padding = '14px 24px';
+    confirmBtn.style.fontWeight = '700';
+    confirmBtn.style.fontSize = '16px';
+    confirmBtn.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
+    confirmBtn.style.zIndex = '3000';
+    confirmBtn.style.cursor = 'pointer';
+    confirmBtn.addEventListener('click', confirmMapPick);
+    document.body.appendChild(confirmBtn);
+}
+
+function onMapMove() {
+    if (!mapPickMode) return;
+    const center = map.getCenter();
+    if (window.mapPinMarker) {
+        window.mapPinMarker.setLngLat([center.lng, center.lat]);
     }
+}
+
+async function confirmMapPick() {
+    if (!mapPickMode) return;
+    const center = map.getCenter();
+    let address = await reverseGeocode(center.lng, center.lat);
+    if (!address || address.trim() === '') address = '(Titik di peta)';
+    const feature = {
+        geometry: { coordinates: [center.lng, center.lat] },
+        properties: { full_address: address, name: address.split(',')[0] }
+    };
+
+    // Pilih alamat (update data & UI)
+    selectAddress(feature);
+
+    // Nonaktifkan mode pick
+    mapPickMode = false;
+    // Hapus marker
+    if (window.mapPinMarker) {
+        window.mapPinMarker.remove();
+        window.mapPinMarker = null;
+    }
+    // Hapus event move
+    map.off('move', onMapMove);
+    // Hapus tombol OK
+    const btn = document.getElementById('mapPickConfirmBtn');
+    if (btn) btn.remove();
+    // Buka main sheet
+    mainSheet.classList.remove('closed');
+}
 
     // ==================== UPDATE MAP ====================
     function updateMap() {
@@ -1253,7 +1312,6 @@
         document.getElementById('detailPickup').innerText = pickup.address;
         document.getElementById('detailDest').innerText = destination.address;
         renderDetailWaypoints();
-        // Update harga tawaran di detail sheet
         updateDetailPriceDisplay();
         detailSheet.classList.add('open');
         mainSheet.classList.remove('open');
@@ -1291,7 +1349,6 @@
         } else {
             offerPrice = 0;
         }
-        // Update display di detail sheet jika terbuka
         updateDetailPriceDisplay();
     });
 
@@ -1421,7 +1478,6 @@
 
     // ==================== CLEANUP & BATAL ====================
     function cleanupDriverOffers(showDetail = true) {
-        // Hentikan listener
         if (offersListener) {
             database.ref(`orders/${currentOrderId}/driver_offers`).off('value', offersListener);
             offersListener = null;
@@ -1436,13 +1492,10 @@
         document.getElementById('driverOffers').classList.remove('active');
         currentOrderId = null;
 
-        // Kembali ke detail sheet (bisa diedit)
         if (showDetail) {
-            // Pastikan detail sheet terbuka, main sheet tertutup
             detailSheet.classList.add('open');
             mainSheet.classList.remove('open');
             mainSheet.classList.add('closed');
-            // Update tampilan detail
             document.getElementById('detailPickup').innerText = pickup.address;
             document.getElementById('detailDest').innerText = destination.address;
             renderDetailWaypoints();
@@ -1451,64 +1504,10 @@
         }
     }
 
-    // Tombol batal pencarian (di driver offers)
-    document.getElementById('cancelSearchBtn').addEventListener('click', function() {
-        // Gunakan popup custom
-        showPopup('Batalkan Pencarian?', 'Apakah Anda yakin ingin membatalkan pencarian driver? Data pesanan akan tetap tersimpan dan Anda bisa mengeditnya kembali.',
-            function() {
-                // Jika user klik OK, batalkan
-                if (currentOrderId) {
-                    database.ref(`orders/${currentOrderId}`).update({ status: 'cancelled_by_user' });
-                }
-                cleanupDriverOffers(true);
-                showPopup('Info', 'Pencarian dibatalkan. Anda dapat mengedit pesanan kembali.');
-            }
-        );
-        // Tombol "OK" di popup akan menjalankan callback di atas
-        // Kita perlu menambahkan tombol batal di popup? Sebenarnya popup hanya punya 1 tombol.
-        // Agar lebih baik, kita bisa buat popup dengan 2 tombol: "Ya, Batalkan" dan "Kembali".
-        // Tapi untuk sederhana, kita pakai 1 tombol dengan fungsi konfirmasi seperti di atas.
-        // Namun karena showPopup hanya punya 1 tombol, kita ubah sedikit.
-        // Saya akan override popup dengan custom di bawah.
-        // Karena showPopup di atas hanya punya 1 tombol, kita buat sendiri.
-        // Gunakan fungsi showConfirmPopup
-    });
-
-    // Kita buat fungsi khusus konfirmasi dengan 2 tombol
-    function showConfirmPopup(title, message, onConfirm, onCancel) {
-        const overlay = document.getElementById('popupOverlay');
-        document.getElementById('popupTitle').innerText = title;
-        document.getElementById('popupMessage').innerHTML = message;
-        const btnContainer = document.querySelector('.popup-buttons');
-        // Kosongkan dan buat 2 tombol
-        btnContainer.innerHTML = `
-            <button class="popup-button popup-button-primary" id="confirmYesBtn">Ya, Batalkan</button>
-            <button class="popup-button" id="confirmNoBtn" style="background:#eee;color:#333;">Kembali</button>
-        `;
-        overlay.classList.add('active');
-        document.getElementById('confirmYesBtn').addEventListener('click', function() {
-            overlay.classList.remove('active');
-            if (onConfirm) onConfirm();
-        });
-        document.getElementById('confirmNoBtn').addEventListener('click', function() {
-            overlay.classList.remove('active');
-            if (onCancel) onCancel();
-        });
-        // Reset tombol saat popup ditutup
-        const reset = () => {
-            btnContainer.innerHTML = `<button class="popup-button popup-button-primary" id="popupButton">OK</button>`;
-            document.getElementById('popupButton').addEventListener('click', closePopup);
-        };
-        const closePopup = () => { overlay.classList.remove('active'); reset(); };
-        // Override close event
-        overlay._reset = reset;
-    }
-
-    // Override tombol batal pencarian dengan konfirmasi 2 tombol
+    // Tombol batal pencarian (dengan konfirmasi custom)
     document.getElementById('cancelSearchBtn').addEventListener('click', function() {
         showConfirmPopup('Batalkan Pencarian?', 'Apakah Anda yakin ingin membatalkan pencarian driver? Data pesanan akan tetap tersimpan dan Anda bisa mengeditnya kembali.',
             function() {
-                // Konfirmasi ya
                 if (currentOrderId) {
                     database.ref(`orders/${currentOrderId}`).update({ status: 'cancelled_by_user' });
                 }
@@ -1523,15 +1522,24 @@
 
     // ==================== SIMPAN ORDER ====================
     document.getElementById('saveOrderBtn').addEventListener('click', async function() {
-        // Validasi tawaran
         const inputVal = parseInt(document.getElementById('offerInput').value);
         if (isNaN(inputVal) || inputVal < minOffer) {
-            showPopup('Tawaran Tidak Valid', `Minimal tawaran ${formatRupiah(minOffer)}`);
-            return;
-        }
+    showPopup('Tawaran Tidak Valid', `Minimal tawaran ${formatRupiah(minOffer)}`, function() {
+        // Tutup detail sheet, buka main sheet
+        closeDetailSheet();
+        // Fokus ke input harga setelah sheet terbuka
+        setTimeout(function() {
+            const input = document.getElementById('offerInput');
+            if (input) {
+                input.focus();
+                input.select();
+            }
+        }, 400);
+    });
+    return;
+}
         offerPrice = inputVal;
 
-        // Validasi detail order
         const senderPhone = document.getElementById('senderPhone').value.trim();
         const receiverPhone = document.getElementById('receiverPhone').value.trim();
         const category = document.getElementById('itemCategory').value;
@@ -1548,7 +1556,6 @@
             return;
         }
 
-        // Hitung rute untuk dapat jarak & durasi
         showLoading(true);
         const route = await calculateRouteDetails();
         if (!route) {
@@ -1558,7 +1565,6 @@
         }
         showLoading(false);
 
-        // Ambil fee & tax dari Firebase
         let feePercent = 7, taxPercent = 11;
         try {
             const potonganSnap = await database.ref('data-jego/potongan').once('value');
@@ -1567,7 +1573,6 @@
             taxPercent = pajakSnap.exists() ? parseFloat(pajakSnap.val()) : 11;
         } catch(e) { console.warn('Gagal ambil fee, pakai default'); }
 
-        // Data order lengkap
         const orderData = {
             user_id: currentUser.id,
             customer_name: currentUser.name,
@@ -1605,29 +1610,24 @@
             localStorage.setItem('current_order_id', currentOrderId);
             showLoading(false);
 
-            // Tutup detail sheet, buka driver offers
             detailSheet.classList.remove('open');
             document.getElementById('driverOffers').classList.add('active');
             document.getElementById('driverOfferList').innerHTML = '<div style="text-align:center; padding:16px;">⏳ Menunggu penawaran driver...</div>';
 
-            // Setup listener untuk driver_offers
             const offersRef = database.ref(`orders/${currentOrderId}/driver_offers`);
             offersListener = offersRef.on('value', (snap) => {
                 renderOffers(snap.val());
             });
 
-            // Mulai timer & cleanup
             if (offerTimerInterval) clearInterval(offerTimerInterval);
             if (cleanupInterval) clearInterval(cleanupInterval);
             offerTimerInterval = setInterval(() => { updateOfferTimers(); }, 1000);
             cleanupInterval = setInterval(() => { cleanupExpiredOffersCustomer(); }, 10000);
 
-            // Dengarkan perubahan status order
             const orderStatusRef = database.ref(`orders/${currentOrderId}/status`);
             orderStatusListener = orderStatusRef.on('value', (snap) => {
                 const status = snap.val();
                 if (status === 'accepted') {
-                    // Redirect ke tracking
                     window.location.href = `tracking_customer.html?order_id=${currentOrderId}`;
                 } else if (status === 'cancelled' || status === 'cancelled_by_user') {
                     cleanupDriverOffers(true);
@@ -1698,10 +1698,16 @@
 
         renderMainSheet();
 
+        // Tombol tutup main sheet pakai popup custom
         document.getElementById('closeMainSheet').addEventListener('click', () => {
-            if (confirm('Yakin ingin keluar? Data akan hilang.')) {
-                window.history.back();
-            }
+            showConfirmPopup('Keluar?', 'Data alamat yang belum disimpan akan hilang. Yakin ingin keluar?',
+                () => {
+                    window.history.back();
+                },
+                () => {
+                    // Batal, tidak melakukan apa-apa
+                }
+            );
         });
 
         document.getElementById('searchBackBtn').addEventListener('click', closeSearchSheet);
