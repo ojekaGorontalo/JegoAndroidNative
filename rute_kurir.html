@@ -1506,7 +1506,7 @@ async function confirmMapPick() {
 
     // Tombol batal pencarian (dengan konfirmasi custom)
     document.getElementById('cancelSearchBtn').addEventListener('click', function() {
-        showConfirmPopup('Batalkan Pencarian?', 'Apakah Anda yakin ingin membatalkan pencarian driver? Data pesanan akan tetap tersimpan dan Anda bisa mengeditnya kembali.',
+        showConfirmPopup('Batalkan Pencarian?', 'Apakah Anda yakin ingin membatalkan pencarian driver kurir?.',
             function() {
                 if (currentOrderId) {
                     database.ref(`orders/${currentOrderId}`).update({ status: 'cancelled_by_user' });
@@ -1714,4 +1714,4 @@ async function confirmMapPick() {
     };
 </script>
 </body>
-</html>
+</html>a
