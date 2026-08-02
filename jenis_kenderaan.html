@@ -872,8 +872,10 @@
         <div class="sidebar-item" data-link="help"><span class="icon">❓</span> Bantuan & Dukungan</div>
         <div class="sidebar-item" data-link="about"><span class="icon">ℹ️</span> Tentang JeGo</div>
         <div class="sidebar-item" id="shareToFriend"><span class="icon">📤</span> Bagikan ke teman</div>
-        <div class="sidebar-item" data-link="logout"><span class="icon">🚪</span> Logout</div>
-    </div>
+         <!-- ===== TAMBAHKAN INI ===== -->
+    <div class="sidebar-item" id="merchantMenuBtn"><span class="icon">🏪</span> Jual Produk Anda</div>
+    <div class="sidebar-item" data-link="logout"><span class="icon">🚪</span> Logout</div>
+</div>
     <div class="sidebar-bottom">
         <div class="menu-section">
             <div class="mode-penumpang-card" id="modeDriverBtn">
@@ -1144,34 +1146,40 @@
     }
 
     function setupSidebarActions() {
-        const menuItems = document.querySelectorAll('.sidebar-item');
-        menuItems.forEach(item => {
-            item.addEventListener('click', async (e) => {
-                const link = item.getAttribute('data-link');
-                if (item.id === 'shareToFriend') {
-                    toggleSidebar(false);
-                    shareToWhatsApp();
-                    return;
-                }
+    const menuItems = document.querySelectorAll('.sidebar-item');
+    menuItems.forEach(item => {
+        item.addEventListener('click', async (e) => {
+            const link = item.getAttribute('data-link');
+            if (item.id === 'shareToFriend') {
                 toggleSidebar(false);
-                if (link === 'profile') {
-                    window.location.href = 'userAccount.html';
-                } else if (link === 'referral') {
-                    window.location.href = 'programReferral.html';
-                } else if (link === 'help') {
-                    window.location.href = 'cs_jego.html';
-                } else if (link === 'about') {
-                    alert('JeGo v1.0 - Aplikasi transportasi & ekspedisi.');
-                } else if (link === 'logout') {
-                    if (firebaseAuth) {
-                        await firebaseAuth.signOut();
-                    }
-                    localStorage.removeItem('jego_logged_in_user');
-                    localStorage.removeItem('current_order_id');
-                    window.location.href = 'loginUser.html';
+                shareToWhatsApp();
+                return;
+            }
+            // ===== TAMBAHKAN INI =====
+            if (item.id === 'merchantMenuBtn') {
+                toggleSidebar(false);
+                window.location.href = 'merchant_ket.html';
+                return;
+            }
+            toggleSidebar(false);
+            if (link === 'profile') {
+                window.location.href = 'userAccount.html';
+            } else if (link === 'referral') {
+                window.location.href = 'programReferral.html';
+            } else if (link === 'help') {
+                window.location.href = 'cs_jego.html';
+            } else if (link === 'about') {
+                alert('JeGo v1.0 - Aplikasi transportasi & ekspedisi.');
+            } else if (link === 'logout') {
+                if (firebaseAuth) {
+                    await firebaseAuth.signOut();
                 }
-            });
+                localStorage.removeItem('jego_logged_in_user');
+                localStorage.removeItem('current_order_id');
+                window.location.href = 'loginUser.html';
+            }
         });
+    });
 
         document.getElementById('modeDriverBtn')?.addEventListener('click', async (e) => {
             e.stopPropagation();
