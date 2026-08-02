@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Tracking Pesanan - JeGo Food</title>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: #f8f9fa;
+            color: #212529;
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            background: linear-gradient(135deg, #FF6D00, #FF9800);
+            color: white;
+            padding: 16px 20px;
+            border-radius: 0 0 24px 24px;
+            margin: -16px -16px 16px -16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 4px 12px rgba(255, 109, 0, 0.3);
+        }
+
+        .header .back {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+            flex-shrink: 0;
+        }
+        .header .back:active {
+            transform: scale(0.92);
+        }
+
+        .header h1 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            flex: 1;
+        }
+
+        .header .order-id {
+            font-size: 0.7rem;
+            background: rgba(255,255,255,0.2);
+            padding: 4px 12px;
+            border-radius: 40px;
+            font-weight: 500;
+        }
+
+        /* ===== STATUS CARD ===== */
+        .status-card {
+            background: white;
+            border-radius: 24px;
+            padding: 24px 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e9ecef;
+            text-align: center;
+        }
+
+        .status-card .icon-big {
+            font-size: 4rem;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .status-card .status-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #212529;
+        }
+
+        .status-card .status-desc {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-top: 4px;
+        }
+
+        .status-card .status-time {
+            font-size: 0.75rem;
+            color: #adb5bd;
+            margin-top: 8px;
+        }
+
+        /* ===== PROGRESS BAR ===== */
+        .progress-container {
+            background: white;
+            border-radius: 24px;
+            padding: 20px 20px 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e9ecef;
+        }
+
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            margin: 0 4px;
+        }
+
+        .progress-steps::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 10%;
+            right: 10%;
+            height: 3px;
+            background: #e9ecef;
+            z-index: 0;
+        }
+
+        .progress-steps .step-line {
+            position: absolute;
+            top: 20px;
+            left: 10%;
+            height: 3px;
+            background: #FF6D00;
+            z-index: 1;
+            transition: width 0.5s ease;
+            width: 0%;
+        }
+
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 2;
+            flex: 1;
+        }
+
+        .step .circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: #adb5bd;
+            transition: 0.3s;
+            border: 3px solid #e9ecef;
+        }
+
+        .step.active .circle {
+            background: #FF6D00;
+            color: white;
+            border-color: #FF6D00;
+            box-shadow: 0 0 0 4px rgba(255, 109, 0, 0.2);
+        }
+
+        .step.done .circle {
+            background: #28a745;
+            color: white;
+            border-color: #28a745;
+        }
+
+        .step .label {
+            font-size: 0.6rem;
+            margin-top: 6px;
+            color: #6c757d;
+            text-align: center;
+            font-weight: 600;
+            max-width: 60px;
+        }
+
+        .step.active .label {
+            color: #FF6D00;
+        }
+
+        .step.done .label {
+            color: #28a745;
+        }
+
+        /* ===== ORDER DETAIL ===== */
+        .detail-card {
+            background: white;
+            border-radius: 24px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e9ecef;
+        }
+
+        .detail-card h3 {
+            font-size: 1rem;
+            margin-bottom: 12px;
+            color: #212529;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .detail-card h3 i {
+            color: #FF6D00;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            font-size: 0.9rem;
+            border-bottom: 1px solid #f1f3f5;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-row .label {
+            color: #6c757d;
+        }
+
+        .detail-row .value {
+            font-weight: 600;
+            text-align: right;
+        }
+
+        .detail-row .value.total {
+            color: #FF6D00;
+            font-size: 1.1rem;
+        }
+
+        /* ===== DRIVER INFO ===== */
+        .driver-card {
+            background: white;
+            border-radius: 24px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e9ecef;
+            display: none;
+        }
+
+        .driver-card.visible {
+            display: block;
+        }
+
+        .driver-card .driver-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 12px;
+        }
+
+        .driver-card .driver-avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: #fff3e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            color: #FF6D00;
+        }
+
+        .driver-card .driver-name {
+            font-weight: 700;
+            font-size: 1.05rem;
+        }
+
+        .driver-card .driver-phone {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+
+        .driver-card .btn-call {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            transition: 0.2s;
+        }
+
+        .driver-card .btn-call:active {
+            transform: scale(0.95);
+        }
+
+        /* ===== MAP PLACEHOLDER ===== */
+        .map-placeholder {
+            background: #e9ecef;
+            border-radius: 16px;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+            font-size: 0.9rem;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .map-placeholder i {
+            font-size: 2.5rem;
+            color: #adb5bd;
+        }
+
+        /* ===== ACTION BUTTONS ===== */
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .action-buttons button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .action-buttons button:active {
+            transform: scale(0.97);
+        }
+
+        .btn-cancel {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .btn-support {
+            background: #e9ecef;
+            color: #495057;
+        }
+
+        .btn-support i {
+            margin-right: 6px;
+        }
+
+        /* ===== EMPTY / LOADING ===== */
+        .loading-container {
+            display: flex;
+            justify-content: center;
+            padding: 60px 0;
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid rgba(255, 109, 0, 0.1);
+            border-top-color: #FF6D00;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+
+        .empty-state .icon {
+            font-size: 4rem;
+            margin-bottom: 16px;
+        }
+
+        .empty-state h3 {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        /* ===== TOAST ===== */
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 40px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            z-index: 3000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        .toast.show {
+            opacity: 1;
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1rem;
+            }
+            .status-card .icon-big {
+                font-size: 3rem;
+            }
+            .step .circle {
+                width: 32px;
+                height: 32px;
+                font-size: 0.9rem;
+            }
+            .step .label {
+                font-size: 0.5rem;
+                max-width: 50px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <div class="header">
+        <button class="back" id="backBtn"><i class="fas fa-arrow-left"></i></button>
+        <h1>📦 Tracking Pesanan</h1>
+        <span class="order-id" id="orderIdDisplay">#---</span>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="container" id="appContainer">
+
+        <!-- Loading -->
+        <div id="loadingIndicator" class="loading-container"><div class="spinner"></div></div>
+
+        <!-- Content -->
+        <div id="contentArea" style="display:none;">
+
+            <!-- Status Card -->
+            <div class="status-card" id="statusCard">
+                <span class="icon-big" id="statusIcon">⏳</span>
+                <div class="status-title" id="statusTitle">Memuat status...</div>
+                <div class="status-desc" id="statusDesc">Silakan tunggu</div>
+                <div class="status-time" id="statusTime"></div>
+            </div>
+
+            <!-- Progress Steps -->
+            <div class="progress-container">
+                <div class="progress-steps">
+                    <div class="step" id="stepPending">
+                        <div class="circle">📝</div>
+                        <span class="label">Order</span>
+                    </div>
+                    <div class="step" id="stepAccepted">
+                        <div class="circle">✅</div>
+                        <span class="label">Diterima</span>
+                    </div>
+                    <div class="step" id="stepDriver">
+                        <div class="circle">🚗</div>
+                        <span class="label">Driver</span>
+                    </div>
+                    <div class="step" id="stepPickup">
+                        <div class="circle">📦</div>
+                        <span class="label">Diambil</span>
+                    </div>
+                    <div class="step" id="stepDelivered">
+                        <div class="circle">🏠</div>
+                        <span class="label">Selesai</span>
+                    </div>
+                    <div class="step-line" id="progressLine"></div>
+                </div>
+            </div>
+
+            <!-- Merchant Info -->
+            <div class="detail-card">
+                <h3><i class="fas fa-store"></i> Toko</h3>
+                <div class="detail-row">
+                    <span class="label">Nama Toko</span>
+                    <span class="value" id="merchantName">-</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Alamat</span>
+                    <span class="value" id="merchantAddress">-</span>
+                </div>
+            </div>
+
+            <!-- Order Items -->
+            <div class="detail-card">
+                <h3><i class="fas fa-receipt"></i> Detail Pesanan</h3>
+                <div id="orderItems"></div>
+                <div class="detail-row" style="border-top:2px solid #e9ecef; margin-top:8px; padding-top:12px;">
+                    <span class="label">Total</span>
+                    <span class="value total" id="orderTotal">Rp0</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Metode Pembayaran</span>
+                    <span class="value" id="paymentMethod">-</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Alamat Kirim</span>
+                    <span class="value" id="deliveryAddress">-</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Catatan</span>
+                    <span class="value" id="orderNote" style="font-weight:400; color:#6c757d;">-</span>
+                </div>
+            </div>
+
+            <!-- Driver Info -->
+            <div class="driver-card" id="driverCard">
+                <h3><i class="fas fa-truck"></i> Driver</h3>
+                <div class="driver-header">
+                    <div class="driver-avatar">👤</div>
+                    <div>
+                        <div class="driver-name" id="driverName">-</div>
+                        <div class="driver-phone" id="driverPhone">-</div>
+                    </div>
+                </div>
+                <button class="btn-call" id="callDriverBtn">
+                    <i class="fas fa-phone"></i> Hubungi Driver
+                </button>
+                <div class="map-placeholder" id="mapPlaceholder">
+                    <i class="fas fa-map-marked-alt"></i>
+                    <span>📍 Posisi driver akan muncul di sini</span>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="btn-support" id="supportBtn">
+                    <i class="fas fa-headset"></i> Bantuan
+                </button>
+                <button class="btn-cancel" id="cancelBtn">
+                    <i class="fas fa-times"></i> Batalkan
+                </button>
+            </div>
+
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="empty-state" style="display:none;">
+            <div class="icon">📭</div>
+            <h3>Pesanan tidak ditemukan</h3>
+            <p>Pesanan mungkin telah dihapus atau tidak valid.</p>
+            <button onclick="goHome()" style="margin-top:16px; padding:10px 28px; background:#FF6D00; color:white; border:none; border-radius:40px; font-weight:700; cursor:pointer;">Kembali ke Beranda</button>
+        </div>
+
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast"></div>
+
+    <!-- FIREBASE CONFIG -->
+    <script>
+        const FIREBASE_CONFIG = {
+            apiKey: "AIzaSyCD0pgeZio-LdKqYDtWxcdXcZwyL4ngYQI",
+            authDomain: "jego-35a2b.firebaseapp.com",
+            databaseURL: "https://jego-35a2b-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "jego-35a2b",
+            storageBucket: "jego-35a2b.firebasestorage.app",
+            messagingSenderId: "600037007040",
+            appId: "1:600037007040:web:ac3243ad9b472647ffd725"
+        };
+
+        let firebaseDatabase = null;
+        let firebaseAuth = null;
+        let currentUser = null;
+        let orderId = null;
+        let orderData = null;
+        let driverRef = null;
+
+        // ==================== INIT ====================
+        function initFirebase() {
+            if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+            firebaseDatabase = firebase.database();
+            firebaseAuth = firebase.auth();
+        }
+
+        function checkSession() {
+            const session = localStorage.getItem('jego_logged_in_user');
+            if (!session) {
+                window.location.href = 'loginUser.html';
+                return null;
+            }
+            try {
+                currentUser = JSON.parse(session);
+                if (!currentUser.uid) throw new Error('Invalid session');
+                return currentUser;
+            } catch (e) {
+                window.location.href = 'loginUser.html';
+                return null;
+            }
+        }
+
+        // ==================== TOAST ====================
+        let toastTimeout;
+
+        function showToast(msg) {
+            const el = document.getElementById('toast');
+            el.textContent = msg;
+            el.classList.add('show');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => el.classList.remove('show'), 2500);
+        }
+
+        // ==================== GET ORDER ID ====================
+        function getOrderId() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = urlParams.get('orderId');
+            if (id) return id;
+            // Coba dari localStorage
+            const saved = localStorage.getItem('current_food_order_id');
+            if (saved) return saved;
+            return null;
+        }
+
+        // ==================== LOAD ORDER ====================
+        function loadOrder() {
+            setLoading(true);
+            orderId = getOrderId();
+            if (!orderId) {
+                setLoading(false);
+                showEmptyState('Pesanan tidak ditemukan');
+                return;
+            }
+
+            document.getElementById('orderIdDisplay').textContent = '#' + orderId.slice(-6);
+
+            const orderRef = firebaseDatabase.ref(`foodOrders/${orderId}`);
+            orderRef.on('value', (snapshot) => {
+                const order = snapshot.val();
+                if (!order) {
+                    setLoading(false);
+                    showEmptyState('Pesanan tidak ditemukan atau telah dihapus');
+                    return;
+                }
+
+                // Cek akses: hanya customer pemilik yang bisa lihat
+                if (order.customerId !== currentUser.uid) {
+                    setLoading(false);
+                    showEmptyState('Anda tidak memiliki akses ke pesanan ini');
+                    return;
+                }
+
+                orderData = order;
+                renderOrder(order);
+                setLoading(false);
+            }, (error) => {
+                console.error('Error loading order:', error);
+                setLoading(false);
+                showToast('Gagal memuat pesanan: ' + error.message);
+            });
+        }
+
+        // ==================== RENDER ORDER ====================
+        function renderOrder(order) {
+            document.getElementById('contentArea').style.display = 'block';
+            document.getElementById('emptyState').style.display = 'none';
+
+            // Status
+            const statusInfo = getStatusInfo(order.status);
+            document.getElementById('statusIcon').textContent = statusInfo.icon;
+            document.getElementById('statusTitle').textContent = statusInfo.title;
+            document.getElementById('statusDesc').textContent = statusInfo.desc;
+
+            const time = order.updatedAt || order.createdAt;
+            document.getElementById('statusTime').textContent = time ? `Terakhir diperbarui: ${formatTime(time)}` : '';
+
+            // Progress Steps
+            updateProgressSteps(order.status);
+
+            // Merchant Info
+            document.getElementById('merchantName').textContent = order.merchantName || 'Toko';
+            document.getElementById('merchantAddress').textContent = order.merchantAddress || 'Alamat tidak tersedia';
+
+            // Order Items
+            const itemsContainer = document.getElementById('orderItems');
+            if (order.items && order.items.length > 0) {
+                itemsContainer.innerHTML = order.items.map(item => `
+                    <div class="detail-row">
+                        <span class="label">${escapeHtml(item.name)} x${item.quantity}</span>
+                        <span class="value">Rp${(item.price * item.quantity).toLocaleString()}</span>
+                    </div>
+                `).join('');
+            } else {
+                itemsContainer.innerHTML = '<div class="detail-row"><span class="label">Tidak ada item</span></div>';
+            }
+
+            document.getElementById('orderTotal').textContent = 'Rp' + (order.totalPrice || 0).toLocaleString();
+            document.getElementById('paymentMethod').textContent = order.paymentMethod || 'Tunai';
+            document.getElementById('deliveryAddress').textContent = order.deliveryAddress || 'Alamat tidak tersedia';
+            document.getElementById('orderNote').textContent = order.orderNote || 'Tidak ada catatan';
+
+            // Driver Info
+            const driverCard = document.getElementById('driverCard');
+            if (order.driverId) {
+                driverCard.classList.add('visible');
+                loadDriverInfo(order.driverId);
+                if (order.driverPhone) {
+                    document.getElementById('driverPhone').textContent = order.driverPhone;
+                }
+            } else {
+                driverCard.classList.remove('visible');
+            }
+
+            // Check if order can be cancelled
+            const canCancel = ['pending', 'accepted', 'looking_for_driver'].includes(order.status);
+            document.getElementById('cancelBtn').style.display = canCancel ? 'block' : 'none';
+        }
+
+        // ==================== STATUS INFO ====================
+        function getStatusInfo(status) {
+            const map = {
+                'pending': { icon: '⏳', title: 'Menunggu Konfirmasi', desc: 'Toko sedang memproses pesanan Anda' },
+                'accepted': { icon: '✅', title: 'Pesanan Diterima', desc: 'Toko sedang menyiapkan pesanan Anda' },
+                'looking_for_driver': { icon: '🔍', title: 'Mencari Driver', desc: 'Mencari driver terdekat untuk mengantar' },
+                'driver_assigned': { icon: '🚗', title: 'Driver Ditugaskan', desc: 'Driver sedang menuju ke toko' },
+                'on_way_to_merchant': { icon: '🚗', title: 'Driver Menuju Toko', desc: 'Driver sedang dalam perjalanan ke toko' },
+                'picked_up': { icon: '📦', title: 'Pesanan Diambil', desc: 'Driver telah mengambil pesanan' },
+                'on_the_way': { icon: '🚗', title: 'Dalam Perjalanan', desc: 'Pesanan sedang diantar ke Anda' },
+                'delivered': { icon: '🎉', title: 'Pesanan Selesai!', desc: 'Pesanan telah sampai. Terima kasih!' },
+                'rejected': { icon: '❌', title: 'Pesanan Ditolak', desc: 'Mohon pesan kembali di lain waktu' },
+                'cancelled': { icon: '❌', title: 'Pesanan Dibatalkan', desc: 'Pesanan telah dibatalkan' }
+            };
+            return map[status] || { icon: '❓', title: 'Status Tidak Diketahui', desc: '' };
+        }
+
+        // ==================== PROGRESS STEPS ====================
+        function updateProgressSteps(status) {
+            const steps = ['pending', 'accepted', 'driver_assigned', 'picked_up', 'delivered'];
+            const currentIndex = steps.indexOf(status);
+            const activeIndex = currentIndex >= 0 ? currentIndex : 0;
+
+            const stepIds = ['stepPending', 'stepAccepted', 'stepDriver', 'stepPickup', 'stepDelivered'];
+
+            stepIds.forEach((id, index) => {
+                const el = document.getElementById(id);
+                el.classList.remove('active', 'done');
+                if (index < activeIndex) {
+                    el.classList.add('done');
+                } else if (index === activeIndex) {
+                    el.classList.add('active');
+                }
+            });
+
+            // Progress line width
+            const progress = (activeIndex / (steps.length - 1)) * 80 + 10;
+            document.getElementById('progressLine').style.width = progress + '%';
+        }
+
+        // ==================== LOAD DRIVER INFO ====================
+        function loadDriverInfo(driverId) {
+            if (driverRef) {
+                driverRef.off();
+            }
+            driverRef = firebaseDatabase.ref(`drivers/${driverId}`);
+            driverRef.on('value', (snapshot) => {
+                const driver = snapshot.val();
+                if (driver) {
+                    document.getElementById('driverName').textContent = driver.name || 'Driver';
+                    document.getElementById('driverPhone').textContent = driver.phone || '-';
+                    document.getElementById('callDriverBtn').onclick = () => {
+                        if (driver.phone) {
+                            window.location.href = 'tel:' + driver.phone;
+                        } else {
+                            showToast('Nomor driver tidak tersedia');
+                        }
+                    };
+                }
+            });
+        }
+
+        // ==================== CANCEL ORDER ====================
+        function cancelOrder() {
+            if (!orderData) return;
+            if (!confirm('Yakin ingin membatalkan pesanan ini?')) return;
+
+            const statuses = ['pending', 'accepted', 'looking_for_driver'];
+            if (!statuses.includes(orderData.status)) {
+                showToast('Pesanan tidak bisa dibatalkan pada tahap ini');
+                return;
+            }
+
+            setLoading(true);
+            firebaseDatabase.ref(`foodOrders/${orderId}/status`).set('cancelled')
+                .then(() => {
+                    setLoading(false);
+                    showToast('✅ Pesanan dibatalkan');
+                    setTimeout(() => {
+                        window.location.href = 'jenis_kenderaan.html';
+                    }, 1500);
+                })
+                .catch((err) => {
+                    setLoading(false);
+                    showToast('❌ Gagal membatalkan: ' + err.message);
+                });
+        }
+
+        // ==================== SUPPORT ====================
+        function contactSupport() {
+            showToast('📞 Hubungi CS: 081-234-567-890');
+            // Redirect ke halaman CS jika ada
+            // window.location.href = 'cs_jego.html';
+        }
+
+        // ==================== UTILITY ====================
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>"]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                if (m === '"') return '&quot;';
+                return m;
+            });
+        }
+
+        function formatTime(timestamp) {
+            if (!timestamp) return '-';
+            try {
+                const date = new Date(timestamp);
+                return date.toLocaleString('id-ID', {
+                    day: '2-digit',
+                    month: 'short',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } catch {
+                return timestamp;
+            }
+        }
+
+        function setLoading(show) {
+            document.getElementById('loadingIndicator').style.display = show ? 'flex' : 'none';
+            if (!show) {
+                document.getElementById('contentArea').style.display = 'block';
+            }
+        }
+
+        function showEmptyState(message) {
+            document.getElementById('loadingIndicator').style.display = 'none';
+            document.getElementById('contentArea').style.display = 'none';
+            const empty = document.getElementById('emptyState');
+            empty.style.display = 'block';
+            empty.querySelector('h3').textContent = message;
+        }
+
+        function goHome() {
+            window.location.href = 'jenis_kenderaan.html';
+        }
+
+        // ==================== INIT ====================
+        function init() {
+            initFirebase();
+            const user = checkSession();
+            if (!user) return;
+
+            // Event listeners
+            document.getElementById('backBtn').addEventListener('click', goHome);
+            document.getElementById('cancelBtn').addEventListener('click', cancelOrder);
+            document.getElementById('supportBtn').addEventListener('click', contactSupport);
+
+            loadOrder();
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+
+</body>
+</html>
