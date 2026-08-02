@@ -1035,15 +1035,23 @@ body.dark .popup-button {
     <div class="sidebar-nav-button" data-url="pengaturanDr.html"><span>⚙️ Pengaturan</span><span>›</span></div>
 </div>
       <div class="menu-section"><h4>Preferensi Order</h4>
-        <div class="menu-item"><span>Terima Kurir</span><label class="toggle-switch"><input type="checkbox" id="acceptKurirToggle"><span class="toggle-slider"></span></label></div>
-        <div class="menu-item">
-  <span>🤖 Autobid (Otomatis ambil order)</span>
-  <label class="toggle-switch">
-    <input type="checkbox" id="autobidToggle">
-    <span class="toggle-slider"></span>
-  </label>
+    <div class="menu-item"><span>📦 Terima Kurir</span><label class="toggle-switch"><input type="checkbox" id="acceptKurirToggle"><span class="toggle-slider"></span></label></div>
+    <div class="menu-item">
+        <span>🤖 Autobid (Otomatis ambil order)</span>
+        <label class="toggle-switch">
+            <input type="checkbox" id="autobidToggle">
+            <span class="toggle-slider"></span>
+        </label>
+    </div>
+    <!-- ===== TAMBAHKAN INI ===== -->
+    <div class="menu-item">
+        <span>🍔 Terima Pesanan Food</span>
+        <label class="toggle-switch">
+            <input type="checkbox" id="acceptFoodToggle">
+            <span class="toggle-slider"></span>
+        </label>
+    </div>
 </div>
-      </div>
 <div class="menu-section">
   <h4>Bantuan & Sosial</h4>
   <div class="sidebar-nav-button" data-url="perlindunganDriver.html"><span>🛡️ Perlindungan</span><span>›</span></div>
@@ -1183,6 +1191,8 @@ let locationWatchId = null, locationTrackingEnabled = false;
 let mapboxAccessToken = null;
 let countdownInterval = null, countdownOrderId = null, countdownDriverId = null, orderStatusListener = null;
 let acceptKurirEnabled = false;
+let acceptFoodEnabled = false; // ✅ TAMBAHKAN
+let foodOrdersRef = null; // ✅ TAMBAHKAN (untuk referensi listener)
 let previousOrderIds = new Set();
 let mapMarkers = [];
 let globalCurrentUid = null;
@@ -1288,19 +1298,25 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 const STORAGE_TRACKING = 'jego_location_tracking';
 const STORAGE_AUTOBID = 'jego_autobid_enabled';
 const STORAGE_ACCEPT_KURIR = 'jego_accept_kurir';
+const STORAGE_ACCEPT_FOOD = 'jego_accept_food'; // ✅ TAMBAHKAN
 
 function isAndroidAvailable() {
   return typeof Android !== 'undefined' && Android !== null;
 }
 
 function loadStoredSettings() {
-  locationTrackingEnabled = localStorage.getItem(STORAGE_TRACKING) === 'true';
-  updateTrackingButton();
-  autobidEnabled = localStorage.getItem(STORAGE_AUTOBID) === 'true';
-  updateAutobidButton();
-  acceptKurirEnabled = localStorage.getItem(STORAGE_ACCEPT_KURIR) === 'true';
-  const toggle = document.getElementById('acceptKurirToggle');
-  if (toggle) toggle.checked = acceptKurirEnabled;
+    locationTrackingEnabled = localStorage.getItem(STORAGE_TRACKING) === 'true';
+    updateTrackingButton();
+    autobidEnabled = localStorage.getItem(STORAGE_AUTOBID) === 'true';
+    updateAutobidButton();
+    acceptKurirEnabled = localStorage.getItem(STORAGE_ACCEPT_KURIR) === 'true';
+    const kurirToggle = document.getElementById('acceptKurirToggle');
+    if (kurirToggle) kurirToggle.checked = acceptKurirEnabled;
+    
+    // ✅ TAMBAHKAN INI
+    acceptFoodEnabled = localStorage.getItem(STORAGE_ACCEPT_FOOD) === 'true';
+    const foodToggle = document.getElementById('acceptFoodToggle');
+    if (foodToggle) foodToggle.checked = acceptFoodEnabled;
 }
 function updateTrackingButton() {
   const btn = document.getElementById('locationToggleBtn');
@@ -1312,9 +1328,31 @@ function updateAutobidButton() {
   if (toggle) toggle.checked = autobidEnabled;
 }
 function updateAcceptKurirSetting() {
-  acceptKurirEnabled = document.getElementById('acceptKurirToggle').checked;
-  localStorage.setItem(STORAGE_ACCEPT_KURIR, acceptKurirEnabled);
-  refreshDisplay();
+    acceptKurirEnabled = document.getElementById('acceptKurirToggle').checked;
+    localStorage.setItem(STORAGE_ACCEPT_KURIR, acceptKurirEnabled);
+    refreshDisplay();
+}
+
+// ==================== TAMBAHKAN FUNGSI INI ====================
+function updateAcceptFoodSetting() {
+    acceptFoodEnabled = document.getElementById('acceptFoodToggle').checked;
+    localStorage.setItem(STORAGE_ACCEPT_FOOD, acceptFoodEnabled);
+    
+    if (acceptFoodEnabled) {
+        showToast('🍔 Fitur Food diaktifkan', 'success');
+        loadFoodOrders();
+    } else {
+        showToast('🍔 Fitur Food dimatikan', 'info');
+        // Hentikan listener
+        if (foodOrdersRef) {
+            foodOrdersRef.off('value');
+            foodOrdersRef = null;
+        }
+        const container = document.getElementById('foodOrdersContainer');
+        if (container) {
+            container.innerHTML = `<div class="empty-state">🍽️ Fitur Food dimatikan. Aktifkan di pengaturan.</div>`;
+        }
+    }
 }
 
 // ==================== FUNGSI UNTUK OPTIMASI LISTENER ====================
@@ -1734,30 +1772,49 @@ const childAddedHandler = (snapshot) => {
 
 // ==================== FUNGSI UNTUK FOOD ORDERS ====================
 function loadFoodOrders() {
-    if (!globalCurrentUid) return;
+    // ✅ CEK APAKAH FITUR FOOD AKTIF
+    if (!acceptFoodEnabled) {
+        console.log('⏭️ Fitur Food dimatikan oleh driver');
+        const container = document.getElementById('foodOrdersContainer');
+        if (container) {
+            container.innerHTML = `<div class="empty-state">🍽️ Fitur Food dimatikan. Aktifkan di pengaturan.</div>`;
+        }
+        return;
+    }
+    
+    if (!globalCurrentUid) {
+        console.warn('❌ loadFoodOrders: globalCurrentUid kosong');
+        return;
+    }
     if (!driverLocation.latitude || !driverLocation.longitude) {
-        console.log('⏳ Lokasi driver belum siap, food orders ditunda');
+        console.warn('⏳ loadFoodOrders: Lokasi driver belum siap');
         return;
     }
 
-    const foodOrdersRef = database.ref('foodOrders');
-    // Hanya ambil order dengan status 'looking_for_driver'
+    console.log('📍 loadFoodOrders: Mencari food orders...');
+    
+    // Hentikan listener lama jika ada
+    if (foodOrdersRef) {
+        foodOrdersRef.off('value');
+        foodOrdersRef = null;
+    }
+    
+    foodOrdersRef = database.ref('foodOrders');
     foodOrdersRef.orderByChild('status')
         .equalTo('looking_for_driver')
         .on('value', (snapshot) => {
             const container = document.getElementById('foodOrdersContainer');
-            if (!container) {
-                console.warn('⚠️ foodOrdersContainer tidak ditemukan');
-                return;
-            }
+            if (!container) return;
+
+            console.log(`📦 loadFoodOrders: Ditemukan ${snapshot.numChildren()} order dengan status looking_for_driver`);
 
             let hasOrders = false;
-            container.innerHTML = ''; // kosongkan dulu
+            container.innerHTML = '';
 
             snapshot.forEach((child) => {
                 const order = child.val();
                 const orderId = child.key;
-                // Cek jarak driver ke merchant
+
                 if (order.merchantLat && order.merchantLng && driverLocation.latitude) {
                     const dist = calculateDistance(
                         driverLocation.latitude,
@@ -1765,6 +1822,7 @@ function loadFoodOrders() {
                         order.merchantLat,
                         order.merchantLng
                     );
+
                     if (dist !== null && dist <= 10) {
                         hasOrders = true;
                         container.innerHTML += createFoodOrderHTML(order, orderId, dist);
@@ -2987,6 +3045,8 @@ if (sidebarHeader) {
   document.getElementById('orderModal').addEventListener('click', e => { if (e.target === document.getElementById('orderModal') && !countdownInterval) closeModal(); });
 
   document.getElementById('acceptKurirToggle').addEventListener('change', updateAcceptKurirSetting);
+// ✅ TAMBAHKAN INI
+document.getElementById('acceptFoodToggle').addEventListener('change', updateAcceptFoodSetting);
   document.getElementById('promptAllowBtn')?.addEventListener('click', async () => {
     closeNotifPrompt();
     await initOneSignal();
