@@ -1,3 +1,7 @@
+<!-- ============================================================ -->
+<!--              FILE: merchant_dashboard.html                     -->
+<!--       (Dengan perbaikan merchantLat/Lng di markOrderReady)    -->
+<!-- ============================================================ -->
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -1343,22 +1347,78 @@
                 });
         }
 
+        // ==================== MARK ORDER READY (DIPERBAIKI) ====================
         function markOrderReady(orderId) {
             if (!confirm('Pesanan sudah siap?')) return;
             showGlobalLoading(true);
-            const updates = {
-                [`foodOrders/${orderId}/status`]: 'looking_for_driver',
-                [`foodOrders/${orderId}/readyAt`]: new Date().toISOString()
-            };
-            firebaseDatabase.ref().update(updates)
-                .then(() => {
-                    showGlobalLoading(false);
-                    showAlert('👨‍🍳 Pesanan siap! Mencari driver...', 'success');
-                    findNearestDriver(orderId);
+
+            // Ambil data order terlebih dahulu
+            firebaseDatabase.ref(`foodOrders/${orderId}`).once('value')
+                .then((snap) => {
+                    const order = snap.val();
+                    if (!order) {
+                        showAlert('Order tidak ditemukan', 'error');
+                        showGlobalLoading(false);
+                        return;
+                    }
+
+                    // Siapkan update dasar
+                    let updates = {
+                        [`foodOrders/${orderId}/status`]: 'looking_for_driver',
+                        [`foodOrders/${orderId}/readyAt`]: new Date().toISOString()
+                    };
+
+                    // Jika merchantLat/Lng belum ada di order, ambil dari data merchant
+                    if (!order.merchantLat || !order.merchantLng) {
+                        const merchantId = order.merchantId;
+                        firebaseDatabase.ref(`merchants/${merchantId}`).once('value')
+                            .then((merchantSnap) => {
+                                const merchant = merchantSnap.val();
+                                if (merchant) {
+                                    // Konversi ke number jika perlu
+                                    const lat = merchant.storeLat ? parseFloat(merchant.storeLat) : null;
+                                    const lng = merchant.storeLng ? parseFloat(merchant.storeLng) : null;
+                                    if (lat && lng) {
+                                        updates[`foodOrders/${orderId}/merchantLat`] = lat;
+                                        updates[`foodOrders/${orderId}/merchantLng`] = lng;
+                                    }
+                                    if (merchant.storeAddress) {
+                                        updates[`foodOrders/${orderId}/merchantAddress`] = merchant.storeAddress;
+                                    }
+                                }
+                                // Update Firebase
+                                firebaseDatabase.ref().update(updates)
+                                    .then(() => {
+                                        showGlobalLoading(false);
+                                        showAlert('👨‍🍳 Pesanan siap! Mencari driver...', 'success');
+                                        findNearestDriver(orderId);
+                                    })
+                                    .catch((err) => {
+                                        showGlobalLoading(false);
+                                        showAlert('❌ Gagal: ' + err.message, 'error');
+                                    });
+                            })
+                            .catch((err) => {
+                                showGlobalLoading(false);
+                                showAlert('❌ Gagal ambil data merchant: ' + err.message, 'error');
+                            });
+                    } else {
+                        // Sudah ada, langsung update
+                        firebaseDatabase.ref().update(updates)
+                            .then(() => {
+                                showGlobalLoading(false);
+                                showAlert('👨‍🍳 Pesanan siap! Mencari driver...', 'success');
+                                findNearestDriver(orderId);
+                            })
+                            .catch((err) => {
+                                showGlobalLoading(false);
+                                showAlert('❌ Gagal: ' + err.message, 'error');
+                            });
+                    }
                 })
                 .catch((err) => {
                     showGlobalLoading(false);
-                    showAlert('❌ Gagal: ' + err.message, 'error');
+                    showAlert('❌ Gagal ambil order: ' + err.message, 'error');
                 });
         }
 
@@ -1368,8 +1428,8 @@
                 .then((snap) => {
                     const order = snap.val();
                     if (!order) return;
-                    const merchantLat = order.merchantLat || null;
-                    const merchantLng = order.merchantLng || null;
+                    const merchantLat = order.merchantLat ? parseFloat(order.merchantLat) : null;
+                    const merchantLng = order.merchantLng ? parseFloat(order.merchantLng) : null;
                     if (merchantLat && merchantLng) {
                         searchDriversNearby(orderId, merchantLat, merchantLng);
                     } else {
@@ -1481,7 +1541,6 @@
                     const pos = marker.getPosition();
                     document.getElementById('storeLat').value = pos.lat();
                     document.getElementById('storeLng').value = pos.lng();
-                    // Reverse geocode (opsional)
                     const geocoder = new google.maps.Geocoder();
                     geocoder.geocode({ location: pos }, function(results, status) {
                         if (status === 'OK' && results[0]) {
