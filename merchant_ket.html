@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
+    <title>Jual Produk Anda - JeGo Food</title>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: #f8f9fa;
+            color: #212529;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 16px 20px 80px;
+            flex: 1;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            background: linear-gradient(135deg, #FF6D00, #FF9800);
+            color: white;
+            padding: 20px 20px;
+            border-radius: 0 0 24px 24px;
+            margin: -16px -16px 20px -16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 4px 12px rgba(255, 109, 0, 0.3);
+        }
+
+        .header .back {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+            flex-shrink: 0;
+        }
+        .header .back:active {
+            transform: scale(0.92);
+        }
+
+        .header h1 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            flex: 1;
+        }
+
+        /* ===== CARD ===== */
+        .card {
+            background: white;
+            border-radius: 24px;
+            padding: 24px 20px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+            margin-bottom: 20px;
+            border: 1px solid #e9ecef;
+        }
+
+        .card h2 {
+            font-size: 1.3rem;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #212529;
+        }
+
+        .card h2 i {
+            color: #FF6D00;
+        }
+
+        .card p {
+            color: #495057;
+            line-height: 1.6;
+            font-size: 0.95rem;
+            margin-bottom: 12px;
+        }
+
+        .benefit-list {
+            list-style: none;
+            padding: 0;
+            margin: 16px 0;
+        }
+
+        .benefit-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid #f1f3f5;
+            font-size: 0.95rem;
+        }
+
+        .benefit-list li:last-child {
+            border-bottom: none;
+        }
+
+        .benefit-list li i {
+            color: #FF6D00;
+            font-size: 1.2rem;
+            width: 24px;
+            text-align: center;
+            margin-top: 2px;
+        }
+
+        .benefit-list li strong {
+            color: #212529;
+        }
+
+        .syarat-list {
+            padding-left: 20px;
+            margin: 12px 0;
+        }
+
+        .syarat-list li {
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+            color: #495057;
+            line-height: 1.5;
+        }
+
+        .syarat-list li i {
+            color: #FF6D00;
+            margin-right: 8px;
+        }
+
+        .highlight-box {
+            background: #fff3e0;
+            border-radius: 16px;
+            padding: 16px 18px;
+            margin: 16px 0;
+            border-left: 4px solid #FF6D00;
+        }
+
+        .highlight-box p {
+            margin-bottom: 0;
+            font-weight: 500;
+            color: #E65100;
+        }
+
+        .btn-primary {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #FF6D00, #FF9800);
+            color: white;
+            border: none;
+            border-radius: 40px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            transition: 0.2s;
+            box-shadow: 0 4px 12px rgba(255, 109, 0, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: scale(0.97);
+        }
+
+        .btn-primary i {
+            margin-right: 8px;
+        }
+
+        .btn-secondary {
+            display: inline-block;
+            padding: 10px 24px;
+            background: #e9ecef;
+            color: #495057;
+            border: none;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: 0.2s;
+        }
+
+        .btn-secondary:active {
+            background: #dee2e6;
+        }
+
+        .footer-note {
+            text-align: center;
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-top: 16px;
+        }
+
+        .footer-note a {
+            color: #FF6D00;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .icon-large {
+            font-size: 3rem;
+            text-align: center;
+            display: block;
+            margin-bottom: 8px;
+            color: #FF6D00;
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.1rem;
+            }
+            .card {
+                padding: 20px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <div class="header">
+        <button class="back" id="backBtn"><i class="fas fa-arrow-left"></i></button>
+        <h1>🏪 Jual Produk Anda</h1>
+        <div style="width:40px;"></div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="container">
+
+        <!-- INTRO CARD -->
+        <div class="card">
+            <span class="icon-large">🛒</span>
+            <h2><i class="fas fa-store"></i> Mulai Jualan di JeGo Food</h2>
+            <p>
+                Bergabunglah sebagai <strong>Merchant JeGo Food</strong> dan jangkau ribuan pelanggan 
+                di Gorontalo. Tunjukkan produk makanan &amp; minuman terbaik Anda!
+            </p>
+            <div class="highlight-box">
+                <p>✅ <strong>GRATIS</strong> mendaftar! Tanpa biaya awal.</p>
+            </div>
+        </div>
+
+        <!-- BENEFITS -->
+        <div class="card">
+            <h2><i class="fas fa-star"></i> Keuntungan Jadi Merchant</h2>
+            <ul class="benefit-list">
+                <li><i class="fas fa-users"></i> <div><strong>Jangkau pelanggan luas</strong><br>Ribuan pengguna JeGo siap memesan produk Anda.</div></li>
+                <li><i class="fas fa-phone-alt"></i> <div><strong>Kelola pesanan mudah</strong><br>Terima, proses, dan siapkan pesanan dari dashboard merchant.</div></li>
+                <li><i class="fas fa-chart-line"></i> <div><strong>Promosi gratis</strong><br>Toko Anda tampil di halaman utama JeGo Food.</div></li>
+                <li><i class="fas fa-truck"></i> <div><strong>Integrasi dengan driver</strong><br>Pesanan akan diantar oleh driver JeGo yang sudah terverifikasi.</div></li>
+            </ul>
+        </div>
+
+        <!-- SYARAT -->
+        <div class="card">
+            <h2><i class="fas fa-clipboard-list"></i> Syarat &amp; Ketentuan</h2>
+            <p>Untuk menjadi merchant JeGo Food, pastikan Anda memenuhi persyaratan berikut:</p>
+            <ol class="syarat-list">
+                <li><i class="fas fa-check-circle"></i> <strong>Memiliki usaha makanan/minuman</strong> (rumahan, restoran, kafe, atau kuliner lainnya).</li>
+                <li><i class="fas fa-check-circle"></i> <strong>Alamat usaha jelas</strong> dan dapat diverifikasi (sesuai dengan alamat di profil).</li>
+                <li><i class="fas fa-check-circle"></i> <strong>Foto toko / produk</strong> yang representatif (untuk ditampilkan di aplikasi).</li>
+                <li><i class="fas fa-check-circle"></i> <strong>Harga dan stok produk</strong> harus diisi dengan benar dan diperbarui secara berkala.</li>
+                <li><i class="fas fa-check-circle"></i> <strong>Menjaga kualitas</strong> dan kebersihan produk sesuai standar keamanan pangan.</li>
+                <li><i class="fas fa-check-circle"></i> <strong>Menerima pesanan</strong> dengan cepat dan menginformasikan jika ada kendala.</li>
+            </ol>
+            <div class="highlight-box" style="border-left-color: #28a745;">
+                <p>📌 <strong>Catatan:</strong> Setelah mendaftar, toko Anda akan langsung aktif dan dapat menerima pesanan. Pastikan data toko lengkap!</p>
+            </div>
+        </div>
+
+        <!-- TOMBOL AKSI -->
+        <div style="margin-top: 8px;">
+            <a href="merchant_dashboard.html" class="btn-primary">
+                <i class="fas fa-store-alt"></i> Buat Toko Sekarang
+            </a>
+            <p style="text-align:center; margin-top:12px; font-size:0.85rem; color:#6c757d;">
+                Dengan mengklik, Anda menyetujui <a href="#" style="color:#FF6D00;">Syarat &amp; Ketentuan</a>.
+            </p>
+        </div>
+
+        <!-- BACK TO HOME -->
+        <div style="text-align:center; margin-top:24px;">
+            <a href="jenis_kenderaan.html" class="btn-secondary">
+                <i class="fas fa-arrow-left"></i> Kembali ke Beranda
+            </a>
+        </div>
+
+        <div class="footer-note">
+            <p>JeGo Food &copy; 2026 • Bergabunglah dan kembangkan usaha Anda!</p>
+        </div>
+
+    </div>
+
+    <script>
+        // ==================== BACK BUTTON ====================
+        document.getElementById('backBtn').addEventListener('click', function() {
+            // Kembali ke halaman sebelumnya
+            if (document.referrer && document.referrer.includes('jenis_kenderaan.html')) {
+                window.location.href = 'jenis_kenderaan.html';
+            } else {
+                window.history.back();
+            }
+        });
+
+        // ==================== (Optional) Prevent double submit ====================
+        document.querySelector('.btn-primary').addEventListener('click', function(e) {
+            // Just a simple feedback, no prevent default because it's a link
+            // But if you want to show a loading state, you can add here.
+        });
+    </script>
+
+</body>
+</html>
