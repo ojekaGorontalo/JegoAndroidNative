@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <title>Tracking Food - JeGo Driver</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+  <!-- Google Maps API -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA1c0N-_Cx6E_yKXcIN87EC4zqCEkC5ysM&libraries=places,geometry&language=id&region=ID"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f5f5f5;
+      color: #333;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .header {
+      background: linear-gradient(135deg, #FF9800, #FF5722);
+      color: white;
+      padding: 15px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      z-index: 10;
+    }
+    .header .back {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: white;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+    .header h1 { font-size: 1.1rem; font-weight: 700; }
+    .header .badge {
+      background: rgba(255,255,255,0.2);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.7rem;
+    }
+    #map {
+      flex: 1;
+      width: 100%;
+      min-height: 0;
+    }
+    .bottom-sheet {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      border-radius: 28px 28px 0 0;
+      box-shadow: 0 -8px 30px rgba(0,0,0,0.15);
+      max-height: 55vh;
+      padding: 16px 20px 20px;
+      overflow-y: auto;
+      transition: transform 0.3s ease;
+      z-index: 20;
+    }
+    .bottom-sheet .handle {
+      width: 40px;
+      height: 4px;
+      background: #ccc;
+      border-radius: 4px;
+      margin: 0 auto 8px;
+    }
+    .bottom-sheet .order-id { font-size: 0.75rem; color: #999; }
+    .bottom-sheet .merchant-name { font-size: 1.1rem; font-weight: 700; }
+    .bottom-sheet .status-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      font-size: 0.85rem;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .bottom-sheet .status-row .label { color: #666; }
+    .bottom-sheet .status-row .value { font-weight: 600; }
+    .bottom-sheet .items-list {
+      list-style: none;
+      padding: 0;
+      margin: 8px 0;
+    }
+    .bottom-sheet .items-list li {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      padding: 2px 0;
+    }
+    .bottom-sheet .total-price {
+      font-weight: 700;
+      color: #FF9800;
+      font-size: 1.1rem;
+      text-align: right;
+      margin-top: 6px;
+    }
+    .bottom-sheet .action-btn {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 40px;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    .bottom-sheet .action-btn.pickup {
+      background: linear-gradient(135deg, #FF9800, #FF5722);
+      color: white;
+    }
+    .bottom-sheet .action-btn.deliver {
+      background: #4CAF50;
+      color: white;
+    }
+    .bottom-sheet .action-btn:active { transform: scale(0.97); }
+    .bottom-sheet .action-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .toast-notification {
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 30px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      z-index: 9999;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+    .toast-notification.show { opacity: 1; }
+
+    body.dark {
+      background: #121212;
+      color: #e9ecef;
+    }
+    body.dark .bottom-sheet {
+      background: #1e1e1e;
+      color: #e9ecef;
+    }
+    body.dark .bottom-sheet .status-row { border-bottom-color: #333; }
+    body.dark .bottom-sheet .status-row .label { color: #aaa; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <button class="back" id="backBtn"><i class="fas fa-arrow-left"></i></button>
+  <h1>🍔 Tracking Food</h1>
+  <span class="badge" id="statusBadge">⏳ Memuat...</span>
+</div>
+
+<div id="map"></div>
+
+<div class="bottom-sheet" id="bottomSheet">
+  <div class="handle"></div>
+  <div id="orderInfo">
+    <!-- Akan diisi JavaScript -->
+  </div>
+</div>
+
+<div class="toast-notification" id="toast"></div>
+
+<script>
+// ==================== FIREBASE CONFIG ====================
+const firebaseConfig = {
+  apiKey: "AIzaSyCD0pgeZio-LdKqYDtWxcdXcZwyL4ngYQI",
+  authDomain: "jego-35a2b.firebaseapp.com",
+  databaseURL: "https://jego-35a2b-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "jego-35a2b",
+  storageBucket: "jego-35a2b.firebasestorage.app",
+  messagingSenderId: "600037007040",
+  appId: "1:600037007040:web:ac3243ad9b472647ffd725"
+};
+
+let database, auth;
+let map, geocoder, directionsService, directionsRenderer;
+let driverMarker, merchantMarker, customerMarker;
+let currentOrderId = null;
+let currentOrder = null;
+let driverLocation = { lat: null, lng: null };
+let watchId = null;
+let orderListener = null;
+
+// ==================== INIT ====================
+try {
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  database = firebase.database();
+  auth = firebase.auth();
+  auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+    .then(() => console.log('🔒 Persistence LOCAL diaktifkan'))
+    .catch(err => console.warn('Gagal set persistence:', err));
+} catch (error) {
+  console.error('❌ Error inisialisasi Firebase:', error);
+}
+
+// ==================== UTILITY ====================
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/[&<>"]/g, function(m) {
+    if (m === '&') return '&amp;';
+    if (m === '<') return '&lt;';
+    if (m === '>') return '&gt;';
+    if (m === '"') return '&quot;';
+    return m;
+  });
+}
+
+let toastTimeout = null;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+function getStatusLabel(status) {
+  const map = {
+    'driver_assigned': '🚗 Menuju Toko',
+    'on_way_to_merchant': '🚗 Menuju Toko',
+    'picked_up': '📦 Pesanan Diambil',
+    'on_the_way': '🚗 Menuju Customer',
+    'delivered': '✅ Selesai',
+    'rejected': '❌ Ditolak',
+    'cancelled': '❌ Dibatalkan'
+  };
+  return map[status] || status;
+}
+
+// ==================== INIT GOOGLE MAP ====================
+function initMap(lat, lng) {
+  const center = { lat: lat || 0.5641, lng: lng || 123.1231 };
+  map = new google.maps.Map(document.getElementById('map'), {
+    center: center,
+    zoom: 14,
+    mapTypeId: 'roadmap',
+    styles: []
+  });
+
+  geocoder = new google.maps.Geocoder();
+  directionsService = new google.maps.DirectionsService();
+  directionsRenderer = new google.maps.DirectionsRenderer({
+    map: map,
+    suppressMarkers: true,
+    polylineOptions: {
+      strokeColor: '#FF9800',
+      strokeWeight: 5,
+      strokeOpacity: 0.8
+    }
+  });
+
+  // Driver marker (bisa drag)
+  driverMarker = new google.maps.Marker({
+    position: center,
+    map: map,
+    icon: {
+      url: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png',
+      scaledSize: new google.maps.Size(40, 40)
+    },
+    draggable: true,
+    title: 'Anda'
+  });
+
+  google.maps.event.addListener(driverMarker, 'dragend', function() {
+    const pos = driverMarker.getPosition();
+    driverLocation.lat = pos.lat();
+    driverLocation.lng = pos.lng();
+    updateDriverLocation();
+  });
+}
+
+// ==================== UPDATE DRIVER LOCATION ====================
+function updateDriverLocation() {
+  if (!currentOrderId || !driverLocation.lat) return;
+  database.ref(`foodOrders/${currentOrderId}`).update({
+    driverLat: driverLocation.lat,
+    driverLng: driverLocation.lng,
+    last_update: new Date().toISOString()
+  }).catch(console.error);
+}
+
+// ==================== START GPS ====================
+function startGPS() {
+  if (!navigator.geolocation) {
+    showToast('GPS tidak didukung');
+    return;
+  }
+  if (watchId) navigator.geolocation.clearWatch(watchId);
+
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      driverLocation.lat = pos.coords.latitude;
+      driverLocation.lng = pos.coords.longitude;
+      if (driverMarker) {
+        driverMarker.setPosition(new google.maps.LatLng(driverLocation.lat, driverLocation.lng));
+        map.setCenter(new google.maps.LatLng(driverLocation.lat, driverLocation.lng));
+      }
+      updateDriverLocation();
+    },
+    (err) => console.warn('GPS error:', err),
+    { timeout: 10000, enableHighAccuracy: true }
+  );
+
+  watchId = navigator.geolocation.watchPosition(
+    (pos) => {
+      driverLocation.lat = pos.coords.latitude;
+      driverLocation.lng = pos.coords.longitude;
+      if (driverMarker) {
+        driverMarker.setPosition(new google.maps.LatLng(driverLocation.lat, driverLocation.lng));
+      }
+      updateDriverLocation();
+    },
+    (err) => console.warn('GPS watch error:', err),
+    { timeout: 10000, enableHighAccuracy: true }
+  );
+}
+
+// ==================== LOAD ORDER ====================
+function loadOrder(orderId) {
+  currentOrderId = orderId;
+  const orderRef = database.ref(`foodOrders/${orderId}`);
+
+  orderListener = orderRef.on('value', (snap) => {
+    const order = snap.val();
+    if (!order) {
+      showToast('Order tidak ditemukan');
+      return;
+    }
+    currentOrder = order;
+    renderOrder(order);
+    updateMapRoute(order);
+    updateStatusBadge(order.status);
+
+    if (order.status === 'delivered' || order.status === 'rejected' || order.status === 'cancelled') {
+      database.ref(`drivers/${auth.currentUser.uid}/activeOrder`).remove();
+    }
+  });
+}
+
+// ==================== RENDER ORDER ====================
+function renderOrder(order) {
+  const container = document.getElementById('orderInfo');
+
+  // Gunakan currentOrderId (sudah didefinisikan di scope global)
+  const orderId = currentOrderId;
+
+  let statusText = getStatusLabel(order.status);
+  let actionHtml = '';
+  if (order.status === 'driver_assigned' || order.status === 'on_way_to_merchant') {
+    actionHtml = `<button class="action-btn pickup" id="pickupBtn">📦 Ambil Pesanan</button>`;
+  } else if (order.status === 'picked_up' || order.status === 'on_the_way') {
+    actionHtml = `<button class="action-btn deliver" id="deliverBtn">✅ Selesai</button>`;
+  } else if (order.status === 'delivered') {
+    actionHtml = `<button class="action-btn" disabled style="background:#e9ecef; color:#666;">✅ Selesai</button>`;
+  }
+
+  const itemsHtml = order.items && Array.isArray(order.items) ?
+    order.items.map(item => `<li><span>${escapeHtml(item.name)} x${item.quantity}</span><span>Rp${(item.price * item.quantity).toLocaleString()}</span></li>`).join('') :
+    '<li>Tidak ada item</li>';
+
+  container.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <span class="merchant-name">${escapeHtml(order.merchantName || 'Toko')}</span>
+      <span class="order-id">#${orderId ? orderId.slice(-6) : '---'}</span>
+    </div>
+    <div class="status-row"><span class="label">Status</span><span class="value">${statusText}</span></div>
+    <div class="status-row"><span class="label">Alamat Toko</span><span class="value" style="font-weight:400; font-size:0.8rem;">${escapeHtml(order.merchantAddress || '-')}</span></div>
+    <div class="status-row"><span class="label">Customer</span><span class="value" style="font-weight:400; font-size:0.8rem;">${escapeHtml(order.customerName || '-')}</span></div>
+    <div class="status-row"><span class="label">Alamat Customer</span><span class="value" style="font-weight:400; font-size:0.8rem;">${escapeHtml(order.deliveryAddress || '-')}</span></div>
+    <ul class="items-list">${itemsHtml}</ul>
+    <div class="total-price">Total: Rp${(order.totalPrice || 0).toLocaleString()}</div>
+    ${actionHtml}
+  `;
+
+  document.getElementById('pickupBtn')?.addEventListener('click', function() {
+    if (confirm('Ambil pesanan dari toko?')) {
+      updateOrderStatus('picked_up');
+    }
+  });
+  document.getElementById('deliverBtn')?.addEventListener('click', function() {
+    if (confirm('Pesanan sudah sampai ke customer?')) {
+      updateOrderStatus('delivered');
+    }
+  });
+}
+
+// ==================== UPDATE ORDER STATUS ====================
+function updateOrderStatus(newStatus) {
+  if (!currentOrderId) return;
+  const updates = {
+    status: newStatus,
+    updatedAt: new Date().toISOString()
+  };
+  if (newStatus === 'picked_up') {
+    updates.pickedUpAt = new Date().toISOString();
+  }
+  if (newStatus === 'delivered') {
+    updates.deliveredAt = new Date().toISOString();
+    database.ref(`drivers/${auth.currentUser.uid}/activeOrder`).remove();
+  }
+
+  database.ref(`foodOrders/${currentOrderId}`).update(updates)
+    .then(() => {
+      showToast(`✅ Status: ${getStatusLabel(newStatus)}`);
+      if (newStatus === 'delivered') {
+        setTimeout(() => {
+          window.location.href = 'index.html';
+        }, 1500);
+      }
+    })
+    .catch(err => {
+      showToast('❌ Gagal update: ' + err.message);
+    });
+}
+
+// ==================== UPDATE STATUS BADGE ====================
+function updateStatusBadge(status) {
+  const el = document.getElementById('statusBadge');
+  const labels = {
+    'driver_assigned': '🚗 Menuju Toko',
+    'on_way_to_merchant': '🚗 Menuju Toko',
+    'picked_up': '📦 Diambil',
+    'on_the_way': '🚗 Menuju Customer',
+    'delivered': '✅ Selesai'
+  };
+  el.textContent = labels[status] || status;
+}
+
+// ==================== UPDATE MAP ROUTE ====================
+function updateMapRoute(order) {
+  if (!map) return;
+  if (!order.merchantLat || !order.merchantLng || !order.deliveryLat || !order.deliveryLng) return;
+
+  const merchantPos = new google.maps.LatLng(
+    parseFloat(order.merchantLat),
+    parseFloat(order.merchantLng)
+  );
+  const customerPos = new google.maps.LatLng(
+    parseFloat(order.deliveryLat),
+    parseFloat(order.deliveryLng)
+  );
+
+  // Hapus marker lama
+  if (merchantMarker) merchantMarker.setMap(null);
+  if (customerMarker) customerMarker.setMap(null);
+
+  merchantMarker = new google.maps.Marker({
+    position: merchantPos,
+    map: map,
+    icon: {
+      url: 'https://maps.google.com/mapfiles/ms/icons/orange-dot.png',
+      scaledSize: new google.maps.Size(40, 40)
+    },
+    title: 'Toko'
+  });
+
+  customerMarker = new google.maps.Marker({
+    position: customerPos,
+    map: map,
+    icon: {
+      url: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
+      scaledSize: new google.maps.Size(40, 40)
+    },
+    title: 'Customer'
+  });
+
+  // Arahkan
+  directionsService.route({
+    origin: merchantPos,
+    destination: customerPos,
+    travelMode: google.maps.TravelMode.DRIVING,
+    unitSystem: google.maps.UnitSystem.METRIC
+  }, function(result, status) {
+    if (status === 'OK') {
+      directionsRenderer.setDirections(result);
+    } else {
+      console.warn('Directions failed:', status);
+    }
+  });
+
+  // Fit bounds
+  const bounds = new google.maps.LatLngBounds();
+  bounds.extend(merchantPos);
+  bounds.extend(customerPos);
+  map.fitBounds(bounds, { top: 80, bottom: 280, left: 40, right: 40 });
+}
+
+// ==================== CHECK AUTH ====================
+auth.onAuthStateChanged(async (user) => {
+  if (!user) {
+    window.location.href = 'loginDriver.html';
+    return;
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const orderId = params.get('orderId');
+  if (!orderId) {
+    showToast('Order ID tidak ditemukan');
+    return;
+  }
+
+  // Cek apakah driver yang login adalah driver yang ditugaskan
+  const orderSnap = await database.ref(`foodOrders/${orderId}`).once('value');
+  const order = orderSnap.val();
+  if (!order) {
+    showToast('Order tidak ditemukan');
+    return;
+  }
+  if (order.driverId !== user.uid) {
+    showToast('Anda tidak memiliki akses ke order ini');
+    window.location.href = 'index.html';
+    return;
+  }
+
+  // Ambil lokasi driver
+  const driverSnap = await database.ref(`drivers/${user.uid}`).once('value');
+  const driverData = driverSnap.val();
+  const lat = driverData?.latitude || order.driverLat || 0;
+  const lng = driverData?.longitude || order.driverLng || 0;
+
+  // Inisialisasi Google Map
+  initMap(lat, lng);
+  if (lat && lng) {
+    driverLocation.lat = lat;
+    driverLocation.lng = lng;
+    if (driverMarker) {
+      driverMarker.setPosition(new google.maps.LatLng(lat, lng));
+    }
+  }
+  startGPS();
+
+  loadOrder(orderId);
+});
+
+// ==================== BACK BUTTON ====================
+document.getElementById('backBtn').addEventListener('click', function() {
+  window.location.href = 'index.html';
+});
+</script>
+</body>
+</html>
