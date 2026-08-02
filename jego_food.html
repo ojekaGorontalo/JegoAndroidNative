@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>JeGo Food - Pesan Makanan</title>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: #f8f9fa;
+            color: #212529;
+            padding-bottom: 80px;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            background: linear-gradient(135deg, #FF6D00, #FF9800);
+            color: white;
+            padding: 16px 20px;
+            border-radius: 0 0 24px 24px;
+            margin: -16px -16px 16px -16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 12px rgba(255, 109, 0, 0.3);
+        }
+
+        .header .back {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+        }
+        .header .back:active {
+            transform: scale(0.92);
+        }
+
+        .header h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        .header .cart-icon {
+            position: relative;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+        }
+        .header .cart-icon:active {
+            transform: scale(0.92);
+        }
+        .header .cart-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: #dc3545;
+            color: white;
+            font-size: 0.65rem;
+            font-weight: 700;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            display: none;
+        }
+
+        /* ===== STATUS CARD ===== */
+        .status-card {
+            background: white;
+            border-radius: 20px;
+            padding: 14px 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.9rem;
+        }
+        .status-card .icon {
+            font-size: 1.4rem;
+        }
+        .status-card .text {
+            flex: 1;
+        }
+        .status-card .text strong {
+            display: block;
+        }
+
+        /* ===== SEARCH BAR ===== */
+        #searchMerchant {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 40px;
+            border: 1px solid #e9ecef;
+            font-size: 1rem;
+            background: white;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+            transition: 0.2s;
+            margin-bottom: 16px;
+        }
+        #searchMerchant:focus {
+            outline: none;
+            border-color: #FF6D00;
+            box-shadow: 0 0 0 3px rgba(255, 109, 0, 0.15);
+        }
+
+        /* ===== MERCHANT LIST ===== */
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin: 20px 0 12px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section-title span {
+            background: #FF6D00;
+            width: 4px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .merchant-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .merchant-card {
+            background: white;
+            border-radius: 20px;
+            padding: 16px;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .merchant-card:active {
+            transform: scale(0.98);
+            background: #f1f3f5;
+        }
+        .merchant-card .avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            background: #fff3e0;
+            flex-shrink: 0;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: #adb5bd;
+        }
+        .merchant-card .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .merchant-card .info {
+            flex: 1;
+        }
+        .merchant-card .info .name {
+            font-weight: 700;
+            font-size: 1rem;
+        }
+        .merchant-card .info .desc {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+        .merchant-card .info .status-badge {
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 2px 10px;
+            border-radius: 40px;
+            display: inline-block;
+            margin-top: 4px;
+        }
+        .badge-open {
+            background: #d4edda;
+            color: #155724;
+        }
+        .badge-closed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        /* ===== PRODUCT LIST ===== */
+        .product-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 16px;
+            padding: 14px;
+            border: 1px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            transition: 0.2s;
+        }
+        .product-card .image {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            background: #f1f3f5;
+            overflow: hidden;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: #adb5bd;
+        }
+        .product-card .image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .product-card .info {
+            flex: 1;
+        }
+        .product-card .info .name {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        .product-card .info .desc {
+            font-size: 0.75rem;
+            color: #6c757d;
+        }
+        .product-card .info .price {
+            font-weight: 700;
+            color: #FF6D00;
+            font-size: 0.95rem;
+            margin-top: 2px;
+        }
+        .product-card .info .stock {
+            font-size: 0.7rem;
+            color: #6c757d;
+        }
+        .product-card .actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .product-card .actions button {
+            background: #fff3e0;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #E65100;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .product-card .actions button:active {
+            transform: scale(0.92);
+        }
+        .product-card .actions .qty {
+            min-width: 24px;
+            text-align: center;
+            font-weight: 600;
+        }
+        .product-card .actions .add-btn {
+            background: linear-gradient(135deg, #FF6D00, #FF9800);
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .product-card .actions .add-btn:active {
+            transform: scale(0.92);
+        }
+
+        /* ===== CART ===== */
+        .cart-overlay {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 24px 24px 0 0;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+            padding: 20px 16px 20px;
+            max-height: 70vh;
+            overflow-y: auto;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            border-top: 1px solid #e9ecef;
+        }
+        .cart-overlay.open {
+            transform: translateY(0);
+        }
+
+        .cart-overlay .cart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        .cart-overlay .cart-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6c757d;
+        }
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #f1f3f5;
+            font-size: 0.9rem;
+        }
+        .cart-item .left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .cart-item .qty-control button {
+            background: #e9ecef;
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        .cart-item .qty-control span {
+            margin: 0 8px;
+            font-weight: 600;
+        }
+        .cart-total {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 2px solid #e9ecef;
+        }
+        .cart-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        .cart-actions button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .cart-actions button:active {
+            transform: scale(0.97);
+        }
+        .btn-checkout {
+            background: linear-gradient(135deg, #FF6D00, #FF9800);
+            color: white;
+        }
+        .btn-clear {
+            background: #f8f9fa;
+            color: #6c757d;
+        }
+
+        /* ===== CHECKOUT MODAL ===== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal-box {
+            background: white;
+            max-width: 400px;
+            width: 100%;
+            border-radius: 28px;
+            padding: 24px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: fadeUp 0.25s ease;
+        }
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .modal-box h2 {
+            font-size: 1.3rem;
+            margin-bottom: 16px;
+        }
+        .modal-box .form-group {
+            margin-bottom: 14px;
+        }
+        .modal-box .form-group label {
+            font-weight: 600;
+            font-size: 0.85rem;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .modal-box .form-group input,
+        .modal-box .form-group textarea,
+        .modal-box .form-group select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #ced4da;
+            border-radius: 12px;
+            font-size: 0.95rem;
+        }
+        .modal-box .form-group input:focus,
+        .modal-box .form-group textarea:focus {
+            outline: none;
+            border-color: #FF6D00;
+            box-shadow: 0 0 0 3px rgba(255, 109, 0, 0.15);
+        }
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        .modal-actions button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 40px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .modal-actions button:active {
+            transform: scale(0.97);
+        }
+        .modal-actions .btn-confirm {
+            background: linear-gradient(135deg, #FF6D00, #FF9800);
+            color: white;
+        }
+        .modal-actions .btn-cancel {
+            background: #e9ecef;
+            color: #495057;
+        }
+
+        /* ===== EMPTY STATE ===== */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6c757d;
+        }
+        .empty-state .icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+        .empty-state h3 {
+            font-weight: 600;
+        }
+
+        /* ===== LOADING ===== */
+        .loading-container {
+            display: flex;
+            justify-content: center;
+            padding: 40px;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 109, 0, 0.1);
+            border-top-color: #FF6D00;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ===== TOAST ===== */
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 40px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            z-index: 3000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        .toast.show {
+            opacity: 1;
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.2rem;
+            }
+            .merchant-card .avatar {
+                width: 48px;
+                height: 48px;
+                font-size: 22px;
+            }
+            .product-card .image {
+                width: 48px;
+                height: 48px;
+                font-size: 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <div class="header">
+        <button class="back" id="backBtn"><i class="fas fa-arrow-left"></i></button>
+        <h1>🍔 JeGo Food</h1>
+        <button class="cart-icon" id="cartIcon">
+            <i class="fas fa-shopping-cart"></i>
+            <span class="cart-badge" id="cartBadge">0</span>
+        </button>
+    </div>
+
+    <!-- MAIN CONTAINER -->
+    <div class="container" id="appContainer">
+
+        <!-- Status Card -->
+        <div class="status-card" id="statusCard">
+            <div class="icon">📍</div>
+            <div class="text">
+                <strong id="statusTitle">Pilih Toko</strong>
+                <span id="statusDesc">Pilih merchant untuk mulai memesan</span>
+            </div>
+        </div>
+
+        <!-- SEARCH BAR -->
+        <div style="margin-bottom: 16px;">
+            <input type="text" id="searchMerchant" placeholder="🔍 Cari nama toko..." />
+        </div>
+
+        <!-- Section Title -->
+        <div class="section-title" id="sectionTitle">
+            <span></span> <span id="sectionLabel">Daftar Toko</span>
+        </div>
+
+        <!-- Loading -->
+        <div id="loadingIndicator" class="loading-container"><div class="spinner"></div></div>
+
+        <!-- Content Area -->
+        <div id="contentArea">
+            <!-- Merchant list -->
+            <div id="merchantList" class="merchant-grid"></div>
+            <!-- Product list (hidden initially) -->
+            <div id="productList" class="product-grid" style="display:none;"></div>
+            <!-- Empty state -->
+            <div id="emptyState" class="empty-state" style="display:none;">
+                <div class="icon">🍽️</div>
+                <h3>Belum ada toko</h3>
+                <p>Belum ada merchant yang terdaftar</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- CART OVERLAY -->
+    <div class="cart-overlay" id="cartOverlay">
+        <div class="cart-header">
+            <span>🛒 Keranjang</span>
+            <button class="cart-close" id="cartClose"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="cartItems"></div>
+        <div class="cart-total" id="cartTotal">Total: Rp0</div>
+        <div class="cart-actions">
+            <button class="btn-clear" id="clearCart">Kosongkan</button>
+            <button class="btn-checkout" id="checkoutBtn">Pesan Sekarang</button>
+        </div>
+    </div>
+
+    <!-- CHECKOUT MODAL -->
+    <div class="modal-overlay" id="checkoutModal">
+        <div class="modal-box">
+            <h2>📝 Pesanan</h2>
+            <div class="form-group">
+                <label>Alamat Pengiriman</label>
+                <input type="text" id="deliveryAddress" placeholder="Jl. Contoh No. 123" required>
+            </div>
+            <div class="form-group">
+                <label>Catatan (opsional)</label>
+                <textarea id="orderNote" placeholder="Contoh: Jangan pakai cabe, pintu belakang" rows="2"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Metode Pembayaran</label>
+                <select id="paymentMethod">
+                    <option value="cash">Tunai</option>
+                    <option value="qris">QRIS</option>
+                    <option value="bank_transfer">Transfer Bank</option>
+                </select>
+            </div>
+            <div id="checkoutSummary" style="margin: 12px 0; font-size: 0.95rem;"></div>
+            <div class="modal-actions">
+                <button class="btn-cancel" id="cancelCheckout">Batal</button>
+                <button class="btn-confirm" id="confirmCheckout">✅ Pesan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const FIREBASE_CONFIG = {
+            apiKey: "AIzaSyCD0pgeZio-LdKqYDtWxcdXcZwyL4ngYQI",
+            authDomain: "jego-35a2b.firebaseapp.com",
+            databaseURL: "https://jego-35a2b-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "jego-35a2b",
+            storageBucket: "jego-35a2b.firebasestorage.app",
+            messagingSenderId: "600037007040",
+            appId: "1:600037007040:web:ac3243ad9b472647ffd725"
+        };
+
+        let firebaseDatabase = null;
+        let firebaseAuth = null;
+        let currentUser = null;
+        let selectedMerchantId = null;
+        let merchantData = {};
+        let cart = {};
+
+        // ==================== INIT ====================
+        function initFirebase() {
+            if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+            firebaseDatabase = firebase.database();
+            firebaseAuth = firebase.auth();
+        }
+
+        function checkSession() {
+            const session = localStorage.getItem('jego_logged_in_user');
+            if (!session) {
+                window.location.href = 'loginUser.html';
+                return null;
+            }
+            try {
+                currentUser = JSON.parse(session);
+                if (!currentUser.uid) throw new Error('Invalid session');
+                return currentUser;
+            } catch (e) {
+                window.location.href = 'loginUser.html';
+                return null;
+            }
+        }
+
+        // ==================== TOAST ====================
+        let toastTimeout;
+
+        function showToast(msg) {
+            const el = document.getElementById('toast');
+            el.textContent = msg;
+            el.classList.add('show');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => el.classList.remove('show'), 2000);
+        }
+
+        // ==================== LOADING ====================
+        function setLoading(show) {
+            document.getElementById('loadingIndicator').style.display = show ? 'flex' : 'none';
+        }
+
+        // ==================== ESCAPE HTML ====================
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>"]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                if (m === '"') return '&quot;';
+                return m;
+            });
+        }
+
+        // ==================== RENDER MERCHANTS ====================
+        function renderMerchants(merchants) {
+            const container = document.getElementById('merchantList');
+            const empty = document.getElementById('emptyState');
+            const productList = document.getElementById('productList');
+
+            productList.style.display = 'none';
+            container.style.display = 'flex';
+
+            const merchantArr = Object.keys(merchants).map(key => ({ id: key, ...merchants[key] }));
+            const openMerchants = merchantArr.filter(m => m.isOpen !== false);
+
+            if (openMerchants.length === 0) {
+                container.innerHTML = '';
+                empty.style.display = 'block';
+                empty.innerHTML =
+                    `<div class="icon">🏪</div><h3>Belum ada toko buka</h3><p>Semua merchant sedang tutup. Coba lagi nanti.</p>`;
+                return;
+            }
+            empty.style.display = 'none';
+
+            container.innerHTML = openMerchants.map(m => `
+                <div class="merchant-card" data-id="${m.id}" onclick="selectMerchant('${m.id}')">
+                    <div class="avatar">
+                        ${m.storePhoto ? `<img src="${m.storePhoto}" alt="foto" loading="lazy">` : '🏪'}
+                    </div>
+                    <div class="info">
+                        <div class="name">${escapeHtml(m.storeName || m.name || 'Merchant')}</div>
+                        <div class="desc">${escapeHtml(m.storeAddress || m.address || '')}</div>
+                        <span class="status-badge badge-open">🟢 Buka</span>
+                    </div>
+                    <div style="color:#adb5bd;"><i class="fas fa-chevron-right"></i></div>
+                </div>
+            `).join('');
+
+            document.getElementById('statusTitle').textContent = 'Pilih Toko';
+            document.getElementById('statusDesc').textContent = `${openMerchants.length} toko tersedia`;
+            document.getElementById('sectionLabel').textContent = 'Daftar Toko';
+
+            // Apply filter if search keyword exists
+            const searchInput = document.getElementById('searchMerchant');
+            if (searchInput.value.trim() !== '') {
+                filterMerchants(searchInput.value);
+            }
+        }
+
+        // ==================== FILTER MERCHANTS ====================
+        function filterMerchants(keyword) {
+            const term = keyword.toLowerCase().trim();
+            const cards = document.querySelectorAll('.merchant-card');
+            let visibleCount = 0;
+            cards.forEach(card => {
+                const name = card.querySelector('.name')?.textContent?.toLowerCase() || '';
+                const desc = card.querySelector('.desc')?.textContent?.toLowerCase() || '';
+                const match = name.includes(term) || desc.includes(term);
+                card.style.display = match ? 'flex' : 'none';
+                if (match) visibleCount++;
+            });
+            const statusDesc = document.getElementById('statusDesc');
+            if (term === '') {
+                statusDesc.textContent = `${document.querySelectorAll('.merchant-card').length} toko tersedia`;
+            } else {
+                statusDesc.textContent = `Menampilkan ${visibleCount} toko`;
+            }
+        }
+
+        // ==================== SELECT MERCHANT ====================
+        function selectMerchant(merchantId) {
+            selectedMerchantId = merchantId;
+            document.getElementById('merchantList').style.display = 'none';
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('productList').style.display = 'flex';
+            document.getElementById('sectionLabel').textContent = 'Menu Produk';
+            const merchant = merchantData[merchantId];
+            document.getElementById('statusTitle').textContent = '📋 Pilih Menu';
+            document.getElementById('statusDesc').textContent = `Toko: ${merchant?.storeName || merchant?.name || 'Merchant'}`;
+
+            cart = {};
+            updateCartBadge();
+            loadProducts(merchantId);
+        }
+
+        // ==================== LOAD PRODUCTS ====================
+        function loadProducts(merchantId) {
+            setLoading(true);
+            const productsRef = firebaseDatabase.ref('products');
+            productsRef.orderByChild('merchantId').equalTo(merchantId).once('value')
+                .then(snapshot => {
+                    setLoading(false);
+                    const container = document.getElementById('productList');
+                    const products = [];
+                    snapshot.forEach(child => {
+                        const p = child.val();
+                        p.id = child.key;
+                        products.push(p);
+                    });
+
+                    if (products.length === 0) {
+                        container.innerHTML = `
+                            <div class="empty-state" style="display:block;">
+                                <div class="icon">🍽️</div>
+                                <h3>Belum ada produk</h3>
+                                <p>Toko ini belum menambahkan menu</p>
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    const available = products.filter(p => p.isAvailable !== false);
+                    if (available.length === 0) {
+                        container.innerHTML = `
+                            <div class="empty-state" style="display:block;">
+                                <div class="icon">⏳</div>
+                                <h3>Menu sedang kosong</h3>
+                                <p>Belum ada produk tersedia saat ini</p>
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    container.innerHTML = available.map(p => `
+                        <div class="product-card" data-id="${p.id}">
+                            <div class="image">
+                                ${p.imageUrl ? `<img src="${p.imageUrl}" alt="${escapeHtml(p.name)}" loading="lazy">` : '🍔'}
+                            </div>
+                            <div class="info">
+                                <div class="name">${escapeHtml(p.name)}</div>
+                                <div class="desc">${escapeHtml(p.description || '')}</div>
+                                <div class="price">Rp${(p.price || 0).toLocaleString()}</div>
+                                <div class="stock">Stok: ${p.stock || 0}</div>
+                            </div>
+                            <div class="actions">
+                                ${cart[p.id] ? `
+                                    <button onclick="updateQty('${p.id}', -1)">−</button>
+                                    <span class="qty">${cart[p.id].qty}</span>
+                                    <button onclick="updateQty('${p.id}', 1)">+</button>
+                                ` : `
+                                    <button class="add-btn" onclick="addToCart('${p.id}')"><i class="fas fa-plus"></i></button>
+                                `}
+                            </div>
+                        </div>
+                    `).join('');
+                })
+                .catch(err => {
+                    setLoading(false);
+                    showToast('Gagal memuat produk: ' + err.message);
+                });
+        }
+
+        // ==================== CART FUNCTIONS ====================
+        function addToCart(productId) {
+            if (!selectedMerchantId) return;
+            const productRef = firebaseDatabase.ref(`products/${productId}`);
+            productRef.once('value').then(snap => {
+                const p = snap.val();
+                if (!p) return;
+                if (p.stock <= 0) {
+                    showToast('Stok habis!');
+                    return;
+                }
+                if (cart[productId]) {
+                    cart[productId].qty += 1;
+                } else {
+                    cart[productId] = {
+                        name: p.name,
+                        price: p.price || 0,
+                        qty: 1,
+                        imageUrl: p.imageUrl || ''
+                    };
+                }
+                updateCartBadge();
+                showToast(`${p.name} ditambahkan`);
+                loadProducts(selectedMerchantId);
+            });
+        }
+
+        function updateQty(productId, delta) {
+            if (!cart[productId]) return;
+            const newQty = cart[productId].qty + delta;
+            if (newQty <= 0) {
+                delete cart[productId];
+            } else {
+                cart[productId].qty = newQty;
+            }
+            updateCartBadge();
+            loadProducts(selectedMerchantId);
+        }
+
+        function updateCartBadge() {
+            const total = Object.values(cart).reduce((sum, item) => sum + item.qty, 0);
+            const badge = document.getElementById('cartBadge');
+            if (total > 0) {
+                badge.textContent = total;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        // ==================== SHOW CART ====================
+        function showCart() {
+            const overlay = document.getElementById('cartOverlay');
+            const container = document.getElementById('cartItems');
+            const totalEl = document.getElementById('cartTotal');
+
+            const items = Object.keys(cart);
+            if (items.length === 0) {
+                container.innerHTML = '<div style="text-align:center; padding:20px; color:#6c757d;">Keranjang kosong</div>';
+                totalEl.textContent = 'Total: Rp0';
+                overlay.classList.add('open');
+                return;
+            }
+
+            let total = 0;
+            container.innerHTML = items.map(id => {
+                const item = cart[id];
+                const subtotal = item.price * item.qty;
+                total += subtotal;
+                return `
+                    <div class="cart-item">
+                        <div class="left">
+                            <span>${escapeHtml(item.name)}</span>
+                            <span style="color:#6c757d; font-size:0.8rem;">x${item.qty}</span>
+                        </div>
+                        <div>
+                            Rp${subtotal.toLocaleString()}
+                            <button onclick="removeCartItem('${id}')" style="background:none; border:none; color:#dc3545; margin-left:8px; cursor:pointer;"><i class="fas fa-trash-alt"></i></button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            totalEl.textContent = `Total: Rp${total.toLocaleString()}`;
+            overlay.classList.add('open');
+        }
+
+        function removeCartItem(productId) {
+            delete cart[productId];
+            updateCartBadge();
+            showCart();
+            if (selectedMerchantId) loadProducts(selectedMerchantId);
+        }
+
+        function clearCart() {
+            if (Object.keys(cart).length === 0) return;
+            if (!confirm('Kosongkan keranjang?')) return;
+            cart = {};
+            updateCartBadge();
+            showCart();
+            if (selectedMerchantId) loadProducts(selectedMerchantId);
+            showToast('Keranjang dikosongkan');
+        }
+
+        // ==================== CHECKOUT ====================
+        function openCheckout() {
+            const items = Object.keys(cart);
+            if (items.length === 0) {
+                showToast('Keranjang kosong!');
+                return;
+            }
+            if (!currentUser) {
+                showToast('Silakan login terlebih dahulu');
+                return;
+            }
+            if (!selectedMerchantId) {
+                showToast('Pilih toko terlebih dahulu');
+                return;
+            }
+
+            let total = 0;
+            let summary = '';
+            items.forEach(id => {
+                const item = cart[id];
+                const subtotal = item.price * item.qty;
+                total += subtotal;
+                summary += `${item.name} x${item.qty} = Rp${subtotal.toLocaleString()}\n`;
+            });
+            summary += `\nTotal: Rp${total.toLocaleString()}`;
+
+            document.getElementById('checkoutSummary').innerHTML = summary.replace(/\n/g, '<br>');
+            document.getElementById('deliveryAddress').value = currentUser.address || '';
+            document.getElementById('orderNote').value = '';
+            document.getElementById('paymentMethod').value = 'cash';
+
+            document.getElementById('checkoutModal').classList.add('active');
+            document.getElementById('cartOverlay').classList.remove('open');
+        }
+
+        function closeCheckout() {
+            document.getElementById('checkoutModal').classList.remove('active');
+        }
+
+        function placeOrder() {
+            const address = document.getElementById('deliveryAddress').value.trim();
+            if (!address) {
+                showToast('Alamat pengiriman wajib diisi');
+                return;
+            }
+
+            const note = document.getElementById('orderNote').value.trim();
+            const payment = document.getElementById('paymentMethod').value;
+
+            const items = Object.keys(cart).map(id => ({
+                productId: id,
+                name: cart[id].name,
+                price: cart[id].price,
+                quantity: cart[id].qty,
+                subtotal: cart[id].price * cart[id].qty
+            }));
+
+            const totalPrice = items.reduce((sum, item) => sum + item.subtotal, 0);
+
+            const orderData = {
+                customerId: currentUser.uid,
+                customerName: currentUser.name || 'Customer',
+                merchantId: selectedMerchantId,
+                merchantName: merchantData[selectedMerchantId]?.storeName || merchantData[selectedMerchantId]?.name ||
+                    'Merchant',
+                items: items,
+                totalPrice: totalPrice,
+                status: 'pending',
+                deliveryAddress: address,
+                orderNote: note,
+                paymentMethod: payment,
+                paymentStatus: 'pending',
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+
+            const confirmBtn = document.getElementById('confirmCheckout');
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = 'Memproses...';
+
+            const newOrderRef = firebaseDatabase.ref('foodOrders').push();
+            newOrderRef.set(orderData)
+                .then(() => {
+                    showToast('✅ Pesanan berhasil!');
+                    cart = {};
+                    updateCartBadge();
+                    closeCheckout();
+                    document.getElementById('cartOverlay').classList.remove('open');
+                    if (selectedMerchantId) loadProducts(selectedMerchantId);
+                    confirmBtn.disabled = false;
+                    confirmBtn.textContent = '✅ Pesan';
+                })
+                .catch(err => {
+                    showToast('❌ Gagal: ' + err.message);
+                    confirmBtn.disabled = false;
+                    confirmBtn.textContent = '✅ Pesan';
+                });
+        }
+
+        // ==================== BACK BUTTON ====================
+        function goBack() {
+            if (selectedMerchantId) {
+                selectedMerchantId = null;
+                document.getElementById('productList').style.display = 'none';
+                document.getElementById('merchantList').style.display = 'flex';
+                document.getElementById('sectionLabel').textContent = 'Daftar Toko';
+                document.getElementById('statusTitle').textContent = 'Pilih Toko';
+                document.getElementById('statusDesc').textContent = 'Pilih merchant untuk mulai memesan';
+                loadMerchants();
+            } else {
+                window.location.href = 'jenis_kenderaan.html';
+            }
+        }
+
+        // ==================== LOAD MERCHANTS ====================
+        function loadMerchants() {
+            setLoading(true);
+            const merchantsRef = firebaseDatabase.ref('merchants');
+            merchantsRef.once('value')
+                .then(snapshot => {
+                    setLoading(false);
+                    const data = snapshot.val() || {};
+                    merchantData = data;
+                    renderMerchants(data);
+                })
+                .catch(err => {
+                    setLoading(false);
+                    showToast('Gagal memuat toko: ' + err.message);
+                });
+        }
+
+        // ==================== INIT ====================
+        function init() {
+            initFirebase();
+            const user = checkSession();
+            if (!user) return;
+
+            loadMerchants();
+
+            // Event listeners
+            document.getElementById('backBtn').addEventListener('click', goBack);
+            document.getElementById('cartIcon').addEventListener('click', showCart);
+            document.getElementById('cartClose').addEventListener('click', () => {
+                document.getElementById('cartOverlay').classList.remove('open');
+            });
+            document.getElementById('clearCart').addEventListener('click', clearCart);
+            document.getElementById('checkoutBtn').addEventListener('click', openCheckout);
+            document.getElementById('cancelCheckout').addEventListener('click', closeCheckout);
+            document.getElementById('confirmCheckout').addEventListener('click', placeOrder);
+
+            document.getElementById('cartOverlay').addEventListener('click', function(e) {
+                if (e.target === this) this.classList.remove('open');
+            });
+
+            // Search filter
+            document.getElementById('searchMerchant').addEventListener('input', function() {
+                filterMerchants(this.value);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
