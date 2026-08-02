@@ -1,0 +1,1547 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Dashboard Merchant - JeGo Food</title>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            background: #f8f9fa;
+            min-height: 100vh;
+            padding: 16px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            background: linear-gradient(135deg, #FF6D00, #FF9800);
+            color: white;
+            padding: 20px 24px;
+            border-radius: 24px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .header .merchant-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.9rem;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 6px 16px 6px 12px;
+            border-radius: 40px;
+        }
+
+        .header .merchant-info .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #FF6D00;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .btn-back {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: 0.2s;
+            text-decoration: none;
+        }
+        .btn-back:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* ===== STATUS TOKO ===== */
+        .status-card {
+            background: white;
+            border-radius: 20px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            border: 1px solid #e9ecef;
+        }
+
+        .status-card .label {
+            font-weight: 600;
+            color: #555;
+        }
+
+        .toggle-status {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .badge {
+            padding: 4px 12px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .badge-open {
+            background: #d4edda;
+            color: #155724;
+        }
+        .badge-closed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .btn-toggle {
+            background: #e9ecef;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: 0.2s;
+        }
+        .btn-toggle:active {
+            transform: scale(0.95);
+        }
+
+        /* ===== TABS ===== */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            background: white;
+            padding: 6px;
+            border-radius: 16px;
+            border: 1px solid #e9ecef;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 12px;
+            background: transparent;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: 0.2s;
+            color: #6c757d;
+            min-width: 80px;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #FF6D00, #FF9800);
+            color: white;
+            box-shadow: 0 2px 8px rgba(255, 109, 0, 0.25);
+        }
+
+        .tab-btn:active {
+            transform: scale(0.97);
+        }
+
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        /* ===== FORM CARD ===== */
+        .form-card {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            margin-bottom: 24px;
+            border: 1px solid #e9ecef;
+        }
+
+        .form-card h2 {
+            font-size: 1.2rem;
+            margin-bottom: 16px;
+            color: #212529;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #495057;
+            margin-bottom: 4px;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #ced4da;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            transition: 0.2s;
+            background: #fff;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #FF6D00;
+            box-shadow: 0 0 0 3px rgba(255, 109, 0, 0.15);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, #FF6D00, #FF9800);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            width: 100%;
+            transition: 0.2s;
+        }
+        .btn-submit:active {
+            transform: scale(0.98);
+        }
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* ===== LIST PRODUK ===== */
+        .product-list {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e9ecef;
+        }
+
+        .product-list h2 {
+            font-size: 1.2rem;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #212529;
+        }
+
+        .product-list h2 span {
+            font-size: 0.85rem;
+            font-weight: 400;
+            color: #6c757d;
+        }
+
+        .product-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 0;
+            border-bottom: 1px solid #f1f3f5;
+        }
+        .product-item:last-child {
+            border-bottom: none;
+        }
+
+        .product-item .image {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            background: #f1f3f5;
+            flex-shrink: 0;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: #adb5bd;
+        }
+
+        .product-item .image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .product-item .info {
+            flex: 1;
+        }
+        .product-item .info .name {
+            font-weight: 700;
+            color: #212529;
+            font-size: 1rem;
+        }
+        .product-item .info .desc {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-top: 2px;
+        }
+        .product-item .info .price {
+            font-weight: 700;
+            color: #FF6D00;
+            font-size: 0.9rem;
+            margin-top: 2px;
+        }
+        .product-item .info .stock {
+            font-size: 0.7rem;
+            color: #6c757d;
+            background: #e9ecef;
+            padding: 2px 8px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .product-item .actions {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        .product-item .actions button {
+            background: none;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-edit {
+            background: #fff3e0;
+            color: #E65100;
+        }
+        .btn-edit:active {
+            background: #ffe0b2;
+        }
+        .btn-delete {
+            background: #fbe9e7;
+            color: #c62828;
+        }
+        .btn-delete:active {
+            background: #ffcdd2;
+        }
+
+        /* ===== ORDER ITEM ===== */
+        .order-item {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+        }
+
+        .order-item .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .order-item .order-id {
+            font-weight: 700;
+            color: #212529;
+        }
+
+        .order-item .order-time {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+
+        .order-item .order-items {
+            font-size: 0.9rem;
+            color: #495057;
+            margin-bottom: 8px;
+        }
+
+        .order-item .order-total {
+            font-weight: 700;
+            color: #FF6D00;
+            font-size: 1.1rem;
+        }
+
+        .order-item .order-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .order-item .order-actions button {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .order-item .order-actions button:active {
+            transform: scale(0.96);
+        }
+
+        .btn-accept {
+            background: #d4edda;
+            color: #155724;
+        }
+        .btn-accept:hover {
+            background: #c3e6cb;
+        }
+
+        .btn-reject {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .btn-reject:hover {
+            background: #f5c6cb;
+        }
+
+        .btn-ready {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .btn-ready:hover {
+            background: #ffeaa7;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6c757d;
+        }
+        .empty-state .icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+        .empty-state h3 {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        /* ===== LOADING & ALERT ===== */
+        .global-loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            flex-direction: column;
+        }
+
+        .global-loading .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            border-top-color: #FF9800;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        .global-loading p {
+            color: white;
+            margin-top: 16px;
+            font-weight: 500;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 16px;
+            margin-bottom: 16px;
+            font-weight: 500;
+            display: none;
+        }
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        /* ===== MODAL EDIT ===== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-box {
+            background: white;
+            max-width: 500px;
+            width: 100%;
+            border-radius: 28px;
+            padding: 28px;
+            animation: fadeUp 0.2s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-box h2 {
+            margin-bottom: 16px;
+            font-size: 1.3rem;
+            color: #212529;
+        }
+        .modal-box .form-group {
+            margin-bottom: 12px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        .modal-actions button {
+            flex: 1;
+            padding: 10px;
+            border-radius: 40px;
+            border: none;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .modal-actions .btn-save {
+            background: #FF6D00;
+            color: white;
+        }
+        .modal-actions .btn-cancel {
+            background: #e9ecef;
+            color: #495057;
+        }
+        .modal-actions button:active {
+            transform: scale(0.96);
+        }
+
+        /* ===== PREVIEW FOTO ===== */
+        .photo-preview {
+            margin-top: 8px;
+            max-width: 100%;
+        }
+        .photo-preview img {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 12px;
+            border: 1px solid #e9ecef;
+            display: none;
+        }
+
+        @media (max-width: 500px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+                text-align: center;
+            }
+            .header .merchant-info {
+                justify-content: center;
+            }
+            .product-item {
+                flex-wrap: wrap;
+            }
+            .product-item .actions {
+                margin-left: auto;
+            }
+            .tabs {
+                flex-direction: column;
+            }
+            .tab-btn {
+                flex: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== LOADING OVERLAY ===== -->
+    <div class="global-loading" id="globalLoading">
+        <div class="spinner"></div>
+        <p>Memproses...</p>
+    </div>
+
+    <!-- ===== MODAL EDIT PRODUK ===== -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal-box">
+            <h2>✏️ Edit Produk</h2>
+            <div class="form-group">
+                <label>Nama Produk</label>
+                <input type="text" id="editName" placeholder="Nama produk" />
+            </div>
+            <div class="form-group">
+                <label>Deskripsi</label>
+                <textarea id="editDesc" placeholder="Deskripsi produk"></textarea>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Harga (Rp)</label>
+                    <input type="number" id="editPrice" placeholder="25000" min="0" />
+                </div>
+                <div class="form-group">
+                    <label>Stok</label>
+                    <input type="number" id="editStock" placeholder="50" min="0" />
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Gambar (URL)</label>
+                <input type="url" id="editImage" placeholder="https://... (opsional)" />
+            </div>
+            <div class="form-group">
+                <label>Ketersediaan</label>
+                <select id="editAvailable">
+                    <option value="true">Tersedia</option>
+                    <option value="false">Tidak Tersedia</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" id="closeEditModal">Batal</button>
+                <button class="btn-save" id="saveEditProduct">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <div class="container">
+
+        <!-- HEADER -->
+        <div class="header">
+            <div>
+                <h1>🏪 Dashboard Merchant</h1>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                <div class="merchant-info">
+                    <div class="avatar" id="merchantAvatar">M</div>
+                    <span id="merchantName">Merchant</span>
+                </div>
+                <a href="jenis_kenderaan.html" class="btn-back">← Kembali</a>
+            </div>
+        </div>
+
+        <!-- STATUS TOKO -->
+        <div class="status-card">
+            <div>
+                <span class="label">Status Toko:</span>
+                <span class="badge badge-open" id="statusBadge">🟢 Buka</span>
+            </div>
+            <div class="toggle-status">
+                <button class="btn-toggle" id="toggleStatusBtn">Ubah Status</button>
+            </div>
+        </div>
+
+        <!-- ALERT -->
+        <div id="alertSuccess" class="alert alert-success"></div>
+        <div id="alertError" class="alert alert-danger"></div>
+
+        <!-- TABS -->
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="products">📋 Produk</button>
+            <button class="tab-btn" data-tab="orders">📦 Pesanan</button>
+            <button class="tab-btn" data-tab="profile">🏪 Profil Toko</button>
+        </div>
+
+        <!-- TAB 1: PRODUK -->
+        <div class="tab-content active" id="tab-products">
+            <div class="form-card">
+                <h2>➕ Tambah Produk Baru</h2>
+                <form id="productForm">
+                    <div class="form-group">
+                        <label>Nama Produk *</label>
+                        <input type="text" id="productName" placeholder="Contoh: Nasi Goreng Spesial" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Deskripsi</label>
+                        <textarea id="productDesc" placeholder="Deskripsi singkat produk"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Harga (Rp) *</label>
+                            <input type="number" id="productPrice" placeholder="25000" required min="0" />
+                        </div>
+                        <div class="form-group">
+                            <label>Stok</label>
+                            <input type="number" id="productStock" placeholder="50" value="50" min="0" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Gambar (URL)</label>
+                        <input type="url" id="productImage" placeholder="https://... (kosongkan jika tidak ada)" />
+                    </div>
+                    <div class="form-group">
+                        <label>Ketersediaan</label>
+                        <select id="productAvailable">
+                            <option value="true">Tersedia</option>
+                            <option value="false">Tidak Tersedia</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-submit" id="submitBtn">➕ Tambah Produk</button>
+                </form>
+            </div>
+
+            <div class="product-list">
+                <h2>
+                    📋 Daftar Produk
+                    <span id="productCount">0 item</span>
+                </h2>
+                <div id="productListContainer">
+                    <!-- akan diisi JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: PESANAN -->
+        <div class="tab-content" id="tab-orders">
+            <div class="product-list">
+                <h2>
+                    📦 Pesanan Masuk
+                    <span id="orderCount">0 pesanan</span>
+                </h2>
+                <div id="orderListContainer">
+                    <!-- akan diisi JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: PROFIL TOKO -->
+        <div class="tab-content" id="tab-profile">
+            <div class="form-card">
+                <h2>🏪 Profil Toko</h2>
+                <form id="profileForm">
+                    <div class="form-group">
+                        <label>Nama Toko *</label>
+                        <input type="text" id="storeName" placeholder="Nama toko Anda" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Alamat Toko *</label>
+                        <textarea id="storeAddress" placeholder="Alamat lengkap toko" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Nomor Telepon Toko</label>
+                        <input type="tel" id="storePhone" placeholder="08123456789" />
+                    </div>
+                    <div class="form-group">
+                        <label>Deskripsi Toko</label>
+                        <textarea id="storeDesc" placeholder="Deskripsi singkat tentang toko Anda"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Foto Toko</label>
+                        <input type="file" id="storePhotoInput" accept="image/*" />
+                        <div class="photo-preview">
+                            <img id="storePhotoImg" src="" alt="Foto Toko" />
+                        </div>
+                        <input type="hidden" id="storePhotoUrl" value="" />
+                    </div>
+                    <button type="submit" class="btn-submit" id="saveProfileBtn">💾 Simpan Profil</button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ==================== KONFIGURASI FIREBASE ====================
+        const FIREBASE_CONFIG = {
+            apiKey: "AIzaSyCD0pgeZio-LdKqYDtWxcdXcZwyL4ngYQI",
+            authDomain: "jego-35a2b.firebaseapp.com",
+            databaseURL: "https://jego-35a2b-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "jego-35a2b",
+            storageBucket: "jego-35a2b.firebasestorage.app",
+            messagingSenderId: "600037007040",
+            appId: "1:600037007040:web:ac3243ad9b472647ffd725"
+        };
+
+        let firebaseDatabase = null;
+        let firebaseAuth = null;
+        let currentUser = null;
+        let merchantData = null;
+        let editingProductId = null;
+
+        // ==================== INIT FIREBASE ====================
+        function initFirebase() {
+            if (!firebase.apps.length) {
+                firebase.initializeApp(FIREBASE_CONFIG);
+            }
+            firebaseDatabase = firebase.database();
+            firebaseAuth = firebase.auth();
+        }
+
+        // ==================== CEK SESSION ====================
+        function checkSession() {
+            const session = localStorage.getItem('jego_logged_in_user');
+            if (!session) {
+                window.location.href = 'loginUser.html';
+                return;
+            }
+            try {
+                const user = JSON.parse(session);
+                if (!user.uid) throw new Error('Invalid session');
+                currentUser = user;
+                document.getElementById('merchantName').textContent = user.name || 'Merchant';
+                document.getElementById('merchantAvatar').textContent = user.name ? user.name.charAt(0).toUpperCase() : 'M';
+
+                // Cek data merchant
+                return firebaseDatabase.ref(`merchants/${user.uid}`).once('value')
+                    .then((snap) => {
+                        if (!snap.exists()) {
+                            // Buat data merchant default
+                            return firebaseDatabase.ref(`merchants/${user.uid}`).set({
+                                uid: user.uid,
+                                name: user.name || 'Merchant',
+                                email: user.email || '',
+                                phone: user.phone || '',
+                                address: user.address || '',
+                                status: 'active',
+                                isOpen: true,
+                                createdAt: new Date().toISOString()
+                            }).then(() => {
+                                merchantData = {
+                                    uid: user.uid,
+                                    name: user.name || 'Merchant',
+                                    isOpen: true
+                                };
+                                updateStatusUI(true);
+                                loadProducts();
+                                listenOrders();
+                                loadStoreProfile();
+                            });
+                        } else {
+                            merchantData = snap.val();
+                            merchantData.uid = user.uid;
+                            updateStatusUI(merchantData.isOpen !== false);
+                            loadProducts();
+                            listenOrders();
+                            loadStoreProfile();
+                        }
+                    });
+            } catch (e) {
+                console.error('Session check error:', e);
+                localStorage.removeItem('jego_logged_in_user');
+                window.location.href = 'loginUser.html';
+            }
+        }
+
+        // ==================== UPDATE STATUS TOKO ====================
+        function updateStatusUI(isOpen) {
+            const badge = document.getElementById('statusBadge');
+            if (isOpen) {
+                badge.textContent = '🟢 Buka';
+                badge.className = 'badge badge-open';
+            } else {
+                badge.textContent = '🔴 Tutup';
+                badge.className = 'badge badge-closed';
+            }
+        }
+
+        // ==================== LOAD PRODUK ====================
+        function loadProducts() {
+            if (!currentUser) return;
+            const productsRef = firebaseDatabase.ref('products');
+            productsRef.orderByChild('merchantId').equalTo(currentUser.uid).on('value', (snapshot) => {
+                const products = [];
+                snapshot.forEach((child) => {
+                    const p = child.val();
+                    p.id = child.key;
+                    products.push(p);
+                });
+                renderProducts(products);
+                document.getElementById('productCount').textContent = products.length + ' item';
+            });
+        }
+
+        function renderProducts(products) {
+            const container = document.getElementById('productListContainer');
+            if (products.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">🍽️</div>
+                        <h3>Belum ada produk</h3>
+                        <p>Tambahkan produk pertama Anda melalui form di atas</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = products.map(p => `
+                <div class="product-item" data-id="${p.id}">
+                    <div class="image">
+                        ${p.imageUrl ? `<img src="${p.imageUrl}" alt="${p.name}" loading="lazy" />` : '🖼️'}
+                    </div>
+                    <div class="info">
+                        <div class="name">${escapeHtml(p.name)}</div>
+                        <div class="desc">${escapeHtml(p.description || '')}</div>
+                        <div class="price">Rp${(p.price || 0).toLocaleString()}</div>
+                        <span class="stock">${p.isAvailable !== false ? '✅ Tersedia' : '❌ Tidak Tersedia'} • Stok: ${p.stock || 0}</span>
+                    </div>
+                    <div class="actions">
+                        <button class="btn-edit" onclick="editProduct('${p.id}')" title="Edit"><i class="fas fa-pen"></i></button>
+                        <button class="btn-delete" onclick="deleteProduct('${p.id}')" title="Hapus"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>"]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                if (m === '"') return '&quot;';
+                return m;
+            });
+        }
+
+        // ==================== TAMBAH PRODUK ====================
+        document.getElementById('productForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (!currentUser) return;
+
+            const name = document.getElementById('productName').value.trim();
+            const description = document.getElementById('productDesc').value.trim();
+            const price = parseInt(document.getElementById('productPrice').value);
+            const stock = parseInt(document.getElementById('productStock').value) || 0;
+            const imageUrl = document.getElementById('productImage').value.trim();
+            const isAvailable = document.getElementById('productAvailable').value === 'true';
+
+            if (!name || !price || price < 0) {
+                showAlert('Nama dan harga wajib diisi (harga minimal 0)', 'error');
+                return;
+            }
+            if (stock < 0) {
+                showAlert('Stok tidak boleh negatif', 'error');
+                return;
+            }
+
+            showGlobalLoading(true);
+            const newProductRef = firebaseDatabase.ref('products').push();
+            const productData = {
+                merchantId: currentUser.uid,
+                name: name,
+                description: description,
+                price: price,
+                stock: stock,
+                imageUrl: imageUrl || '',
+                isAvailable: isAvailable,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+
+            newProductRef.set(productData)
+                .then(() => {
+                    showGlobalLoading(false);
+                    showAlert('✅ Produk berhasil ditambahkan!', 'success');
+                    document.getElementById('productForm').reset();
+                    document.getElementById('productStock').value = '50';
+                    document.getElementById('productAvailable').value = 'true';
+                })
+                .catch((err) => {
+                    showGlobalLoading(false);
+                    showAlert('❌ Gagal tambah produk: ' + err.message, 'error');
+                });
+        });
+
+        // ==================== EDIT PRODUK ====================
+        function editProduct(productId) {
+            editingProductId = productId;
+            const productsRef = firebaseDatabase.ref('products');
+            productsRef.child(productId).once('value')
+                .then((snap) => {
+                    const p = snap.val();
+                    if (!p) return;
+                    document.getElementById('editName').value = p.name || '';
+                    document.getElementById('editDesc').value = p.description || '';
+                    document.getElementById('editPrice').value = p.price || '';
+                    document.getElementById('editStock').value = p.stock || '';
+                    document.getElementById('editImage').value = p.imageUrl || '';
+                    document.getElementById('editAvailable').value = p.isAvailable !== false ? 'true' : 'false';
+                    document.getElementById('editModal').classList.add('active');
+                });
+        }
+
+        document.getElementById('closeEditModal').addEventListener('click', function() {
+            document.getElementById('editModal').classList.remove('active');
+            editingProductId = null;
+        });
+
+        document.getElementById('saveEditProduct').addEventListener('click', function() {
+            if (!editingProductId) return;
+            const name = document.getElementById('editName').value.trim();
+            const description = document.getElementById('editDesc').value.trim();
+            const price = parseInt(document.getElementById('editPrice').value);
+            const stock = parseInt(document.getElementById('editStock').value) || 0;
+            const imageUrl = document.getElementById('editImage').value.trim();
+            const isAvailable = document.getElementById('editAvailable').value === 'true';
+
+            if (!name || !price || price < 0) {
+                showAlert('Nama dan harga wajib diisi (harga minimal 0)', 'error');
+                return;
+            }
+            if (stock < 0) {
+                showAlert('Stok tidak boleh negatif', 'error');
+                return;
+            }
+
+            showGlobalLoading(true);
+            const updates = {
+                name: name,
+                description: description,
+                price: price,
+                stock: stock,
+                imageUrl: imageUrl || '',
+                isAvailable: isAvailable,
+                updatedAt: new Date().toISOString()
+            };
+
+            firebaseDatabase.ref('products').child(editingProductId).update(updates)
+                .then(() => {
+                    showGlobalLoading(false);
+                    showAlert('✅ Produk berhasil diupdate!', 'success');
+                    document.getElementById('editModal').classList.remove('active');
+                    editingProductId = null;
+                })
+                .catch((err) => {
+                    showGlobalLoading(false);
+                    showAlert('❌ Gagal update: ' + err.message, 'error');
+                });
+        });
+
+        // ==================== HAPUS PRODUK ====================
+        function deleteProduct(productId) {
+            if (!confirm('Yakin ingin menghapus produk ini?')) return;
+            showGlobalLoading(true);
+            firebaseDatabase.ref('products').child(productId).remove()
+                .then(() => {
+                    showGlobalLoading(false);
+                    showAlert('🗑️ Produk dihapus', 'success');
+                })
+                .catch((err) => {
+                    showGlobalLoading(false);
+                    showAlert('❌ Gagal hapus: ' + err.message, 'error');
+                });
+        }
+
+        // ==================== TOGGLE STATUS TOKO ====================
+        document.getElementById('toggleStatusBtn').addEventListener('click', function() {
+            if (!currentUser) return;
+            const newStatus = !(merchantData.isOpen !== false);
+            showGlobalLoading(true);
+            firebaseDatabase.ref(`merchants/${currentUser.uid}/isOpen`).set(newStatus)
+                .then(() => {
+                    merchantData.isOpen = newStatus;
+                    updateStatusUI(newStatus);
+                    showGlobalLoading(false);
+                    showAlert(newStatus ? '🟢 Toko dibuka' : '🔴 Toko ditutup', 'success');
+                })
+                .catch((err) => {
+                    showGlobalLoading(false);
+                    showAlert('❌ Gagal update status: ' + err.message, 'error');
+                });
+        });
+
+        // ==================== TAB SWITCH ====================
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                const tabId = 'tab-' + this.dataset.tab;
+                document.getElementById(tabId).classList.add('active');
+                if (this.dataset.tab === 'profile') {
+                    loadStoreProfile();
+                }
+            });
+        });
+
+        // ==================== PESANAN MASUK ====================
+        function listenOrders() {
+            if (!currentUser) return;
+            const ordersRef = firebaseDatabase.ref('foodOrders');
+            ordersRef.orderByChild('merchantId').equalTo(currentUser.uid).on('value', (snapshot) => {
+                const orders = [];
+                snapshot.forEach((child) => {
+                    const order = child.val();
+                    order.id = child.key;
+                    orders.push(order);
+                });
+                // Urutkan: pending di atas
+                orders.sort((a, b) => {
+                    const statusOrder = { 'pending': 0, 'accepted': 1, 'looking_for_driver': 2,
+                        'driver_assigned': 3, 'on_way_to_merchant': 4, 'picked_up': 5, 'on_the_way': 6,
+                        'delivered': 7, 'rejected': 8, 'cancelled': 9 };
+                    return (statusOrder[a.status] || 99) - (statusOrder[b.status] || 99);
+                });
+                renderOrders(orders);
+                document.getElementById('orderCount').textContent = orders.length + ' pesanan';
+            });
+        }
+
+        function renderOrders(orders) {
+            const container = document.getElementById('orderListContainer');
+            if (orders.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">📭</div>
+                        <h3>Belum ada pesanan</h3>
+                        <p>Pesanan akan muncul di sini</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = orders.map(order => `
+                <div class="order-item" data-id="${order.id}">
+                    <div class="order-header">
+                        <span class="order-id">#${order.orderId || order.id.slice(-6)}</span>
+                        <span class="order-time">${formatTime(order.createdAt)}</span>
+                    </div>
+                    <div style="margin-bottom:4px;">
+                        <span class="badge ${getStatusBadgeClass(order.status)}">${getStatusLabel(order.status)}</span>
+                    </div>
+                    <div class="order-items">
+                        ${order.items ? order.items.map(item => `${item.name} x${item.quantity} = Rp${(item.price * item.quantity).toLocaleString()}`).join('<br>') : 'Tidak ada item'}
+                    </div>
+                    <div class="order-total">Total: Rp${(order.totalPrice || 0).toLocaleString()}</div>
+                    <div style="font-size:0.8rem; color:#6c757d; margin-top:4px;">
+                        👤 ${order.customerName || 'Customer'} • 📍 ${order.deliveryAddress || 'Alamat tidak tersedia'}
+                    </div>
+                    <div class="order-actions">
+                        ${order.status === 'pending' ? `
+                            <button class="btn-accept" onclick="acceptOrder('${order.id}')">✅ Terima</button>
+                            <button class="btn-reject" onclick="rejectOrder('${order.id}')">❌ Tolak</button>
+                        ` : ''}
+                        ${order.status === 'accepted' ? `
+                            <button class="btn-ready" onclick="markOrderReady('${order.id}')">👨‍🍳 Siap</button>
+                        ` : ''}
+                        ${order.status === 'looking_for_driver' ? `
+                            <span style="color:#856404; background:#fff3cd; padding:4px 12px; border-radius:40px; font-size:0.8rem;">⏳ Mencari driver...</span>
+                        ` : ''}
+                        ${order.status === 'driver_assigned' ? `
+                            <span style="color:#155724; background:#d4edda; padding:4px 12px; border-radius:40px; font-size:0.8rem;">🚗 Driver ditugaskan</span>
+                        ` : ''}
+                        ${order.status === 'on_way_to_merchant' ? `
+                            <span style="color:#004085; background:#cce5ff; padding:4px 12px; border-radius:40px; font-size:0.8rem;">🚗 Driver menuju toko</span>
+                        ` : ''}
+                        ${order.status === 'picked_up' ? `
+                            <span style="color:#856404; background:#fff3cd; padding:4px 12px; border-radius:40px; font-size:0.8rem;">📦 Pesanan diambil</span>
+                        ` : ''}
+                        ${order.status === 'on_the_way' ? `
+                            <span style="color:#004085; background:#cce5ff; padding:4px 12px; border-radius:40px; font-size:0.8rem;">🚗 Dalam perjalanan</span>
+                        ` : ''}
+                        ${order.status === 'delivered' ? `
+                            <span style="color:#155724; background:#d4edda; padding:4px 12px; border-radius:40px; font-size:0.8rem;">✅ Selesai</span>
+                        ` : ''}
+                        ${order.status === 'rejected' || order.status === 'cancelled' ? `
+                            <span style="color:#721c24; background:#f8d7da; padding:4px 12px; border-radius:40px; font-size:0.8rem;">❌ ${order.status === 'rejected' ? 'Ditolak' : 'Dibatalkan'}</span>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function getStatusLabel(status) {
+            const labels = {
+                'pending': '⏳ Menunggu',
+                'accepted': '✅ Diterima',
+                'looking_for_driver': '🔍 Cari Driver',
+                'driver_assigned': '🚗 Driver Ditugaskan',
+                'on_way_to_merchant': '🚗 Driver Menuju Toko',
+                'picked_up': '📦 Diambil',
+                'on_the_way': '🚗 Dalam Perjalanan',
+                'delivered': '✅ Selesai',
+                'rejected': '❌ Ditolak',
+                'cancelled': '❌ Dibatalkan'
+            };
+            return labels[status] || status;
+        }
+
+        function getStatusBadgeClass(status) {
+            const classes = {
+                'pending': 'badge-warning',
+                'accepted': 'badge-success',
+                'looking_for_driver': 'badge-info',
+                'driver_assigned': 'badge-info',
+                'on_way_to_merchant': 'badge-info',
+                'picked_up': 'badge-info',
+                'on_the_way': 'badge-info',
+                'delivered': 'badge-success',
+                'rejected': 'badge-danger',
+                'cancelled': 'badge-danger'
+            };
+            return classes[status] || 'badge-secondary';
+        }
+
+        function formatTime(timestamp) {
+            if (!timestamp) return '-';
+            try {
+                const date = new Date(timestamp);
+                return date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+            } catch {
+                return timestamp;
+            }
+        }
+
+        // ==================== ACTION PESANAN ====================
+        function acceptOrder(orderId) {
+            if (!confirm('Terima pesanan ini?')) return;
+            showGlobalLoading(true);
+            const updates = {
+                [`foodOrders/${orderId}/status`]: 'accepted',
+                [`foodOrders/${orderId}/acceptedAt`]: new Date().toISOString()
+            };
+            firebaseDatabase.ref().update(updates)
+                .then(() => {
+                    showGlobalLoading(false);
+                    showAlert('✅ Pesanan diterima!', 'success');
+                })
+                .catch((err) => {
+                    showGlobalLoading(false);
+                    showAlert('❌ Gagal: ' + err.message, 'error');
+                });
+        }
+
+        function rejectOrder(orderId) {
+            if (!confirm('Tolak pesanan ini?')) return;
+            showGlobalLoading(true);
+            firebaseDatabase.ref(`foodOrders/${orderId}/status`).set('rejected')
+                .then(() => {
+                    showGlobalLoading(false);
+                    showAlert('❌ Pesanan ditolak', 'success');
+                })
+                .catch((err) => {
+                    showGlobalLoading(false);
+                    showAlert('❌ Gagal: ' + err.message, 'error');
+                });
+        }
+
+        function markOrderReady(orderId) {
+            if (!confirm('Pesanan sudah siap?')) return;
+            showGlobalLoading(true);
+            const updates = {
+                [`foodOrders/${orderId}/status`]: 'looking_for_driver',
+                [`foodOrders/${orderId}/readyAt`]: new Date().toISOString()
+            };
+            firebaseDatabase.ref().update(updates)
+                .then(() => {
+                    showGlobalLoading(false);
+                    showAlert('👨‍🍳 Pesanan siap! Mencari driver...', 'success');
+                    // Trigger cari driver
+                    findNearestDriver(orderId);
+                })
+                .catch((err) => {
+                    showGlobalLoading(false);
+                    showAlert('❌ Gagal: ' + err.message, 'error');
+                });
+        }
+
+        // ==================== CARI DRIVER ====================
+        function findNearestDriver(orderId) {
+            firebaseDatabase.ref(`foodOrders/${orderId}`).once('value')
+                .then((snap) => {
+                    const order = snap.val();
+                    if (!order) return;
+                    const merchantId = order.merchantId;
+                    firebaseDatabase.ref(`merchants/${merchantId}/location`).once('value')
+                        .then((merchantSnap) => {
+                            const merchantLoc = merchantSnap.val();
+                            if (merchantLoc) {
+                                searchDriversNearby(orderId, merchantLoc.lat, merchantLoc.lng);
+                            }
+                        });
+                });
+        }
+
+        function searchDriversNearby(orderId, merchantLat, merchantLng) {
+            const driversRef = firebaseDatabase.ref('drivers');
+            driversRef.orderByChild('isFoodDelivery').equalTo(true).once('value')
+                .then((snapshot) => {
+                    const nearbyDrivers = [];
+                    snapshot.forEach((child) => {
+                        const driver = child.val();
+                        const driverId = child.key;
+                        if (driver.status === 'available' && driver.currentLocation) {
+                            const distance = calculateDistance(
+                                merchantLat, merchantLng,
+                                driver.currentLocation.lat,
+                                driver.currentLocation.lng
+                            );
+                            if (distance <= 10) {
+                                nearbyDrivers.push({ id: driverId, name: driver.name, distance: distance });
+                            }
+                        }
+                    });
+                    nearbyDrivers.sort((a, b) => a.distance - b.distance);
+                    if (nearbyDrivers.length > 0) {
+                        const topDrivers = nearbyDrivers.slice(0, 10);
+                        broadcastToDrivers(orderId, topDrivers);
+                    } else {
+                        firebaseDatabase.ref(`foodOrders/${orderId}/status`).set('no_driver_available');
+                        showAlert('⚠️ Tidak ada driver tersedia', 'error');
+                    }
+                });
+        }
+
+        function broadcastToDrivers(orderId, drivers) {
+            const updates = {
+                [`foodOrders/${orderId}/driverBids`]: {}
+            };
+            drivers.forEach(driver => {
+                updates[`foodOrders/${orderId}/driverBids/${driver.id}`] = {
+                    driverName: driver.name,
+                    distance: driver.distance,
+                    timestamp: new Date().toISOString(),
+                    status: 'pending'
+                };
+            });
+            firebaseDatabase.ref().update(updates);
+            showAlert('📢 Broadcast ke ' + drivers.length + ' driver terdekat', 'success');
+        }
+
+        function calculateDistance(lat1, lng1, lat2, lng2) {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLng = (lng2 - lng1) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLng / 2) * Math.sin(dLng / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
+
+        // ==================== PROFIL TOKO ====================
+        function loadStoreProfile() {
+            if (!currentUser) return;
+            const merchantRef = firebaseDatabase.ref(`merchants/${currentUser.uid}`);
+            merchantRef.once('value').then(snap => {
+                const data = snap.val();
+                if (data) {
+                    document.getElementById('storeName').value = data.storeName || data.name || '';
+                    document.getElementById('storeAddress').value = data.storeAddress || data.address || '';
+                    document.getElementById('storePhone').value = data.storePhone || data.phone || '';
+                    document.getElementById('storeDesc').value = data.description || '';
+                    const photoUrl = data.storePhoto || data.photoURL || '';
+                    if (photoUrl) {
+                        document.getElementById('storePhotoImg').src = photoUrl;
+                        document.getElementById('storePhotoImg').style.display = 'block';
+                        document.getElementById('storePhotoUrl').value = photoUrl;
+                    } else {
+                        document.getElementById('storePhotoImg').style.display = 'none';
+                    }
+                }
+            });
+        }
+
+        // ==================== UPLOAD FOTO KE IMGBB ====================
+        async function uploadStorePhoto(file) {
+            const apiKey = await getImgBBKey();
+            if (!apiKey) {
+                showAlert('Gagal mendapatkan API key untuk upload gambar', 'error');
+                return null;
+            }
+            const formData = new FormData();
+            formData.append('image', file);
+            try {
+                const response = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                if (result.success) {
+                    return result.data.url;
+                } else {
+                    throw new Error(result.error?.message || 'Upload gagal');
+                }
+            } catch (e) {
+                console.error(e);
+                showAlert('Gagal upload foto: ' + e.message, 'error');
+                return null;
+            }
+        }
+
+        function getImgBBKey() {
+            return firebaseDatabase.ref('data-jego/imgBBapiKey').once('value')
+                .then(snap => snap.val())
+                .catch(() => null);
+        }
+
+        document.getElementById('profileForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            if (!currentUser) return;
+
+            const storeName = document.getElementById('storeName').value.trim();
+            const storeAddress = document.getElementById('storeAddress').value.trim();
+            const storePhone = document.getElementById('storePhone').value.trim();
+            const storeDesc = document.getElementById('storeDesc').value.trim();
+            let storePhoto = document.getElementById('storePhotoUrl').value;
+
+            if (!storeName || !storeAddress) {
+                showAlert('Nama dan alamat toko wajib diisi', 'error');
+                return;
+            }
+
+            const fileInput = document.getElementById('storePhotoInput');
+            if (fileInput.files && fileInput.files[0]) {
+                const file = fileInput.files[0];
+                showGlobalLoading(true);
+                const uploadedUrl = await uploadStorePhoto(file);
+                showGlobalLoading(false);
+                if (uploadedUrl) {
+                    storePhoto = uploadedUrl;
+                } else {
+                    return;
+                }
+            }
+
+            showGlobalLoading(true);
+            const updates = {
+                storeName: storeName,
+                storeAddress: storeAddress,
+                storePhone: storePhone,
+                description: storeDesc,
+                storePhoto: storePhoto,
+                updatedAt: new Date().toISOString()
+            };
+
+            firebaseDatabase.ref(`merchants/${currentUser.uid}`).update(updates)
+                .then(() => {
+                    showGlobalLoading(false);
+                    showAlert('✅ Profil toko berhasil disimpan!', 'success');
+                    loadStoreProfile();
+                })
+                .catch(err => {
+                    showGlobalLoading(false);
+                    showAlert('❌ Gagal simpan: ' + err.message, 'error');
+                });
+        });
+
+        document.getElementById('storePhotoInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    document.getElementById('storePhotoImg').src = ev.target.result;
+                    document.getElementById('storePhotoImg').style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // ==================== ALERT & LOADING ====================
+        function showAlert(message, type) {
+            const alertEl = type === 'success' ? document.getElementById('alertSuccess') : document.getElementById(
+            'alertError');
+            alertEl.textContent = message;
+            alertEl.style.display = 'block';
+            setTimeout(() => {
+                alertEl.style.display = 'none';
+            }, 4000);
+        }
+
+        function showGlobalLoading(show) {
+            document.getElementById('globalLoading').style.display = show ? 'flex' : 'none';
+        }
+
+        // ==================== INIT ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            initFirebase();
+            checkSession();
+        });
+    </script>
+</body>
+</html>
