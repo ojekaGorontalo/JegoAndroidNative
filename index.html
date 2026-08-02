@@ -925,7 +925,24 @@ body.dark .popup-button {
 </div>
 
 <div class="container">
-  <div class="orders-list" id="ordersList"><div class="loading"><div class="spinner"></div></div></div>
+  <!-- ===== TAMBAHAN CONTAINER UNTUK FOOD ORDERS ===== -->
+  <div style="margin-bottom:12px; padding:0 8px;">
+    <h3 style="display:flex; align-items:center; gap:8px; font-size:1rem; margin-top:8px;">
+      <span style="background:#FF9800; color:white; padding:2px 10px; border-radius:20px; font-size:0.7rem;">FOOD</span>
+      Pesanan Makanan Terdekat
+    </h3>
+    <div id="foodOrdersContainer">
+      <div class="loading"><div class="spinner"></div><p>Memuat pesanan makanan...</p></div>
+    </div>
+  </div>
+  <!-- ===== ORDERS LIST YANG SUDAH ADA ===== -->
+  <div style="margin-top:16px; padding:0 8px;">
+    <h3 style="display:flex; align-items:center; gap:8px; font-size:1rem;">
+      <span style="background:#4CAF50; color:white; padding:2px 10px; border-radius:20px; font-size:0.7rem;">🚗</span>
+      Permintaan Transportasi
+    </h3>
+    <div class="orders-list" id="ordersList"><div class="loading"><div class="spinner"></div></div></div>
+  </div>
 </div>
 
 <div class="modal" id="orderModal">
@@ -1715,6 +1732,128 @@ const childAddedHandler = (snapshot) => {
     });
 }
 
+// ==================== FUNGSI UNTUK FOOD ORDERS ====================
+function loadFoodOrders() {
+    if (!globalCurrentUid) return;
+    if (!driverLocation.latitude || !driverLocation.longitude) {
+        console.log('⏳ Lokasi driver belum siap, food orders ditunda');
+        return;
+    }
+
+    const foodOrdersRef = database.ref('foodOrders');
+    // Hanya ambil order dengan status 'looking_for_driver'
+    foodOrdersRef.orderByChild('status')
+        .equalTo('looking_for_driver')
+        .on('value', (snapshot) => {
+            const container = document.getElementById('foodOrdersContainer');
+            if (!container) {
+                console.warn('⚠️ foodOrdersContainer tidak ditemukan');
+                return;
+            }
+
+            let hasOrders = false;
+            container.innerHTML = ''; // kosongkan dulu
+
+            snapshot.forEach((child) => {
+                const order = child.val();
+                const orderId = child.key;
+                // Cek jarak driver ke merchant
+                if (order.merchantLat && order.merchantLng && driverLocation.latitude) {
+                    const dist = calculateDistance(
+                        driverLocation.latitude,
+                        driverLocation.longitude,
+                        order.merchantLat,
+                        order.merchantLng
+                    );
+                    if (dist !== null && dist <= 10) {
+                        hasOrders = true;
+                        container.innerHTML += createFoodOrderHTML(order, orderId, dist);
+                    }
+                }
+            });
+
+            if (!hasOrders) {
+                container.innerHTML = `<div class="empty-state">🍽️ Tidak ada pesanan makanan terdekat</div>`;
+            }
+        });
+}
+
+function createFoodOrderHTML(order, orderId, distance) {
+    const itemsHtml = order.items ? order.items.map(item => 
+        `${item.name} x${item.quantity}`).join(', ') : 'Tidak ada item';
+
+    const merchantPhoto = order.merchantPhoto || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
+
+    return `
+        <div class="food-order-item order-item" data-order-id="${orderId}" style="border-left: 4px solid #FF9800; margin-bottom: 10px;">
+            <div class="order-header">
+                <span class="order-badges"><span class="kurir-badge" style="background:#FF9800;">🍔 FOOD</span></span>
+            </div>
+            <div class="route-info-with-photo">
+                <div class="customer-info-left" style="width:55px; flex-shrink:0;">
+                    <img src="${merchantPhoto}" 
+                         class="customer-photo-left" style="border-color:#FF9800;">
+                    <div class="customer-name-left" style="color:#FF9800;">${escapeHtml(order.merchantName || 'Toko')}</div>
+                    <div style="font-size:0.6rem; color:#666;">${distance.toFixed(1)} km</div>
+                </div>
+                <div class="route-addresses-right">
+                    <div class="route-point">
+                        <div class="point-marker point-marker-a" style="background:#FF9800;">🍔</div>
+                        <div class="point-address">${escapeHtml(order.merchantAddress || 'Alamat toko')}</div>
+                    </div>
+                    <div class="route-point">
+                        <div class="point-marker point-marker-b" style="background:#4CAF50;">📍</div>
+                        <div class="point-address">${escapeHtml(order.deliveryAddress || 'Alamat customer')}</div>
+                    </div>
+                    <div class="order-items" style="font-size:0.8rem; color:#555; margin-top:4px;">
+                        📦 ${itemsHtml}
+                    </div>
+                    <div class="order-total" style="font-weight:700; color:#FF9800; margin-top:4px;">
+                        Total: Rp${(order.totalPrice || 0).toLocaleString()}
+                    </div>
+                </div>
+            </div>
+            <div class="order-actions" style="display:flex; gap:10px; margin-top:8px;">
+                <button class="ambil-btn" onclick="acceptFoodOrder('${orderId}')" 
+                        style="flex:1; background:linear-gradient(135deg, #FF9800, #FF5722); color:white; border:none; padding:10px; border-radius:8px; font-weight:600; cursor:pointer;">
+                    ✅ Ambil Pesanan
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+function acceptFoodOrder(orderId) {
+    if (isWaitingForConfirmation) {
+        showToast('Sedang memproses order lain, harap tunggu.', 'warning');
+        return;
+    }
+    if (!globalCurrentUid || !currentDriverData) {
+        showToast('Data driver tidak lengkap.', 'error');
+        return;
+    }
+
+    showToast('⏳ Memproses...', 'info');
+
+    // Update status di Firebase
+    database.ref(`foodOrders/${orderId}`).update({
+        status: 'driver_assigned',
+        driverId: globalCurrentUid,
+        driverName: currentDriverData.fullName || 'Driver',
+        driverPhone: currentDriverData.phoneNumber || '',
+        driverLat: driverLocation.latitude || null,
+        driverLng: driverLocation.longitude || null,
+        assignedAt: new Date().toISOString()
+    }).then(() => {
+        showToast('✅ Pesanan makanan diterima!', 'success');
+        localStorage.setItem('current_food_order_id', orderId);
+        window.location.href = `tracking_food.html?orderId=${orderId}`;
+    }).catch((err) => {
+        console.error('❌ Gagal menerima pesanan:', err);
+        showToast('❌ Gagal: ' + err.message, 'error');
+    });
+}
+
 function escapeHtml(str) {
   if (!str) return '';
   return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
@@ -2250,6 +2389,7 @@ function startGPSMonitoring() {
         gpsLoadingInterval = null;
       }
       loadOrders();
+      loadFoodOrders(); // panggil juga food orders setelah GPS siap
     } catch(e) {}
   }
 
@@ -2311,6 +2451,7 @@ function updateDriverLocation(position) {
       gpsLoadingInterval = null;
     }
     loadOrders();
+    loadFoodOrders();
     // Tandai lastSent agar setelah ini hanya kirim jika berubah
     lastSentLat = lat;
     lastSentLng = lng;
@@ -2442,6 +2583,8 @@ function toggleAutobid() {
 }
 function refreshData() {
     refreshDisplay();
+    // refresh food orders juga
+    loadFoodOrders();
 }
 
 function showPopup(title, message, type = 'info', options = {}) {
@@ -2804,6 +2947,7 @@ window.addEventListener('click', (e) => {
   }).catch(console.error);
 }
     loadOrders();
+    loadFoodOrders(); // tambahkan ini
     setTimeout(startGPSMonitoring, 1000);
     await checkPlayerIdAndPrompt();
   } else {
