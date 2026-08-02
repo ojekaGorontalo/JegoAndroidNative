@@ -10,6 +10,9 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 
+    <!-- Google Maps Places API -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA1c0N-_Cx6E_yKXcIN87EC4zqCEkC5ysM&libraries=places&language=id"></script>
+
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
@@ -427,76 +430,147 @@
             color: #6c757d;
         }
 
-        /* ===== CHECKOUT MODAL ===== */
+        /* ============================================================
+           CHECKOUT BOTTOM SHEET
+           ============================================================ */
         .modal-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.6);
             backdrop-filter: blur(4px);
             display: none;
-            align-items: center;
+            align-items: flex-end;
             justify-content: center;
             z-index: 2000;
-            padding: 20px;
+            padding: 0;
         }
         .modal-overlay.active {
             display: flex;
         }
-        .modal-box {
+
+        .bottom-sheet {
             background: white;
-            max-width: 400px;
             width: 100%;
-            border-radius: 28px;
-            padding: 24px;
-            max-height: 90vh;
+            max-width: 500px;
+            max-height: 92vh;
+            border-radius: 28px 28px 0 0;
+            padding: 24px 20px 30px;
+            animation: slideUp 0.3s cubic-bezier(0.2, 0.9, 0.3, 1);
             overflow-y: auto;
-            animation: fadeUp 0.25s ease;
+            margin: 0 auto;
+            box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.15);
         }
-        @keyframes fadeUp {
+        @keyframes slideUp {
             from {
+                transform: translateY(100%);
                 opacity: 0;
-                transform: translateY(20px);
             }
             to {
-                opacity: 1;
                 transform: translateY(0);
+                opacity: 1;
             }
         }
-        .modal-box h2 {
-            font-size: 1.3rem;
+
+        .sheet-handle {
+            width: 48px;
+            height: 4px;
+            background: #e9ecef;
+            border-radius: 4px;
+            margin: 0 auto 16px;
+        }
+
+        .bottom-sheet h2 {
+            font-size: 1.4rem;
+            margin-bottom: 16px;
+            color: #212529;
+        }
+
+        .bottom-sheet .form-group {
             margin-bottom: 16px;
         }
-        .modal-box .form-group {
-            margin-bottom: 14px;
-        }
-        .modal-box .form-group label {
+        .bottom-sheet .form-group label {
+            display: block;
             font-weight: 600;
             font-size: 0.85rem;
-            display: block;
+            color: #495057;
             margin-bottom: 4px;
         }
-        .modal-box .form-group input,
-        .modal-box .form-group textarea,
-        .modal-box .form-group select {
+
+        .bottom-sheet .form-group input,
+        .bottom-sheet .form-group textarea,
+        .bottom-sheet .form-group select {
             width: 100%;
             padding: 10px 14px;
             border: 1px solid #ced4da;
             border-radius: 12px;
             font-size: 0.95rem;
+            background: #fff;
+            transition: 0.2s;
         }
-        .modal-box .form-group input:focus,
-        .modal-box .form-group textarea:focus {
+        .bottom-sheet .form-group input:focus,
+        .bottom-sheet .form-group textarea:focus {
             outline: none;
             border-color: #FF6D00;
             box-shadow: 0 0 0 3px rgba(255, 109, 0, 0.15);
         }
+
+        .address-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .address-row input {
+            flex: 1;
+        }
+        .btn-current-location {
+            background: #fff3e0;
+            border: 1px solid #FF6D00;
+            border-radius: 40px;
+            padding: 0 16px;
+            height: 46px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: #FF6D00;
+            white-space: nowrap;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: 0.2s;
+            flex-shrink: 0;
+        }
+        .btn-current-location:active {
+            background: #ffe0b2;
+            transform: scale(0.96);
+        }
+
+        .bottom-sheet .checkout-summary {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin: 12px 0 16px;
+            font-size: 0.95rem;
+            color: #212529;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #e9ecef;
+        }
+        .bottom-sheet .checkout-summary .total-row {
+            font-weight: 700;
+            color: #FF6D00;
+            font-size: 1.1rem;
+            border-top: 2px solid #e9ecef;
+            padding-top: 8px;
+            margin-top: 4px;
+        }
+
         .modal-actions {
             display: flex;
             gap: 12px;
-            margin-top: 16px;
+            margin-top: 8px;
         }
         .modal-actions button {
             flex: 1;
@@ -504,6 +578,7 @@
             border: none;
             border-radius: 40px;
             font-weight: 700;
+            font-size: 1rem;
             cursor: pointer;
             transition: 0.2s;
         }
@@ -575,6 +650,10 @@
             opacity: 1;
         }
 
+        .pac-container {
+            z-index: 9999 !important;
+        }
+
         @media (max-width: 480px) {
             .header h1 {
                 font-size: 1.2rem;
@@ -588,6 +667,14 @@
                 width: 48px;
                 height: 48px;
                 font-size: 22px;
+            }
+            .address-row {
+                flex-wrap: wrap;
+            }
+            .btn-current-location {
+                width: 100%;
+                justify-content: center;
+                height: 44px;
             }
         }
     </style>
@@ -659,18 +746,32 @@
         </div>
     </div>
 
-    <!-- CHECKOUT MODAL -->
+    <!-- =========================================================
+    CHECKOUT BOTTOM SHEET
+    ========================================================= -->
     <div class="modal-overlay" id="checkoutModal">
-        <div class="modal-box">
+        <div class="bottom-sheet">
+            <div class="sheet-handle"></div>
             <h2>📝 Pesanan</h2>
+
             <div class="form-group">
                 <label>Alamat Pengiriman</label>
-                <input type="text" id="deliveryAddress" placeholder="Jl. Contoh No. 123" required>
+                <div class="address-row">
+                    <input type="text" id="deliveryAddress" placeholder="Cari alamat atau ketik manual..." required />
+                    <button type="button" class="btn-current-location" id="useCurrentLocation">
+                        <i class="fas fa-location-dot"></i> Lokasi Saya
+                    </button>
+                </div>
+                <input type="hidden" id="deliveryLat" />
+                <input type="hidden" id="deliveryLng" />
+                <small style="color:#6c757d; font-size:0.7rem;">📍 Pilih alamat dari saran atau gunakan tombol "Lokasi Saya"</small>
             </div>
+
             <div class="form-group">
                 <label>Catatan (opsional)</label>
                 <textarea id="orderNote" placeholder="Contoh: Jangan pakai cabe, pintu belakang" rows="2"></textarea>
             </div>
+
             <div class="form-group">
                 <label>Metode Pembayaran</label>
                 <select id="paymentMethod">
@@ -679,7 +780,11 @@
                     <option value="bank_transfer">Transfer Bank</option>
                 </select>
             </div>
-            <div id="checkoutSummary" style="margin: 12px 0; font-size: 0.95rem;"></div>
+
+            <div class="checkout-summary" id="checkoutSummary">
+                <!-- Akan diisi JS -->
+            </div>
+
             <div class="modal-actions">
                 <button class="btn-cancel" id="cancelCheckout">Batal</button>
                 <button class="btn-confirm" id="confirmCheckout">✅ Pesan</button>
@@ -707,6 +812,7 @@
         let selectedMerchantId = null;
         let merchantData = {};
         let cart = {};
+        let deliveryAutocomplete = null;
 
         // ==================== INIT ====================
         function initFirebase() {
@@ -798,7 +904,6 @@
             document.getElementById('statusDesc').textContent = `${openMerchants.length} toko tersedia`;
             document.getElementById('sectionLabel').textContent = 'Daftar Toko';
 
-            // Apply filter if search keyword exists
             const searchInput = document.getElementById('searchMerchant');
             if (searchInput.value.trim() !== '') {
                 filterMerchants(searchInput.value);
@@ -1012,7 +1117,32 @@
             showToast('Keranjang dikosongkan');
         }
 
-        // ==================== CHECKOUT ====================
+        // ============================================================
+        // CHECKOUT (BOTTOM SHEET)
+        // ============================================================
+        function initDeliveryAutocomplete() {
+            const input = document.getElementById('deliveryAddress');
+            if (!input) return;
+            if (deliveryAutocomplete) {
+                google.maps.event.clearInstanceListeners(deliveryAutocomplete);
+                deliveryAutocomplete = null;
+            }
+            deliveryAutocomplete = new google.maps.places.Autocomplete(input, {
+                componentRestrictions: { country: 'id' },
+                fields: ['address_components', 'geometry', 'formatted_address']
+            });
+            deliveryAutocomplete.addListener('place_changed', function() {
+                const place = deliveryAutocomplete.getPlace();
+                if (place.geometry) {
+                    document.getElementById('deliveryLat').value = place.geometry.location.lat();
+                    document.getElementById('deliveryLng').value = place.geometry.location.lng();
+                } else {
+                    document.getElementById('deliveryLat').value = '';
+                    document.getElementById('deliveryLng').value = '';
+                }
+            });
+        }
+
         function openCheckout() {
             const items = Object.keys(cart);
             if (items.length === 0) {
@@ -1028,31 +1158,78 @@
                 return;
             }
 
+            // Fill summary
             let total = 0;
-            let summary = '';
+            let summaryHtml = '';
             items.forEach(id => {
                 const item = cart[id];
                 const subtotal = item.price * item.qty;
                 total += subtotal;
-                summary += `${item.name} x${item.qty} = Rp${subtotal.toLocaleString()}\n`;
+                summaryHtml += `<div>${escapeHtml(item.name)} x${item.qty} = <strong>Rp${subtotal.toLocaleString()}</strong></div>`;
             });
-            summary += `\nTotal: Rp${total.toLocaleString()}`;
+            summaryHtml += `<div class="total-row">Total: Rp${total.toLocaleString()}</div>`;
+            document.getElementById('checkoutSummary').innerHTML = summaryHtml;
 
-            document.getElementById('checkoutSummary').innerHTML = summary.replace(/\n/g, '<br>');
+            // Prefill address
             document.getElementById('deliveryAddress').value = currentUser.address || '';
+            document.getElementById('deliveryLat').value = '';
+            document.getElementById('deliveryLng').value = '';
             document.getElementById('orderNote').value = '';
             document.getElementById('paymentMethod').value = 'cash';
 
+            // Show bottom sheet
             document.getElementById('checkoutModal').classList.add('active');
             document.getElementById('cartOverlay').classList.remove('open');
+
+            // Init autocomplete after sheet is visible
+            setTimeout(() => {
+                initDeliveryAutocomplete();
+            }, 300);
         }
 
         function closeCheckout() {
             document.getElementById('checkoutModal').classList.remove('active');
+            if (deliveryAutocomplete) {
+                google.maps.event.clearInstanceListeners(deliveryAutocomplete);
+                deliveryAutocomplete = null;
+            }
         }
 
+        // ==================== CURRENT LOCATION ====================
+        document.getElementById('useCurrentLocation').addEventListener('click', function() {
+            if (!navigator.geolocation) {
+                showToast('Geolocation tidak didukung browser ini');
+                return;
+            }
+            showToast('📍 Mengambil lokasi...');
+            navigator.geolocation.getCurrentPosition(function(pos) {
+                const lat = pos.coords.latitude;
+                const lng = pos.coords.longitude;
+                document.getElementById('deliveryLat').value = lat;
+                document.getElementById('deliveryLng').value = lng;
+
+                // Reverse geocode
+                const geocoder = new google.maps.Geocoder();
+                geocoder.geocode({ location: { lat, lng } }, function(results, status) {
+                    if (status === 'OK' && results[0]) {
+                        document.getElementById('deliveryAddress').value = results[0].formatted_address;
+                        showToast('✅ Lokasi ditemukan');
+                    } else {
+                        document.getElementById('deliveryAddress').value = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                        showToast('⚠️ Alamat tidak ditemukan, gunakan koordinat');
+                    }
+                });
+            }, function(err) {
+                showToast('❌ Gagal ambil lokasi: ' + err.message);
+            }, { enableHighAccuracy: true });
+        });
+
+        // ==================== PLACE ORDER ====================
         function placeOrder() {
             const address = document.getElementById('deliveryAddress').value.trim();
+            const lat = document.getElementById('deliveryLat').value.trim();
+            const lng = document.getElementById('deliveryLng').value.trim();
+
             if (!address) {
                 showToast('Alamat pengiriman wajib diisi');
                 return;
@@ -1071,16 +1248,23 @@
 
             const totalPrice = items.reduce((sum, item) => sum + item.subtotal, 0);
 
+            const merchant = merchantData[selectedMerchantId];
+
             const orderData = {
                 customerId: currentUser.uid,
                 customerName: currentUser.name || 'Customer',
+                customerPhone: currentUser.phone || '',
                 merchantId: selectedMerchantId,
-                merchantName: merchantData[selectedMerchantId]?.storeName || merchantData[selectedMerchantId]?.name ||
-                    'Merchant',
+                merchantName: merchant?.storeName || merchant?.name || 'Merchant',
+                merchantAddress: merchant?.storeAddress || merchant?.address || '',
+                merchantLat: merchant?.storeLat || null,
+                merchantLng: merchant?.storeLng || null,
                 items: items,
                 totalPrice: totalPrice,
                 status: 'pending',
                 deliveryAddress: address,
+                deliveryLat: lat || null,
+                deliveryLng: lng || null,
                 orderNote: note,
                 paymentMethod: payment,
                 paymentStatus: 'pending',
@@ -1096,13 +1280,16 @@
             newOrderRef.set(orderData)
                 .then(() => {
                     showToast('✅ Pesanan berhasil!');
+                    // Save order id to localStorage for tracking
+                    localStorage.setItem('current_food_order_id', newOrderRef.key);
                     cart = {};
                     updateCartBadge();
                     closeCheckout();
-                    document.getElementById('cartOverlay').classList.remove('open');
                     if (selectedMerchantId) loadProducts(selectedMerchantId);
                     confirmBtn.disabled = false;
                     confirmBtn.textContent = '✅ Pesan';
+                    // Redirect to tracking page
+                    window.location.href = 'tracking_food.html?orderId=' + newOrderRef.key;
                 })
                 .catch(err => {
                     showToast('❌ Gagal: ' + err.message);
@@ -1162,8 +1349,9 @@
             document.getElementById('cancelCheckout').addEventListener('click', closeCheckout);
             document.getElementById('confirmCheckout').addEventListener('click', placeOrder);
 
-            document.getElementById('cartOverlay').addEventListener('click', function(e) {
-                if (e.target === this) this.classList.remove('open');
+            // Close bottom sheet by clicking overlay background
+            document.getElementById('checkoutModal').addEventListener('click', function(e) {
+                if (e.target === this) closeCheckout();
             });
 
             // Search filter
