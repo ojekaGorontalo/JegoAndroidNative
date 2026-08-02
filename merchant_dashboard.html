@@ -10,6 +10,9 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 
+    <!-- Google Maps Places API -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA1c0N-_Cx6E_yKXcIN87EC4zqCEkC5ysM&libraries=places&language=id"></script>
+
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 
@@ -623,6 +626,26 @@
             display: none;
         }
 
+        /* ===== PETA & AUTOCOMPLETE ===== */
+        #storeAddress {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #ced4da;
+            border-radius: 12px;
+            font-size: 0.95rem;
+        }
+
+        #map {
+            height: 200px;
+            margin-top: 8px;
+            border-radius: 12px;
+            display: none;
+        }
+
+        .pac-container {
+            z-index: 9999 !important;
+        }
+
         @media (max-width: 500px) {
             .form-row {
                 grid-template-columns: 1fr;
@@ -810,7 +833,11 @@
                     </div>
                     <div class="form-group">
                         <label>Alamat Toko *</label>
-                        <textarea id="storeAddress" placeholder="Alamat lengkap toko" required></textarea>
+                        <input type="text" id="storeAddress" placeholder="Mulai ketik alamat..." required />
+                        <input type="hidden" id="storeLat" />
+                        <input type="hidden" id="storeLng" />
+                        <div id="map"></div>
+                        <small style="color:#6c757d; font-size:0.75rem;">📍 Pilih alamat dari saran atau seret marker untuk menyesuaikan</small>
                     </div>
                     <div class="form-group">
                         <label>Nomor Telepon Toko</label>
@@ -852,6 +879,9 @@
         let currentUser = null;
         let merchantData = null;
         let editingProductId = null;
+        let autocomplete = null;
+        let map = null;
+        let marker = null;
 
         // ==================== INIT FIREBASE ====================
         function initFirebase() {
@@ -1144,7 +1174,10 @@
                 const tabId = 'tab-' + this.dataset.tab;
                 document.getElementById(tabId).classList.add('active');
                 if (this.dataset.tab === 'profile') {
-                    loadStoreProfile();
+                    setTimeout(() => {
+                        loadStoreProfile();
+                        initAutocomplete();
+                    }, 300);
                 }
             });
         });
@@ -1321,7 +1354,6 @@
                 .then(() => {
                     showGlobalLoading(false);
                     showAlert('👨‍🍳 Pesanan siap! Mencari driver...', 'success');
-                    // Trigger cari driver
                     findNearestDriver(orderId);
                 })
                 .catch((err) => {
@@ -1336,14 +1368,13 @@
                 .then((snap) => {
                     const order = snap.val();
                     if (!order) return;
-                    const merchantId = order.merchantId;
-                    firebaseDatabase.ref(`merchants/${merchantId}/location`).once('value')
-                        .then((merchantSnap) => {
-                            const merchantLoc = merchantSnap.val();
-                            if (merchantLoc) {
-                                searchDriversNearby(orderId, merchantLoc.lat, merchantLoc.lng);
-                            }
-                        });
+                    const merchantLat = order.merchantLat || null;
+                    const merchantLng = order.merchantLng || null;
+                    if (merchantLat && merchantLng) {
+                        searchDriversNearby(orderId, merchantLat, merchantLng);
+                    } else {
+                        showAlert('⚠️ Lokasi toko tidak ditemukan, driver tidak bisa diarahkan', 'error');
+                    }
                 });
         }
 
@@ -1404,6 +1435,66 @@
             return R * c;
         }
 
+        // ==================== GOOGLE PLACES AUTOCOMPLETE ====================
+        function initAutocomplete() {
+            const input = document.getElementById('storeAddress');
+            if (!input) return;
+            if (autocomplete) {
+                google.maps.event.clearInstanceListeners(autocomplete);
+                autocomplete = null;
+            }
+            autocomplete = new google.maps.places.Autocomplete(input, {
+                componentRestrictions: { country: 'id' },
+                fields: ['address_components', 'geometry', 'formatted_address']
+            });
+            autocomplete.addListener('place_changed', onPlaceChanged);
+        }
+
+        function onPlaceChanged() {
+            const place = autocomplete.getPlace();
+            if (!place.geometry) {
+                document.getElementById('storeAddress').value = '';
+                document.getElementById('storeLat').value = '';
+                document.getElementById('storeLng').value = '';
+                return;
+            }
+            document.getElementById('storeLat').value = place.geometry.location.lat();
+            document.getElementById('storeLng').value = place.geometry.location.lng();
+            showMap(place.geometry.location.lat(), place.geometry.location.lng());
+        }
+
+        function showMap(lat, lng) {
+            const mapDiv = document.getElementById('map');
+            mapDiv.style.display = 'block';
+            const center = { lat: parseFloat(lat), lng: parseFloat(lng) };
+            if (!map) {
+                map = new google.maps.Map(mapDiv, {
+                    center: center,
+                    zoom: 15
+                });
+                marker = new google.maps.Marker({
+                    position: center,
+                    map: map,
+                    draggable: true
+                });
+                marker.addListener('dragend', function() {
+                    const pos = marker.getPosition();
+                    document.getElementById('storeLat').value = pos.lat();
+                    document.getElementById('storeLng').value = pos.lng();
+                    // Reverse geocode (opsional)
+                    const geocoder = new google.maps.Geocoder();
+                    geocoder.geocode({ location: pos }, function(results, status) {
+                        if (status === 'OK' && results[0]) {
+                            document.getElementById('storeAddress').value = results[0].formatted_address;
+                        }
+                    });
+                });
+            } else {
+                map.setCenter(center);
+                marker.setPosition(center);
+            }
+        }
+
         // ==================== PROFIL TOKO ====================
         function loadStoreProfile() {
             if (!currentUser) return;
@@ -1415,6 +1506,8 @@
                     document.getElementById('storeAddress').value = data.storeAddress || data.address || '';
                     document.getElementById('storePhone').value = data.storePhone || data.phone || '';
                     document.getElementById('storeDesc').value = data.description || '';
+                    document.getElementById('storeLat').value = data.storeLat || '';
+                    document.getElementById('storeLng').value = data.storeLng || '';
                     const photoUrl = data.storePhoto || data.photoURL || '';
                     if (photoUrl) {
                         document.getElementById('storePhotoImg').src = photoUrl;
@@ -1422,6 +1515,11 @@
                         document.getElementById('storePhotoUrl').value = photoUrl;
                     } else {
                         document.getElementById('storePhotoImg').style.display = 'none';
+                    }
+                    if (data.storeLat && data.storeLng) {
+                        setTimeout(() => {
+                            showMap(parseFloat(data.storeLat), parseFloat(data.storeLng));
+                        }, 500);
                     }
                 }
             });
@@ -1468,10 +1566,17 @@
             const storeAddress = document.getElementById('storeAddress').value.trim();
             const storePhone = document.getElementById('storePhone').value.trim();
             const storeDesc = document.getElementById('storeDesc').value.trim();
+            const storeLat = document.getElementById('storeLat').value.trim();
+            const storeLng = document.getElementById('storeLng').value.trim();
             let storePhoto = document.getElementById('storePhotoUrl').value;
 
             if (!storeName || !storeAddress) {
                 showAlert('Nama dan alamat toko wajib diisi', 'error');
+                return;
+            }
+
+            if (!storeLat || !storeLng) {
+                showAlert('Silakan pilih alamat dari saran atau seret marker di peta', 'error');
                 return;
             }
 
@@ -1495,6 +1600,8 @@
                 storePhone: storePhone,
                 description: storeDesc,
                 storePhoto: storePhoto,
+                storeLat: storeLat,
+                storeLng: storeLng,
                 updatedAt: new Date().toISOString()
             };
 
