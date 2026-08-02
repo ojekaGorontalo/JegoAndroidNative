@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <title>JeGo Food - Driver</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary: #FF9800;
+      --secondary: #FFB74D;
+      --accent: #FF5722;
+      --light: #f8f9fa;
+      --dark: #343a40;
+      --success: #4CAF50;
+      --danger: #F44336;
+      --surface: #ffffff;
+      --border-light: #e9ecef;
+      --text-secondary: #6c757d;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f5f5;
+      color: #333;
+      line-height: 1.4;
+      font-size: 0.85rem;
+      padding-bottom: 70px;
+      overflow-x: hidden;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      background: linear-gradient(135deg, #FF9800, #FFB74D);
+      color: white;
+      padding: 15px 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      height: 60px;
+    }
+    .header .back {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: white;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .header h1 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      flex: 1;
+      text-align: center;
+    }
+    .header .badge {
+      background: rgba(255,255,255,0.2);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.7rem;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #666;
+      background: white;
+      border-radius: 8px;
+      margin-top: 20px;
+    }
+    .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+    .loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 30px;
+      background: white;
+      border-radius: 8px;
+    }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(0,0,0,0.1);
+      border-radius: 50%;
+      border-top-color: #FF9800;
+      animation: spin 1s ease-in-out infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ===== FOOD ORDER CARD ===== */
+    .food-order-item {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      border: 1px solid #e9ecef;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .food-order-item .order-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .food-order-item .order-badges .badge-food {
+      background: #FF9800;
+      color: white;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 0.65rem;
+      font-weight: 700;
+    }
+    .food-order-item .route-info-with-photo {
+      display: flex;
+      gap: 12px;
+    }
+    .food-order-item .customer-info-left {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 55px;
+      flex-shrink: 0;
+    }
+    .food-order-item .customer-photo-left {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #FF9800;
+    }
+    .food-order-item .customer-name-left {
+      font-size: 0.6rem;
+      font-weight: 600;
+      color: #FF9800;
+      text-align: center;
+    }
+    .food-order-item .distance-label {
+      font-size: 0.6rem;
+      color: #666;
+    }
+    .food-order-item .route-addresses-right {
+      flex: 1;
+    }
+    .food-order-item .route-point {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 4px;
+    }
+    .food-order-item .point-marker {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 8px;
+      font-size: 0.65rem;
+      color: white;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+    .food-order-item .point-marker-a { background: #FF9800; }
+    .food-order-item .point-marker-b { background: #4CAF50; }
+    .food-order-item .point-address {
+      flex: 1;
+      word-break: break-word;
+      font-size: 0.8rem;
+      color: #333;
+    }
+    .food-order-item .order-items {
+      font-size: 0.8rem;
+      color: #555;
+      margin-top: 4px;
+    }
+    .food-order-item .order-total {
+      font-weight: 700;
+      color: #FF9800;
+      margin-top: 4px;
+    }
+    .food-order-item .order-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .food-order-item .order-actions .ambil-btn {
+      flex: 1;
+      background: linear-gradient(135deg, #FF9800, #FF5722);
+      color: white;
+      border: none;
+      padding: 10px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .food-order-item .order-actions .ambil-btn:active { transform: scale(0.97); }
+    .food-order-item .order-actions .ambil-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .toast-notification {
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 30px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      z-index: 9999;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+      max-width: 90%;
+      text-align: center;
+    }
+    .toast-notification.show { opacity: 1; }
+    .toast-notification.warning { background: #F44336; }
+    .toast-notification.success { background: #4CAF50; }
+    .toast-notification.info { background: #FF9800; }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: white;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 10px 16px 20px;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+      border-top: 1px solid #e9ecef;
+      z-index: 100;
+    }
+    .bottom-nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      text-decoration: none;
+      color: #6c757d;
+      font-size: 0.7rem;
+      font-weight: 500;
+      padding: 6px 0;
+      border-radius: 30px;
+    }
+    .bottom-nav-item i { font-size: 1.4rem; }
+    .bottom-nav-item.active { color: #FF9800; }
+    .bottom-nav-item span { font-size: 0.7rem; font-weight: 700; }
+
+    body.dark {
+      background-color: #121212;
+      color: #e9ecef;
+    }
+    body.dark .food-order-item,
+    body.dark .empty-state,
+    body.dark .loading,
+    body.dark .bottom-nav {
+      background: #1e1e1e;
+      color: #e9ecef;
+      border-color: #343a40;
+    }
+    body.dark .food-order-item .point-address { color: #ddd; }
+    body.dark .food-order-item .order-items { color: #aaa; }
+    body.dark .header { background: linear-gradient(135deg, #FF9800, #FFB74D); }
+    body.dark .bottom-nav-item { color: #adb5bd; }
+    body.dark .bottom-nav-item.active { color: #FF9800; }
+
+    @media (max-width: 480px) {
+      .header h1 { font-size: 1rem; }
+      .food-order-item .customer-info-left { width: 45px; }
+      .food-order-item .customer-photo-left { width: 40px; height: 40px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <button class="back" id="backBtn"><i class="fas fa-arrow-left"></i></button>
+  <h1>🍔 JeGo Food</h1>
+  <span class="badge" id="orderCount">0</span>
+</div>
+
+<div class="container">
+  <div id="foodList">
+    <div class="loading"><div class="spinner"></div><p>Memuat pesanan makanan...</p></div>
+  </div>
+</div>
+
+<div class="bottom-nav">
+  <a href="index.html" class="bottom-nav-item" id="navTransport">
+    <i class="fas fa-car"></i>
+    <span>Transportasi</span>
+  </a>
+  <a href="food_driver.html" class="bottom-nav-item active" id="navFood">
+    <i class="fas fa-utensils"></i>
+    <span>Food</span>
+  </a>
+  <a href="Statistik.html" class="bottom-nav-item" id="navStats">
+    <i class="fas fa-chart-line"></i>
+    <span>Statistik</span>
+  </a>
+</div>
+
+<div class="toast-notification" id="toast"></div>
+
+<script>
+// ==================== FIREBASE CONFIG ====================
+const firebaseConfig = {
+  apiKey: "AIzaSyCD0pgeZio-LdKqYDtWxcdXcZwyL4ngYQI",
+  authDomain: "jego-35a2b.firebaseapp.com",
+  databaseURL: "https://jego-35a2b-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "jego-35a2b",
+  storageBucket: "jego-35a2b.firebasestorage.app",
+  messagingSenderId: "600037007040",
+  appId: "1:600037007040:web:ac3243ad9b472647ffd725"
+};
+
+let database, auth;
+let globalCurrentUid = null;
+let currentDriverData = null;
+let driverLocation = { latitude: null, longitude: null };
+let foodOrdersRef = null;
+let isWaitingForConfirmation = false;
+
+// ==================== INIT ====================
+try {
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  database = firebase.database();
+  auth = firebase.auth();
+  auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+    .then(() => console.log('🔒 Persistence LOCAL diaktifkan'))
+    .catch(err => console.warn('Gagal set persistence:', err));
+  console.log('✅ Firebase berhasil diinisialisasi');
+} catch (error) {
+  console.error('❌ Error inisialisasi Firebase:', error);
+}
+
+// ==================== UTILITY ====================
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/[&<>"]/g, function(m) {
+    if (m === '&') return '&amp;';
+    if (m === '<') return '&lt;';
+    if (m === '>') return '&gt;';
+    if (m === '"') return '&quot;';
+    return m;
+  });
+}
+
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) * Math.sin(dLon/2)**2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
+let toastTimeout = null;
+function showToast(message, type = 'info') {
+  const existing = document.querySelector('.toast-notification');
+  if (existing) existing.remove();
+  if (toastTimeout) clearTimeout(toastTimeout);
+  const toast = document.createElement('div');
+  toast.className = `toast-notification ${type}`;
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.classList.add('show'), 10);
+  toastTimeout = setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 300);
+  }, 2500);
+}
+
+// ==================== CHECK LOGIN ====================
+function checkDriverData() {
+  try {
+    const driverDataStr = localStorage.getItem('jego_logged_in_driver');
+    if (!driverDataStr || driverDataStr === '{}') {
+      window.location.href = 'loginDriver.html';
+      return false;
+    }
+    const driverData = JSON.parse(driverDataStr);
+    if (driverData.uid && driverData.name) {
+      globalCurrentUid = driverData.uid;
+      currentDriverData = {
+        driverId: driverData.uid,
+        fullName: driverData.name,
+        phoneNumber: driverData.phone,
+        profilePhotoUrl: driverData.fotoProfilURL || driverData.photoURL || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
+        vehicleType: driverData.vehicleType,
+        plateNumber: driverData.plateNumber,
+        rating: driverData.rating || 5,
+        perjalanan: driverData.perjalanan || 0,
+        balance: driverData.Balance || 0
+      };
+      return true;
+    } else {
+      window.location.href = 'loginDriver.html';
+      return false;
+    }
+  } catch (error) {
+    window.location.href = 'loginDriver.html';
+    return false;
+  }
+}
+
+// ==================== GET GPS LOCATION ====================
+function getCurrentLocation() {
+  return new Promise((resolve) => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          driverLocation.latitude = lat;
+          driverLocation.longitude = lng;
+          localStorage.setItem('jego_last_driver_location', JSON.stringify({ lat, lng }));
+          resolve(true);
+        },
+        (error) => {
+          console.warn('GPS error:', error);
+          // fallback ke cache
+          const cached = localStorage.getItem('jego_last_driver_location');
+          if (cached) {
+            try {
+              const loc = JSON.parse(cached);
+              driverLocation.latitude = loc.lat;
+              driverLocation.longitude = loc.lng;
+              resolve(true);
+            } catch (e) { resolve(false); }
+          } else {
+            resolve(false);
+          }
+        },
+        { timeout: 10000, enableHighAccuracy: true }
+      );
+    } else {
+      resolve(false);
+    }
+  });
+}
+
+// ==================== LOAD FOOD ORDERS ====================
+function loadFoodOrders() {
+  if (!globalCurrentUid) return;
+  if (!driverLocation.latitude || !driverLocation.longitude) {
+    document.getElementById('foodList').innerHTML = `
+      <div class="loading"><div class="spinner"></div><p>Menunggu lokasi...</p></div>
+    `;
+    return;
+  }
+
+  if (foodOrdersRef) {
+    foodOrdersRef.off('value');
+    foodOrdersRef = null;
+  }
+
+  foodOrdersRef = database.ref('foodOrders');
+  foodOrdersRef.orderByChild('status')
+    .equalTo('looking_for_driver')
+    .on('value', (snapshot) => {
+      const container = document.getElementById('foodList');
+      let hasOrders = false;
+      let html = '';
+
+      snapshot.forEach((child) => {
+        const order = child.val();
+        const orderId = child.key;
+
+        const merchantLat = order.merchantLat ? parseFloat(order.merchantLat) : null;
+        const merchantLng = order.merchantLng ? parseFloat(order.merchantLng) : null;
+
+        if (merchantLat && merchantLng && driverLocation.latitude) {
+          const dist = calculateDistance(
+            driverLocation.latitude,
+            driverLocation.longitude,
+            merchantLat,
+            merchantLng
+          );
+          if (dist !== null && dist <= 20) {
+            hasOrders = true;
+            html += createFoodOrderHTML(order, orderId, dist);
+          }
+        }
+      });
+
+      if (!hasOrders) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="icon">🍽️</div>
+            <p>Tidak ada pesanan makanan terdekat</p>
+          </div>
+        `;
+      } else {
+        container.innerHTML = html;
+      }
+      document.getElementById('orderCount').textContent = snapshot.numChildren() || 0;
+    });
+}
+
+// ==================== CREATE FOOD ORDER HTML ====================
+function createFoodOrderHTML(order, orderId, distance) {
+  const itemsHtml = order.items && Array.isArray(order.items) ?
+    order.items.map(item => `${escapeHtml(item.name)} x${item.quantity}`).join(', ') :
+    'Tidak ada item';
+
+  const merchantPhoto = order.merchantPhoto || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
+
+  return `
+    <div class="food-order-item" data-order-id="${orderId}">
+      <div class="order-header">
+        <span class="order-badges"><span class="badge-food">🍔 FOOD</span></span>
+        <span style="font-size:0.7rem; color:#999;">${distance.toFixed(1)} km</span>
+      </div>
+      <div class="route-info-with-photo">
+        <div class="customer-info-left">
+          <img src="${merchantPhoto}" class="customer-photo-left" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3135/3135715.png'">
+          <div class="customer-name-left">${escapeHtml(order.merchantName || 'Toko')}</div>
+        </div>
+        <div class="route-addresses-right">
+          <div class="route-point">
+            <div class="point-marker point-marker-a">🍔</div>
+            <div class="point-address">${escapeHtml(order.merchantAddress || 'Alamat toko')}</div>
+          </div>
+          <div class="route-point">
+            <div class="point-marker point-marker-b">📍</div>
+            <div class="point-address">${escapeHtml(order.deliveryAddress || 'Alamat customer')}</div>
+          </div>
+          <div class="order-items">📦 ${itemsHtml}</div>
+          <div class="order-total">Total: Rp${(order.totalPrice || 0).toLocaleString()}</div>
+        </div>
+      </div>
+      <div class="order-actions">
+        <button class="ambil-btn" onclick="acceptFoodOrder('${orderId}')">✅ Ambil Pesanan</button>
+      </div>
+    </div>
+  `;
+}
+
+// ==================== ACCEPT FOOD ORDER ====================
+function acceptFoodOrder(orderId) {
+  if (isWaitingForConfirmation) {
+    showToast('Sedang memproses order lain, harap tunggu.', 'warning');
+    return;
+  }
+  if (!globalCurrentUid || !currentDriverData) {
+    showToast('Data driver tidak lengkap.', 'error');
+    return;
+  }
+
+  const btn = document.querySelector(`.food-order-item[data-order-id="${orderId}"] .ambil-btn`);
+  if (btn) { btn.disabled = true; btn.textContent = 'Memproses...'; }
+
+  showToast('⏳ Mengambil pesanan...', 'info');
+
+  const updates = {
+    status: 'driver_assigned',
+    driverId: globalCurrentUid,
+    driverName: currentDriverData.fullName || 'Driver',
+    driverPhone: currentDriverData.phoneNumber || '',
+    driverLat: driverLocation.latitude || null,
+    driverLng: driverLocation.longitude || null,
+    assignedAt: new Date().toISOString()
+  };
+
+  database.ref(`foodOrders/${orderId}`).update(updates)
+    .then(() => {
+      showToast('✅ Pesanan makanan diterima!', 'success');
+      localStorage.setItem('current_food_order_id', orderId);
+      // Redirect ke tracking_food.html
+      window.location.href = `tracking_food.html?orderId=${orderId}`;
+    })
+    .catch((err) => {
+      console.error('❌ Gagal menerima pesanan:', err);
+      showToast('❌ Gagal: ' + err.message, 'error');
+      if (btn) { btn.disabled = false; btn.textContent = '✅ Ambil Pesanan'; }
+    });
+}
+
+// ==================== BACK BUTTON ====================
+document.getElementById('backBtn').addEventListener('click', function() {
+  window.location.href = 'index.html';
+});
+
+// ==================== INIT ====================
+async function init() {
+  if (!checkDriverData()) return;
+
+  // Get location
+  await getCurrentLocation();
+
+  // Load food orders
+  loadFoodOrders();
+
+  // Listen for auth state changes
+  auth.onAuthStateChanged((user) => {
+    if (!user) {
+      window.location.href = 'loginDriver.html';
+    } else {
+      if (!globalCurrentUid) {
+        globalCurrentUid = user.uid;
+        checkDriverData();
+        loadFoodOrders();
+      }
+    }
+  });
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
