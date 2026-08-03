@@ -418,10 +418,7 @@
             <span class="setting-label"><i class="fas fa-link"></i> Rantai permintaan</span>
             <label class="toggle-switch"><input type="checkbox" id="requestChainToggle"><span class="toggle-slider"></span></label>
         </div>
-        <div class="setting-item">
-            <span class="setting-label"><i class="fas fa-keyboard"></i> Tombol pintasan</span>
-            <label class="toggle-switch"><input type="checkbox" id="shortcutToggle"><span class="toggle-slider"></span></label>
-        </div>
+        <!-- Tombol pintasan telah dihapus -->
         <div class="setting-item">
             <span class="setting-label"><i class="fas fa-moon"></i> Mode gelap</span>
             <div class="mode-group">
@@ -455,9 +452,6 @@ const db = firebase.database();
 // ================================================================
 // VARIABEL GLOBAL
 // ================================================================
-// ================================================================
-// VARIABEL GLOBAL
-// ================================================================
 let currentDriverUid = null;
 let driverDataCache = null;
 let feePersen = 0, pajakPersen = 0;
@@ -477,35 +471,6 @@ let driverOrdersListener = null;
 let gpsWatchId = null;
 let lastGpsUpdate = 0;
 const GPS_THROTTLE_MS = 5000;
-
-// ================================================================
-// FUNGSI KONTROL FLOATING BUTTON (ANDROID) - TAMBAHAN
-// ================================================================
-function isAndroidAvailable() {
-    return typeof Android !== 'undefined' && Android !== null;
-}
-
-function startFloatingButton() {
-    if (isAndroidAvailable()) {
-        try {
-            Android.startFloatingButton();
-            console.log('✅ Floating button diaktifkan dari Statistik');
-        } catch(e) {
-            console.warn('Gagal start floating button:', e);
-        }
-    }
-}
-
-function stopFloatingButton() {
-    if (isAndroidAvailable()) {
-        try {
-            Android.stopFloatingButton();
-            console.log('❌ Floating button dimatikan dari Statistik');
-        } catch(e) {
-            console.warn('Gagal stop floating button:', e);
-        }
-    }
-}
 
 // ================================================================
 // FUNGSI UTILITY
@@ -552,7 +517,7 @@ function showToast(msg, type = 'info') {
 }
 
 // ================================================================
-// CACHE POTONGAN (FEE & PAJAK) - Hanya baca sekali setiap 1 menit
+// CACHE POTONGAN (FEE & PAJAK)
 // ================================================================
 async function getFeeSettings() {
     const now = Date.now();
@@ -601,7 +566,7 @@ async function getDriverData(uid) {
 }
 
 // ================================================================
-// RENDER UI UTAMA (HANYA SAAT PERUBAHAN PENTING)
+// RENDER UI UTAMA
 // ================================================================
 async function renderMainContent() {
     if (!currentDriverUid) return;
@@ -611,17 +576,16 @@ async function renderMainContent() {
         return;
     }
 
-    // ===== HEMAT BANDWIDTH: Ambil langsung dari daily_earnings (tidak query orders) =====
     const today = new Date().toLocaleDateString('id-ID', {
-  timeZone: 'Asia/Makassar',  // WITA (Gorontalo)
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit'
-}).split('/').reverse().join('-'); // hasil "2026-07-18"
+        timeZone: 'Asia/Makassar',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    }).split('/').reverse().join('-');
+
     const dailySnap = await db.ref(`drivers/${currentDriverUid}/daily_earnings/${today}`).once('value');
     const totalGross = dailySnap.val() || 0;
 
-    // Ambil jumlah order selesai hari ini dari driver_earnings_history (hanya hitung jumlah, tanpa ambil semua data)
     let completedCount = 0;
     try {
         const historySnap = await db.ref(`driver_earnings_history/${currentDriverUid}`).once('value');
@@ -693,7 +657,6 @@ async function renderMainContent() {
     const container = document.getElementById('mainContent');
     container.innerHTML = html;
 
-    // Render bintang
     const starsContainer = document.getElementById('ratingStars');
     if (starsContainer) {
         starsContainer.innerHTML = '';
@@ -709,7 +672,6 @@ async function renderMainContent() {
         }
     }
 
-    // Event listeners
     document.getElementById('ratingCard')?.addEventListener('click', (e) => {
         if (e.target.closest('#priorityInfoIcon')) return;
         window.location.href = 'penilaianLayanan.html';
@@ -727,7 +689,7 @@ async function renderMainContent() {
 }
 
 // ================================================================
-// LISTENER OPTIMASI: HANYA DENGARKAN PERUBAHAN RATING & BALANCE
+// LISTENER OPTIMASI: RATING & BALANCE
 // ================================================================
 function setupOptimizedListeners(uid) {
     if (driverBalanceListener) { driverBalanceListener.off(); driverBalanceListener = null; }
@@ -748,9 +710,6 @@ function setupOptimizedListeners(uid) {
     });
 }
 
-// ================================================================
-// LISTENER ORDER DRIVER (UNTUK UPDATE STATUS ORDER)
-// ================================================================
 function setupDriverOrdersListener(uid) {
     if (driverOrdersListener) { driverOrdersListener.off(); driverOrdersListener = null; }
     driverOrdersListener = db.ref('orders')
@@ -763,7 +722,7 @@ function setupDriverOrdersListener(uid) {
 }
 
 // ================================================================
-// SISTEM NOTIFIKASI ORDER (OPTIMASI: child_added dengan filter)
+// SISTEM NOTIFIKASI ORDER
 // ================================================================
 function startListeningOrders(uid) {
     if (ordersListenerRef) { ordersListenerRef.off(); ordersListenerRef = null; }
@@ -1031,13 +990,7 @@ function initGPS() {
 function loadSettings() {
     document.getElementById('tripSoundToggle').checked = localStorage.getItem('jego_trip_sound') === 'true';
     document.getElementById('requestChainToggle').checked = localStorage.getItem('jego_request_chain') === 'true';
-    document.getElementById('shortcutToggle').checked = localStorage.getItem('jego_shortcut') === 'true';
-    
-    // ✅ TAMBAHKAN INI - Aktifkan floating button jika toggle ON
-    if (document.getElementById('shortcutToggle').checked) {
-        setTimeout(startFloatingButton, 500); // delay agar Android siap
-    }
-    
+    // shortcutToggle dihapus
     const theme = localStorage.getItem('jego_driver_theme');
     if (theme === 'dark') document.querySelector('input[name="darkMode"][value="dark"]').checked = true;
     else document.querySelector('input[name="darkMode"][value="light"]').checked = true;
@@ -1046,20 +999,7 @@ function loadSettings() {
 function initSettingsListeners() {
     document.getElementById('tripSoundToggle').addEventListener('change', (e) => localStorage.setItem('jego_trip_sound', e.target.checked));
     document.getElementById('requestChainToggle').addEventListener('change', (e) => localStorage.setItem('jego_request_chain', e.target.checked));
-    
-    // ✅ UPDATE INI - Tambahkan kontrol floating button
-    document.getElementById('shortcutToggle').addEventListener('change', (e) => {
-        localStorage.setItem('jego_shortcut', e.target.checked);
-        
-        if (e.target.checked) {
-            startFloatingButton();
-            showToast('🔘 Tombol pintasan diaktifkan', 'success');
-        } else {
-            stopFloatingButton();
-            showToast('🔘 Tombol pintasan dimatikan', 'info');
-        }
-    });
-    
+
     document.querySelectorAll('input[name="darkMode"]').forEach(radio => {
         radio.addEventListener('change', (e) => {
             if (e.target.checked) {
@@ -1077,7 +1017,7 @@ document.getElementById('closeModalBtn').onclick = () => modalSettings.classList
 modalSettings.addEventListener('click', (e) => { if (e.target === modalSettings) modalSettings.classList.remove('active'); });
 
 // ================================================================
-// VISIBILITY API - HENTIKAN LISTENER SAAT HILANG
+// VISIBILITY API
 // ================================================================
 document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
