@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>JeGo - Pilih Peran</title>
+  <style>
+    /* reset & base */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(145deg, #FFF5EE 0%, #FFFFFF 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 420px;
+      width: 100%;
+      background: #FFFFFF;
+      border-radius: 40px;
+      padding: 40px 28px 35px;
+      box-shadow: 0 20px 60px rgba(255, 87, 34, 0.12), 0 8px 24px rgba(0, 0, 0, 0.06);
+      text-align: center;
+      transition: transform 0.25s ease;
+    }
+
+    /* logo / icon */
+    .brand-icon {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, #FF9800, #FF5722);
+      border-radius: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+      font-size: 40px;
+      font-weight: 700;
+      color: #fff;
+      box-shadow: 0 10px 24px rgba(255, 87, 34, 0.30);
+    }
+
+    h1 {
+      font-size: 26px;
+      font-weight: 700;
+      color: #1E1E1E;
+      margin-bottom: 6px;
+      letter-spacing: -0.3px;
+    }
+
+    .subtitle {
+      font-size: 15px;
+      color: #7A7A7A;
+      margin-bottom: 32px;
+      font-weight: 400;
+      line-height: 1.5;
+    }
+
+    /* role cards */
+    .role-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .role-card {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      background: #F9F9F9;
+      border: 2px solid transparent;
+      border-radius: 20px;
+      padding: 18px 22px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      text-decoration: none;
+      color: #1E1E1E;
+      text-align: left;
+      position: relative;
+    }
+
+    .role-card:hover {
+      background: #FFF2EB;
+      border-color: #FF9800;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(255, 152, 0, 0.15);
+    }
+
+    .role-card:active {
+      transform: scale(0.97);
+    }
+
+    .role-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      flex-shrink: 0;
+    }
+
+    .role-icon.driver {
+      background: #FFE0CC;
+      color: #FF5722;
+    }
+
+    .role-icon.passenger {
+      background: #D4E8FF;
+      color: #1A73E8;
+    }
+
+    .role-info {
+      flex: 1;
+    }
+
+    .role-info .role-name {
+      font-size: 18px;
+      font-weight: 600;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .role-info .role-desc {
+      font-size: 13px;
+      color: #7A7A7A;
+      display: block;
+    }
+
+    .role-arrow {
+      font-size: 20px;
+      color: #CCCCCC;
+      transition: color 0.2s, transform 0.2s;
+    }
+
+    .role-card:hover .role-arrow {
+      color: #FF9800;
+      transform: translateX(4px);
+    }
+
+    /* footer */
+    .footer-note {
+      font-size: 13px;
+      color: #AAAAAA;
+      margin-top: 20px;
+      border-top: 1px solid #F0F0F0;
+      padding-top: 20px;
+    }
+
+    .footer-note span {
+      color: #FF5722;
+      font-weight: 600;
+    }
+
+    /* responsive touch */
+    @media (max-width: 420px) {
+      .container {
+        padding: 28px 18px 28px;
+        border-radius: 32px;
+      }
+      .brand-icon {
+        width: 68px;
+        height: 68px;
+        font-size: 34px;
+        border-radius: 22px;
+      }
+      h1 {
+        font-size: 22px;
+      }
+      .role-card {
+        padding: 14px 18px;
+      }
+      .role-icon {
+        width: 44px;
+        height: 44px;
+        font-size: 22px;
+      }
+      .role-info .role-name {
+        font-size: 16px;
+      }
+    }
+
+    /* animasi masuk */
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .container {
+      animation: fadeUp 0.6s ease forwards;
+    }
+
+    .role-card:nth-child(1) {
+      animation: fadeUp 0.6s ease 0.10s both;
+    }
+    .role-card:nth-child(2) {
+      animation: fadeUp 0.6s ease 0.20s both;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- logo -->
+    <div class="brand-icon">JeGo</div>
+
+    <h1>Pilih Peran Anda</h1>
+    <p class="subtitle">Aktif sebagai pengemudi atau penumpang</p>
+
+    <!-- pilihan peran -->
+    <div class="role-grid">
+      <!-- Pengemudi → loginDriver.html -->
+      <a href="loginDriver.html" class="role-card" id="driverCard">
+        <div class="role-icon driver">🚗</div>
+        <div class="role-info">
+          <span class="role-name">Pengemudi</span>
+          <span class="role-desc">Saya siap mengantar penumpang</span>
+        </div>
+        <span class="role-arrow">›</span>
+      </a>
+
+      <!-- Penumpang → loginUser.html -->
+      <a href="loginUser.html" class="role-card" id="passengerCard">
+        <div class="role-icon passenger">🧑‍🧑‍🧒</div>
+        <div class="role-info">
+          <span class="role-name">Penumpang</span>
+          <span class="role-desc">Saya ingin memesan kendaraan</span>
+        </div>
+        <span class="role-arrow">›</span>
+      </a>
+    </div>
+
+    <div class="footer-note">
+      JeGo <span>•</span> Aman &amp; Terpercaya
+    </div>
+  </div>
+
+  <script>
+    // ============================================================
+    // OPSIONAL: efek haptic / log untuk debugging (bisa dihapus)
+    // ============================================================
+    document.querySelectorAll('.role-card').forEach(card => {
+      card.addEventListener('click', function(e) {
+        // hanya log, tidak mengganggu navigasi
+        const role = this.querySelector('.role-name')?.textContent || 'peran';
+        console.log(`🔁 Memilih: ${role} → menuju ${this.href}`);
+      });
+    });
+  </script>
+</body>
+</html>
