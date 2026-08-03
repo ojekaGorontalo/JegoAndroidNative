@@ -284,7 +284,7 @@
           // Redirect sesuai peran
           const updatedDriver = getDriverSession();
           if (updatedDriver && isValidDriverSession(updatedDriver)) {
-            window.location.href = 'index.html';
+            window.location.href = 'home_pack.html';
           } else {
             window.location.href = 'loginUser.html';
           }
@@ -361,14 +361,14 @@
             if (isBase64Photo(photoURL)) {
               showBase64Modal();
             } else {
-              redirectTo('index.html');
+              redirectTo('home_pack.html');
             }
           })
           .catch(() => {
             if (isBase64Photo(driverSession.photoURL)) {
               showBase64Modal();
             } else {
-              redirectTo('index.html');
+              redirectTo('home_pack.html');
             }
           });
         return;
