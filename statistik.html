@@ -455,13 +455,14 @@ const db = firebase.database();
 // ================================================================
 // VARIABEL GLOBAL
 // ================================================================
+// ================================================================
+// VARIABEL GLOBAL
+// ================================================================
 let currentDriverUid = null;
-let driverDataCache = null;           // untuk caching data driver
+let driverDataCache = null;
 let feePersen = 0, pajakPersen = 0;
 let feeCacheTime = 0;
-const FEE_CACHE_TTL = 60000; // 1 menit
-
-// Untuk notifikasi & auto-bid
+const FEE_CACHE_TTL = 60000;
 let lastNotifiedOrderIds = new Set();
 let isWaitingConfirmation = false;
 let driverLocation = { lat: null, lng: null };
@@ -469,15 +470,42 @@ let autobidEnabled = false;
 const STORAGE_AUTOBID = 'jego_autobid_enabled';
 let countdownInterval = null;
 let currentOrderId = null;
-let ordersListenerRef = null;         // untuk melepas listener child_added
+let ordersListenerRef = null;
 let driverBalanceListener = null;
 let driverRatingListener = null;
 let driverOrdersListener = null;
-
-// Throttle GPS
 let gpsWatchId = null;
 let lastGpsUpdate = 0;
-const GPS_THROTTLE_MS = 5000; // update setiap 5 detik
+const GPS_THROTTLE_MS = 5000;
+
+// ================================================================
+// FUNGSI KONTROL FLOATING BUTTON (ANDROID) - TAMBAHAN
+// ================================================================
+function isAndroidAvailable() {
+    return typeof Android !== 'undefined' && Android !== null;
+}
+
+function startFloatingButton() {
+    if (isAndroidAvailable()) {
+        try {
+            Android.startFloatingButton();
+            console.log('✅ Floating button diaktifkan dari Statistik');
+        } catch(e) {
+            console.warn('Gagal start floating button:', e);
+        }
+    }
+}
+
+function stopFloatingButton() {
+    if (isAndroidAvailable()) {
+        try {
+            Android.stopFloatingButton();
+            console.log('❌ Floating button dimatikan dari Statistik');
+        } catch(e) {
+            console.warn('Gagal stop floating button:', e);
+        }
+    }
+}
 
 // ================================================================
 // FUNGSI UTILITY
@@ -1004,6 +1032,12 @@ function loadSettings() {
     document.getElementById('tripSoundToggle').checked = localStorage.getItem('jego_trip_sound') === 'true';
     document.getElementById('requestChainToggle').checked = localStorage.getItem('jego_request_chain') === 'true';
     document.getElementById('shortcutToggle').checked = localStorage.getItem('jego_shortcut') === 'true';
+    
+    // ✅ TAMBAHKAN INI - Aktifkan floating button jika toggle ON
+    if (document.getElementById('shortcutToggle').checked) {
+        setTimeout(startFloatingButton, 500); // delay agar Android siap
+    }
+    
     const theme = localStorage.getItem('jego_driver_theme');
     if (theme === 'dark') document.querySelector('input[name="darkMode"][value="dark"]').checked = true;
     else document.querySelector('input[name="darkMode"][value="light"]').checked = true;
@@ -1012,7 +1046,20 @@ function loadSettings() {
 function initSettingsListeners() {
     document.getElementById('tripSoundToggle').addEventListener('change', (e) => localStorage.setItem('jego_trip_sound', e.target.checked));
     document.getElementById('requestChainToggle').addEventListener('change', (e) => localStorage.setItem('jego_request_chain', e.target.checked));
-    document.getElementById('shortcutToggle').addEventListener('change', (e) => localStorage.setItem('jego_shortcut', e.target.checked));
+    
+    // ✅ UPDATE INI - Tambahkan kontrol floating button
+    document.getElementById('shortcutToggle').addEventListener('change', (e) => {
+        localStorage.setItem('jego_shortcut', e.target.checked);
+        
+        if (e.target.checked) {
+            startFloatingButton();
+            showToast('🔘 Tombol pintasan diaktifkan', 'success');
+        } else {
+            stopFloatingButton();
+            showToast('🔘 Tombol pintasan dimatikan', 'info');
+        }
+    });
+    
     document.querySelectorAll('input[name="darkMode"]').forEach(radio => {
         radio.addEventListener('change', (e) => {
             if (e.target.checked) {
