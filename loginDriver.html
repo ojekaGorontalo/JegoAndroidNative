@@ -656,7 +656,7 @@
         localStorage.setItem('jego_logged_in_driver', JSON.stringify(sessionDriver));
         sendToKodular('login_success', { driver: sessionDriver });
         showSuccess('Login berhasil! Mengalihkan...', true);
-        setTimeout(() => { window.location.href = 'index.html'; }, 1500);
+        setTimeout(() => { window.location.href = 'home_pack.html'; }, 1500);
         break;
 
       case 'rejected':
@@ -865,7 +865,7 @@
         const driver = JSON.parse(loggedInDriver);
         if (driver.status === 'active') {
           sendToKodular('already_logged_in', { driver: driver });
-          window.location.href = 'index.html';
+          window.location.href = 'home_pack.html';
         } else {
           localStorage.removeItem('jego_logged_in_driver');
         }
