@@ -2833,14 +2833,19 @@ function toggleLocationTracking() {
   localStorage.setItem(STORAGE_TRACKING, locationTrackingEnabled);
   updateTrackingButton();
 
-  // 🆕 Mulai/hentikan service Android
   if (isAndroidAvailable()) {
     if (locationTrackingEnabled) {
+      // Aktifkan tracking dan floating button
       Android.startDriverTracking();
+      Android.startFloatingButton();  // <-- TAMBAHKAN INI
       console.log('📍 Service tracking dimulai dari tombol');
+      console.log('🔘 Floating button diaktifkan');
     } else {
+      // Matikan tracking dan floating button
       Android.stopDriverTracking();
+      Android.stopFloatingButton();   // <-- TAMBAHKAN INI
       console.log('⏹️ Service tracking dihentikan dari tombol');
+      console.log('🔘 Floating button dimatikan');
     }
   }
 
