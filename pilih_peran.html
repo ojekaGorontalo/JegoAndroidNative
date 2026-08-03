@@ -286,7 +286,7 @@
           if (updatedDriver && isValidDriverSession(updatedDriver)) {
             window.location.href = 'index.html';
           } else {
-            window.location.href = 'Loginuser.html';
+            window.location.href = 'loginUser.html';
           }
         }, 1500);
 
@@ -349,7 +349,7 @@
       let customerSession = getCustomerSession();
 
       if (!driverSession && !customerSession) {
-        redirectTo('loginUser.html');
+        redirectTo('peran.html');
         return;
       }
 
@@ -379,7 +379,7 @@
         return;
       }
 
-      redirectTo('loginUser.html');
+      redirectTo('peran.html');
     }
 
     // ================= EKSEKUSI =================
