@@ -872,128 +872,6 @@ body.dark .popup-header h3 {
 body.dark .popup-button {
     background: #FF9800;
 }
-
-/* ===== FOOD ORDER BOTTOM SHEET ===== */
-.food-bottom-sheet {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: white;
-  border-radius: 28px 28px 0 0;
-  box-shadow: 0 -8px 30px rgba(0,0,0,0.2);
-  z-index: 2000;
-  transform: translateY(100%);
-  transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
-  max-height: 85vh;
-  overflow-y: auto;
-  padding: 20px 20px 30px;
-  display: none;
-}
-.food-bottom-sheet.open {
-  transform: translateY(0);
-  display: block;
-}
-.food-bottom-sheet .handle {
-  width: 40px;
-  height: 4px;
-  background: #ccc;
-  border-radius: 4px;
-  margin: 0 auto 12px;
-}
-.food-bottom-sheet .header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-}
-.food-bottom-sheet .header h2 {
-  font-size: 1.1rem;
-  margin: 0;
-}
-.food-bottom-sheet .close-sheet {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  color: #999;
-}
-.food-bottom-sheet .info-row {
-  display: flex;
-  justify-content: space-between;
-  padding: 6px 0;
-  font-size: 0.9rem;
-  border-bottom: 1px solid #f0f0f0;
-}
-.food-bottom-sheet .info-row .label {
-  color: #666;
-}
-.food-bottom-sheet .info-row .value {
-  font-weight: 600;
-  text-align: right;
-}
-.food-bottom-sheet .items-list {
-  margin: 10px 0;
-  padding: 0;
-  list-style: none;
-}
-.food-bottom-sheet .items-list li {
-  display: flex;
-  justify-content: space-between;
-  padding: 4px 0;
-  font-size: 0.9rem;
-}
-.food-bottom-sheet .total-price {
-  font-weight: 700;
-  font-size: 1.1rem;
-  color: #FF9800;
-  text-align: right;
-  margin-top: 8px;
-}
-.food-bottom-sheet .actions {
-  display: flex;
-  gap: 12px;
-  margin-top: 16px;
-}
-.food-bottom-sheet .actions button {
-  flex: 1;
-  padding: 12px;
-  border: none;
-  border-radius: 40px;
-  font-weight: 700;
-  font-size: 1rem;
-  cursor: pointer;
-}
-.food-bottom-sheet .actions .btn-accept {
-  background: linear-gradient(135deg, #FF9800, #FF5722);
-  color: white;
-}
-.food-bottom-sheet .actions .btn-reject {
-  background: #e9ecef;
-  color: #333;
-}
-.food-bottom-sheet .actions button:active { transform: scale(0.96); }
-
-body.dark .food-bottom-sheet {
-  background: #1e1e1e;
-  color: #e9ecef;
-}
-body.dark .food-bottom-sheet .info-row {
-  border-bottom-color: #333;
-}
-body.dark .food-bottom-sheet .info-row .label {
-  color: #aaa;
-}
-body.dark .food-bottom-sheet .info-row .value {
-  color: #eee;
-}
-body.dark .food-bottom-sheet .items-list li {
-  color: #ddd;
-}
-body.dark .food-bottom-sheet .actions .btn-reject {
-  background: #2c2c2c;
-  color: #eee;
-}
 </style>
 </head>
 <body>
@@ -1018,7 +896,6 @@ body.dark .food-bottom-sheet .actions .btn-reject {
 <div class="header">
   <div class="logo-container">
     <button class="menu-btn" id="menuBtn">☰</button>
-    <!-- <img id="driverPhoto" class="driver-photo" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Driver Photo"> -->
     <div class="gps-status" id="gpsStatus">
       <span class="gps-dot gps-inactive" id="gpsDot"></span>
       <span id="gpsText">GPS</span>
@@ -1026,7 +903,6 @@ body.dark .food-bottom-sheet .actions .btn-reject {
   </div>
   <div class="center-controls">
     <button class="location-toggle-btn" id="locationToggleBtn">📍 OFF</button>
-    
   </div>
   <div class="right-controls">
   <button class="refresh-btn" id="refreshBtn" title="Refresh">↻</button>
@@ -1047,17 +923,7 @@ body.dark .food-bottom-sheet .actions .btn-reject {
 </div>
 
 <div class="container">
-  <!-- ===== FOOD ORDERS SECTION (tetap ada, tapi akan diisi oleh bottom sheet) ===== -->
-  <div style="margin-bottom:12px; padding:0 8px; background: #f8f9fa; border-radius: 12px;">
-    <h3 style="display:flex; align-items:center; gap:8px; font-size:1rem; margin-top:8px; padding:8px 0;">
-      <span style="background:#FF9800; color:white; padding:2px 10px; border-radius:20px; font-size:0.7rem;">FOOD</span>
-      Pesanan Makanan Terdekat
-    </h3>
-    <div id="foodOrdersContainer">
-      <div class="loading"><div class="spinner"></div><p>Memuat pesanan makanan...</p></div>
-    </div>
-  </div>
-  <!-- ===== ORDERS LIST YANG SUDAH ADA ===== -->
+  <!-- ===== ORDERS LIST ===== -->
   <div style="margin-top:16px; padding:0 8px;">
     <h3 style="display:flex; align-items:center; gap:8px; font-size:1rem;">
       <span style="background:#4CAF50; color:white; padding:2px 10px; border-radius:20px; font-size:0.7rem;">🚗</span>
@@ -1067,17 +933,7 @@ body.dark .food-bottom-sheet .actions .btn-reject {
   </div>
 </div>
 
-<!-- ===== BOTTOM SHEET FOOD ORDER ===== -->
-<div id="foodBottomSheet" class="food-bottom-sheet">
-  <div class="handle"></div>
-  <div class="header">
-    <h2>🍔 Pesanan Food Masuk</h2>
-    <button class="close-sheet" id="closeFoodSheet">&times;</button>
-  </div>
-  <div id="foodSheetContent">
-    <!-- akan diisi JS -->
-  </div>
-</div>
+<!-- ===== BOTTOM SHEET FOOD (DIHAPUS) ===== -->
 
 <div class="modal" id="orderModal">
   <div class="modal-content">
@@ -1137,10 +993,6 @@ body.dark .food-bottom-sheet .actions .btn-reject {
     <i class="fas fa-car"></i>
     <span>Permintaan Transportasi</span>
   </a>
-  <a href="food_driver.html" class="bottom-nav-item" id="navFood">
-    <i class="fas fa-utensils"></i>
-    <span>Food</span>
-  </a>
   <a href="Statistik.html" class="bottom-nav-item" id="navStats">
     <i class="fas fa-chart-line"></i>
     <span>Statistik</span>
@@ -1181,14 +1033,7 @@ body.dark .food-bottom-sheet .actions .btn-reject {
             <span class="toggle-slider"></span>
         </label>
     </div>
-    <!-- ===== TAMBAHKAN INI ===== -->
-    <div class="menu-item">
-        <span>🍔 Terima Pesanan Food</span>
-        <label class="toggle-switch">
-            <input type="checkbox" id="acceptFoodToggle">
-            <span class="toggle-slider"></span>
-        </label>
-    </div>
+    <!-- ===== TOMBOL FOOD DIHAPUS ===== -->
 </div>
 <div class="menu-section">
   <h4>Bantuan & Sosial</h4>
@@ -1270,7 +1115,6 @@ try {
   database = firebase.database();
   auth = firebase.auth();
   
-  // ✅ SET PERSISTENCE LOCAL
   auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
     .then(() => console.log('🔒 Persistence LOCAL diaktifkan'))
     .catch(err => console.warn('Gagal set persistence:', err));
@@ -1329,8 +1173,6 @@ let locationWatchId = null, locationTrackingEnabled = false;
 let mapboxAccessToken = null;
 let countdownInterval = null, countdownOrderId = null, countdownDriverId = null, orderStatusListener = null;
 let acceptKurirEnabled = false;
-let acceptFoodEnabled = false; // ✅ TAMBAHKAN
-let foodOrdersRef = null; // ✅ TAMBAHKAN (untuk referensi listener)
 let previousOrderIds = new Set();
 let mapMarkers = [];
 let globalCurrentUid = null;
@@ -1347,10 +1189,10 @@ let lastSentLat = null;
 let lastSentLng = null;
 
 // ==================== STATE UNTUK OPTIMASI LISTENER ====================
-let orderMap = new Map();                 // Semua order waiting yang diterima dari Firebase
-let ordersChildListeners = {};            // Referensi untuk child listener agar bisa di-off
-let isInitialLoad = true;                // Flag untuk membedakan inisialisasi vs perubahan baru
-const MAX_DISTANCE_KM = 20;              // Batas jarak maksimal driver ke pickup
+let orderMap = new Map();
+let ordersChildListeners = {};
+let isInitialLoad = true;
+const MAX_DISTANCE_KM = 20;
 
 // ========== CUSTOM CONFIRM (TANPA URL) ==========
 function showConfirmPopup(message, onConfirm, onCancel) {
@@ -1360,12 +1202,10 @@ function showConfirmPopup(message, onConfirm, onCancel) {
     const msg = document.getElementById('popupMessage');
     const footer = document.querySelector('.popup-footer');
 
-    // Set konten
     icon.textContent = '⚠️';
     title.textContent = 'Konfirmasi';
     msg.textContent = message;
 
-    // Hapus tombol lama, buat dua tombol
     footer.innerHTML = `
         <button id="confirmYes" class="popup-button" style="background: var(--primary); margin-right: 10px;">Ya, Lanjutkan</button>
         <button id="confirmNo" class="popup-button" style="background: #ccc; color: #333;">Batal</button>
@@ -1436,7 +1276,6 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 const STORAGE_TRACKING = 'jego_location_tracking';
 const STORAGE_AUTOBID = 'jego_autobid_enabled';
 const STORAGE_ACCEPT_KURIR = 'jego_accept_kurir';
-const STORAGE_ACCEPT_FOOD = 'jego_accept_food'; // ✅ TAMBAHKAN
 
 function isAndroidAvailable() {
   return typeof Android !== 'undefined' && Android !== null;
@@ -1450,11 +1289,6 @@ function loadStoredSettings() {
     acceptKurirEnabled = localStorage.getItem(STORAGE_ACCEPT_KURIR) === 'true';
     const kurirToggle = document.getElementById('acceptKurirToggle');
     if (kurirToggle) kurirToggle.checked = acceptKurirEnabled;
-    
-    // ✅ TAMBAHKAN INI
-    acceptFoodEnabled = localStorage.getItem(STORAGE_ACCEPT_FOOD) === 'true';
-    const foodToggle = document.getElementById('acceptFoodToggle');
-    if (foodToggle) foodToggle.checked = acceptFoodEnabled;
 }
 function updateTrackingButton() {
   const btn = document.getElementById('locationToggleBtn');
@@ -1471,38 +1305,7 @@ function updateAcceptKurirSetting() {
     refreshDisplay();
 }
 
-// ==================== TAMBAHKAN FUNGSI INI ====================
-function updateAcceptFoodSetting() {
-    acceptFoodEnabled = document.getElementById('acceptFoodToggle').checked;
-    localStorage.setItem(STORAGE_ACCEPT_FOOD, acceptFoodEnabled);
-    
-    // ===== TAMBAHKAN INI =====
-    if (globalCurrentUid) {
-        database.ref(`drivers/${globalCurrentUid}/isFoodDelivery`).set(acceptFoodEnabled)
-            .then(() => console.log('✅ isFoodDelivery updated in Firebase'))
-            .catch(err => console.error('❌ Gagal update isFoodDelivery:', err));
-    }
-    
-    if (acceptFoodEnabled) {
-        showToast('🍔 Fitur Food diaktifkan', 'success');
-        loadFoodOrders();
-    } else {
-        showToast('🍔 Fitur Food dimatikan', 'info');
-        if (foodOrdersRef) {
-            foodOrdersRef.off('value');
-            foodOrdersRef = null;
-        }
-        const container = document.getElementById('foodOrdersContainer');
-        if (container) {
-            container.innerHTML = `<div class="empty-state">🍽️ Fitur Food dimatikan. Aktifkan di pengaturan.</div>`;
-        }
-    }
-}
-
 // ==================== FUNGSI UNTUK OPTIMASI LISTENER ====================
-/**
- * Melepas semua listener child yang terpasang pada ordersRef
- */
 function detachOrdersListeners() {
     if (ordersRef) {
         if (ordersChildListeners.child_added) {
@@ -1518,13 +1321,9 @@ function detachOrdersListeners() {
     }
 }
 
-/**
- * Menentukan apakah suatu order layak ditampilkan berdasarkan filter saat ini
- */
 function isOrderVisible(orderData) {
     if (!orderData) return false;
 
-    // Filter tipe kendaraan
     const orderType = orderData.transport_type || orderData.vehicle || 'motor';
     const driverVehicleType = currentDriverData?.vehicleType;
     if (!driverVehicleType) return false;
@@ -1541,7 +1340,6 @@ function isOrderVisible(orderData) {
         if (orderType !== driverVehicleType) return false;
     }
 
-    // Filter jarak
     if (!driverLocation.latitude || !driverLocation.longitude) return false;
     if (!orderData.pickup_lat || !orderData.pickup_lng) return false;
     const dist = calculateDistance(
@@ -1553,9 +1351,6 @@ function isOrderVisible(orderData) {
     return dist !== null && dist <= MAX_DISTANCE_KM;
 }
 
-/**
- * Membuat elemen DOM untuk satu order
- */
 function createOrderElement(order) {
     const customerName = order.customer_name || 'Tidak diketahui';
     const customerPhoto = order.photoURL || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
@@ -1582,7 +1377,6 @@ function createOrderElement(order) {
     orderItem.className = 'order-item';
     orderItem.dataset.orderId = order.id;
 
-    // Rute dengan dukungan via point
     let routeHtml = `
         <div class="route-point">
             <div class="point-marker point-marker-a">🟢</div>
@@ -1639,9 +1433,6 @@ function createOrderElement(order) {
     return orderItem;
 }
 
-/**
- * Menambahkan satu order ke daftar DOM (di akhir)
- */
 function addOrderToDOM(order) {
     const ordersList = document.getElementById('ordersList');
     if (!ordersList) return;
@@ -1650,17 +1441,11 @@ function addOrderToDOM(order) {
     updateRadarVisibility();
 }
 
-/**
- * Memperbarui order yang sudah ada di DOM (hapus + tambah baru)
- */
 function updateOrderDOM(orderId, orderData) {
     removeOrderDOM(orderId);
     addOrderToDOM(orderData);
 }
 
-/**
- * Menghapus order dari DOM berdasarkan ID
- */
 function removeOrderDOM(orderId) {
     const ordersList = document.getElementById('ordersList');
     if (!ordersList) return;
@@ -1669,9 +1454,6 @@ function removeOrderDOM(orderId) {
     updateRadarVisibility();
 }
 
-/**
- * Merender ulang semua order yang visible dari orderMap
- */
 function renderAllOrdersFromMap() {
     const ordersList = document.getElementById('ordersList');
     if (!ordersList) return;
@@ -1681,12 +1463,11 @@ function renderAllOrdersFromMap() {
 
     for (let [orderId, orderData] of orderMap) {
         if (isOrderVisible(orderData)) {
-            addOrderToDOM(orderData);   // addOrderToDOM akan menambahkan ke container
+            addOrderToDOM(orderData);
             hasVisible = true;
         }
     }
 
-    // Tampilkan radar jika tidak ada order yang visible
     if (!hasVisible) {
         document.getElementById('radarContainer').style.display = 'flex';
         document.querySelector('.container').style.display = 'none';
@@ -1698,16 +1479,10 @@ function renderAllOrdersFromMap() {
     }
 }
 
-/**
- * Refresh tampilan tanpa memuat ulang dari Firebase (dipanggil saat filter berubah)
- */
 function refreshDisplay() {
     renderAllOrdersFromMap();
 }
 
-/**
- * Memperbarui visibilitas radar berdasarkan ada/tidaknya order di DOM
- */
 function updateRadarVisibility() {
     const ordersList = document.getElementById('ordersList');
     if (!ordersList) return;
@@ -1728,14 +1503,12 @@ function loadOrders() {
     const ordersList = document.getElementById('ordersList');
     if (!ordersList) return;
 
-    // Validasi login dan data driver
     if (!globalCurrentUid) {
         ordersList.innerHTML = '<div class="empty-state"><div>🔐</div><p>Menunggu autentikasi driver...</p></div>';
         return;
     }
     if (!checkDriverData()) return;
 
-    // Cek GPS
     if (!gpsReady || !driverLocation.latitude || !driverLocation.longitude) {
         const messages = ["Mencari sinyal GPS...", "Menunggu sinyal stabil...", "Memastikan akurasi lokasi..."];
         let msgIndex = 0;
@@ -1754,21 +1527,17 @@ function loadOrders() {
         return;
     }
 
-    // Hentikan listener lama dan reset state
     detachOrdersListeners();
     orderMap.clear();
-    ordersList.innerHTML = '';  // kosongkan, nanti diisi oleh renderAllOrdersFromMap
+    ordersList.innerHTML = '';
 
-    // Buat query
     ordersRef = database.ref('orders')
         .orderByChild('status')
         .equalTo('waiting');
 
     isInitialLoad = true;
 
-    // ---- child_added ----
-    // ---- child_added ----
-const childAddedHandler = (snapshot) => {
+    const childAddedHandler = (snapshot) => {
     const orderId = snapshot.key;
     const orderData = snapshot.val();
     if (!orderData) {
@@ -1777,18 +1546,14 @@ const childAddedHandler = (snapshot) => {
     }
     console.log(`📥 [child_added] Order ${orderId} muncul: status=${orderData.status}, created_at=${orderData.created_at}`);
 
-    // ===== TAMBAHKAN ID KE orderData =====
     orderData.id = orderId;
 
-    // Simpan di map
     orderMap.set(orderId, orderData);
 
-    // Jika bukan inisialisasi awal, proses order baru
     if (!isInitialLoad) {
         if (isOrderVisible(orderData)) {
             addOrderToDOM(orderData);
 
-            // 🔥 Ambil lokasi terakhir dari Android Service
             let loc = null;
             if (typeof Android !== 'undefined') {
                 try {
@@ -1801,18 +1566,15 @@ const childAddedHandler = (snapshot) => {
                     console.warn('Gagal ambil lokasi dari Android:', e);
                 }
             }
-            // Fallback ke driverLocation dari cache GPS HTML
             if (!loc || !loc.lat || !loc.lng) {
                 loc = { lat: driverLocation.latitude, lng: driverLocation.longitude };
                 console.log('📍 Lokasi fallback dari cache HTML:', loc);
             }
 
             if (loc && loc.lat && loc.lng) {
-                // Update driverLocation di memori
                 driverLocation.latitude = loc.lat;
                 driverLocation.longitude = loc.lng;
 
-                // 🔥 Kirim lokasi ke Firebase SEKALI (hanya saat ada order baru)
                 if (globalCurrentUid) {
                     database.ref('drivers/' + globalCurrentUid).update({
                         latitude: loc.lat,
@@ -1828,7 +1590,6 @@ const childAddedHandler = (snapshot) => {
                     }).catch(console.error);
                 }
 
-                // Hitung jarak ke order
                 const dist = calculateDistance(
                     loc.lat, loc.lng,
                     orderData.pickup_lat, orderData.pickup_lng
@@ -1849,41 +1610,30 @@ const childAddedHandler = (snapshot) => {
     }
 };
 
-    const beepSound = document.getElementById('beekSound');
-    if (beepSound) beepSound.play().catch(e => console.log('Audio error:', e));
-
-    // ---- child_changed ----
     const childChangedHandler = (snapshot) => {
     const orderId = snapshot.key;
     const orderData = snapshot.val();
     if (!orderData) return;
     console.log(`🔄 [child_changed] Order ${orderId} berubah: status=${orderData.status}`);
 
-    // ===== TAMBAHKAN ID KE orderData =====
     orderData.id = orderId;
 
-    // Update map
     orderMap.set(orderId, orderData);
 
-        // Cek apakah order saat ini tampil di DOM
         const existingEl = document.querySelector(`.order-item[data-order-id="${orderId}"]`);
         if (existingEl) {
             if (isOrderVisible(orderData)) {
-                // Update DOM
                 updateOrderDOM(orderId, orderData);
             } else {
-                // Tidak lagi visible, hapus
                 removeOrderDOM(orderId);
             }
         } else {
-            // Tidak ada di DOM, tapi mungkin sekarang visible -> tambahkan
             if (isOrderVisible(orderData)) {
                 addOrderToDOM(orderData);
             }
         }
     };
 
-    // ---- child_removed ----
     const childRemovedHandler = (snapshot) => {
     const orderId = snapshot.key;
     console.log(`🗑️ [child_removed] Order ${orderId} dihapus dari daftar waiting`);
@@ -1891,275 +1641,22 @@ const childAddedHandler = (snapshot) => {
     removeOrderDOM(orderId);
 };
 
-    // Simpan referensi listener
     ordersChildListeners.child_added = childAddedHandler;
     ordersChildListeners.child_changed = childChangedHandler;
     ordersChildListeners.child_removed = childRemovedHandler;
 
-    // Pasang listener
     ordersRef.on('child_added', childAddedHandler);
     ordersRef.on('child_changed', childChangedHandler);
     ordersRef.on('child_removed', childRemovedHandler);
 
-    // Tandai selesai inisialisasi dengan once('value')
     ordersRef.once('value', function(snapshot) {
         isInitialLoad = false;
-        // Render semua order yang visible berdasarkan filter saat ini
         renderAllOrdersFromMap();
-        // Hentikan loading GPS jika masih berjalan
         if (gpsLoadingInterval) {
             clearInterval(gpsLoadingInterval);
             gpsLoadingInterval = null;
         }
     });
-}
-
-// ==================== FUNGSI UNTUK FOOD ORDERS (BOTTOM SHEET) ====================
-// Variabel untuk menampung order yang sedang ditampilkan di bottom sheet
-let currentFoodOrderId = null;
-let isFoodOrderProcessing = false;
-
-function showFoodBottomSheet(order, orderId) {
-    const sheet = document.getElementById('foodBottomSheet');
-    const content = document.getElementById('foodSheetContent');
-    const distDriverToMerchant = order._distDriverToMerchant || 0;
-    const distMerchantToCustomer = order._distMerchantToCustomer || 0;
-
-    const itemsHtml = order.items && Array.isArray(order.items) ?
-        order.items.map(item => `<li><span>${escapeHtml(item.name)} x${item.quantity}</span><span>Rp${(item.price * item.quantity).toLocaleString()}</span></li>`).join('') :
-        '<li>Tidak ada item</li>';
-
-    content.innerHTML = `
-        <div class="info-row"><span class="label">Toko</span><span class="value">${escapeHtml(order.merchantName || 'Toko')}</span></div>
-        <div class="info-row"><span class="label">Alamat Toko</span><span class="value">${escapeHtml(order.merchantAddress || '-')}</span></div>
-        <div class="info-row"><span class="label">Jarak Anda ke Toko</span><span class="value">${distDriverToMerchant.toFixed(1)} km</span></div>
-        <div class="info-row"><span class="label">Customer</span><span class="value">${escapeHtml(order.customerName || 'Customer')}</span></div>
-        <div class="info-row"><span class="label">Alamat Customer</span><span class="value">${escapeHtml(order.deliveryAddress || '-')}</span></div>
-        <div class="info-row"><span class="label">Jarak Toko ke Customer</span><span class="value">${distMerchantToCustomer.toFixed(1)} km</span></div>
-        <div style="margin:10px 0 6px; font-weight:600;">Pesanan:</div>
-        <ul class="items-list">${itemsHtml}</ul>
-        <div class="total-price">Total: Rp${(order.totalPrice || 0).toLocaleString()}</div>
-        <div class="actions">
-            <button class="btn-reject" id="rejectFoodBtn">Tolak</button>
-            <button class="btn-accept" id="acceptFoodBtn">✅ Terima</button>
-        </div>
-    `;
-
-    currentFoodOrderId = orderId;
-    sheet.classList.add('open');
-
-    // Event listener untuk tombol terima/tolak
-    document.getElementById('acceptFoodBtn').onclick = function() {
-        acceptFoodOrder(orderId);
-    };
-    document.getElementById('rejectFoodBtn').onclick = function() {
-        rejectFoodOrder(orderId);
-    };
-}
-
-function rejectFoodOrder(orderId) {
-    // Tutup bottom sheet dan catat penolakan di localStorage agar tidak muncul lagi
-    closeFoodSheet();
-    // Simpan penolakan (opsional)
-    const rejected = JSON.parse(localStorage.getItem('rejected_food_orders') || '[]');
-    if (!rejected.includes(orderId)) {
-        rejected.push(orderId);
-        localStorage.setItem('rejected_food_orders', JSON.stringify(rejected));
-    }
-    showToast('Pesanan ditolak', 'warning');
-}
-
-function acceptFoodOrder(orderId) {
-    if (isFoodOrderProcessing) return;
-    isFoodOrderProcessing = true;
-    showToast('⏳ Memproses...', 'info');
-
-    // Cek apakah driver masih idle (tidak ada active order)
-    database.ref(`drivers/${globalCurrentUid}/activeOrder`).once('value')
-        .then(snap => {
-            const activeOrder = snap.val();
-            if (activeOrder) {
-                showToast('Anda sedang menangani order lain!', 'warning');
-                isFoodOrderProcessing = false;
-                closeFoodSheet();
-                return;
-            }
-
-            // Update order
-            const updates = {
-                status: 'driver_assigned',
-                driverId: globalCurrentUid,
-                driverName: currentDriverData.fullName || 'Driver',
-                driverPhone: currentDriverData.phoneNumber || '',
-                driverLat: driverLocation.latitude || null,
-                driverLng: driverLocation.longitude || null,
-                assignedAt: new Date().toISOString()
-            };
-
-            database.ref(`foodOrders/${orderId}`).update(updates)
-                .then(() => {
-                    // Set active order di driver
-                    return database.ref(`drivers/${globalCurrentUid}/activeOrder`).set(orderId);
-                })
-                .then(() => {
-                    showToast('✅ Pesanan makanan diterima!', 'success');
-                    localStorage.setItem('current_food_order_id', orderId);
-                    closeFoodSheet();
-                    // Redirect ke halaman tracking driver food
-                    window.location.href = `tracking_driver_food.html?orderId=${orderId}`;
-                })
-                .catch(err => {
-                    console.error('❌ Gagal menerima pesanan:', err);
-                    showToast('❌ Gagal: ' + err.message, 'error');
-                    isFoodOrderProcessing = false;
-                });
-        })
-        .catch(err => {
-            console.error('❌ Gagal cek active order:', err);
-            showToast('❌ Gagal: ' + err.message, 'error');
-            isFoodOrderProcessing = false;
-        });
-}
-
-function closeFoodSheet() {
-    document.getElementById('foodBottomSheet').classList.remove('open');
-    currentFoodOrderId = null;
-}
-
-// ==================== LOAD FOOD ORDERS (DENGAN BOTTOM SHEET) ====================
-function loadFoodOrders() {
-    // CEK APAKAH FITUR FOOD AKTIF
-    if (!acceptFoodEnabled) {
-        console.log('⏭️ Fitur Food dimatikan oleh driver');
-        const container = document.getElementById('foodOrdersContainer');
-        if (container) {
-            container.innerHTML = `<div class="empty-state">🍽️ Fitur Food dimatikan. Aktifkan di pengaturan.</div>`;
-        }
-        return;
-    }
-    
-    if (!globalCurrentUid) {
-        console.warn('❌ loadFoodOrders: globalCurrentUid kosong');
-        return;
-    }
-    if (!driverLocation.latitude || !driverLocation.longitude) {
-        console.warn('⏳ loadFoodOrders: Lokasi driver belum siap');
-        const container = document.getElementById('foodOrdersContainer');
-        if (container) {
-            container.innerHTML = `<div class="loading"><div class="spinner"></div><p>Menunggu lokasi...</p></div>`;
-        }
-        return;
-    }
-
-    console.log('📍 loadFoodOrders: Mencari food orders...');
-    console.log(`📍 Lokasi driver: ${driverLocation.latitude}, ${driverLocation.longitude}`);
-    
-    if (foodOrdersRef) {
-        foodOrdersRef.off('value');
-        foodOrdersRef = null;
-    }
-    
-    foodOrdersRef = database.ref('foodOrders');
-    foodOrdersRef.orderByChild('status')
-        .equalTo('looking_for_driver')
-        .on('value', (snapshot) => {
-            const container = document.getElementById('foodOrdersContainer');
-            if (!container) return;
-
-            console.log(`📦 loadFoodOrders: Ditemukan ${snapshot.numChildren()} order dengan status looking_for_driver`);
-
-            // Cek apakah driver sedang aktif (punya activeOrder)
-            database.ref(`drivers/${globalCurrentUid}/activeOrder`).once('value')
-                .then(snap => {
-                    const activeOrder = snap.val();
-                    if (activeOrder) {
-                        // Driver sedang sibuk, jangan tampilkan apapun
-                        container.innerHTML = `<div class="empty-state">🚗 Anda sedang dalam perjalanan. Tidak ada notifikasi food.</div>`;
-                        return;
-                    }
-
-                    // Cek penolakan sebelumnya
-                    const rejected = JSON.parse(localStorage.getItem('rejected_food_orders') || '[]');
-
-                    let hasOrders = false;
-                    container.innerHTML = '';
-
-                    snapshot.forEach((child) => {
-                        const order = child.val();
-                        const orderId = child.key;
-
-                        // Lewati jika sudah ditolak
-                        if (rejected.includes(orderId)) {
-                            console.log(`⏭️ Order ${orderId} sudah ditolak, lewati.`);
-                            return;
-                        }
-
-                        const merchantLat = order.merchantLat ? parseFloat(order.merchantLat) : null;
-                        const merchantLng = order.merchantLng ? parseFloat(order.merchantLng) : null;
-                        const customerLat = order.deliveryLat ? parseFloat(order.deliveryLat) : null;
-                        const customerLng = order.deliveryLng ? parseFloat(order.deliveryLng) : null;
-
-                        if (merchantLat && merchantLng && driverLocation.latitude) {
-                            // Jarak driver ke toko
-                            const distDriverToMerchant = calculateDistance(
-                                driverLocation.latitude,
-                                driverLocation.longitude,
-                                merchantLat,
-                                merchantLng
-                            );
-                            // Jarak toko ke customer
-                            let distMerchantToCustomer = 0;
-                            if (customerLat && customerLng) {
-                                distMerchantToCustomer = calculateDistance(
-                                    merchantLat,
-                                    merchantLng,
-                                    customerLat,
-                                    customerLng
-                                );
-                            }
-
-                            if (distDriverToMerchant !== null && distDriverToMerchant <= 20) {
-                                hasOrders = true;
-                                // Simpan jarak di order agar bisa ditampilkan di bottom sheet
-                                order._distDriverToMerchant = distDriverToMerchant;
-                                order._distMerchantToCustomer = distMerchantToCustomer || 0;
-
-                                // Tampilkan bottom sheet langsung, bukan list
-                                // Hanya tampilkan satu order pertama yang masuk
-                                if (!document.getElementById('foodBottomSheet').classList.contains('open')) {
-                                    showFoodBottomSheet(order, orderId);
-                                }
-                            }
-                        }
-                    });
-
-                    // Jika tidak ada order, tampilkan pesan kosong
-                    if (!hasOrders && !document.getElementById('foodBottomSheet').classList.contains('open')) {
-                        container.innerHTML = `<div class="empty-state">🍽️ Tidak ada pesanan makanan terdekat</div>`;
-                    } else {
-                        container.innerHTML = `<div class="empty-state">📢 Ada pesanan food masuk! Periksa notifikasi.</div>`;
-                    }
-                })
-                .catch(err => {
-                    console.error('❌ Gagal cek active order:', err);
-                });
-        });
-}
-
-function createFoodOrderHTML(order, orderId, distance) {
-    // Fungsi ini tidak digunakan lagi karena pakai bottom sheet
-    return '';
-}
-
-function escapeHtml(str) {
-  if (!str) return '';
-  return str.replace(/[&<>"]/g, function(m) {
-    if (m === '&') return '&amp;';
-    if (m === '<') return '&lt;';
-    if (m === '>') return '&gt;';
-    if (m === '"') return '&quot;';
-    return m;
-  });
 }
 
 // ========== BANTUAN UNTUK TAWARAN MANUAL ==========
@@ -2300,14 +1797,12 @@ async function showOrderDetail(orderObj, fromAuto = false, isAutoTrigger = false
 
   document.getElementById('orderModal').style.display = 'flex';
 
-  // ========== PUTAR SOUND MANUAL POPUP JIKA AUTOMATIC TRIGGER DAN AUTOBID OFF ==========
   if (isAutoTrigger && !fromAuto) {
     const manualSound = document.getElementById('manualPopupSound');
     if (manualSound) {
       manualSound.play().catch(e => console.log('Audio manualPopupSound error:', e));
     }
   }
-  // ====================================================================================
 
   if (currentModalOrderListener && currentModalOrderRef) {
     currentModalOrderRef.off('value', currentModalOrderListener);
@@ -2653,9 +2148,8 @@ function closeModal() {
 // ========== HANDLE GPS ERROR ==========
 function handleGpsError(error) {
     console.warn('GPS error:', error);
-    if (error.code === 1) { // PERMISSION_DENIED
+    if (error.code === 1) {
         showToast('⚠️ Izin lokasi ditolak. Aktifkan lokasi di pengaturan aplikasi.', 'warning');
-        // Tampilkan popup dengan tombol refresh
         showPopup(
             'Izin Lokasi Diperlukan',
             'Aktifkan izin lokasi Anda untuk menerima order terdekat. Jika sudah diizinkan, refresh halaman.',
@@ -2668,7 +2162,6 @@ function handleGpsError(error) {
     } else {
         showToast('Gagal mendapatkan lokasi. Gunakan lokasi terakhir.', 'warning');
     }
-    // Jika tidak ada cache, tampilkan pesan di list
     if (!driverLocation.latitude) {
         const ordersList = document.getElementById('ordersList');
         if (ordersList) {
@@ -2678,7 +2171,6 @@ function handleGpsError(error) {
 }
 
 function startGPSMonitoring() {
-  // Cek cache
   const lastLocation = localStorage.getItem('jego_last_driver_location');
   if (lastLocation) {
     try {
@@ -2692,7 +2184,6 @@ function startGPSMonitoring() {
         gpsLoadingInterval = null;
       }
       loadOrders();
-      loadFoodOrders(); // panggil juga food orders setelah GPS siap
     } catch(e) {}
   }
 
@@ -2701,21 +2192,19 @@ function startGPSMonitoring() {
     return;
   }
 
-  // Coba dapatkan lokasi realtime
   navigator.geolocation.getCurrentPosition(
     (position) => { updateDriverLocation(position); },
     handleGpsError,
     { timeout: 10000, enableHighAccuracy: true }
   );
 
-  // Pasang watch untuk update berkala
   if (locationWatchId) navigator.geolocation.clearWatch(locationWatchId);
   locationWatchId = navigator.geolocation.watchPosition(
     updateDriverLocation,
     handleGpsError,
     { timeout: 10000, enableHighAccuracy: true }
   );
-} // <-- TUTUP startGPSMonitoring DI SINI
+}
 
 function updateDriverLocation(position) {
   if (!position || !position.coords) return;
@@ -2723,12 +2212,11 @@ function updateDriverLocation(position) {
   const lng = position.coords.longitude;
   if (!lat || !lng) return;
 
-  // ===== THRESHOLD JARAK 50 METER =====
-  const thresholdKm = 0.10; // 100 meter
+  const thresholdKm = 0.10;
   let shouldUpdate = false;
 
   if (lastSentLat === null || lastSentLng === null) {
-    shouldUpdate = true; // pertama kali, wajib kirim
+    shouldUpdate = true;
   } else {
     const dist = calculateDistance(lastSentLat, lastSentLng, lat, lng);
     if (dist !== null && dist > thresholdKm) {
@@ -2738,15 +2226,12 @@ function updateDriverLocation(position) {
     }
   }
 
-  // Selalu perbarui driverLocation di memori dan cache localStorage
   driverLocation = { latitude: lat, longitude: lng };
   localStorage.setItem('jego_last_driver_location', JSON.stringify({ lat, lng }));
 
-  // Update GPS indicator
   document.getElementById('gpsDot').className = 'gps-dot gps-active';
   document.getElementById('gpsText').textContent = 'GPS';
 
-  // Jika belum siap, langsung load orders (tanpa kirim ke Firebase)
   if (!gpsReady) {
     gpsReady = true;
     if (gpsLoadingInterval) {
@@ -2754,14 +2239,11 @@ function updateDriverLocation(position) {
       gpsLoadingInterval = null;
     }
     loadOrders();
-    loadFoodOrders();
-    // Tandai lastSent agar setelah ini hanya kirim jika berubah
     lastSentLat = lat;
     lastSentLng = lng;
     return;
   }
 
-  // Kirim update ke Firebase hanya jika shouldUpdate === true
   if (shouldUpdate && locationTrackingEnabled && currentDriverData && globalCurrentUid) {
     database.ref('drivers/' + globalCurrentUid).update({
       latitude: lat,
@@ -2776,12 +2258,10 @@ function updateDriverLocation(position) {
       last_update: new Date().toISOString()
     }).catch(console.error);
 
-    // Perbarui lastSent setelah berhasil kirim
     lastSentLat = lat;
     lastSentLng = lng;
     console.log(`📍 Kirim lokasi: ${lat}, ${lng}`);
   } else {
-    // Jika tidak kirim, tapi tetap refresh tampilan dengan posisi baru di memori
     refreshDisplay();
   }
 }
@@ -2807,7 +2287,6 @@ function checkDriverData() {
         balance: driverData.Balance || 0,
         potongan: driverData.Potongan || 0
       };
-      // document.getElementById('driverPhoto').src = currentDriverData.profilePhotoUrl;
       document.getElementById('sidebarDriverName').textContent = currentDriverData.fullName;
       document.getElementById('sidebarDriverRating').textContent = currentDriverData.rating.toFixed(1);
       document.getElementById('sidebarDriverTrips').innerHTML = `(${currentDriverData.perjalanan || 0})`;
@@ -2835,15 +2314,13 @@ function toggleLocationTracking() {
 
   if (isAndroidAvailable()) {
     if (locationTrackingEnabled) {
-      // Aktifkan tracking dan floating button
       Android.startDriverTracking();
-      Android.startFloatingButton();  // <-- TAMBAHKAN INI
+      Android.startFloatingButton();
       console.log('📍 Service tracking dimulai dari tombol');
       console.log('🔘 Floating button diaktifkan');
     } else {
-      // Matikan tracking dan floating button
       Android.stopDriverTracking();
-      Android.stopFloatingButton();   // <-- TAMBAHKAN INI
+      Android.stopFloatingButton();
       console.log('⏹️ Service tracking dihentikan dari tombol');
       console.log('🔘 Floating button dimatikan');
     }
@@ -2891,8 +2368,6 @@ function toggleAutobid() {
 }
 function refreshData() {
     refreshDisplay();
-    // refresh food orders juga
-    loadFoodOrders();
 }
 
 function showPopup(title, message, type = 'info', options = {}) {
@@ -3189,7 +2664,6 @@ if (modePenumpangBtn) {
           localStorage.removeItem('jego_logged_in_driver');
           localStorage.removeItem('autobid_offered_orders');
 
-          // ✅ LANGSUNG KE JENIS_KENDERAAN.HTML (SEFOLDER)
           window.location.href = 'jenis_kenderaan.html';
         } catch (err) {
           console.error('❌ Gagal beralih mode:', err);
@@ -3240,7 +2714,6 @@ window.addEventListener('click', (e) => {
         locationTrackingEnabled = data.tracking_enabled;
         localStorage.setItem(STORAGE_TRACKING, locationTrackingEnabled);
         updateTrackingButton();
-        // 🆕 Aktifkan service jika tracking ON
         if (locationTrackingEnabled && isAndroidAvailable()) {
           Android.startDriverTracking();
           console.log('📍 Service tracking dimulai otomatis saat login');
@@ -3251,25 +2724,10 @@ window.addEventListener('click', (e) => {
         localStorage.setItem(STORAGE_AUTOBID, autobidEnabled);
         updateAutobidButton();
       }
-      // ===== TAMBAHKAN INI =====
-      if (data.isFoodDelivery !== undefined) {
-        acceptFoodEnabled = data.isFoodDelivery === true;
-        localStorage.setItem(STORAGE_ACCEPT_FOOD, acceptFoodEnabled);
-        document.getElementById('acceptFoodToggle').checked = acceptFoodEnabled;
-        if (acceptFoodEnabled) {
-          loadFoodOrders();
-        } else {
-          const container = document.getElementById('foodOrdersContainer');
-          if (container) {
-            container.innerHTML = `<div class="empty-state">🍽️ Fitur Food dimatikan. Aktifkan di pengaturan.</div>`;
-          }
-        }
-      }
     }
   }).catch(console.error);
 }
     loadOrders();
-    loadFoodOrders(); // tambahkan ini
     setTimeout(startGPSMonitoring, 1000);
     await checkPlayerIdAndPrompt();
   } else {
@@ -3309,8 +2767,6 @@ if (sidebarHeader) {
   document.getElementById('orderModal').addEventListener('click', e => { if (e.target === document.getElementById('orderModal') && !countdownInterval) closeModal(); });
 
   document.getElementById('acceptKurirToggle').addEventListener('change', updateAcceptKurirSetting);
-// ✅ TAMBAHKAN INI
-document.getElementById('acceptFoodToggle').addEventListener('change', updateAcceptFoodSetting);
   document.getElementById('promptAllowBtn')?.addEventListener('click', async () => {
     closeNotifPrompt();
     await initOneSignal();
@@ -3320,12 +2776,6 @@ document.getElementById('acceptFoodToggle').addEventListener('change', updateAcc
 
 window.addEventListener('beforeunload', () => { if (locationWatchId) navigator.geolocation.clearWatch(locationWatchId); });
 if (gpsLoadingInterval) clearInterval(gpsLoadingInterval);
-
-// Close bottom sheet saat klik tombol close
-document.getElementById('closeFoodSheet').addEventListener('click', closeFoodSheet);
-document.getElementById('foodBottomSheet').addEventListener('click', function(e) {
-  if (e.target === this) closeFoodSheet();
-});
 
 document.addEventListener("backbutton", function () {
     if (
