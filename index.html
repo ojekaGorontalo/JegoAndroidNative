@@ -283,51 +283,159 @@
   .spinner { width: 40px; height: 40px; border: 4px solid rgba(0,0,0,0.1); border-radius: 50%; border-top-color: var(--primary); animation: spin 1s ease-in-out infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
   
-  .modal {
-    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;
-  }
-  .modal-content { background: white; border-radius: 12px; width: 95%; max-width: 380px; max-height: 90vh; overflow-y: auto; }
-  .modal-header-with-customer { display: flex; justify-content: space-between; align-items: flex-start; padding: 12px 15px; border-bottom: 1px solid #eee; }
-  .modal-title { font-size: 1rem; font-weight: 600; color: var(--primary); }
-  .modal-customer-photo { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); }
-  .close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #666; }
-  .close-btn.disabled { cursor: not-allowed; opacity: 0.5; pointer-events: none; }
-  .modal-map { height: 50vh; min-height: 200px; max-height: 300px; width: 100%; }
-  .modal-details { padding: 12px 15px; }
-  .modal-route-point { display: flex; align-items: flex-start; margin-bottom: 8px; }
-  .modal-point-marker { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 8px; font-size: 0.7rem; color: white; font-weight: bold; }
-  .modal-order-details { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; background: #f9f9f9; padding: 10px; border-radius: 8px; margin: 10px 0; }
-  .modal-footer { padding: 12px 15px; border-top: 1px solid #eee; }
-  .progress-container { width: 100%; background: #e0e0e0; border-radius: 10px; overflow: hidden; margin-bottom: 10px; }
-  .progress-bar { height: 8px; background: linear-gradient(to right, var(--primary), var(--secondary)); width: 100%; transition: width 0.3s; }
-  .progress-info { display: flex; justify-content: space-between; font-size: 0.75rem; color: #666; }
-  .ambil-btn {
-    width: 100%; background: linear-gradient(to right, var(--primary), var(--secondary));
-    color: white; border: none; border-radius: 8px; padding: 12px; font-weight: 600; cursor: pointer;
-  }
-  .ambil-btn:disabled { background: #ccc; cursor: not-allowed; }
-  
-  .bid-options-container {
-    display: none;
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 10px;
-  }
-  .bid-option {
-    width: 100%;
-    padding: 10px;
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    background: #f5f5f5;
-    color: #333;
-    transition: all 0.2s;
-  }
-  .bid-option.original { background: var(--primary); color: white; }
-  .bid-option.plus { background: var(--secondary); color: white; }
-  .bid-option:hover { opacity: 0.9; transform: scale(0.99); }
+  /* ===== ORDER BOTTOM SHEET ===== */
+.order-bottom-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-radius: 28px 28px 0 0;
+  box-shadow: 0 -8px 30px rgba(0,0,0,0.2);
+  z-index: 2000;
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 20px 20px 30px;
+  display: none;
+}
+.order-bottom-sheet.open {
+  transform: translateY(0);
+  display: block;
+}
+.order-bottom-sheet .handle {
+  width: 40px;
+  height: 4px;
+  background: #ccc;
+  border-radius: 4px;
+  margin: 0 auto 12px;
+}
+.order-bottom-sheet .header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.order-bottom-sheet .header h2 {
+  font-size: 1.1rem;
+  margin: 0;
+}
+.order-bottom-sheet .close-sheet {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #999;
+}
+.order-bottom-sheet .info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  font-size: 0.9rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+.order-bottom-sheet .info-row .label {
+  color: #666;
+}
+.order-bottom-sheet .info-row .value {
+  font-weight: 600;
+  text-align: right;
+}
+.order-bottom-sheet .map-container {
+  height: 200px;
+  width: 100%;
+  margin: 10px 0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.order-bottom-sheet .modal-order-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  background: #f9f9f9;
+  padding: 10px;
+  border-radius: 8px;
+  margin: 10px 0;
+}
+.order-bottom-sheet .modal-footer {
+  margin-top: 10px;
+}
+.order-bottom-sheet .progress-container {
+  width: 100%;
+  background: #e0e0e0;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+.order-bottom-sheet .progress-bar {
+  height: 8px;
+  background: linear-gradient(to right, var(--primary), var(--secondary));
+  width: 100%;
+  transition: width 0.3s;
+}
+.order-bottom-sheet .progress-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: #666;
+}
+.order-bottom-sheet .bid-options-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.order-bottom-sheet .ambil-btn {
+  width: 100%;
+  background: linear-gradient(to right, var(--primary), var(--secondary));
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.order-bottom-sheet .ambil-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+body.dark .order-bottom-sheet {
+  background: #1e1e1e;
+  color: #e9ecef;
+}
+body.dark .order-bottom-sheet .info-row {
+  border-bottom-color: #333;
+}
+body.dark .order-bottom-sheet .info-row .label {
+  color: #aaa;
+}
+body.dark .order-bottom-sheet .info-row .value {
+  color: #eee;
+}
+body.dark .order-bottom-sheet .modal-order-details {
+  background: #2c2c2c;
+}
+body.dark .order-bottom-sheet .progress-container {
+  background: #333;
+}
+body.dark .order-bottom-sheet .bid-option {
+  background: #2c2c2c;
+  color: #e9ecef;
+  border: 1px solid #444;
+}
+body.dark .order-bottom-sheet .bid-option.original {
+  background: #FF9800;
+  color: white;
+}
+body.dark .order-bottom-sheet .bid-option.plus {
+  background: #FFB74D;
+  color: #1e1e1e;
+}
+body.dark .order-bottom-sheet .ambil-btn {
+  background: linear-gradient(135deg, #FF9800, #FFB74D);
+  color: white;
+}
   
   .sidebar {
     display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1100;
@@ -873,126 +981,24 @@ body.dark .popup-button {
     background: #FF9800;
 }
 
-/* ===== FOOD ORDER BOTTOM SHEET ===== */
-.food-bottom-sheet {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: white;
-  border-radius: 28px 28px 0 0;
-  box-shadow: 0 -8px 30px rgba(0,0,0,0.2);
-  z-index: 2000;
-  transform: translateY(100%);
-  transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
-  max-height: 85vh;
-  overflow-y: auto;
-  padding: 20px 20px 30px;
-  display: none;
-}
-.food-bottom-sheet.open {
-  transform: translateY(0);
-  display: block;
-}
-.food-bottom-sheet .handle {
-  width: 40px;
-  height: 4px;
-  background: #ccc;
-  border-radius: 4px;
-  margin: 0 auto 12px;
-}
-.food-bottom-sheet .header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-}
-.food-bottom-sheet .header h2 {
-  font-size: 1.1rem;
-  margin: 0;
-}
-.food-bottom-sheet .close-sheet {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  color: #999;
-}
-.food-bottom-sheet .info-row {
-  display: flex;
-  justify-content: space-between;
-  padding: 6px 0;
-  font-size: 0.9rem;
-  border-bottom: 1px solid #f0f0f0;
-}
-.food-bottom-sheet .info-row .label {
-  color: #666;
-}
-.food-bottom-sheet .info-row .value {
-  font-weight: 600;
-  text-align: right;
-}
-.food-bottom-sheet .items-list {
-  margin: 10px 0;
-  padding: 0;
-  list-style: none;
-}
-.food-bottom-sheet .items-list li {
-  display: flex;
-  justify-content: space-between;
-  padding: 4px 0;
-  font-size: 0.9rem;
-}
-.food-bottom-sheet .total-price {
-  font-weight: 700;
-  font-size: 1.1rem;
-  color: #FF9800;
-  text-align: right;
-  margin-top: 8px;
-}
-.food-bottom-sheet .actions {
-  display: flex;
-  gap: 12px;
-  margin-top: 16px;
-}
-.food-bottom-sheet .actions button {
-  flex: 1;
+/* ===== NOTIF BOTTOM SHEET ===== */
+#notifBottomSheet .notif-item {
   padding: 12px;
-  border: none;
-  border-radius: 40px;
-  font-weight: 700;
-  font-size: 1rem;
+  border-bottom: 1px solid #eee;
   cursor: pointer;
 }
-.food-bottom-sheet .actions .btn-accept {
-  background: linear-gradient(135deg, #FF9800, #FF5722);
-  color: white;
+#notifBottomSheet .notif-item.unread {
+  background: #fff9e6;
+  border-left: 3px solid var(--primary);
 }
-.food-bottom-sheet .actions .btn-reject {
-  background: #e9ecef;
-  color: #333;
+#notifBottomSheet .notif-item:last-child {
+  border-bottom: none;
 }
-.food-bottom-sheet .actions button:active { transform: scale(0.96); }
-
-body.dark .food-bottom-sheet {
-  background: #1e1e1e;
-  color: #e9ecef;
-}
-body.dark .food-bottom-sheet .info-row {
+body.dark #notifBottomSheet .notif-item {
   border-bottom-color: #333;
 }
-body.dark .food-bottom-sheet .info-row .label {
-  color: #aaa;
-}
-body.dark .food-bottom-sheet .info-row .value {
-  color: #eee;
-}
-body.dark .food-bottom-sheet .items-list li {
-  color: #ddd;
-}
-body.dark .food-bottom-sheet .actions .btn-reject {
-  background: #2c2c2c;
-  color: #eee;
+body.dark #notifBottomSheet .notif-item.unread {
+  background: #2a2a1a;
 }
 </style>
 </head>
@@ -1047,16 +1053,6 @@ body.dark .food-bottom-sheet .actions .btn-reject {
 </div>
 
 <div class="container">
-  <!-- ===== FOOD ORDERS SECTION (tetap ada, tapi akan diisi oleh bottom sheet) ===== -->
-  <div style="margin-bottom:12px; padding:0 8px; background: #f8f9fa; border-radius: 12px;">
-    <h3 style="display:flex; align-items:center; gap:8px; font-size:1rem; margin-top:8px; padding:8px 0;">
-      <span style="background:#FF9800; color:white; padding:2px 10px; border-radius:20px; font-size:0.7rem;">FOOD</span>
-      Pesanan Makanan Terdekat
-    </h3>
-    <div id="foodOrdersContainer">
-      <div class="loading"><div class="spinner"></div><p>Memuat pesanan makanan...</p></div>
-    </div>
-  </div>
   <!-- ===== ORDERS LIST YANG SUDAH ADA ===== -->
   <div style="margin-top:16px; padding:0 8px;">
     <h3 style="display:flex; align-items:center; gap:8px; font-size:1rem;">
@@ -1067,68 +1063,27 @@ body.dark .food-bottom-sheet .actions .btn-reject {
   </div>
 </div>
 
-<!-- ===== BOTTOM SHEET FOOD ORDER ===== -->
-<div id="foodBottomSheet" class="food-bottom-sheet">
+<!-- ===== ORDER BOTTOM SHEET ===== -->
+<div id="orderBottomSheet" class="order-bottom-sheet">
   <div class="handle"></div>
   <div class="header">
-    <h2>🍔 Pesanan Food Masuk</h2>
-    <button class="close-sheet" id="closeFoodSheet">&times;</button>
+    <h2 id="bottomSheetTitle">Detail Permintaan</h2>
+    <button class="close-sheet" id="closeBottomSheet">&times;</button>
   </div>
-  <div id="foodSheetContent">
+  <div id="bottomSheetContent">
     <!-- akan diisi JS -->
   </div>
 </div>
 
-<div class="modal" id="orderModal">
-  <div class="modal-content">
-    <div class="modal-header-with-customer">
-      <div><h3 class="modal-title">Detail Permintaan</h3><div class="modal-customer-name" id="modalCustomerName"></div></div>
-      <img id="modalCustomerPhoto" class="modal-customer-photo" src="" style="display:none;">
-      <button class="close-btn" id="closeModal">&times;</button>
-    </div>
-    <div class="modal-body">
-      <div class="modal-map" id="modalMap"></div>
-      <div class="modal-details">
-  <div class="modal-route-point" id="modalAddressAContainer">
-    <div class="modal-point-marker point-marker-a">🟢</div>
-    <div id="modalAddressA">-</div>
+<!-- ===== NOTIF BOTTOM SHEET ===== -->
+<div id="notifBottomSheet" class="order-bottom-sheet" style="z-index: 1200;">
+  <div class="handle"></div>
+  <div class="header">
+    <h2>📬 Pesan Masuk</h2>
+    <button class="close-sheet" id="closeNotifSheet">&times;</button>
   </div>
-  <div class="modal-route-point" id="modalViaContainer" style="display:none;">
-    <div class="modal-point-marker" style="background-color:#2196F3;">🔵</div>
-    <div id="modalViaAddress"></div>
-  </div>
-  <div class="modal-route-point" id="modalAddressBContainer">
-    <div class="modal-point-marker point-marker-b">🟠</div>
-    <div id="modalAddressB">-</div>
-  </div>
-        <div id="modalDeliveryInfo" style="display:none;"></div>
-        <div class="modal-order-details">
-          <div><span id="modalDuration">-</span><div class="detail-label">Durasi</div></div>
-          <div><span id="modalDistance">-</span><div class="detail-label">Jarak</div></div>
-          <div><span id="modalPrice">-</span><div class="detail-label">Harga</div></div>
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <div id="countdownContainer" style="display:none;">
-        <div class="progress-container"><div id="countdownProgress" class="progress-bar" style="width:100%"></div></div>
-        <div class="progress-info"><span>Menunggu konfirmasi customer...</span><span id="countdownSeconds">30 detik</span></div>
-      </div>
-      <div id="bidOptionsContainer" class="bid-options-container"></div>
-      <button class="ambil-btn" id="ambilBtn">Kirim Penawaran</button>
-    </div>
-  </div>
-</div>
-
-<div id="notifModal" class="modal" style="z-index: 1200;">
-  <div class="modal-content" style="max-width: 500px;">
-    <div class="modal-header-with-customer">
-      <h3 class="modal-title">📬 Pesan Masuk</h3>
-      <button class="close-btn" id="closeNotifModal">&times;</button>
-    </div>
-    <div class="modal-body" id="notifListBody" style="max-height: 60vh; overflow-y: auto;">
-      <div class="loading">Memuat...</div>
-    </div>
+  <div id="notifListBody" style="max-height: 60vh; overflow-y: auto; padding: 0 4px;">
+    <div class="loading">Memuat...</div>
   </div>
 </div>
 
@@ -1136,10 +1091,6 @@ body.dark .food-bottom-sheet .actions .btn-reject {
   <a href="index.html" class="bottom-nav-item active" id="navHome">
     <i class="fas fa-car"></i>
     <span>Permintaan Transportasi</span>
-  </a>
-  <a href="food_driver.html" class="bottom-nav-item" id="navFood">
-    <i class="fas fa-utensils"></i>
-    <span>Food</span>
   </a>
   <a href="Statistik.html" class="bottom-nav-item" id="navStats">
     <i class="fas fa-chart-line"></i>
@@ -1178,14 +1129,6 @@ body.dark .food-bottom-sheet .actions .btn-reject {
         <span>🤖 Autobid (Otomatis ambil order)</span>
         <label class="toggle-switch">
             <input type="checkbox" id="autobidToggle">
-            <span class="toggle-slider"></span>
-        </label>
-    </div>
-    <!-- ===== TAMBAHKAN INI ===== -->
-    <div class="menu-item">
-        <span>🍔 Terima Pesanan Food</span>
-        <label class="toggle-switch">
-            <input type="checkbox" id="acceptFoodToggle">
             <span class="toggle-slider"></span>
         </label>
     </div>
@@ -1319,7 +1262,7 @@ function processPendingFCMToken() {
 
 // Variabel global
 let ordersRef = null, ordersListener = null;
-let modalMap = null;
+let bottomSheetMap = null;
 let currentSelectedOrder = null;
 let radarTextInterval = null;
 let gpsLoadingInterval = null;
@@ -1329,8 +1272,6 @@ let locationWatchId = null, locationTrackingEnabled = false;
 let mapboxAccessToken = null;
 let countdownInterval = null, countdownOrderId = null, countdownDriverId = null, orderStatusListener = null;
 let acceptKurirEnabled = false;
-let acceptFoodEnabled = false; // ✅ TAMBAHKAN
-let foodOrdersRef = null; // ✅ TAMBAHKAN (untuk referensi listener)
 let previousOrderIds = new Set();
 let mapMarkers = [];
 let globalCurrentUid = null;
@@ -1436,7 +1377,6 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 const STORAGE_TRACKING = 'jego_location_tracking';
 const STORAGE_AUTOBID = 'jego_autobid_enabled';
 const STORAGE_ACCEPT_KURIR = 'jego_accept_kurir';
-const STORAGE_ACCEPT_FOOD = 'jego_accept_food'; // ✅ TAMBAHKAN
 
 function isAndroidAvailable() {
   return typeof Android !== 'undefined' && Android !== null;
@@ -1451,10 +1391,6 @@ function loadStoredSettings() {
     const kurirToggle = document.getElementById('acceptKurirToggle');
     if (kurirToggle) kurirToggle.checked = acceptKurirEnabled;
     
-    // ✅ TAMBAHKAN INI
-    acceptFoodEnabled = localStorage.getItem(STORAGE_ACCEPT_FOOD) === 'true';
-    const foodToggle = document.getElementById('acceptFoodToggle');
-    if (foodToggle) foodToggle.checked = acceptFoodEnabled;
 }
 function updateTrackingButton() {
   const btn = document.getElementById('locationToggleBtn');
@@ -1469,34 +1405,6 @@ function updateAcceptKurirSetting() {
     acceptKurirEnabled = document.getElementById('acceptKurirToggle').checked;
     localStorage.setItem(STORAGE_ACCEPT_KURIR, acceptKurirEnabled);
     refreshDisplay();
-}
-
-// ==================== TAMBAHKAN FUNGSI INI ====================
-function updateAcceptFoodSetting() {
-    acceptFoodEnabled = document.getElementById('acceptFoodToggle').checked;
-    localStorage.setItem(STORAGE_ACCEPT_FOOD, acceptFoodEnabled);
-    
-    // ===== TAMBAHKAN INI =====
-    if (globalCurrentUid) {
-        database.ref(`drivers/${globalCurrentUid}/isFoodDelivery`).set(acceptFoodEnabled)
-            .then(() => console.log('✅ isFoodDelivery updated in Firebase'))
-            .catch(err => console.error('❌ Gagal update isFoodDelivery:', err));
-    }
-    
-    if (acceptFoodEnabled) {
-        showToast('🍔 Fitur Food diaktifkan', 'success');
-        loadFoodOrders();
-    } else {
-        showToast('🍔 Fitur Food dimatikan', 'info');
-        if (foodOrdersRef) {
-            foodOrdersRef.off('value');
-            foodOrdersRef = null;
-        }
-        const container = document.getElementById('foodOrdersContainer');
-        if (container) {
-            container.innerHTML = `<div class="empty-state">🍽️ Fitur Food dimatikan. Aktifkan di pengaturan.</div>`;
-        }
-    }
 }
 
 // ==================== FUNGSI UNTUK OPTIMASI LISTENER ====================
@@ -1914,243 +1822,6 @@ const childAddedHandler = (snapshot) => {
     });
 }
 
-// ==================== FUNGSI UNTUK FOOD ORDERS (BOTTOM SHEET) ====================
-// Variabel untuk menampung order yang sedang ditampilkan di bottom sheet
-let currentFoodOrderId = null;
-let isFoodOrderProcessing = false;
-
-function showFoodBottomSheet(order, orderId) {
-    const sheet = document.getElementById('foodBottomSheet');
-    const content = document.getElementById('foodSheetContent');
-    const distDriverToMerchant = order._distDriverToMerchant || 0;
-    const distMerchantToCustomer = order._distMerchantToCustomer || 0;
-
-    const itemsHtml = order.items && Array.isArray(order.items) ?
-        order.items.map(item => `<li><span>${escapeHtml(item.name)} x${item.quantity}</span><span>Rp${(item.price * item.quantity).toLocaleString()}</span></li>`).join('') :
-        '<li>Tidak ada item</li>';
-
-    content.innerHTML = `
-        <div class="info-row"><span class="label">Toko</span><span class="value">${escapeHtml(order.merchantName || 'Toko')}</span></div>
-        <div class="info-row"><span class="label">Alamat Toko</span><span class="value">${escapeHtml(order.merchantAddress || '-')}</span></div>
-        <div class="info-row"><span class="label">Jarak Anda ke Toko</span><span class="value">${distDriverToMerchant.toFixed(1)} km</span></div>
-        <div class="info-row"><span class="label">Customer</span><span class="value">${escapeHtml(order.customerName || 'Customer')}</span></div>
-        <div class="info-row"><span class="label">Alamat Customer</span><span class="value">${escapeHtml(order.deliveryAddress || '-')}</span></div>
-        <div class="info-row"><span class="label">Jarak Toko ke Customer</span><span class="value">${distMerchantToCustomer.toFixed(1)} km</span></div>
-        <div style="margin:10px 0 6px; font-weight:600;">Pesanan:</div>
-        <ul class="items-list">${itemsHtml}</ul>
-        <div class="total-price">Total: Rp${(order.totalPrice || 0).toLocaleString()}</div>
-        <div class="actions">
-            <button class="btn-reject" id="rejectFoodBtn">Tolak</button>
-            <button class="btn-accept" id="acceptFoodBtn">✅ Terima</button>
-        </div>
-    `;
-
-    currentFoodOrderId = orderId;
-    sheet.classList.add('open');
-
-    // Event listener untuk tombol terima/tolak
-    document.getElementById('acceptFoodBtn').onclick = function() {
-        acceptFoodOrder(orderId);
-    };
-    document.getElementById('rejectFoodBtn').onclick = function() {
-        rejectFoodOrder(orderId);
-    };
-}
-
-function rejectFoodOrder(orderId) {
-    // Tutup bottom sheet dan catat penolakan di localStorage agar tidak muncul lagi
-    closeFoodSheet();
-    // Simpan penolakan (opsional)
-    const rejected = JSON.parse(localStorage.getItem('rejected_food_orders') || '[]');
-    if (!rejected.includes(orderId)) {
-        rejected.push(orderId);
-        localStorage.setItem('rejected_food_orders', JSON.stringify(rejected));
-    }
-    showToast('Pesanan ditolak', 'warning');
-}
-
-function acceptFoodOrder(orderId) {
-    if (isFoodOrderProcessing) return;
-    isFoodOrderProcessing = true;
-    showToast('⏳ Memproses...', 'info');
-
-    // Cek apakah driver masih idle (tidak ada active order)
-    database.ref(`drivers/${globalCurrentUid}/activeOrder`).once('value')
-        .then(snap => {
-            const activeOrder = snap.val();
-            if (activeOrder) {
-                showToast('Anda sedang menangani order lain!', 'warning');
-                isFoodOrderProcessing = false;
-                closeFoodSheet();
-                return;
-            }
-
-            // Update order
-            const updates = {
-                status: 'driver_assigned',
-                driverId: globalCurrentUid,
-                driverName: currentDriverData.fullName || 'Driver',
-                driverPhone: currentDriverData.phoneNumber || '',
-                driverLat: driverLocation.latitude || null,
-                driverLng: driverLocation.longitude || null,
-                assignedAt: new Date().toISOString()
-            };
-
-            database.ref(`foodOrders/${orderId}`).update(updates)
-                .then(() => {
-                    // Set active order di driver
-                    return database.ref(`drivers/${globalCurrentUid}/activeOrder`).set(orderId);
-                })
-                .then(() => {
-                    showToast('✅ Pesanan makanan diterima!', 'success');
-                    localStorage.setItem('current_food_order_id', orderId);
-                    closeFoodSheet();
-                    // Redirect ke halaman tracking driver food
-                    window.location.href = `tracking_driver_food.html?orderId=${orderId}`;
-                })
-                .catch(err => {
-                    console.error('❌ Gagal menerima pesanan:', err);
-                    showToast('❌ Gagal: ' + err.message, 'error');
-                    isFoodOrderProcessing = false;
-                });
-        })
-        .catch(err => {
-            console.error('❌ Gagal cek active order:', err);
-            showToast('❌ Gagal: ' + err.message, 'error');
-            isFoodOrderProcessing = false;
-        });
-}
-
-function closeFoodSheet() {
-    document.getElementById('foodBottomSheet').classList.remove('open');
-    currentFoodOrderId = null;
-}
-
-// ==================== LOAD FOOD ORDERS (DENGAN BOTTOM SHEET) ====================
-function loadFoodOrders() {
-    // CEK APAKAH FITUR FOOD AKTIF
-    if (!acceptFoodEnabled) {
-        console.log('⏭️ Fitur Food dimatikan oleh driver');
-        const container = document.getElementById('foodOrdersContainer');
-        if (container) {
-            container.innerHTML = `<div class="empty-state">🍽️ Fitur Food dimatikan. Aktifkan di pengaturan.</div>`;
-        }
-        return;
-    }
-    
-    if (!globalCurrentUid) {
-        console.warn('❌ loadFoodOrders: globalCurrentUid kosong');
-        return;
-    }
-    if (!driverLocation.latitude || !driverLocation.longitude) {
-        console.warn('⏳ loadFoodOrders: Lokasi driver belum siap');
-        const container = document.getElementById('foodOrdersContainer');
-        if (container) {
-            container.innerHTML = `<div class="loading"><div class="spinner"></div><p>Menunggu lokasi...</p></div>`;
-        }
-        return;
-    }
-
-    console.log('📍 loadFoodOrders: Mencari food orders...');
-    console.log(`📍 Lokasi driver: ${driverLocation.latitude}, ${driverLocation.longitude}`);
-    
-    if (foodOrdersRef) {
-        foodOrdersRef.off('value');
-        foodOrdersRef = null;
-    }
-    
-    foodOrdersRef = database.ref('foodOrders');
-    foodOrdersRef.orderByChild('status')
-        .equalTo('looking_for_driver')
-        .on('value', (snapshot) => {
-            const container = document.getElementById('foodOrdersContainer');
-            if (!container) return;
-
-            console.log(`📦 loadFoodOrders: Ditemukan ${snapshot.numChildren()} order dengan status looking_for_driver`);
-
-            // Cek apakah driver sedang aktif (punya activeOrder)
-            database.ref(`drivers/${globalCurrentUid}/activeOrder`).once('value')
-                .then(snap => {
-                    const activeOrder = snap.val();
-                    if (activeOrder) {
-                        // Driver sedang sibuk, jangan tampilkan apapun
-                        container.innerHTML = `<div class="empty-state">🚗 Anda sedang dalam perjalanan. Tidak ada notifikasi food.</div>`;
-                        return;
-                    }
-
-                    // Cek penolakan sebelumnya
-                    const rejected = JSON.parse(localStorage.getItem('rejected_food_orders') || '[]');
-
-                    let hasOrders = false;
-                    container.innerHTML = '';
-
-                    snapshot.forEach((child) => {
-                        const order = child.val();
-                        const orderId = child.key;
-
-                        // Lewati jika sudah ditolak
-                        if (rejected.includes(orderId)) {
-                            console.log(`⏭️ Order ${orderId} sudah ditolak, lewati.`);
-                            return;
-                        }
-
-                        const merchantLat = order.merchantLat ? parseFloat(order.merchantLat) : null;
-                        const merchantLng = order.merchantLng ? parseFloat(order.merchantLng) : null;
-                        const customerLat = order.deliveryLat ? parseFloat(order.deliveryLat) : null;
-                        const customerLng = order.deliveryLng ? parseFloat(order.deliveryLng) : null;
-
-                        if (merchantLat && merchantLng && driverLocation.latitude) {
-                            // Jarak driver ke toko
-                            const distDriverToMerchant = calculateDistance(
-                                driverLocation.latitude,
-                                driverLocation.longitude,
-                                merchantLat,
-                                merchantLng
-                            );
-                            // Jarak toko ke customer
-                            let distMerchantToCustomer = 0;
-                            if (customerLat && customerLng) {
-                                distMerchantToCustomer = calculateDistance(
-                                    merchantLat,
-                                    merchantLng,
-                                    customerLat,
-                                    customerLng
-                                );
-                            }
-
-                            if (distDriverToMerchant !== null && distDriverToMerchant <= 20) {
-                                hasOrders = true;
-                                // Simpan jarak di order agar bisa ditampilkan di bottom sheet
-                                order._distDriverToMerchant = distDriverToMerchant;
-                                order._distMerchantToCustomer = distMerchantToCustomer || 0;
-
-                                // Tampilkan bottom sheet langsung, bukan list
-                                // Hanya tampilkan satu order pertama yang masuk
-                                if (!document.getElementById('foodBottomSheet').classList.contains('open')) {
-                                    showFoodBottomSheet(order, orderId);
-                                }
-                            }
-                        }
-                    });
-
-                    // Jika tidak ada order, tampilkan pesan kosong
-                    if (!hasOrders && !document.getElementById('foodBottomSheet').classList.contains('open')) {
-                        container.innerHTML = `<div class="empty-state">🍽️ Tidak ada pesanan makanan terdekat</div>`;
-                    } else {
-                        container.innerHTML = `<div class="empty-state">📢 Ada pesanan food masuk! Periksa notifikasi.</div>`;
-                    }
-                })
-                .catch(err => {
-                    console.error('❌ Gagal cek active order:', err);
-                });
-        });
-}
-
-function createFoodOrderHTML(order, orderId, distance) {
-    // Fungsi ini tidak digunakan lagi karena pakai bottom sheet
-    return '';
-}
-
 function escapeHtml(str) {
   if (!str) return '';
   return str.replace(/[&<>"]/g, function(m) {
@@ -2174,8 +1845,7 @@ function calculateBidPrice(original, percent) {
   }
 }
 
-function createBidOptions(originalPrice, currentOrderId) {
-    const container = document.getElementById('bidOptionsContainer');
+function createBidOptionsInContainer(originalPrice, orderId, container) {
     if (!container) return;
     container.innerHTML = '';
     const prices = [
@@ -2184,44 +1854,34 @@ function createBidOptions(originalPrice, currentOrderId) {
         { percent: 20, class: 'plus' },
         { percent: 30, class: 'plus' }
     ];
-    
-    const isCountdownActiveForThisOrder = (isWaitingForConfirmation && countdownOrderId === currentOrderId);
-    
+    const isCountdownActive = (isWaitingForConfirmation && countdownOrderId === orderId);
     prices.forEach(opt => {
         const bidPrice = calculateBidPrice(originalPrice, opt.percent);
         const btn = document.createElement('button');
         btn.className = `bid-option ${opt.class}`;
-        if (opt.percent === 0) {
-            btn.innerText = `Ambil Rp ${bidPrice.toLocaleString('id-ID')}`;
-        } else {
-            btn.innerText = `Ambil dengan Rp ${bidPrice.toLocaleString('id-ID')}`;
-        }
-        
-        if (isCountdownActiveForThisOrder) {
+        btn.innerText = opt.percent === 0 ? `Ambil Rp ${bidPrice.toLocaleString('id-ID')}` : `Ambil dengan Rp ${bidPrice.toLocaleString('id-ID')}`;
+        if (isCountdownActive) {
             btn.disabled = true;
             btn.style.opacity = '0.5';
             btn.style.cursor = 'not-allowed';
         }
-        
         btn.addEventListener('click', async (e) => {
             e.stopPropagation();
             if (isWaitingForConfirmation) {
-                showToast('Sedang menunggu konfirmasi order lain, tidak bisa mengirim penawaran baru.', 'warning');
+                showToast('Sedang menunggu konfirmasi order lain.', 'warning');
                 return;
             }
             const originalText = btn.innerText;
             btn.dataset.originalText = originalText;
             btn.innerText = 'Mengirim...';
             btn.disabled = true;
-            document.querySelectorAll('.bid-option').forEach(otherBtn => {
-                if (otherBtn !== btn) otherBtn.disabled = true;
-            });
+            document.querySelectorAll('#bottomSheetBidOptions .bid-option').forEach(b => b.disabled = true);
             try {
                 await sendDriverOffer(false, bidPrice, opt.percent, btn);
             } catch (err) {
                 btn.innerText = originalText;
                 btn.disabled = false;
-                document.querySelectorAll('.bid-option').forEach(otherBtn => otherBtn.disabled = false);
+                document.querySelectorAll('#bottomSheetBidOptions .bid-option').forEach(b => b.disabled = false);
             }
         });
         container.appendChild(btn);
@@ -2229,138 +1889,22 @@ function createBidOptions(originalPrice, currentOrderId) {
     container.style.display = 'flex';
 }
 
-function hideBidOptions() {
-  const container = document.getElementById('bidOptionsContainer');
-  if (container) {
-    container.style.display = 'none';
-    container.innerHTML = '';
-  }
-}
-
-async function showOrderDetail(orderObj, fromAuto = false, isAutoTrigger = false) {
-    if (isWaitingForConfirmation) {
-        showToast('Anda sedang memproses order lain, harap tunggu.', 'warning');
-        return;
-    }
-    if (!checkDriverData() || !globalCurrentUid) return;
-    const { orderId, orderData } = orderObj;
-    console.log(`👆 [showOrderDetail] User mengklik order ${orderId}`);
-    
-    const snapshot = await database.ref(`orders/${orderId}`).once('value');
-    const currentOrder = snapshot.val();
-    console.log(`📋 [showOrderDetail] Data order dari Firebase:`, currentOrder);
-    if (!currentOrder || currentOrder.status !== 'waiting') {
-        console.warn(`❌ [showOrderDetail] Order ${orderId} tidak valid. Data:`, currentOrder);
-        showToast('Order ini sudah tidak tersedia.', 'warning');
-        refreshDisplay();
-        return;
-    }
-  currentSelectedOrder = { orderId: orderId, orderData: currentOrder };
-
-  document.getElementById('modalAddressA').innerHTML = `<strong>🟢 Jemput:</strong> ${escapeHtml(currentOrder.pickup_address || '-')}`;
-  const viaAddress = currentOrder.via_address;
-  const viaContainer = document.getElementById('modalViaContainer');
-  const viaAddressSpan = document.getElementById('modalViaAddress');
-  if (viaAddress) {
-    viaAddressSpan.innerHTML = `<strong>🔵 Lewat:</strong> ${escapeHtml(viaAddress)}`;
-    viaContainer.style.display = 'flex';
-  } else {
-    viaContainer.style.display = 'none';
-  }
-  document.getElementById('modalAddressB').innerHTML = `<strong>🟠 Tujuan:</strong> ${escapeHtml(currentOrder.destination_address || '-')}`;
-  
-  document.getElementById('modalAddressB').textContent = currentOrder.destination_address || '-';
-  document.getElementById('modalDuration').textContent = currentOrder.duration_seconds ? Math.round(currentOrder.duration_seconds / 60) + ' menit' : '-';
-  document.getElementById('modalDistance').textContent = currentOrder.distance_meters ? (currentOrder.distance_meters / 1000).toFixed(1) + ' km' : '-';
-  document.getElementById('modalPrice').textContent = currentOrder.price ? `Rp ${currentOrder.price.toLocaleString('id-ID')}` : '-';
-  document.getElementById('modalCustomerName').textContent = currentOrder.customer_name || 'Customer';
-  const modalPhoto = document.getElementById('modalCustomerPhoto');
-  if (currentOrder.photoURL) {
-    modalPhoto.src = currentOrder.photoURL;
-    modalPhoto.style.display = 'block';
-  } else modalPhoto.style.display = 'none';
-  const deliveryDiv = document.getElementById('modalDeliveryInfo');
-  if (currentOrder.item_description) {
-    deliveryDiv.innerHTML = `<div>Jenis: ${currentOrder.item_category||'-'}</div><div>Deskripsi: ${currentOrder.item_description}</div>`;
-    deliveryDiv.style.display = 'block';
-  } else deliveryDiv.style.display = 'none';
-
-  document.getElementById('countdownContainer').style.display = 'none';
-  document.getElementById('ambilBtn').disabled = false;
-  document.getElementById('ambilBtn').textContent = 'Kirim Penawaran';
-  document.getElementById('ambilBtn').style.display = 'block';
-  hideBidOptions();
-
-  const isAutoBid = (autobidEnabled && fromAuto);
-  
-  if (!isAutoBid) {
-    document.getElementById('ambilBtn').style.display = 'none';
-    createBidOptions(currentOrder.price, orderId);
-  }
-
-  document.getElementById('orderModal').style.display = 'flex';
-
-  // ========== PUTAR SOUND MANUAL POPUP JIKA AUTOMATIC TRIGGER DAN AUTOBID OFF ==========
-  if (isAutoTrigger && !fromAuto) {
-    const manualSound = document.getElementById('manualPopupSound');
-    if (manualSound) {
-      manualSound.play().catch(e => console.log('Audio manualPopupSound error:', e));
-    }
-  }
-  // ====================================================================================
-
-  if (currentModalOrderListener && currentModalOrderRef) {
-    currentModalOrderRef.off('value', currentModalOrderListener);
-  }
-  currentModalOrderRef = database.ref(`orders/${orderId}`);
-  currentModalOrderListener = currentModalOrderRef.on('value', (snapshot) => {
-    const order = snapshot.val();
-    if (!order || order.status !== 'waiting' || order.status === 'cancelled_by_user') {
-      closeModal();
-      showToast('Order telah dibatalkan oleh customer.', 'warning');
-    }
-  });
-
-  if (mapboxAccessToken) {
-    if (!modalMap) initModalMapbox();
-    showRouteOnMapbox(currentOrder);
-  } else {
-    fetchMapboxToken().then(() => {
-      if (!modalMap) initModalMapbox();
-      showRouteOnMapbox(currentOrder);
-    }).catch(console.error);
-  }
-
-  if (isAutoBid) {
-    if (autobidOfferedOrders.has(orderId)) {
-      console.log(`Autobid untuk order ${orderId} sudah dikirim sebelumnya, lewat.`);
-      return;
-    }
-    const autoSound = document.getElementById('autobidSound');
-    if (autoSound) autoSound.play().catch(e => console.log('Audio error:', e));
-    const ambilBtn = document.getElementById('ambilBtn');
-    ambilBtn.disabled = true;
-    ambilBtn.textContent = 'Mengirim Penawaran...';
-    await sendDriverOffer(true, currentOrder.price, 0, null);
-  }
-}
-
-async function fetchMapboxToken() {
-  const snapshot = await database.ref('data-jego/mapbox_acces_token').once('value');
-  const token = snapshot.val();
-  if (token) { mapboxAccessToken = token; return token; }
-  throw new Error('Token tidak valid');
-}
-function initModalMapbox() {
+function initBottomSheetMapbox() {
   mapboxgl.accessToken = mapboxAccessToken;
-  modalMap = new mapboxgl.Map({ container: 'modalMap', style: 'mapbox://styles/mapbox/streets-v11', center: [123.0595, 0.5441], zoom: 12 });
-  modalMap.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+  bottomSheetMap = new mapboxgl.Map({
+    container: 'bottomSheetMap',
+    style: 'mapbox://styles/mapbox/streets-v11',
+    center: [123.0595, 0.5441],
+    zoom: 12
+  });
+  bottomSheetMap.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
 }
-function showRouteOnMapbox(order) {
+
+function showRouteOnBottomSheetMap(order) {
   if (!order.pickup_lng || !order.pickup_lat || !order.dest_lng || !order.dest_lat) return;
   if (mapMarkers.length) mapMarkers.forEach(m => m.remove());
-  if (modalMap.getLayer('route')) modalMap.removeLayer('route');
-  if (modalMap.getSource('route')) modalMap.removeSource('route');
+  if (bottomSheetMap.getLayer('route')) bottomSheetMap.removeLayer('route');
+  if (bottomSheetMap.getSource('route')) bottomSheetMap.removeSource('route');
 
   const waypoints = [];
   waypoints.push({ lng: order.pickup_lng, lat: order.pickup_lat });
@@ -2375,32 +1919,32 @@ function showRouteOnMapbox(order) {
 
   const pickupEl = document.createElement('div');
   pickupEl.innerHTML = `<img src="${pickupIcon}" style="width:40px;">`;
-  const pickupMarker = new mapboxgl.Marker({ element: pickupEl }).setLngLat([waypoints[0].lng, waypoints[0].lat]).addTo(modalMap);
+  const pickupMarker = new mapboxgl.Marker({ element: pickupEl }).setLngLat([waypoints[0].lng, waypoints[0].lat]).addTo(bottomSheetMap);
   mapMarkers.push(pickupMarker);
 
   if (waypoints.length === 3 && order.via_lng) {
     const viaEl = document.createElement('div');
     viaEl.innerHTML = `<img src="${viaIcon}" style="width:40px; filter: hue-rotate(200deg);">`;
-    const viaMarker = new mapboxgl.Marker({ element: viaEl }).setLngLat([waypoints[1].lng, waypoints[1].lat]).addTo(modalMap);
+    const viaMarker = new mapboxgl.Marker({ element: viaEl }).setLngLat([waypoints[1].lng, waypoints[1].lat]).addTo(bottomSheetMap);
     mapMarkers.push(viaMarker);
   }
 
   const destEl = document.createElement('div');
   destEl.innerHTML = `<img src="${destIcon}" style="width:40px;">`;
-  const destMarker = new mapboxgl.Marker({ element: destEl }).setLngLat([waypoints[waypoints.length-1].lng, waypoints[waypoints.length-1].lat]).addTo(modalMap);
+  const destMarker = new mapboxgl.Marker({ element: destEl }).setLngLat([waypoints[waypoints.length-1].lng, waypoints[waypoints.length-1].lat]).addTo(bottomSheetMap);
   mapMarkers.push(destMarker);
 
   const bounds = new mapboxgl.LngLatBounds();
   waypoints.forEach(wp => bounds.extend([wp.lng, wp.lat]));
-  modalMap.fitBounds(bounds, { padding: 40 });
+  bottomSheetMap.fitBounds(bounds, { padding: 40 });
 
   let coordString = waypoints.map(wp => `${wp.lng},${wp.lat}`).join(';');
   const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${coordString}?geometries=geojson&access_token=${mapboxAccessToken}`;
 
   fetch(url).then(res => res.json()).then(data => {
     if (data.routes && data.routes.length) {
-      modalMap.addSource('route', { type: 'geojson', data: data.routes[0].geometry });
-      modalMap.addLayer({ id: 'route', type: 'line', source: 'route', paint: { 'line-color': '#289672', 'line-width': 4 } });
+      bottomSheetMap.addSource('route', { type: 'geojson', data: data.routes[0].geometry });
+      bottomSheetMap.addLayer({ id: 'route', type: 'line', source: 'route', paint: { 'line-color': '#289672', 'line-width': 4 } });
     } else fallbackLine();
   }).catch(fallbackLine);
 
@@ -2409,9 +1953,130 @@ function showRouteOnMapbox(order) {
       type: 'Feature',
       geometry: { type: 'LineString', coordinates: waypoints.map(wp => [wp.lng, wp.lat]) }
     };
-    modalMap.addSource('route', { type: 'geojson', data: lineGeo });
-    modalMap.addLayer({ id: 'route', type: 'line', source: 'route', paint: { 'line-color': '#289672', 'line-width': 4, 'line-dasharray': [2,1] } });
+    bottomSheetMap.addSource('route', { type: 'geojson', data: lineGeo });
+    bottomSheetMap.addLayer({ id: 'route', type: 'line', source: 'route', paint: { 'line-color': '#289672', 'line-width': 4, 'line-dasharray': [2,1] } });
   }
+}
+
+async function showOrderDetail(orderObj, fromAuto = false, isAutoTrigger = false) {
+    if (isWaitingForConfirmation) {
+        showToast('Anda sedang memproses order lain, harap tunggu.', 'warning');
+        return;
+    }
+    if (!checkDriverData() || !globalCurrentUid) return;
+    const { orderId, orderData } = orderObj;
+    console.log(`👆 [showOrderDetail] User mengklik order ${orderId}`);
+    
+    const snapshot = await database.ref(`orders/${orderId}`).once('value');
+    const currentOrder = snapshot.val();
+    if (!currentOrder || currentOrder.status !== 'waiting') {
+        showToast('Order ini sudah tidak tersedia.', 'warning');
+        refreshDisplay();
+        return;
+    }
+    currentSelectedOrder = { orderId: orderId, orderData: currentOrder };
+
+    // Siapkan konten bottom sheet
+    const content = document.getElementById('bottomSheetContent');
+    let html = `
+        <div class="info-row"><span class="label">Customer</span><span class="value">${escapeHtml(currentOrder.customer_name || 'Customer')}</span></div>
+        <div class="info-row"><span class="label">Jemput</span><span class="value">${escapeHtml(currentOrder.pickup_address || '-')}</span></div>
+        ${currentOrder.via_address ? `<div class="info-row"><span class="label">Lewat</span><span class="value">${escapeHtml(currentOrder.via_address)}</span></div>` : ''}
+        <div class="info-row"><span class="label">Tujuan</span><span class="value">${escapeHtml(currentOrder.destination_address || '-')}</span></div>
+        <div class="info-row"><span class="label">Durasi</span><span class="value">${currentOrder.duration_seconds ? Math.round(currentOrder.duration_seconds / 60) + ' menit' : '-'}</span></div>
+        <div class="info-row"><span class="label">Jarak</span><span class="value">${currentOrder.distance_meters ? (currentOrder.distance_meters / 1000).toFixed(1) + ' km' : '-'}</span></div>
+        <div class="info-row"><span class="label">Harga</span><span class="value">${currentOrder.price ? 'Rp ' + currentOrder.price.toLocaleString('id-ID') : '-'}</span></div>
+        ${currentOrder.item_description ? `<div class="info-row"><span class="label">Deskripsi</span><span class="value">${escapeHtml(currentOrder.item_description)}</span></div>` : ''}
+        <div id="bottomSheetMap" class="map-container"></div>
+        <div id="bottomSheetBidOptions" class="bid-options-container" style="display:none;"></div>
+        <div id="bottomSheetCountdown" style="display:none;">
+            <div class="progress-container"><div id="bottomSheetProgress" class="progress-bar" style="width:100%"></div></div>
+            <div class="progress-info"><span>Menunggu konfirmasi customer...</span><span id="bottomSheetSeconds">30 detik</span></div>
+        </div>
+        <button class="ambil-btn" id="bottomSheetAmbilBtn">Kirim Penawaran</button>
+    `;
+    content.innerHTML = html;
+
+    // Tampilkan bottom sheet
+    const sheet = document.getElementById('orderBottomSheet');
+    sheet.classList.add('open');
+
+    // Inisialisasi map
+    if (mapboxAccessToken) {
+        if (!bottomSheetMap) initBottomSheetMapbox();
+        setTimeout(() => {
+            showRouteOnBottomSheetMap(currentOrder);
+        }, 300);
+    } else {
+        fetchMapboxToken().then(() => {
+            if (!bottomSheetMap) initBottomSheetMapbox();
+            setTimeout(() => {
+                showRouteOnBottomSheetMap(currentOrder);
+            }, 300);
+        }).catch(console.error);
+    }
+
+    const ambilBtn = document.getElementById('bottomSheetAmbilBtn');
+    const bidContainer = document.getElementById('bottomSheetBidOptions');
+    const countdownContainer = document.getElementById('bottomSheetCountdown');
+
+    const isAutoBid = (autobidEnabled && fromAuto);
+    if (!isAutoBid) {
+        ambilBtn.style.display = 'none';
+        createBidOptionsInContainer(currentOrder.price, orderId, bidContainer);
+    } else {
+        ambilBtn.style.display = 'block';
+        ambilBtn.textContent = 'Kirim Penawaran';
+        ambilBtn.disabled = false;
+    }
+
+    ambilBtn.onclick = function() {
+        if (isAutoBid) {
+            if (autobidOfferedOrders.has(orderId)) {
+                showToast('Penawaran sudah dikirim sebelumnya.', 'info');
+                return;
+            }
+            ambilBtn.disabled = true;
+            ambilBtn.textContent = 'Mengirim...';
+            sendDriverOffer(true, currentOrder.price, 0, null);
+        }
+    };
+
+    if (isAutoTrigger && !fromAuto) {
+        const manualSound = document.getElementById('manualPopupSound');
+        if (manualSound) manualSound.play().catch(e => console.log('Audio error:', e));
+    }
+
+    if (currentModalOrderListener && currentModalOrderRef) {
+        currentModalOrderRef.off('value', currentModalOrderListener);
+    }
+    currentModalOrderRef = database.ref(`orders/${orderId}`);
+    currentModalOrderListener = currentModalOrderRef.on('value', (snapshot) => {
+        const order = snapshot.val();
+        if (!order || order.status !== 'waiting' || order.status === 'cancelled_by_user') {
+            closeBottomSheet();
+            showToast('Order telah dibatalkan oleh customer.', 'warning');
+        }
+    });
+
+    if (isAutoBid) {
+        if (autobidOfferedOrders.has(orderId)) {
+            console.log(`Autobid untuk order ${orderId} sudah dikirim sebelumnya, lewat.`);
+            return;
+        }
+        const autoSound = document.getElementById('autobidSound');
+        if (autoSound) autoSound.play().catch(e => console.log('Audio error:', e));
+        ambilBtn.disabled = true;
+        ambilBtn.textContent = 'Mengirim Penawaran...';
+        await sendDriverOffer(true, currentOrder.price, 0, null);
+    }
+}
+
+async function fetchMapboxToken() {
+  const snapshot = await database.ref('data-jego/mapbox_acces_token').once('value');
+  const token = snapshot.val();
+  if (token) { mapboxAccessToken = token; return token; }
+  throw new Error('Token tidak valid');
 }
 
 // ========== FUNGSI PENGIRIMAN PENAWARAN ==========
@@ -2479,28 +2144,28 @@ async function sendDriverOffer(isAuto = false, bidPrice = null, bidPercent = nul
     if (clickedButton) {
       clickedButton.innerText = clickedButton.dataset.originalText || (clickedButton.innerText === 'Mengirim...' ? 'Ambil' : clickedButton.innerText);
       clickedButton.disabled = false;
-      document.querySelectorAll('.bid-option').forEach(btn => btn.disabled = false);
+      document.querySelectorAll('#bottomSheetBidOptions .bid-option').forEach(btn => btn.disabled = false);
     }
     return;
   }
   
-  const ambilBtn = document.getElementById('ambilBtn');
+  const ambilBtn = document.getElementById('bottomSheetAmbilBtn');
   if (ambilBtn) {
     ambilBtn.disabled = true;
     ambilBtn.textContent = 'Mengirim...';
   } else {
-    document.querySelectorAll('.bid-option').forEach(btn => btn.disabled = true);
+    document.querySelectorAll('#bottomSheetBidOptions .bid-option').forEach(btn => btn.disabled = true);
   }
   
   const snapshot = await database.ref(`orders/${orderId}`).once('value');
   const currentOrder = snapshot.val();
   if (!currentOrder || currentOrder.status !== 'waiting') {
     showToast('Order ini sudah diambil oleh driver lain.', 'warning');
-    closeModal();
+    closeBottomSheet();
     if (clickedButton) {
       clickedButton.innerText = clickedButton.dataset.originalText || (clickedButton.innerText === 'Mengirim...' ? 'Ambil' : clickedButton.innerText);
       clickedButton.disabled = false;
-      document.querySelectorAll('.bid-option').forEach(btn => btn.disabled = false);
+      document.querySelectorAll('#bottomSheetBidOptions .bid-option').forEach(btn => btn.disabled = false);
     }
     return;
   }
@@ -2545,7 +2210,7 @@ async function sendDriverOffer(isAuto = false, bidPrice = null, bidPercent = nul
         clickedButton.innerText = clickedButton.dataset.originalText || (clickedButton.innerText === 'Mengirim...' ? 'Ambil' : clickedButton.innerText);
         clickedButton.disabled = false;
       }
-      document.querySelectorAll('.bid-option').forEach(btn => btn.disabled = false);
+      document.querySelectorAll('#bottomSheetBidOptions .bid-option').forEach(btn => btn.disabled = false);
     }
   }
 }
@@ -2561,11 +2226,11 @@ function stopCountdown() {
     database.ref(`orders/${countdownOrderId}/driver_offers/${countdownDriverId}/status`).off('value', offerRejectionListener);
     offerRejectionListener = null;
   }
-  const container = document.getElementById('countdownContainer');
+  const container = document.getElementById('bottomSheetCountdown');
   if (container) container.style.display = 'none';
-  const ambilBtn = document.getElementById('ambilBtn');
+  const ambilBtn = document.getElementById('bottomSheetAmbilBtn');
   if (ambilBtn) { ambilBtn.disabled = false; ambilBtn.textContent = 'Kirim Penawaran'; }
-  const closeBtn = document.getElementById('closeModal');
+  const closeBtn = document.getElementById('closeBottomSheet');
   if (closeBtn) { closeBtn.classList.remove('disabled'); closeBtn.disabled = false; }
   countdownOrderId = null; countdownDriverId = null; orderStatusListener = null; countdownInterval = null;
 }
@@ -2575,14 +2240,14 @@ function startCountdown(orderId, driverId) {
   countdownOrderId = orderId;
   countdownDriverId = driverId;
   isWaitingForConfirmation = true;
-  const container = document.getElementById('countdownContainer');
-  const progress = document.getElementById('countdownProgress');
-  const secondsSpan = document.getElementById('countdownSeconds');
-  const ambilBtn = document.getElementById('ambilBtn');
+  const container = document.getElementById('bottomSheetCountdown');
+  const progress = document.getElementById('bottomSheetProgress');
+  const secondsSpan = document.getElementById('bottomSheetSeconds');
+  const ambilBtn = document.getElementById('bottomSheetAmbilBtn');
   let timeLeft = 30;
   container.style.display = 'block';
   if (ambilBtn) { ambilBtn.disabled = true; ambilBtn.textContent = 'Menunggu...'; }
-  const closeBtn = document.getElementById('closeModal');
+  const closeBtn = document.getElementById('closeBottomSheet');
   if (closeBtn) { closeBtn.classList.add('disabled'); closeBtn.disabled = true; }
   countdownInterval = setInterval(() => {
     timeLeft--;
@@ -2591,13 +2256,13 @@ function startCountdown(orderId, driverId) {
     if (timeLeft <= 0) {
       clearInterval(countdownInterval);
       countdownInterval = null;
-      database.ref(`orders/${orderId}/driver_offers/${driverId}`).remove().then(() => closeModal()).catch(() => closeModal());
+      database.ref(`orders/${orderId}/driver_offers/${driverId}`).remove().then(() => closeBottomSheet()).catch(() => closeBottomSheet());
     }
   }, 1000);
   
   orderStatusListener = database.ref(`orders/${orderId}`).on('value', (snapshot) => {
     const order = snapshot.val();
-    if (!order) { stopCountdown(); closeModal(); return; }
+    if (!order) { stopCountdown(); closeBottomSheet(); return; }
     if (order.status === 'accepted') {
       if (order.driver_id === driverId) {
         stopCountdown();
@@ -2616,11 +2281,11 @@ function startCountdown(orderId, driverId) {
       } else {
         stopCountdown();
         showToast('Order sudah diambil driver lain.', 'warning');
-        closeModal();
+        closeBottomSheet();
       }
     } else if (order.status !== 'waiting') {
       stopCountdown();
-      closeModal();
+      closeBottomSheet();
     }
   });
   
@@ -2628,28 +2293,29 @@ function startCountdown(orderId, driverId) {
     const status = snap.val();
     if (status === 'rejected') {
       stopCountdown();
-      closeModal();
+      closeBottomSheet();
       showToast('Customer menolak penawaran Anda.', 'warning');
     }
   });
 }
 
-function closeModal() {
+function closeBottomSheet() {
   stopAllSounds();
-  document.getElementById('orderModal').style.display = 'none';
+  document.getElementById('orderBottomSheet').classList.remove('open');
   stopCountdown();
   currentSelectedOrder = null;
-  document.getElementById('ambilBtn').style.display = 'block';
-  hideBidOptions();
-
+  if (bottomSheetMap) {
+    bottomSheetMap.remove();
+    bottomSheetMap = null;
+  }
   if (currentModalOrderListener && currentModalOrderRef) {
     currentModalOrderRef.off('value', currentModalOrderListener);
     currentModalOrderListener = null;
     currentModalOrderRef = null;
   }
-
   refreshDisplay();
 }
+
 // ========== HANDLE GPS ERROR ==========
 function handleGpsError(error) {
     console.warn('GPS error:', error);
@@ -2692,7 +2358,7 @@ function startGPSMonitoring() {
         gpsLoadingInterval = null;
       }
       loadOrders();
-      loadFoodOrders(); // panggil juga food orders setelah GPS siap
+
     } catch(e) {}
   }
 
@@ -2754,8 +2420,6 @@ function updateDriverLocation(position) {
       gpsLoadingInterval = null;
     }
     loadOrders();
-    loadFoodOrders();
-    // Tandai lastSent agar setelah ini hanya kirim jika berubah
     lastSentLat = lat;
     lastSentLng = lng;
     return;
@@ -2891,8 +2555,6 @@ function toggleAutobid() {
 }
 function refreshData() {
     refreshDisplay();
-    // refresh food orders juga
-    loadFoodOrders();
 }
 
 function showPopup(title, message, type = 'info', options = {}) {
@@ -3205,23 +2867,29 @@ if (modePenumpangBtn) {
     const notifBtn = document.getElementById('notifBtn');
 if (notifBtn) {
   notifBtn.addEventListener('click', () => {
-    const modal = document.getElementById('notifModal');
-    if (modal) {
-      modal.style.display = 'flex';
+    const sheet = document.getElementById('notifBottomSheet');
+    if (sheet) {
+      sheet.classList.add('open');
       loadDriverNotifications();
     }
   });
 }
-const closeNotifModal = document.getElementById('closeNotifModal');
-if (closeNotifModal) {
-  closeNotifModal.addEventListener('click', () => {
-    document.getElementById('notifModal').style.display = 'none';
+
+// Notif bottom sheet close handlers
+const closeNotifSheet = document.getElementById('closeNotifSheet');
+if (closeNotifSheet) {
+  closeNotifSheet.addEventListener('click', () => {
+    document.getElementById('notifBottomSheet').classList.remove('open');
   });
 }
-window.addEventListener('click', (e) => {
-  const modal = document.getElementById('notifModal');
-  if (e.target === modal) modal.style.display = 'none';
-});
+const notifSheet = document.getElementById('notifBottomSheet');
+if (notifSheet) {
+  notifSheet.addEventListener('click', function(e) {
+    if (e.target === this) {
+      this.classList.remove('open');
+    }
+  });
+}
 
     if (await checkDriverActiveOrder()) return;
     if (!checkDriverData()) {
@@ -3251,25 +2919,10 @@ window.addEventListener('click', (e) => {
         localStorage.setItem(STORAGE_AUTOBID, autobidEnabled);
         updateAutobidButton();
       }
-      // ===== TAMBAHKAN INI =====
-      if (data.isFoodDelivery !== undefined) {
-        acceptFoodEnabled = data.isFoodDelivery === true;
-        localStorage.setItem(STORAGE_ACCEPT_FOOD, acceptFoodEnabled);
-        document.getElementById('acceptFoodToggle').checked = acceptFoodEnabled;
-        if (acceptFoodEnabled) {
-          loadFoodOrders();
-        } else {
-          const container = document.getElementById('foodOrdersContainer');
-          if (container) {
-            container.innerHTML = `<div class="empty-state">🍽️ Fitur Food dimatikan. Aktifkan di pengaturan.</div>`;
-          }
-        }
-      }
     }
   }).catch(console.error);
 }
     loadOrders();
-    loadFoodOrders(); // tambahkan ini
     setTimeout(startGPSMonitoring, 1000);
     await checkPlayerIdAndPrompt();
   } else {
@@ -3303,14 +2956,13 @@ if (sidebarHeader) {
 });
   document.getElementById('locationToggleBtn').addEventListener('click', toggleLocationTracking);
   document.getElementById('refreshBtn').addEventListener('click', refreshData);
-  document.getElementById('closeModal').addEventListener('click', closeModal);
-  document.getElementById('ambilBtn').addEventListener('click', () => sendDriverOffer(false));
-  document.getElementById('autobidToggle').addEventListener('change', toggleAutobid);
-  document.getElementById('orderModal').addEventListener('click', e => { if (e.target === document.getElementById('orderModal') && !countdownInterval) closeModal(); });
+  document.getElementById('closeBottomSheet').addEventListener('click', closeBottomSheet);
+  document.getElementById('orderBottomSheet').addEventListener('click', function(e) {
+    if (e.target === this) closeBottomSheet();
+  });
 
+  document.getElementById('autobidToggle').addEventListener('change', toggleAutobid);
   document.getElementById('acceptKurirToggle').addEventListener('change', updateAcceptKurirSetting);
-// ✅ TAMBAHKAN INI
-document.getElementById('acceptFoodToggle').addEventListener('change', updateAcceptFoodSetting);
   document.getElementById('promptAllowBtn')?.addEventListener('click', async () => {
     closeNotifPrompt();
     await initOneSignal();
@@ -3320,12 +2972,6 @@ document.getElementById('acceptFoodToggle').addEventListener('change', updateAcc
 
 window.addEventListener('beforeunload', () => { if (locationWatchId) navigator.geolocation.clearWatch(locationWatchId); });
 if (gpsLoadingInterval) clearInterval(gpsLoadingInterval);
-
-// Close bottom sheet saat klik tombol close
-document.getElementById('closeFoodSheet').addEventListener('click', closeFoodSheet);
-document.getElementById('foodBottomSheet').addEventListener('click', function(e) {
-  if (e.target === this) closeFoodSheet();
-});
 
 document.addEventListener("backbutton", function () {
     if (
