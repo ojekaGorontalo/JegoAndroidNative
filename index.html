@@ -1350,6 +1350,14 @@ body.dark #notifBottomSheet .notif-item.unread {
   <source src="https://jegotiem.netlify.app/audio/audioorderaccepted.mp3" type="audio/mpeg">
 </audio>
 
+<!-- ===== TAMBAHKAN INI ===== -->
+<audio id="toggleOnSound" preload="auto">
+  <source src="https://jego-movego-hld.netlify.app/sounds/toggle_on.mp3" type="audio/mpeg">
+</audio>
+<audio id="toggleOffSound" preload="auto">
+  <source src="https://jego-movego-hld.netlify.app/sounds/tonggle_off.mp3" type="audio/mpeg">
+</audio>
+
 <script>
 // ==================== FIREBASE CONFIG ====================
 const firebaseConfig = {
@@ -2662,14 +2670,28 @@ function toggleLocationTracking() {
   const toggleBtn = document.getElementById('locationToggleBtn');
   const icon = toggleBtn.querySelector('.icon');
   
+  // ===== PLAY SOUND =====
   if (locationTrackingEnabled) {
     toggleBtn.classList.add('active');
     icon.textContent = '📡';
-    // Buat efek ripple
     createRippleEffect(toggleBtn);
+    
+    // 🔥 Play sound ON
+    const soundOn = document.getElementById('toggleOnSound');
+    if (soundOn) {
+      soundOn.currentTime = 0;  // Reset ke awal
+      soundOn.play().catch(e => console.log('Audio error:', e));
+    }
   } else {
     toggleBtn.classList.remove('active');
     icon.textContent = '📍';
+    
+    // 🔥 Play sound OFF
+    const soundOff = document.getElementById('toggleOffSound');
+    if (soundOff) {
+      soundOff.currentTime = 0;  // Reset ke awal
+      soundOff.play().catch(e => console.log('Audio error:', e));
+    }
   }
 
   if (isAndroidAvailable()) {
