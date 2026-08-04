@@ -1010,7 +1010,7 @@ body.dark #notifBottomSheet .notif-item.unread {
 .toggle-btn {
   position: relative;
   width: 100%;
-  height: 120px;
+  height: 50px;
   background: #1e293b;
   border-radius: 50px;
   box-shadow: 
@@ -1456,41 +1456,41 @@ let ordersChildListeners = {};            // Referensi untuk child listener agar
 let isInitialLoad = true;                // Flag untuk membedakan inisialisasi vs perubahan baru
 const MAX_DISTANCE_KM = 20;              // Batas jarak maksimal driver ke pickup
 
-// ========== CUSTOM CONFIRM (TANPA URL) ==========
-function showConfirmPopup(message, onConfirm, onCancel) {
+function showConfirmPopupTracking(title, message, onConfirm, onCancel) {
     const overlay = document.getElementById('popupOverlay');
     const icon = document.getElementById('popupIcon');
-    const title = document.getElementById('popupTitle');
+    const titleEl = document.getElementById('popupTitle');
     const msg = document.getElementById('popupMessage');
     const footer = document.querySelector('.popup-footer');
 
-    // Set konten
     icon.textContent = '⚠️';
-    title.textContent = 'Konfirmasi';
-    msg.textContent = message;
+    titleEl.textContent = title || 'Konfirmasi';
+    msg.textContent = message || '';
 
-    // Hapus tombol lama, buat dua tombol
     footer.innerHTML = `
-        <button id="confirmYes" class="popup-button" style="background: var(--primary); margin-right: 10px;">Ya, Lanjutkan</button>
-        <button id="confirmNo" class="popup-button" style="background: #ccc; color: #333;">Batal</button>
+        <button id="confirmYes" class="popup-button" style="background: var(--primary); margin-right: 10px;">Batal</button>
+        <button id="confirmNo" class="popup-button" style="background: #ccc; color: #333;">Lanjutkan</button>
     `;
 
     overlay.style.display = 'flex';
 
-    document.getElementById('confirmYes').onclick = function() {
-        overlay.style.display = 'none';
-        if (typeof onConfirm === 'function') onConfirm();
-    };
-
-    document.getElementById('confirmNo').onclick = function() {
+    // ✅ Tombol "Batal" → panggil onCancel
+    document.getElementById('confirmYes').onclick = function(e) {
+        e.stopPropagation();
         overlay.style.display = 'none';
         if (typeof onCancel === 'function') onCancel();
+    };
+
+    // ✅ Tombol "Lanjutkan" → panggil onConfirm
+    document.getElementById('confirmNo').onclick = function(e) {
+        e.stopPropagation();
+        overlay.style.display = 'none';
+        if (typeof onConfirm === 'function') onConfirm();
     };
 
     overlay.onclick = function(e) {
         if (e.target === overlay) {
             overlay.style.display = 'none';
-            if (typeof onCancel === 'function') onCancel();
         }
     };
 }
@@ -2662,71 +2662,90 @@ function navigateToScreen(screen) {
     else if (screen === 'account') window.location.href = 'akun.html';
     else if (screen === 'notif_status') window.location.href = 'statusOneSignal.html';
 }
+
+
+// ===== FUNGSI TOGGLE LOKASI (GABUNGAN) =====
 function toggleLocationTracking() {
-  locationTrackingEnabled = !locationTrackingEnabled;
-  localStorage.setItem(STORAGE_TRACKING, locationTrackingEnabled);
-  
-  // Update tombol animasi
-  const toggleBtn = document.getElementById('locationToggleBtn');
-  const icon = toggleBtn.querySelector('.icon');
-  
-  // ===== PLAY SOUND =====
-  if (locationTrackingEnabled) {
-    toggleBtn.classList.add('active');
-    icon.textContent = '📡';
-    createRippleEffect(toggleBtn);
-    
-    // 🔥 Play sound ON
-    const soundOn = document.getElementById('toggleOnSound');
-    if (soundOn) {
-      soundOn.currentTime = 0;  // Reset ke awal
-      soundOn.play().catch(e => console.log('Audio error:', e));
-    }
-  } else {
-    toggleBtn.classList.remove('active');
-    icon.textContent = '📍';
-    
-    // 🔥 Play sound OFF
-    const soundOff = document.getElementById('toggleOffSound');
-    if (soundOff) {
-      soundOff.currentTime = 0;  // Reset ke awal
-      soundOff.play().catch(e => console.log('Audio error:', e));
-    }
-  }
+    locationTrackingEnabled = !locationTrackingEnabled;
+    localStorage.setItem(STORAGE_TRACKING, locationTrackingEnabled);
 
-  if (isAndroidAvailable()) {
+    const toggleBtn = document.getElementById('locationToggleBtn');
+    const icon = toggleBtn.querySelector('.icon');
+
     if (locationTrackingEnabled) {
-      Android.startDriverTracking();
-      Android.startFloatingButton();
-      console.log('📍 Service tracking dimulai dari tombol');
+        toggleBtn.classList.add('active');
+        icon.textContent = '📡';
+        createRippleEffect(toggleBtn);
+
+        const soundOn = document.getElementById('toggleOnSound');
+        if (soundOn) {
+            soundOn.currentTime = 0;
+            soundOn.play().catch(e => console.log('Audio error:', e));
+        }
     } else {
-      Android.stopDriverTracking();
-      Android.stopFloatingButton();
-      console.log('⏹️ Service tracking dihentikan dari tombol');
+        toggleBtn.classList.remove('active');
+        icon.textContent = '📍';
+
+        const soundOff = document.getElementById('toggleOffSound');
+        if (soundOff) {
+            soundOff.currentTime = 0;
+            soundOff.play().catch(e => console.log('Audio error:', e));
+        }
     }
-  }
 
-  if (globalCurrentUid) {
-    database.ref('drivers/' + globalCurrentUid).update({
-      tracking_enabled: locationTrackingEnabled,
-      last_update: new Date().toISOString()
-    }).catch(console.error);
-    database.ref(`driver_locations/${globalCurrentUid}`).update({
-      tracking_enabled: locationTrackingEnabled,
-      last_update: new Date().toISOString()
-    }).catch(console.error);
-  }
+    if (isAndroidAvailable()) {
+        if (locationTrackingEnabled) {
+            Android.startDriverTracking();
+            Android.startFloatingButton();
+            console.log('📍 Service tracking dimulai dari tombol');
+        } else {
+            Android.stopDriverTracking();
+            Android.stopFloatingButton();
+            console.log('⏹️ Service tracking dihentikan dari tombol');
+        }
+    }
 
-  if (locationTrackingEnabled && driverLocation.latitude && currentDriverData && globalCurrentUid) {
-    database.ref('drivers/' + globalCurrentUid).update({
-      latitude: driverLocation.latitude,
-      longitude: driverLocation.longitude
-    }).catch(console.error);
-    database.ref(`driver_locations/${globalCurrentUid}`).update({
-      latitude: driverLocation.latitude,
-      longitude: driverLocation.longitude
-    }).catch(console.error);
-  }
+    if (globalCurrentUid) {
+        database.ref('drivers/' + globalCurrentUid).update({
+            tracking_enabled: locationTrackingEnabled,
+            last_update: new Date().toISOString()
+        }).catch(console.error);
+        database.ref(`driver_locations/${globalCurrentUid}`).update({
+            tracking_enabled: locationTrackingEnabled,
+            last_update: new Date().toISOString()
+        }).catch(console.error);
+    }
+
+    // Kirim lokasi terakhir jika tracking aktif dan lokasi tersedia
+    if (locationTrackingEnabled && driverLocation.latitude && currentDriverData && globalCurrentUid) {
+        database.ref('drivers/' + globalCurrentUid).update({
+            latitude: driverLocation.latitude,
+            longitude: driverLocation.longitude
+        }).catch(console.error);
+        database.ref(`driver_locations/${globalCurrentUid}`).update({
+            latitude: driverLocation.latitude,
+            longitude: driverLocation.longitude
+        }).catch(console.error);
+    }
+}
+
+// ===== FUNGSI TOGGLE DENGAN KONFIRMASI (BARU - TAMBAHKAN) =====
+function toggleLocationTrackingWithConfirm() {
+    if (locationTrackingEnabled) {
+        showConfirmPopupTracking(
+            '📴 Nonaktifkan Mode',
+            'Anda akan berhenti menerima order baru.\n\n⚠️ Order yang sedang berjalan TIDAK akan terpengaruh.',
+            () => { toggleLocationTracking(); },
+            () => { console.log('Batal nonaktifkan mode'); }
+        );
+    } else {
+        showConfirmPopupTracking(
+            '🚗 Siap Menerima Order',
+            'Sekarang kamu akan menerima order dari pelanggan terdekat.\n\n💡 Pastikan:\n• GPS menyala\n• Kuota data stabil\n• Baterai cukup',
+            () => { toggleLocationTracking(); },
+            () => { console.log('Batal aktifkan mode'); }
+        );
+    }
 }
 
 // Fungsi efek ripple (tambahkan di bawah)
@@ -3161,7 +3180,7 @@ if (sidebarHeader) {
     }
   });
 });
-  document.getElementById('locationToggleBtn').addEventListener('click', toggleLocationTracking);
+  document.getElementById('locationToggleBtn').addEventListener('click', toggleLocationTrackingWithConfirm);
   document.getElementById('refreshBtn').addEventListener('click', refreshData);
   document.getElementById('closeBottomSheet').addEventListener('click', closeBottomSheet);
   document.getElementById('orderBottomSheet').addEventListener('click', function(e) {
