@@ -289,7 +289,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: white;
+  background: #FFF3E0;
   border-radius: 28px 28px 0 0;
   box-shadow: 0 -8px 30px rgba(0,0,0,0.2);
   z-index: 2000;
@@ -1845,7 +1845,6 @@ function loadOrders() {
     isInitialLoad = true;
 
     // ---- child_added ----
-    // ---- child_added ----
 const childAddedHandler = (snapshot) => {
     const orderId = snapshot.key;
     const orderData = snapshot.val();
@@ -2005,6 +2004,7 @@ function escapeHtml(str) {
 
 // ========== BANTUAN UNTUK TAWARAN MANUAL ==========
 function calculateBidPrice(original, percent) {
+  // Fungsi ini tidak dipakai di layout baru, tapi kita pertahankan untuk kompatibilitas.
   let raw = original * (1 + percent / 100);
   let rounded = Math.round(raw);
   let remainder = rounded % 1000;
@@ -2015,48 +2015,105 @@ function calculateBidPrice(original, percent) {
   }
 }
 
+// ===== FUNGSI BARU UNTUK MEMBUAT OPSI BID (MANUAL) =====
 function createBidOptionsInContainer(originalPrice, orderId, container) {
     if (!container) return;
     container.innerHTML = '';
-    const prices = [
-        { percent: 0, class: 'original' },
-        { percent: 10, class: 'plus' },
-        { percent: 20, class: 'plus' },
-        { percent: 30, class: 'plus' }
-    ];
-    const isCountdownActive = (isWaitingForConfirmation && countdownOrderId === orderId);
-    prices.forEach(opt => {
-        const bidPrice = calculateBidPrice(originalPrice, opt.percent);
-        const btn = document.createElement('button');
-        btn.className = `bid-option ${opt.class}`;
-        btn.innerText = opt.percent === 0 ? `Ambil Rp ${bidPrice.toLocaleString('id-ID')}` : `Ambil dengan Rp ${bidPrice.toLocaleString('id-ID')}`;
-        if (isCountdownActive) {
-            btn.disabled = true;
-            btn.style.opacity = '0.5';
-            btn.style.cursor = 'not-allowed';
+
+    // ===== TOMBOL UTAMA: TAWARAN ASLI =====
+    const mainBtn = document.createElement('button');
+    mainBtn.className = 'bid-option original';
+    mainBtn.style.width = '100%';
+    mainBtn.style.padding = '14px 12px';
+    mainBtn.style.borderRadius = '10px';
+    mainBtn.style.border = 'none';
+    mainBtn.style.fontWeight = '700';
+    mainBtn.style.fontSize = '1.1rem';
+    mainBtn.style.cursor = 'pointer';
+    mainBtn.style.background = 'var(--primary)';
+    mainBtn.style.color = 'white';
+    mainBtn.style.boxShadow = '0 2px 8px rgba(255,152,0,0.3)';
+    mainBtn.innerHTML = `Terima ${originalPrice.toLocaleString('id-ID')} `;
+
+    mainBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        if (isWaitingForConfirmation) {
+            showToast('Sedang menunggu konfirmasi order lain.', 'warning');
+            return;
         }
+        mainBtn.disabled = true;
+        mainBtn.textContent = 'Mengirim...';
+        document.querySelectorAll('#bottomSheetBidOptions .bid-option').forEach(b => b.disabled = true);
+        try {
+            await sendDriverOffer(false, originalPrice, 0, mainBtn);
+        } catch (err) {
+            mainBtn.disabled = false;
+            mainBtn.innerHTML = `Ambil ${originalPrice.toLocaleString('id-ID')} (tawaran asli)`;
+            document.querySelectorAll('#bottomSheetBidOptions .bid-option').forEach(b => b.disabled = false);
+        }
+    });
+    container.appendChild(mainBtn);
+
+    // ===== OPSI TAMBAHAN (HORIZONTAL SCROLL) =====
+    // Hitung harga +20%, +30%, +40% (dibulatkan ke ribuan)
+    const extraPercentages = [20, 30, 40];
+    const extraPrices = extraPercentages.map(pct => {
+        let val = originalPrice * (1 + pct / 100);
+        val = Math.round(val / 1000) * 1000; // pembulatan ke ribuan
+        return { percent: pct, price: val };
+    });
+
+    // Buat container untuk scroll horizontal
+    const extraContainer = document.createElement('div');
+    extraContainer.style.display = 'flex';
+    extraContainer.style.flexWrap = 'nowrap';
+    extraContainer.style.overflowX = 'auto';
+    extraContainer.style.gap = '8px';
+    extraContainer.style.marginTop = '10px';
+    extraContainer.style.paddingBottom = '4px';
+    extraContainer.style.scrollbarWidth = 'thin';
+
+    // Di dalam fungsi createBidOptionsInContainer, bagian extraPrices.forEach
+extraPrices.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'bid-option plus';
+    btn.style.flex = '1 1 0';                    // ← SAMA BESAR, bagi rata
+    btn.style.minWidth = '0';                     // ← Biarkan flex mengatur
+    btn.style.padding = '10px 6px';               // ← Padding lebih kecil
+    btn.style.borderRadius = '8px';
+    btn.style.border = '1px solid #ddd';
+    btn.style.fontWeight = '600';
+    btn.style.cursor = 'pointer';
+    btn.style.whiteSpace = 'nowrap';
+    btn.style.background = '#f8f9fa';
+    btn.style.color = '#333';
+    btn.style.textAlign = 'center';
+    btn.innerHTML = `Rp ${opt.price.toLocaleString('id-ID')}`;
+    btn.dataset.percent = opt.percent;
+    btn.dataset.price = opt.price;
+
         btn.addEventListener('click', async (e) => {
             e.stopPropagation();
             if (isWaitingForConfirmation) {
                 showToast('Sedang menunggu konfirmasi order lain.', 'warning');
                 return;
             }
-            const originalText = btn.innerText;
-            btn.dataset.originalText = originalText;
-            btn.innerText = 'Mengirim...';
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = 'Mengirim...';
             btn.disabled = true;
             document.querySelectorAll('#bottomSheetBidOptions .bid-option').forEach(b => b.disabled = true);
             try {
-                await sendDriverOffer(false, bidPrice, opt.percent, btn);
+                await sendDriverOffer(false, opt.price, opt.percent, btn);
             } catch (err) {
-                btn.innerText = originalText;
+                btn.innerHTML = originalHTML;
                 btn.disabled = false;
                 document.querySelectorAll('#bottomSheetBidOptions .bid-option').forEach(b => b.disabled = false);
             }
         });
-        container.appendChild(btn);
+        extraContainer.appendChild(btn);
     });
-    container.style.display = 'flex';
+
+    container.appendChild(extraContainer);
 }
 
 function initBottomSheetMapbox() {
@@ -2146,24 +2203,61 @@ async function showOrderDetail(orderObj, fromAuto = false, isAutoTrigger = false
     }
     currentSelectedOrder = { orderId: orderId, orderData: currentOrder };
 
-    // Siapkan konten bottom sheet
+    // Siapkan konten bottom sheet dengan urutan baru
     const content = document.getElementById('bottomSheetContent');
     let html = `
-        <div class="info-row"><span class="label">Customer</span><span class="value">${escapeHtml(currentOrder.customer_name || 'Customer')}</span></div>
-        <div class="info-row"><span class="label">Jemput</span><span class="value">${escapeHtml(currentOrder.pickup_address || '-')}</span></div>
-        ${currentOrder.via_address ? `<div class="info-row"><span class="label">Lewat</span><span class="value">${escapeHtml(currentOrder.via_address)}</span></div>` : ''}
-        <div class="info-row"><span class="label">Tujuan</span><span class="value">${escapeHtml(currentOrder.destination_address || '-')}</span></div>
-        <div class="info-row"><span class="label">Durasi</span><span class="value">${currentOrder.duration_seconds ? Math.round(currentOrder.duration_seconds / 60) + ' menit' : '-'}</span></div>
-        <div class="info-row"><span class="label">Jarak</span><span class="value">${currentOrder.distance_meters ? (currentOrder.distance_meters / 1000).toFixed(1) + ' km' : '-'}</span></div>
-        <div class="info-row"><span class="label">Harga</span><span class="value">${currentOrder.price ? 'Rp ' + currentOrder.price.toLocaleString('id-ID') : '-'}</span></div>
-        ${currentOrder.item_description ? `<div class="info-row"><span class="label">Deskripsi</span><span class="value">${escapeHtml(currentOrder.item_description)}</span></div>` : ''}
-        <div id="bottomSheetMap" class="map-container"></div>
-        <div id="bottomSheetBidOptions" class="bid-options-container" style="display:none;"></div>
-        <div id="bottomSheetCountdown" style="display:none;">
+        <!-- MAP di atas -->
+        <div id="bottomSheetMap" class="map-container" style="height:180px; margin-bottom:12px;"></div>
+
+        <!-- Informasi Customer & Rute -->
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+            <img src="${currentOrder.photoURL || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'}" style="width:36px; height:36px; border-radius:50%; object-fit:cover; border:2px solid var(--primary);">
+            <div>
+                <div style="font-weight:600; font-size:0.95rem;">${escapeHtml(currentOrder.customer_name || 'Customer')}</div>
+                <div style="font-size:0.7rem; color:#666;">⭐ ${(currentOrder.passenger_rating || 0).toFixed(1)} (${currentOrder.perjalanan || 0} perjalanan)</div>
+            </div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:4px; margin-bottom:8px; background:#f8f9fa; padding:8px 10px; border-radius:8px;">
+            <div style="display:flex; align-items:flex-start; gap:6px; font-size:0.85rem;">
+                <span style="color:var(--primary);">🟢</span>
+                <span><strong>Jemput</strong> ${escapeHtml(currentOrder.pickup_address || '-')}</span>
+            </div>
+            ${currentOrder.via_address ? `
+            <div style="display:flex; align-items:flex-start; gap:6px; font-size:0.85rem;">
+                <span style="color:#2196F3;">🔵</span>
+                <span><strong>Via</strong> ${escapeHtml(currentOrder.via_address)}</span>
+            </div>` : ''}
+            <div style="display:flex; align-items:flex-start; gap:6px; font-size:0.85rem;">
+                <span style="color:var(--secondary);">🟠</span>
+                <span><strong>Antar</strong> ${escapeHtml(currentOrder.destination_address || '-')}</span>
+            </div>
+        </div>
+
+        <!-- Durasi, Jarak, Harga -->
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; background:#f0f0f0; padding:8px; border-radius:8px; margin-bottom:12px; text-align:center;">
+            <div><span style="font-size:0.7rem; color:#666;">Durasi</span><br><span style="font-weight:700;">${currentOrder.duration_seconds ? Math.round(currentOrder.duration_seconds / 60) + ' min' : '-'}</span></div>
+            <div><span style="font-size:0.7rem; color:#666;">Jarak</span><br><span style="font-weight:700;">${currentOrder.distance_meters ? (currentOrder.distance_meters / 1000).toFixed(1) + ' km' : '-'}</span></div>
+            <div><span style="font-size:0.7rem; color:#666;">Harga</span><br><span style="font-weight:700; color:var(--success);">Rp ${(currentOrder.price || 0).toLocaleString('id-ID')}</span></div>
+        </div>
+
+        <!-- Deskripsi barang jika kurir -->
+        ${currentOrder.item_description ? `<div style="background:#fff3e0; border-left:3px solid var(--primary); padding:6px 8px; border-radius:6px; font-size:0.75rem; margin-bottom:10px;">${escapeHtml(currentOrder.item_description)}</div>` : ''}
+
+        <!-- Opsi ambil (horizontal scroll) -->
+        <div id="bottomSheetBidOptions" class="bid-options-container" style="display:flex; flex-direction:column; gap:8px; margin-bottom:8px;"></div>
+
+        <!-- Countdown (jika sedang menunggu) -->
+        <div id="bottomSheetCountdown" style="display:none; margin-bottom:8px;">
             <div class="progress-container"><div id="bottomSheetProgress" class="progress-bar" style="width:100%"></div></div>
             <div class="progress-info"><span>Menunggu konfirmasi customer...</span><span id="bottomSheetSeconds">30 detik</span></div>
         </div>
-        <button class="ambil-btn" id="bottomSheetAmbilBtn">Kirim Penawaran</button>
+
+        <!-- Tombol Kirim & Lewati -->
+        <div style="display:flex; gap:8px; margin-top:4px;">
+            <button class="ambil-btn" id="bottomSheetAmbilBtn" style="flex:2;">Kirim Penawaran</button>
+            <button class="ambil-btn" id="bottomSheetSkipBtn" style="flex:1; background:#ccc; color:#333;">Lewati</button>
+        </div>
     `;
     content.innerHTML = html;
 
@@ -2187,12 +2281,34 @@ async function showOrderDetail(orderObj, fromAuto = false, isAutoTrigger = false
     }
 
     const ambilBtn = document.getElementById('bottomSheetAmbilBtn');
+    const skipBtn = document.getElementById('bottomSheetSkipBtn');
     const bidContainer = document.getElementById('bottomSheetBidOptions');
     const countdownContainer = document.getElementById('bottomSheetCountdown');
+
+    // ===== TOMBOL LEWATI =====
+    // Hanya aktif jika belum dalam proses countdown
+    if (isWaitingForConfirmation) {
+        skipBtn.disabled = true;
+        skipBtn.style.opacity = '0.5';
+        skipBtn.style.cursor = 'not-allowed';
+    } else {
+        skipBtn.disabled = false;
+        skipBtn.style.opacity = '1';
+        skipBtn.style.cursor = 'pointer';
+    }
+
+    skipBtn.addEventListener('click', () => {
+        if (isWaitingForConfirmation) {
+            showToast('Tidak bisa lewati, sedang menunggu konfirmasi customer.', 'warning');
+            return;
+        }
+        closeBottomSheet();
+    });
 
     const isAutoBid = (autobidEnabled && fromAuto);
     if (!isAutoBid) {
         ambilBtn.style.display = 'none';
+        // Buat opsi ambil horizontal
         createBidOptionsInContainer(currentOrder.price, orderId, bidContainer);
     } else {
         ambilBtn.style.display = 'block';
@@ -2212,11 +2328,13 @@ async function showOrderDetail(orderObj, fromAuto = false, isAutoTrigger = false
         }
     };
 
+    // Jika auto-trigger dan bukan dari auto, putar suara notifikasi
     if (isAutoTrigger && !fromAuto) {
         const manualSound = document.getElementById('manualPopupSound');
         if (manualSound) manualSound.play().catch(e => console.log('Audio error:', e));
     }
 
+    // Listener perubahan status order
     if (currentModalOrderListener && currentModalOrderRef) {
         currentModalOrderRef.off('value', currentModalOrderListener);
     }
@@ -2229,6 +2347,7 @@ async function showOrderDetail(orderObj, fromAuto = false, isAutoTrigger = false
         }
     });
 
+    // Jika autobid dan order belum ditawarkan, kirim otomatis
     if (isAutoBid) {
         if (autobidOfferedOrders.has(orderId)) {
             console.log(`Autobid untuk order ${orderId} sudah dikirim sebelumnya, lewat.`);
@@ -2402,6 +2521,15 @@ function stopCountdown() {
   if (ambilBtn) { ambilBtn.disabled = false; ambilBtn.textContent = 'Kirim Penawaran'; }
   const closeBtn = document.getElementById('closeBottomSheet');
   if (closeBtn) { closeBtn.classList.remove('disabled'); closeBtn.disabled = false; }
+  
+  // ===== AKTIFKAN KEMBALI TOMBOL LEWATI =====
+  const skipBtn = document.getElementById('bottomSheetSkipBtn');
+  if (skipBtn) {
+    skipBtn.disabled = false;
+    skipBtn.style.opacity = '1';
+    skipBtn.style.cursor = 'pointer';
+  }
+
   countdownOrderId = null; countdownDriverId = null; orderStatusListener = null; countdownInterval = null;
 }
 
@@ -2419,6 +2547,15 @@ function startCountdown(orderId, driverId) {
   if (ambilBtn) { ambilBtn.disabled = true; ambilBtn.textContent = 'Menunggu...'; }
   const closeBtn = document.getElementById('closeBottomSheet');
   if (closeBtn) { closeBtn.classList.add('disabled'); closeBtn.disabled = true; }
+  
+  // ===== NONAKTIFKAN TOMBOL LEWATI =====
+  const skipBtn = document.getElementById('bottomSheetSkipBtn');
+  if (skipBtn) {
+    skipBtn.disabled = true;
+    skipBtn.style.opacity = '0.5';
+    skipBtn.style.cursor = 'not-allowed';
+  }
+
   countdownInterval = setInterval(() => {
     timeLeft--;
     progress.style.width = (timeLeft/30)*100 + '%';
