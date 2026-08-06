@@ -15,11 +15,9 @@ if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
 const auth = firebase.auth();
 const database = firebase.database();
 
-// Google Maps API Key (hardcode)
 const GOOGLE_MAPS_API_KEY = 'AIzaSyA1c0N-_Cx6E_yKXcIN87EC4zqCEkC5ysM';
 console.log('✅ Google Maps API Key loaded');
 
-// Dark mode style untuk Google Maps
 const darkMapStyle = [
     { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
     { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
@@ -74,6 +72,7 @@ let searchOverlayMode = 'pickup';
 let pickFromMapActive = false;
 let searchTimeout = null;
 let minAllowedNego = 0;
+let mapIdleTimer = null;
 
 // Data kendaraan dari Firebase
 let transportData = {};
@@ -101,8 +100,8 @@ let directionsRenderer;
 let autocompleteService = null;
 
 // ==================== CACHE UNTUK SEARCH ====================
-let searchCache = {};           // cache hasil autocomplete
-let placeDetailsCache = {};    // cache detail place
+let searchCache = {};
+let placeDetailsCache = {};
 let searchAbortController = null;
 
 // ==================== UTILITY ====================
@@ -391,8 +390,8 @@ async function loadWaitingOrderData() {
         document.getElementById('routeDuration').innerText = order.duration_seconds ? Math.round(order.duration_seconds / 60) + ' menit' : '-';
         document.getElementById('routePrice').innerHTML = formatRupiah(order.price);
         document.getElementById('routeDetails').style.display = 'block';
-        document.getElementById('cancelBtn').style.display = 'block';
-        document.getElementById('cancelBtn').innerHTML = '❌ Batalkan Perjalanan';
+        document.getElementById('cancelBtn').classList.add('show');
+        document.getElementById('cancelBtn').innerText = '❌ Batalkan Perjalanan';
         document.getElementById('confirmBtn').disabled = false;
         document.getElementById('confirmBtn').innerHTML = `🚀 LANJUTKAN CARI DRIVER | ${formatRupiah(order.price)}`;
         currentOrderId = orderId;
@@ -619,7 +618,6 @@ function initMap() {
     map = new google.maps.Map(document.getElementById('map'), mapOptions);
     console.log('✅ Google Maps berhasil diinisialisasi');
 
-    // Inisialisasi services
     geocoder = new google.maps.Geocoder();
     directionsService = new google.maps.DirectionsService();
     directionsRenderer = new google.maps.DirectionsRenderer({
@@ -633,7 +631,6 @@ function initMap() {
     });
     window.directionsRenderer = directionsRenderer;
 
-    // Klik di peta untuk pilih lokasi
     map.addListener('click', async (e) => {
         if (!pickFromMapActive) return;
         pickFromMapActive = false;
@@ -646,13 +643,10 @@ function initMap() {
         showToast('📍 Lokasi dipilih dari peta', 'success');
     });
 
-    // Inisialisasi AutocompleteService
     initAutocompleteService();
-
     window.initMapDone = true;
 }
 
-// ==================== INIT AUTOCOMPLETE SERVICE ====================
 function initAutocompleteService() {
     if (!autocompleteService && google.maps && google.maps.places) {
         try {
@@ -665,7 +659,6 @@ function initAutocompleteService() {
     }
 }
 
-// ==================== REVERSE GEOCODE ====================
 function reverseGeocode(lng, lat) {
     console.log(`🔍 reverseGeocode: lng=${lng}, lat=${lat}`);
     return new Promise((resolve) => {
@@ -694,30 +687,27 @@ function reverseGeocode(lng, lat) {
     });
 }
 
-// ==================== SEARCH ADDRESS (DENGAN CACHE & TIMEOUT) ====================
+// ==================== SEARCH ADDRESS ====================
 function searchAddress(keyword) {
     console.log(`🔍 searchAddress() dipanggil dengan keyword: "${keyword}"`);
-    
-    // Hapus controller lama jika ada
     if (searchAbortController) {
         searchAbortController.abort();
         searchAbortController = null;
     }
 
     const trimmedKeyword = keyword.trim();
-if (trimmedKeyword.length < 3) {
-    console.log('⚠️ Minimal 3 karakter');
-    document.getElementById('searchResultList').style.display = 'none';
-    document.getElementById('searchDefaultOptions').style.display = 'block';
-    document.getElementById('searchLoading').style.display = 'none';
-    return;
-}
+    if (trimmedKeyword.length < 3) {
+        console.log('⚠️ Minimal 3 karakter');
+        document.getElementById('searchResultList').style.display = 'none';
+        document.getElementById('searchDefaultOptions').style.display = 'block';
+        document.getElementById('searchLoading').style.display = 'none';
+        return;
+    }
 
     document.getElementById('searchDefaultOptions').style.display = 'none';
     document.getElementById('searchResultList').style.display = 'none';
     document.getElementById('searchLoading').style.display = 'block';
 
-    // CEK CACHE
     const cacheKey = trimmedKeyword.toLowerCase();
     if (searchCache[cacheKey]) {
         console.log('📦 Pakai cache untuk:', trimmedKeyword);
@@ -726,7 +716,6 @@ if (trimmedKeyword.length < 3) {
         return;
     }
 
-    // BUAT ABORT CONTROLLER BARU
     searchAbortController = new AbortController();
 
     if (!autocompleteService) {
@@ -735,20 +724,17 @@ if (trimmedKeyword.length < 3) {
 
     if (autocompleteService && typeof autocompleteService.getPlacePredictions === 'function') {
         const request = {
-    input: trimmedKeyword,
-    language: 'id',
-    componentRestrictions: {
-        country: 'id'
-    },
-    locationBias: {
-        east: 123.5,
-        west: 122.5,
-        north: 1.0,
-        south: 0.0
-    }
-};
+            input: trimmedKeyword,
+            language: 'id',
+            componentRestrictions: { country: 'id' },
+            locationBias: {
+                east: 123.5,
+                west: 122.5,
+                north: 1.0,
+                south: 0.0
+            }
+        };
 
-        // SET TIMEOUT 5 DETIK
         const timeoutId = setTimeout(() => {
             if (searchAbortController) {
                 searchAbortController.abort();
@@ -762,30 +748,24 @@ if (trimmedKeyword.length < 3) {
 
         autocompleteService.getPlacePredictions(request, (predictions, status) => {
             clearTimeout(timeoutId);
-            
             if (searchAbortController && searchAbortController.signal.aborted) {
                 console.log('⏹️ Pencarian dibatalkan');
                 return;
             }
             searchAbortController = null;
-
             document.getElementById('searchLoading').style.display = 'none';
 
             if (status === 'OK' && predictions && predictions.length > 0) {
                 console.log(`✅ Ditemukan ${predictions.length} prediksi di Gorontalo`);
-                
                 const gorontaloResults = predictions.filter(p =>
                     p.description && p.description.toLowerCase().includes('gorontalo')
                 );
-
                 if (gorontaloResults.length === 0) {
                     const resultList = document.getElementById('searchResultList');
                     resultList.style.display = 'block';
                     resultList.innerHTML = '<div style="text-align:center;padding:20px;color:#999;">🔍 Tidak ditemukan di Gorontalo. Coba kata kunci lain.</div>';
                     return;
                 }
-
-                // SIMPAN KE CACHE
                 searchCache[cacheKey] = gorontaloResults;
                 renderSearchResults(gorontaloResults);
             } else {
@@ -798,7 +778,6 @@ if (trimmedKeyword.length < 3) {
     }
 }
 
-// ==================== RENDER HASIL PENCARIAN ====================
 function renderSearchResults(predictions) {
     const resultList = document.getElementById('searchResultList');
     resultList.innerHTML = '';
@@ -827,9 +806,7 @@ function renderSearchResults(predictions) {
     });
 }
 
-// ==================== GET PLACE DETAILS (DENGAN CACHE) ====================
 function getPlaceDetails(placeId) {
-    // CEK CACHE DETAIL
     if (placeDetailsCache[placeId]) {
         console.log('📦 Pakai cache detail untuk:', placeId);
         const cached = placeDetailsCache[placeId];
@@ -842,7 +819,6 @@ function getPlaceDetails(placeId) {
     }
 
     showToast('🔍 Mengambil detail lokasi...', 'info');
-    
     const service = new google.maps.places.PlacesService(document.createElement('div'));
     service.getDetails({
         placeId: placeId,
@@ -853,15 +829,12 @@ function getPlaceDetails(placeId) {
             const lng = place.geometry.location.lng();
             let address = place.formatted_address || place.name || '';
             address = address.replace(', Indonesia', '');
-
-            // SIMPAN KE CACHE DETAIL
             placeDetailsCache[placeId] = {
                 lat: lat,
                 lng: lng,
                 address: address,
                 name: place.name || address.split(',')[0]
             };
-
             const feature = {
                 geometry: { coordinates: [lng, lat] },
                 properties: { full_address: address, name: place.name || address.split(',')[0] }
@@ -873,7 +846,6 @@ function getPlaceDetails(placeId) {
     });
 }
 
-// ==================== SEARCH ADDRESS FALLBACK (DENGAN TIMEOUT) ====================
 function searchAddressFallback(keyword) {
     console.log('📍 searchAddressFallback dipanggil untuk:', keyword);
     if (!geocoder) {
@@ -887,7 +859,6 @@ function searchAddressFallback(keyword) {
         south: 0.0
     };
 
-    // SET TIMEOUT 5 DETIK UNTUK FALLBACK
     const timeoutId = setTimeout(() => {
         document.getElementById('searchLoading').style.display = 'none';
         const resultList = document.getElementById('searchResultList');
@@ -971,29 +942,59 @@ function selectAddress(feature) {
 
     if (pickupCoord && destCoord) updateRoute();
     closeSearchOverlay();
+    closeVehicleOverlay();
 }
 
 // ==================== AUTO FILL PICKUP ====================
 async function autoFillPickupLocation() {
     console.log('📍 autoFillPickupLocation() dipanggil');
+
+    const pickupInput = document.getElementById('pickupInput');
+    const originalPlaceholder = pickupInput.placeholder;
+    pickupInput.placeholder = '⏳ Mendeteksi lokasi Anda...';
+    pickupInput.style.color = '#999';
+
     return new Promise((resolve) => {
-        if (!navigator.geolocation) { console.warn('⚠️ Geolokasi tidak didukung'); resolve(false); return; }
+        if (!navigator.geolocation) {
+            console.warn('⚠️ Geolokasi tidak didukung');
+            pickupInput.placeholder = originalPlaceholder;
+            pickupInput.style.color = '';
+            resolve(false);
+            return;
+        }
+
         navigator.geolocation.getCurrentPosition(async (position) => {
             const { latitude, longitude } = position.coords;
             console.log(`📍 Lokasi pengguna: ${latitude}, ${longitude}`);
+
+            pickupInput.placeholder = '⏳ Mengambil alamat...';
+
             let address = await reverseGeocode(longitude, latitude);
             if (!address || address.trim() === '') address = '(Jalan Tanpa Nama)';
+
             pickupCoord = [longitude, latitude];
             pickupAddress = address;
-            document.getElementById('pickupInput').value = pickupAddress;
+            pickupInput.value = pickupAddress;
+            pickupInput.placeholder = originalPlaceholder;
+            pickupInput.style.color = '';
+
             updateMarkers();
             if (map) {
                 map.setCenter({ lat: latitude, lng: longitude });
                 map.setZoom(14);
             }
             if (destCoord) await updateRoute();
+
+            showToast('✅ Lokasi Anda digunakan sebagai titik penjemputan', 'success');
             resolve(true);
-        }, () => { console.warn('⚠️ Gagal mendapatkan lokasi'); resolve(false); }, { enableHighAccuracy: true, timeout: 10000 });
+
+        }, () => {
+            console.warn('⚠️ Gagal mendapatkan lokasi');
+            pickupInput.placeholder = originalPlaceholder;
+            pickupInput.style.color = '';
+            showToast('⚠️ Gagal mendeteksi lokasi, silakan pilih manual', 'error');
+            resolve(false);
+        }, { enableHighAccuracy: true, timeout: 10000 });
     });
 }
 
@@ -1141,6 +1142,7 @@ async function updateRoute() {
 // ==================== OVERLAY PENCARIAN ====================
 function openSearchOverlay(type) {
     console.log(`🔍 openSearchOverlay: ${type}`);
+    closeVehicleOverlay();
     searchOverlayMode = type;
     const overlay = document.getElementById('searchOverlay');
     const input = document.getElementById('searchOverlayInput');
@@ -1170,6 +1172,7 @@ function closeSearchOverlay() {
 }
 
 function useCurrentLocation() {
+    closeVehicleOverlay();
     if (!navigator.geolocation) { showToast('⚠️ Geolokasi tidak didukung', 'error'); return; }
     showToast('📍 Mendapatkan lokasi...', 'info');
     navigator.geolocation.getCurrentPosition(async (position) => {
@@ -1185,31 +1188,89 @@ function useCurrentLocation() {
 // ==================== FITUR PILIH DI PETA ====================
 function pickFromMap() {
     closeSearchOverlay();
+    closeVehicleOverlay();
+    // Sembunyikan bottom sheet detail rute
+    document.getElementById('routeDetails').style.display = 'none';
+
     if (!map) return;
+
     mapPickActive = true;
+    mapPickCoords = null;
+    mapPickAddress = '';
+
+    if (mapIdleTimer) {
+        clearTimeout(mapIdleTimer);
+        mapIdleTimer = null;
+    }
+
     const pinContainer = document.getElementById('mapCenterPin');
     pinContainer.classList.add('active');
+
+    const pinAddress = document.getElementById('pinAddress');
+    pinAddress.textContent = '📍 Geser peta untuk memilih lokasi';
+    pinAddress.classList.remove('loading');
+
+    document.getElementById('pinActions').style.display = 'flex';
+
     const useBtn = document.getElementById('useMapPickBtn');
-    useBtn.innerHTML = '📍 Pilih Lokasi';
+    useBtn.textContent = '📍 Pilih Lokasi';
+    useBtn.className = 'pin-action-btn primary';
+
     const center = map.getCenter();
     mapPickCoords = [center.lng(), center.lat()];
-    resolveCenterAddress();
+
+    reverseGeocode(mapPickCoords[0], mapPickCoords[1]).then(address => {
+        if (!mapPickActive) return;
+        mapPickAddress = address || '(Alamat tidak ditemukan)';
+        if (mapPickAddress && mapPickAddress !== '(Alamat tidak ditemukan)') {
+            const streetName = mapPickAddress.split(',')[0] || mapPickAddress;
+            pinAddress.textContent = `📍 ${streetName}`;
+            useBtn.textContent = '✅ Ok';
+            useBtn.className = 'pin-action-btn success';
+        } else {
+            pinAddress.textContent = '📍 Lokasi tidak dikenal';
+        }
+    });
+
+    google.maps.event.clearListeners(map, 'dragstart');
+    google.maps.event.clearListeners(map, 'dragend');
     map.addListener('dragstart', onMapMoveStart);
     map.addListener('dragend', onMapMoveEnd);
+
     pickFromMapActive = false;
-    showToast('📍 Geser peta, lalu klik "Gunakan" di samping pin', 'info');
+    showToast('📍 Geser peta, lalu klik "Ok" untuk memilih', 'info');
 }
 
 function onMapMoveStart() {
-    if (!mapPickActive) return;
+    if (!mapPickActive) {
+        document.getElementById('pinActions').style.display = 'none';
+        return;
+    }
+
+    document.getElementById('pinActions').style.display = 'none';
+
+    const pinAddress = document.getElementById('pinAddress');
+    pinAddress.textContent = '⏳ Memuat alamat...';
+    pinAddress.classList.add('loading');
+
+    if (mapIdleTimer) {
+        clearTimeout(mapIdleTimer);
+        mapIdleTimer = null;
+    }
+
     const pinContainer = document.getElementById('mapCenterPin');
     if (pinContainer) pinContainer.classList.add('dragging');
+
     const useBtn = document.getElementById('useMapPickBtn');
-    useBtn.innerHTML = 'Memuat...';
+    useBtn.textContent = '📍 Memuat...';
 }
 
 function onMapMoveEnd() {
-    if (!mapPickActive) return;
+    if (!mapPickActive) {
+        document.getElementById('pinActions').style.display = 'none';
+        return;
+    }
+
     const pinContainer = document.getElementById('mapCenterPin');
     if (pinContainer) {
         pinContainer.classList.remove('dragging');
@@ -1218,39 +1279,111 @@ function onMapMoveEnd() {
         void pinContainer.offsetWidth;
         pinContainer.classList.add('active');
     }
+
     const center = map.getCenter();
     mapPickCoords = [center.lng(), center.lat()];
-    resolveCenterAddress();
-    const useBtn = document.getElementById('useMapPickBtn');
-    useBtn.innerHTML = '📍 Pilih Lokasi';
-}
 
-async function resolveCenterAddress() {
-    if (!mapPickCoords) return;
-    const [lng, lat] = mapPickCoords;
-    if (mapPickResolveTimer) clearTimeout(mapPickResolveTimer);
-    mapPickResolveTimer = setTimeout(async () => {
-        const address = await reverseGeocode(lng, lat);
+    if (mapIdleTimer) {
+        clearTimeout(mapIdleTimer);
+        mapIdleTimer = null;
+    }
+
+    mapIdleTimer = setTimeout(async () => {
+        if (!mapPickActive) return;
+
+        const address = await reverseGeocode(mapPickCoords[0], mapPickCoords[1]);
         mapPickAddress = address || '(Alamat tidak ditemukan)';
-    }, 300);
+
+        const pinAddress = document.getElementById('pinAddress');
+        const useBtn = document.getElementById('useMapPickBtn');
+
+        if (mapPickAddress && mapPickAddress !== '(Alamat tidak ditemukan)') {
+            const streetName = mapPickAddress.split(',')[0] || mapPickAddress;
+            pinAddress.textContent = `📍 ${streetName}`;
+            pinAddress.classList.remove('loading');
+            useBtn.textContent = '✅ Ok';
+            useBtn.className = 'pin-action-btn success';
+        } else {
+            pinAddress.textContent = '📍 Lokasi tidak dikenal';
+            pinAddress.classList.remove('loading');
+            useBtn.textContent = '📍 Pilih Lokasi';
+            useBtn.className = 'pin-action-btn primary';
+        }
+
+        document.getElementById('pinActions').style.display = 'flex';
+        mapIdleTimer = null;
+    }, 3000);
 }
 
 function confirmMapPick() {
-    if (!mapPickCoords || !mapPickAddress) { showToast('❌ Alamat belum didapatkan', 'error'); return; }
+    if (!mapPickActive) {
+        showToast('❌ Mode pilih peta tidak aktif', 'error');
+        return;
+    }
+
+    if (!mapPickCoords) {
+        showToast('❌ Pilih lokasi terlebih dahulu', 'error');
+        return;
+    }
+
+    if (!mapPickAddress || mapPickAddress === '(Alamat tidak ditemukan)') {
+        showToast('⏳ Mengambil alamat...', 'info');
+        reverseGeocode(mapPickCoords[0], mapPickCoords[1]).then(address => {
+            if (!mapPickActive) return;
+            mapPickAddress = address || '(Alamat tidak ditemukan)';
+            if (mapPickAddress && mapPickAddress !== '(Alamat tidak ditemukan)') {
+                const feature = {
+                    geometry: { coordinates: mapPickCoords },
+                    properties: { full_address: mapPickAddress, name: mapPickAddress.split(',')[0] }
+                };
+                selectAddress(feature);
+                cancelMapPick();
+            } else {
+                showToast('❌ Gagal mengambil alamat', 'error');
+            }
+        });
+        return;
+    }
+
     const [lng, lat] = mapPickCoords;
-    const feature = { geometry: { coordinates: [lng, lat] }, properties: { full_address: mapPickAddress, name: mapPickAddress.split(',')[0] } };
+    const feature = {
+        geometry: { coordinates: [lng, lat] },
+        properties: { full_address: mapPickAddress, name: mapPickAddress.split(',')[0] }
+    };
     selectAddress(feature);
     cancelMapPick();
 }
 
 function cancelMapPick() {
     mapPickActive = false;
-    document.getElementById('mapCenterPin').classList.remove('active', 'dragging');
+
+    const pinContainer = document.getElementById('mapCenterPin');
+    pinContainer.classList.remove('active', 'dragging');
+
+    document.getElementById('pinActions').style.display = 'none';
+
+    const pinAddress = document.getElementById('pinAddress');
+    pinAddress.textContent = '📍 Pilih lokasi di peta';
+    pinAddress.classList.remove('loading');
+
     google.maps.event.clearListeners(map, 'dragstart');
     google.maps.event.clearListeners(map, 'dragend');
-    if (mapPickResolveTimer) clearTimeout(mapPickResolveTimer);
+
+    if (mapPickResolveTimer) {
+        clearTimeout(mapPickResolveTimer);
+        mapPickResolveTimer = null;
+    }
+    if (mapIdleTimer) {
+        clearTimeout(mapIdleTimer);
+        mapIdleTimer = null;
+    }
+
     mapPickCoords = null;
     mapPickAddress = '';
+
+    const useBtn = document.getElementById('useMapPickBtn');
+    useBtn.textContent = '📍 Pilih Lokasi';
+    useBtn.className = 'pin-action-btn primary';
 }
 
 function clearViaPoint() {
@@ -1623,7 +1756,7 @@ function cleanupSearch() {
     btn.addEventListener('click', confirmRoute);
     btn.innerHTML = currentPrice ? `🚀 CARI DRIVER | ${formatRupiah(currentPrice)}` : '📍 Konfirmasi Rute';
     btn.disabled = (currentPrice === 0);
-    document.getElementById('cancelBtn').style.display = 'none';
+    document.getElementById('cancelBtn').classList.remove('show');
     document.getElementById('routeDetails').style.display = 'block';
     currentOrderId = null;
     deactivateRadarOnPickup();
@@ -1642,7 +1775,6 @@ window.onload = async () => {
 
     const orderActive = await cekOrderAktifDanRedirect();
 
-    // Tunggu Google Maps siap
     let attempts = 0;
     while (!window.initMapDone && attempts < 30) {
         await new Promise(r => setTimeout(r, 300));
@@ -1672,6 +1804,25 @@ window.onload = async () => {
             await autoFillPickupLocation();
         }
     }
+
+    // Force tampilkan tombol cancel jika ada order waiting (backup)
+    setTimeout(async () => {
+        const orderId = localStorage.getItem('current_order_id');
+        if (orderId) {
+            try {
+                const snap = await database.ref(`orders/${orderId}`).once('value');
+                const order = snap.val();
+                if (order && order.status === 'waiting') {
+                    const cancelBtn = document.getElementById('cancelBtn');
+                    cancelBtn.classList.add('show');
+                    cancelBtn.innerText = '❌ Batalkan Perjalanan';
+                    console.log('✅ Force tampil tombol cancel di dalam bottom sheet dari window.onload');
+                }
+            } catch(e) {
+                console.warn('Gagal cek order:', e);
+            }
+        }
+    }, 1500);
 
     // Event listeners
     document.getElementById('useMapPickBtn').addEventListener('click', confirmMapPick);
