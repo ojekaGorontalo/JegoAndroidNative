@@ -14,19 +14,20 @@
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA1c0N-_Cx6E_yKXcIN87EC4zqCEkC5ysM&libraries=places&callback=initMap" async defer></script>
 
     <!-- CSS -->
-    <link rel="stylesheet" href="rute.css">
+    <link rel="stylesheet" href="rute_jego.css">
 
     <!-- JS Utama -->
-    <script src="rute.js" defer></script>
+    <script src="rute_jego.js" defer></script>
 </head>
 <body>
 
 <!-- PIN TENGAH MODE PILIH PETA -->
 <div id="mapCenterPin">
+    <div class="pin-address" id="pinAddress">📍 Geser peta untuk memilih lokasi</div>
     <div class="pin-bounce"></div>
     <div class="pin-shadow"></div>
     <div class="pin-actions" id="pinActions">
-        <button class="pin-action-btn primary" id="useMapPickBtn">📍 Gunakan</button>
+        <button class="pin-action-btn primary" id="useMapPickBtn">📍 Pilih Lokasi</button>
         <button class="pin-action-btn" id="cancelMapPickBtn">✕ Batal</button>
     </div>
 </div>
@@ -165,7 +166,7 @@
 <!-- MAP -->
 <div id="map"></div>
 
-<!-- ROUTE DETAILS -->
+<!-- ROUTE DETAILS (BOTTOM SHEET) -->
 <div class="route-details" id="routeDetails">
     <div class="route-address">
         <span class="label">Penjemputan:</span>
@@ -204,10 +205,14 @@
             <small style="color:red; display:none;" id="negoError">Harga tawaran tidak valid! Minimal <span id="minErrorVal">0</span></small>
         </div>
     </div>
+
+    <!-- TOMBOL CANCEL (DI DALAM BOTTOM SHEET) -->
+    <button class="cancel-btn-inline" id="cancelBtn">❌ Batalkan Perjalanan</button>
 </div>
 
+<!-- TOMBOL CONFIRM / CARI DRIVER (TETAP DI LUAR) -->
 <button class="confirm-btn" id="confirmBtn" disabled>📍 Konfirmasi Rute</button>
-<button class="cancel-btn" id="cancelBtn">❌ Batalkan</button>
+
 <div class="radar" id="radar"></div>
 
 <div class="popup-overlay" id="popupOverlay">
@@ -334,7 +339,7 @@
 
             if (routeDetails) routeDetails.style.display = 'none';
             if (confirmBtn) confirmBtn.disabled = true;
-            if (cancelBtn) cancelBtn.style.display = 'none';
+            if (cancelBtn) cancelBtn.classList.remove('show');
 
             document.getElementById('negoInput').value = '';
             document.getElementById('labelRekomendasi').innerText = 'Rp 0';
