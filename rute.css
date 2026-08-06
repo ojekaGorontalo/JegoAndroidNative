@@ -368,7 +368,7 @@ body.dark-mode .menu-item:hover {
     color: var(--primary);
 }
 
-/* ===== SISA STYLE (tidak berubah) ===== */
+/* ===== ROUTE DETAILS (BOTTOM SHEET) ===== */
 .route-details {
     position: fixed;
     bottom: 100px;
@@ -422,37 +422,67 @@ body.dark-mode .menu-item:hover {
     font-weight: 700;
 }
 
-.confirm-btn, .cancel-btn {
+/* ===== TOMBOL CANCEL DI DALAM BOTTOM SHEET ===== */
+.cancel-btn-inline {
+    width: 100%;
+    padding: 14px;
+    margin-top: 16px;
+    border: none;
+    border-radius: 50px;
+    font-size: 16px;
+    font-weight: 600;
+    background: linear-gradient(135deg, #f44336, #e74c3c);
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+    transition: all 0.2s;
+    display: none;
+}
+
+.cancel-btn-inline.show {
+    display: block;
+}
+
+.cancel-btn-inline:hover {
+    opacity: 0.9;
+}
+
+.cancel-btn-inline:active {
+    transform: scale(0.96);
+}
+
+/* ===== TOMBOL CONFIRM / CARI DRIVER (DI LUAR) ===== */
+.confirm-btn {
     position: fixed;
     bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
     width: 90%;
     max-width: 500px;
-    color: white;
+    padding: 16px;
     border: none;
     border-radius: 50px;
-    padding: 16px;
     font-size: 16px;
     font-weight: 600;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
     cursor: pointer;
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     z-index: 10000;
     transition: all 0.2s;
     text-align: center;
 }
-.confirm-btn {
-    background: linear-gradient(135deg, var(--primary), var(--secondary));
-}
-.cancel-btn {
-    background: linear-gradient(135deg, var(--danger), #e74c3c);
-    display: none;
-}
-.confirm-btn:disabled, .cancel-btn:disabled {
+
+.confirm-btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
 }
 
+.confirm-btn:active:not(:disabled) {
+    transform: translateX(-50%) scale(0.96);
+}
+
+/* ===== RADAR ===== */
 .radar {
     position: absolute;
     top: 50%;
@@ -537,7 +567,6 @@ body.dark-mode .menu-item:hover {
     overflow-y: auto;
     padding: 12px;
 }
-
 .bid-price-text {
     font-size: 1.2rem;
     font-weight: bold;
@@ -545,7 +574,6 @@ body.dark-mode .menu-item:hover {
     margin-top: 8px;
     display: block;
 }
-
 .driver-offer-card {
     background: #fff;
     border-radius: 16px;
@@ -663,7 +691,7 @@ body.dark-mode .menu-item:hover {
 }
 
 @media (max-width: 640px) {
-    .address-card, .route-details, .confirm-btn, .cancel-btn {
+    .address-card, .route-details, .confirm-btn {
         width: 95%;
     }
 }
@@ -819,13 +847,40 @@ body.dark-mode .search-option-item:active { background: #3a3a3a; }
     transition: transform 0.2s ease-out;
 }
 #mapCenterPin.active {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     animation: pinDrop 0.4s ease-out;
 }
 #mapCenterPin.dragging {
     transform: translate(-50%, -120%);
     transition: none;
 }
+
+.pin-address {
+    background: rgba(255,255,255,0.95);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #202124;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    margin-bottom: 8px;
+    text-align: center;
+    max-width: 280px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: all 0.3s ease;
+}
+body.dark-mode .pin-address {
+    background: rgba(30,30,30,0.95);
+    color: #e8eaed;
+}
+.pin-address.loading {
+    opacity: 0.7;
+}
+
 .pin-bounce {
     width: 32px;
     height: 32px;
@@ -849,10 +904,6 @@ body.dark-mode .search-option-item:active { background: #3a3a3a; }
 }
 
 .pin-actions {
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
     margin-top: 8px;
     display: flex;
     gap: 8px;
@@ -874,6 +925,11 @@ body.dark-mode .search-option-item:active { background: #3a3a3a; }
 }
 .pin-action-btn.primary {
     background: var(--primary);
+    color: white;
+    border: none;
+}
+.pin-action-btn.success {
+    background: #4CAF50;
     color: white;
     border: none;
 }
