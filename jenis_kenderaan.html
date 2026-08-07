@@ -949,6 +949,8 @@
                 </div>
                 <div style="font-size:1.5rem; color:var(--primary);">→</div>
             </div>
+            <!-- JEGO FOOD DISEMBUNYIKAN SEMENTARA -->
+            <!--
             <div class="modal-option" id="chooseFood">
                 <div class="icon">🍔</div>
                 <div class="info">
@@ -957,6 +959,7 @@
                 </div>
                 <div style="font-size:1.5rem; color:var(--primary);">→</div>
             </div>
+            -->
             <button class="modal-close" id="closeChoiceModal">Batal</button>
         </div>
     </div>
@@ -1495,14 +1498,16 @@
         }
     });
 
-    document.getElementById('chooseFood').addEventListener('click', () => {
-        if (selectedTransport) {
-            document.getElementById('kurirChoiceModal').classList.remove('active');
-            showGlobalLoading(true);
-            // Untuk Jego Food, kita arahkan ke jego_food.html
-            setTimeout(() => processTransportSelection(selectedTransport, 'jego_food.html'), 400);
-        }
-    });
+    // JEGO FOOD DISEMBUNYIKAN SEMENTARA
+/*
+document.getElementById('chooseFood').addEventListener('click', () => {
+    if (selectedTransport) {
+        document.getElementById('kurirChoiceModal').classList.remove('active');
+        showGlobalLoading(true);
+        setTimeout(() => processTransportSelection(selectedTransport, 'jego_food.html'), 400);
+    }
+});
+*/
 
     document.getElementById('closeChoiceModal').addEventListener('click', closeKurirChoiceModal);
     // Tutup modal jika klik di luar konten
