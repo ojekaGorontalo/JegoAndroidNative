@@ -8,8 +8,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
-  <!-- Google Maps -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA1c0N-_Cx6E_yKXcIN87EC4zqCEkC5ysM&libraries=places&callback=initMap" async defer></script>
+  <!-- Google Maps akan dimuat secara dinamis setelah API key diambil dari Firebase -->
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
@@ -1350,7 +1349,7 @@ let gpsLoadingInterval = null;
 let currentDriverData = null;
 let autobidEnabled = false, driverLocation = { latitude: null, longitude: null };
 let locationWatchId = null, locationTrackingEnabled = false;
-let googleApiKey = 'YOUR_GOOGLE_MAPS_API_KEY';
+let googleApiKey = ''; // akan diisi dari Firebase
 let countdownInterval = null, countdownOrderId = null, countdownDriverId = null, orderStatusListener = null;
 let acceptKurirEnabled = false;
 let previousOrderIds = new Set();
@@ -1415,6 +1414,32 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
   const a = Math.sin(dLat/2)**2 + Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) * Math.sin(dLon/2)**2;
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
   return R * c;
+}
+
+// ==================== LOAD GOOGLE MAPS DYNAMICALLY ====================
+function loadGoogleMaps(apiKey) {
+  return new Promise((resolve, reject) => {
+    // Cek apakah sudah termuat
+    if (typeof google !== 'undefined' && google.maps) {
+      console.log('✅ Google Maps sudah termuat sebelumnya');
+      resolve();
+      return;
+    }
+    // Definisikan callback global yang dipanggil oleh script
+    window.initMap = function() {
+      console.log('✅ Google Maps callback initMap dipanggil');
+      resolve();
+    };
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initMap`;
+    script.async = true;
+    script.defer = true;
+    script.onerror = () => {
+      console.error('❌ Gagal memuat Google Maps');
+      reject(new Error('Gagal memuat Google Maps'));
+    };
+    document.head.appendChild(script);
+  });
 }
 
 // ==================== TOAST, POPUP, AUDIO ====================
@@ -3079,6 +3104,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.location.href = 'loginDriver.html';
         return;
       }
+      
+      // 🔥 Ambil API key Google Maps dari Firebase
+      try {
+        const keySnap = await database.ref('data-jego/apikey-google-maps').once('value');
+        const apiKey = keySnap.val();
+        if (apiKey) {
+          await loadGoogleMaps(apiKey);
+          console.log('✅ Google Maps berhasil dimuat dengan API key dari Firebase');
+        } else {
+          console.warn('⚠️ API key Google Maps tidak ditemukan di Firebase. Peta tidak akan berfungsi.');
+          showToast('API key Google Maps tidak ditemukan', 'warning');
+        }
+      } catch (error) {
+        console.error('❌ Gagal mengambil API key dari Firebase:', error);
+        showToast('Gagal memuat Google Maps', 'error');
+      }
+
       loadStoredSettings();
       if (globalCurrentUid) {
         database.ref('drivers/' + globalCurrentUid).once('value').then(snap => {
