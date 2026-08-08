@@ -10,13 +10,11 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
-    <!-- Google Maps API (callback=initMap) -->
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA1c0N-_Cx6E_yKXcIN87EC4zqCEkC5ysM&libraries=places&callback=initMap" async defer></script>
-
+    <!-- Google Maps akan dimuat secara dinamis setelah API key diambil dari Firebase -->
     <!-- CSS -->
     <link rel="stylesheet" href="rute.css">
 
-    <!-- JS Utama -->
+    <!-- JS Utama (akan memuat Google Maps secara dinamis) -->
     <script src="rute.js" defer></script>
 </head>
 <body>
@@ -220,7 +218,9 @@
         <div class="popup-header"><h3 id="popupTitle">Pemberitahuan</h3></div>
         <div class="popup-content">
             <div id="popupMessage">Pesan</div>
-            <div class="popup-buttons"><button class="popup-button popup-button-primary" id="popupButton">OK</button></div>
+            <div class="popup-buttons" id="popupButtons">
+                <button class="popup-button popup-button-primary" id="popupButton">OK</button>
+            </div>
         </div>
     </div>
 </div>
