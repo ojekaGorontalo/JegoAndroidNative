@@ -4,40 +4,20 @@
   <meta charset="utf-8" />
   <title>List Permintaan - JeGo (Driver)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-
-  <!-- Google Maps API (hanya untuk peta di bottom sheet) -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA1c0N-_Cx6E_yKXcIN87EC4zqCEkC5ysM&libraries=places,geometry&callback=initGoogleMaps" async defer>
-  </script>
-
-  <!-- Font Awesome -->
+  <!-- Firebase SDK (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+  <!-- Mapbox GL -->
+  <script src='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js'></script>
+  <link href='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css' rel='stylesheet' />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-
-  <!-- CSS -->
-  <link rel="stylesheet" href="home_pack.css">
-
-  <!-- JS -->
-  <script src="home_pack.js" defer></script>
+  <!-- External CSS & JS -->
+  <link rel="stylesheet" href="home.css">
 </head>
 <body>
 
-<div id="radarContainer">
-  <div class="radar">
-    <div class="radar-circle"></div>
-    <div class="scan"></div>
-    <div class="radar-dot dot1"></div>
-    <div class="radar-dot dot2"></div>
-    <div class="radar-dot dot3"></div>
-    <div class="radar-dot dot4"></div>
-    <div class="radar-status" id="radarStatusText">Menunggu order baru...</div>
-  </div>
-</div>
-
-<!-- HEADER -->
+<!-- ===== HEADER ===== -->
 <div class="header">
   <div class="logo-container">
     <button class="menu-btn" id="menuBtn">☰</button>
@@ -48,6 +28,7 @@
   </div>
   <div class="center-controls">
     <div class="toggle-wrapper">
+      <!-- INI PERUBAHAN: onclick dihapus -->
       <div class="toggle-btn" id="locationToggleBtn" role="button" tabindex="0">
         <div class="track-glow"></div>
         <div class="toggle-slider">
@@ -62,7 +43,20 @@
   </div>
 </div>
 
-<!-- CONTAINER -->
+<!-- ===== RADAR ===== -->
+<div id="radarContainer">
+  <div class="radar">
+    <div class="radar-circle"></div>
+    <div class="scan"></div>
+    <div class="radar-dot dot1"></div>
+    <div class="radar-dot dot2"></div>
+    <div class="radar-dot dot3"></div>
+    <div class="radar-dot dot4"></div>
+    <div class="radar-status" id="radarStatusText">Menunggu order baru...</div>
+  </div>
+</div>
+
+<!-- ===== CONTAINER ===== -->
 <div class="container">
   <div style="margin-top:16px; padding:0 8px;">
     <h3 style="display:flex; align-items:center; gap:8px; font-size:1rem;">
@@ -73,7 +67,7 @@
   </div>
 </div>
 
-<!-- BOTTOM SHEET ORDER -->
+<!-- ===== ORDER BOTTOM SHEET ===== -->
 <div id="orderBottomSheet" class="order-bottom-sheet">
   <div class="handle"></div>
   <div class="header">
@@ -83,7 +77,7 @@
   <div id="bottomSheetContent"></div>
 </div>
 
-<!-- BOTTOM SHEET NOTIFIKASI -->
+<!-- ===== NOTIF BOTTOM SHEET ===== -->
 <div id="notifBottomSheet" class="order-bottom-sheet" style="z-index: 1200;">
   <div class="handle"></div>
   <div class="header">
@@ -95,9 +89,9 @@
   </div>
 </div>
 
-<!-- BOTTOM NAV -->
+<!-- ===== BOTTOM NAV ===== -->
 <div class="bottom-nav">
-  <a href="home_pack.html" class="bottom-nav-item active" id="navHome">
+  <a href="index.html" class="bottom-nav-item active" id="navHome">
     <i class="fas fa-car"></i>
     <span>Permintaan Transportasi</span>
   </a>
@@ -107,7 +101,7 @@
   </a>
 </div>
 
-<!-- SIDEBAR -->
+<!-- ===== SIDEBAR ===== -->
 <div class="sidebar" id="sidebar">
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
   <div class="sidebar-content">
@@ -150,15 +144,6 @@
       </div>
       <div class="sidebar-bottom">
         <div class="menu-section">
-          <div class="mode-penumpang-card" id="modePenumpangBtn">
-            <div class="mode-penumpang-icon"><i class="fas fa-exchange-alt"></i></div>
-            <div class="mode-penumpang-text">
-              <div class="mode-penumpang-title">Mode Penumpang</div>
-              <div class="mode-penumpang-desc">Beralih ke aplikasi penumpang</div>
-            </div>
-            <div class="mode-penumpang-arrow">›</div>
-          </div>
-        </div>
         <div class="social-icons">
           <a href="https://whatsapp.com/channel/0029VbCtkcaEQIaidcHMTy0G" target="_blank"><i class="fab fa-whatsapp"></i></a>
           <a href="https://www.facebook.com/share/18gp8qJRdM/" target="_blank"><i class="fab fa-facebook"></i></a>
@@ -169,7 +154,7 @@
   </div>
 </div>
 
-<!-- NOTIF PROMPT -->
+<!-- ===== NOTIF PROMPT ===== -->
 <div id="notifPromptModal" class="notif-prompt-modal">
   <div class="notif-prompt-content">
     <div class="notif-prompt-icon">🔔</div>
@@ -182,7 +167,7 @@
   </div>
 </div>
 
-<!-- POPUP -->
+<!-- ===== POPUP ===== -->
 <div class="popup-overlay" id="popupOverlay">
   <div class="popup">
     <div class="popup-header"><span id="popupIcon">ℹ️</span><h3 id="popupTitle">Pemberitahuan</h3></div>
@@ -191,10 +176,10 @@
   </div>
 </div>
 
-<!-- LOADING OVERLAY -->
+<!-- ===== LOADING OVERLAY ===== -->
 <div id="loadingOverlay"><div class="spinner"></div><p>Memuat...</p></div>
 
-<!-- AUDIO -->
+<!-- ===== AUDIO ===== -->
 <audio id="beekSound" preload="auto">
   <source src="https://jegotiem.netlify.app/audio/beek.mp3" type="audio/mpeg">
 </audio>
@@ -214,14 +199,7 @@
   <source src="https://jego-movego-hld.netlify.app/sounds/tonggle_off.mp3" type="audio/mpeg">
 </audio>
 
-<!-- Google Maps callback flag -->
-<script>
-  function initGoogleMaps() {
-    // Fungsi ini dipanggil oleh Google Maps API
-    // Implementasi ada di home_pack.js
-    console.log('✅ Google Maps ready (callback dari HTML)');
-  }
-</script>
-
+<!-- ===== EXTERNAL JS ===== -->
+<script src="home.js"></script>
 </body>
 </html>
