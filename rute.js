@@ -15,30 +15,6 @@ if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
 const auth = firebase.auth();
 const database = firebase.database();
 
-const GOOGLE_MAPS_API_KEY = 'AIzaSyA1c0N-_Cx6E_yKXcIN87EC4zqCEkC5ysM';
-console.log('✅ Google Maps API Key loaded');
-
-const darkMapStyle = [
-    { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
-    { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
-    { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
-    { featureType: "administrative.locality", elementType: "labels.text.fill", stylers: [{ color: "#d59563" }] },
-    { featureType: "poi", elementType: "labels.text.fill", stylers: [{ color: "#d59563" }] },
-    { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#263c3f" }] },
-    { featureType: "poi.park", elementType: "labels.text.fill", stylers: [{ color: "#6b9a76" }] },
-    { featureType: "road", elementType: "geometry", stylers: [{ color: "#38414e" }] },
-    { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#212a37" }] },
-    { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#9ca5b3" }] },
-    { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#746855" }] },
-    { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ color: "#1f2835" }] },
-    { featureType: "road.highway", elementType: "labels.text.fill", stylers: [{ color: "#f3d19c" }] },
-    { featureType: "transit", elementType: "geometry", stylers: [{ color: "#2f3948" }] },
-    { featureType: "transit.station", elementType: "labels.text.fill", stylers: [{ color: "#d59563" }] },
-    { featureType: "water", elementType: "geometry", stylers: [{ color: "#17263c" }] },
-    { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#515c6d" }] },
-    { featureType: "water", elementType: "labels.text.stroke", stylers: [{ color: "#17263c" }] }
-];
-
 // ==================== GLOBAL VARIABLES ====================
 let map;
 let currentUser = null;
@@ -103,6 +79,108 @@ let autocompleteService = null;
 let searchCache = {};
 let placeDetailsCache = {};
 let searchAbortController = null;
+
+// ==================== DARK MAP STYLE ====================
+const darkMapStyle = [
+    { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
+    { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
+    { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
+    { featureType: "administrative.locality", elementType: "labels.text.fill", stylers: [{ color: "#d59563" }] },
+    { featureType: "poi", elementType: "labels.text.fill", stylers: [{ color: "#d59563" }] },
+    { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#263c3f" }] },
+    { featureType: "poi.park", elementType: "labels.text.fill", stylers: [{ color: "#6b9a76" }] },
+    { featureType: "road", elementType: "geometry", stylers: [{ color: "#38414e" }] },
+    { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#212a37" }] },
+    { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#9ca5b3" }] },
+    { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#746855" }] },
+    { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ color: "#1f2835" }] },
+    { featureType: "road.highway", elementType: "labels.text.fill", stylers: [{ color: "#f3d19c" }] },
+    { featureType: "transit", elementType: "geometry", stylers: [{ color: "#2f3948" }] },
+    { featureType: "transit.station", elementType: "labels.text.fill", stylers: [{ color: "#d59563" }] },
+    { featureType: "water", elementType: "geometry", stylers: [{ color: "#17263c" }] },
+    { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#515c6d" }] },
+    { featureType: "water", elementType: "labels.text.stroke", stylers: [{ color: "#17263c" }] }
+];
+
+// ==================== LOAD GOOGLE MAPS DYNAMICALLY ====================
+function loadGoogleMaps(apiKey) {
+    return new Promise((resolve, reject) => {
+        // Cek apakah sudah termuat
+        if (typeof google !== 'undefined' && google.maps) {
+            console.log('✅ Google Maps sudah termuat sebelumnya');
+            resolve();
+            return;
+        }
+        // Definisikan callback global yang dipanggil oleh script
+        window.initMap = function() {
+            console.log('✅ Google Maps callback initMap dipanggil');
+            // Panggil fungsi inisialisasi peta yang sebenarnya
+            initializeMap();
+            resolve();
+        };
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initMap`;
+        script.async = true;
+        script.defer = true;
+        script.onerror = () => {
+            console.error('❌ Gagal memuat Google Maps');
+            reject(new Error('Gagal memuat Google Maps'));
+        };
+        document.head.appendChild(script);
+    });
+}
+
+// ==================== INISIALISASI PETA ====================
+function initializeMap() {
+    // Cegah inisialisasi ganda
+    if (window.initMapDone) {
+        console.log('⚠️ Peta sudah diinisialisasi, lewati.');
+        return;
+    }
+    console.log('🗺️ initializeMap() dipanggil');
+    
+    const isDark = localStorage.getItem('jego_dark_mode') === 'true';
+    const mapOptions = {
+        center: { lat: 0.5435, lng: 123.0580 },
+        zoom: 12,
+        mapTypeId: 'roadmap',
+        styles: isDark ? darkMapStyle : [],
+        zoomControl: true,
+        zoomControlOptions: { position: google.maps.ControlPosition.TOP_RIGHT },
+        fullscreenControl: true,
+        fullscreenControlOptions: { position: google.maps.ControlPosition.TOP_RIGHT }
+    };
+    map = new google.maps.Map(document.getElementById('map'), mapOptions);
+    console.log('✅ Google Maps berhasil diinisialisasi');
+
+    geocoder = new google.maps.Geocoder();
+    directionsService = new google.maps.DirectionsService();
+    directionsRenderer = new google.maps.DirectionsRenderer({
+        map: map,
+        suppressMarkers: true,
+        polylineOptions: {
+            strokeColor: '#FF9800',
+            strokeWeight: 5,
+            strokeOpacity: 0.8
+        }
+    });
+    window.directionsRenderer = directionsRenderer;
+
+    map.addListener('click', async (e) => {
+        if (!pickFromMapActive) return;
+        pickFromMapActive = false;
+        const lat = e.latLng.lat();
+        const lng = e.latLng.lng();
+        let address = await reverseGeocode(lng, lat);
+        if (!address || address.trim() === '') address = '(Titik di peta)';
+        const feature = { geometry: { coordinates: [lng, lat] }, properties: { full_address: address, name: address.split(',')[0] } };
+        selectAddress(feature);
+        showToast('📍 Lokasi dipilih dari peta', 'success');
+    });
+
+    initAutocompleteService();
+    window.initMapDone = true;
+}
 
 // ==================== UTILITY ====================
 function showPopup(title, message, onClose = null) {
@@ -600,51 +678,6 @@ function getFullAddress(feature) {
         return `${name}, ${fullAddress}`;
     }
     return fullAddress;
-}
-
-function initMap() {
-    console.log('🗺️ initMap() dipanggil oleh Google Maps API');
-    const isDark = localStorage.getItem('jego_dark_mode') === 'true';
-    const mapOptions = {
-        center: { lat: 0.5435, lng: 123.0580 },
-        zoom: 12,
-        mapTypeId: 'roadmap',
-        styles: isDark ? darkMapStyle : [],
-        zoomControl: true,
-        zoomControlOptions: { position: google.maps.ControlPosition.TOP_RIGHT },
-        fullscreenControl: true,
-        fullscreenControlOptions: { position: google.maps.ControlPosition.TOP_RIGHT }
-    };
-    map = new google.maps.Map(document.getElementById('map'), mapOptions);
-    console.log('✅ Google Maps berhasil diinisialisasi');
-
-    geocoder = new google.maps.Geocoder();
-    directionsService = new google.maps.DirectionsService();
-    directionsRenderer = new google.maps.DirectionsRenderer({
-        map: map,
-        suppressMarkers: true,
-        polylineOptions: {
-            strokeColor: '#FF9800',
-            strokeWeight: 5,
-            strokeOpacity: 0.8
-        }
-    });
-    window.directionsRenderer = directionsRenderer;
-
-    map.addListener('click', async (e) => {
-        if (!pickFromMapActive) return;
-        pickFromMapActive = false;
-        const lat = e.latLng.lat();
-        const lng = e.latLng.lng();
-        let address = await reverseGeocode(lng, lat);
-        if (!address || address.trim() === '') address = '(Titik di peta)';
-        const feature = { geometry: { coordinates: [lng, lat] }, properties: { full_address: address, name: address.split(',')[0] } };
-        selectAddress(feature);
-        showToast('📍 Lokasi dipilih dari peta', 'success');
-    });
-
-    initAutocompleteService();
-    window.initMapDone = true;
 }
 
 function initAutocompleteService() {
@@ -1773,18 +1806,24 @@ window.onload = async () => {
 
     await fetchTransportData();
 
+    // 🔥 Ambil API key Google Maps dari Firebase
+    try {
+        const keySnap = await database.ref('data-jego/apikey-google-maps').once('value');
+        const apiKey = keySnap.val();
+        if (apiKey) {
+            await loadGoogleMaps(apiKey);
+            console.log('✅ Google Maps berhasil dimuat dengan API key dari Firebase');
+        } else {
+            console.warn('⚠️ API key Google Maps tidak ditemukan di Firebase. Peta tidak akan berfungsi.');
+            showToast('API key Google Maps tidak ditemukan', 'warning');
+        }
+    } catch (error) {
+        console.error('❌ Gagal mengambil API key dari Firebase:', error);
+        showToast('Gagal memuat Google Maps', 'error');
+    }
+
+    // Setelah Google Maps termuat, lakukan inisialisasi lainnya
     const orderActive = await cekOrderAktifDanRedirect();
-
-    let attempts = 0;
-    while (!window.initMapDone && attempts < 30) {
-        await new Promise(r => setTimeout(r, 300));
-        attempts++;
-    }
-
-    if (!window.initMapDone) {
-        console.warn('⚠️ Google Maps belum siap, inisialisasi manual');
-        initMap();
-    }
 
     if (orderActive) {
         const loaded = await loadWaitingOrderData();
