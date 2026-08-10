@@ -1032,6 +1032,27 @@
             -moz-user-select: text !important;
             -ms-user-select: text !important;
         }
+
+        /* ===== DEBUG LOG ===== */
+        #debugLog {
+            position: fixed;
+            bottom: 100px;
+            left: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.85);
+            color: #0f0;
+            font-size: 12px;
+            padding: 8px;
+            border-radius: 8px;
+            z-index: 9999;
+            max-height: 120px;
+            overflow-y: auto;
+            display: none;
+            pointer-events: none;
+            font-family: monospace;
+            line-height: 1.4;
+            border: 1px solid #333;
+        }
     </style>
 </head>
 <body>
@@ -1246,12 +1267,45 @@
         <button class="call-end-btn" id="callOverlayEndBtn">❌ Akhiri Panggilan</button>
     </div>
 
+    <!-- ===== DEBUG LOG ===== -->
+    <div id="debugLog"></div>
+
     <!-- ===== LEAFET ===== -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
     </script>
 
-    <!-- ===== FIREBASE + LOGIKA (TIDAK DIUBAH) ===== -->
+    <!-- ===== FIREBASE + LOGIKA ===== -->
     <script>
+        // ==================== DEBUG ====================
+        function debug(msg) {
+            console.log('[DEBUG]', msg);
+            const el = document.getElementById('debugLog');
+            if (el) {
+                const entry = document.createElement('div');
+                entry.textContent = new Date().toLocaleTimeString() + ' ' + msg;
+                el.appendChild(entry);
+                el.scrollTop = el.scrollHeight;
+                el.style.display = 'block';
+                clearTimeout(el._hideTimer);
+                el._hideTimer = setTimeout(() => { el.style.display = 'none'; }, 30000);
+            }
+        }
+
+        // Cek objek Android
+        debug('🔍 Memeriksa objek Android...');
+        debug('typeof Android: ' + typeof Android);
+        if (typeof Android !== 'undefined') {
+            var methods = [];
+            if (Android) {
+                var proto = Object.getPrototypeOf(Android);
+                if (proto) methods = Object.getOwnPropertyNames(proto);
+                else methods = Object.getOwnPropertyNames(Android);
+            }
+            debug('✅ Android tersedia, method: ' + methods.join(', '));
+        } else {
+            debug('❌ Android TIDAK tersedia!');
+        }
+
         // ==================== FIREBASE CONFIG ====================
         const firebaseConfig = {
             apiKey: "AIzaSyCD0pgeZio-LdKqYDtWxcdXcZwyL4ngYQI",
@@ -1325,6 +1379,7 @@
 
         // === FUNGSI DIPANGGIL DARI KOTLIN ===
         window.updateCallStatus = function(status) {
+            debug('📞 updateCallStatus: ' + status);
             const btn = document.getElementById('callBtn');
             if (status === 'idle') {
                 btn.innerHTML = '📞 Telepon';
@@ -2121,6 +2176,12 @@
             // Event listeners
             document.getElementById('mapActionBtn').addEventListener('click', onMapAction);
             document.getElementById('callBtn').addEventListener('click', function() {
+                debug('📞 Tombol Telepon diklik');
+                debug('Android tersedia? ' + (typeof Android !== 'undefined'));
+                if (typeof Android !== 'undefined') {
+                    debug('Android.startVoiceCall ada? ' + (typeof Android.startVoiceCall === 'function'));
+                }
+
                 if (this.innerHTML.includes('Akhiri')) {
                     if (typeof Android !== 'undefined' && Android.endVoiceCall) {
                         Android.endVoiceCall();
@@ -2131,8 +2192,10 @@
                         'Anda akan menghubungi customer melalui panggilan suara. Lanjutkan?',
                         function() {
                             if (typeof Android !== 'undefined' && Android.startVoiceCall) {
+                                debug('Memanggil Android.startVoiceCall(' + orderId + ', ' + customerId + ')');
                                 Android.startVoiceCall(orderId, customerId);
                             } else {
+                                debug('❌ Android.startVoiceCall tidak tersedia');
                                 showToast('Fitur tidak tersedia');
                             }
                         },
