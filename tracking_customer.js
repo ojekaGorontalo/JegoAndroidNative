@@ -539,11 +539,9 @@ async function loadOrderData() {
       }
     }
     
-    // Di dalam loadOrderData(), setelah semua data di-set dan sebelum menampilkan mainContent
-
-// Tampilkan tombol aksi
-document.getElementById('cancelHeaderBtn').classList.remove('hidden');
-document.getElementById('actionsSection').classList.remove('hidden');
+    // Tampilkan tombol aksi
+    document.getElementById('cancelHeaderBtn').classList.remove('hidden');
+    document.getElementById('actionsSection').classList.remove('hidden');
 
     document.getElementById('loadingScreen').style.display = 'none';
     document.getElementById('mainContent').style.display = 'block';
@@ -606,22 +604,21 @@ function updateStatusUI(status, cancelledBy = null) {
   } else {
     cancelBtn.classList.remove('disabled');
   }
-  
-  // Di dalam updateStatusUI(), setelah update cancelBtn
-const chatBtn = document.getElementById('chatBtn');
-const callBtn = document.getElementById('callBtn');
 
-if (status === 'cancelled' || status === 'completed') {
-  chatBtn.classList.add('disabled');
-  callBtn.classList.add('disabled');
-  chatBtn.disabled = true;
-  callBtn.disabled = true;
-} else {
-  chatBtn.classList.remove('disabled');
-  callBtn.classList.remove('disabled');
-  chatBtn.disabled = false;
-  callBtn.disabled = false;
-}
+  // Update tombol Chat dan Panggil
+  const chatBtn = document.getElementById('chatBtn');
+  const callBtn = document.getElementById('callBtn');
+  if (status === 'cancelled' || status === 'completed') {
+    chatBtn.classList.add('disabled');
+    callBtn.classList.add('disabled');
+    chatBtn.disabled = true;
+    callBtn.disabled = true;
+  } else {
+    chatBtn.classList.remove('disabled');
+    callBtn.classList.remove('disabled');
+    chatBtn.disabled = false;
+    callBtn.disabled = false;
+  }
 
   document.getElementById('orderStatus').innerText = info.text;
   if (status === 'arrived' && !isArrivedAlertShowing) showArrivedAlert();
@@ -1076,6 +1073,45 @@ window.addEventListener('popstate', function(event) {
   }
 });
 history.pushState(null, null, location.href);
+
+// ==================== MENCEGAH COPY ====================
+document.addEventListener('copy', function(e) {
+  const target = e.target;
+  const isInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA';
+  const isChat = target.closest('.chat-messages') || target.closest('.chat-input-area');
+  const isRating = target.closest('#ratingModal');
+  const isBonus = target.closest('.bonus-input-group');
+  
+  if (!isInput && !isChat && !isRating && !isBonus) {
+    e.preventDefault();
+    showToast('📋 Menyalin teks tidak diizinkan di halaman ini');
+    return false;
+  }
+});
+
+document.addEventListener('contextmenu', function(e) {
+  const target = e.target;
+  const isInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA';
+  const isChat = target.closest('.chat-messages') || target.closest('.chat-input-area');
+  const isRating = target.closest('#ratingModal');
+  const isBonus = target.closest('.bonus-input-group');
+  
+  if (!isInput && !isChat && !isRating && !isBonus) {
+    e.preventDefault();
+    return false;
+  }
+});
+
+document.addEventListener('dragstart', function(e) {
+  const target = e.target;
+  const isInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA';
+  const isChat = target.closest('.chat-messages') || target.closest('.chat-input-area');
+  
+  if (!isInput && !isChat) {
+    e.preventDefault();
+    return false;
+  }
+});
 
 // ==================== DOM READY ====================
 document.addEventListener('DOMContentLoaded', () => {

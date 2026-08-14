@@ -894,3 +894,27 @@ body {
     padding-top: 8px;
   }
 }
+
+/* ===== MENCEGAH COPY ===== */
+* {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Izinkan copy di input dan textarea (untuk chat dan form) */
+input, textarea, .chat-input, .rating-comment, .bonus-input {
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  user-select: text !important;
+}
+
+/* Izinkan copy di chat messages */
+.chat-messages .message {
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  user-select: text !important;
+}
