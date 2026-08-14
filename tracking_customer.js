@@ -538,6 +538,13 @@ async function loadOrderData() {
         driverVehicleType = order.driver_type;
       }
     }
+    
+    // Di dalam loadOrderData(), setelah semua data di-set dan sebelum menampilkan mainContent
+
+// Tampilkan tombol aksi
+document.getElementById('cancelHeaderBtn').classList.remove('hidden');
+document.getElementById('actionsSection').classList.remove('hidden');
+
     document.getElementById('loadingScreen').style.display = 'none';
     document.getElementById('mainContent').style.display = 'block';
     document.getElementById('pickupAddr').innerText = order.pickup_address || '-';
@@ -599,6 +606,22 @@ function updateStatusUI(status, cancelledBy = null) {
   } else {
     cancelBtn.classList.remove('disabled');
   }
+  
+  // Di dalam updateStatusUI(), setelah update cancelBtn
+const chatBtn = document.getElementById('chatBtn');
+const callBtn = document.getElementById('callBtn');
+
+if (status === 'cancelled' || status === 'completed') {
+  chatBtn.classList.add('disabled');
+  callBtn.classList.add('disabled');
+  chatBtn.disabled = true;
+  callBtn.disabled = true;
+} else {
+  chatBtn.classList.remove('disabled');
+  callBtn.classList.remove('disabled');
+  chatBtn.disabled = false;
+  callBtn.disabled = false;
+}
 
   document.getElementById('orderStatus').innerText = info.text;
   if (status === 'arrived' && !isArrivedAlertShowing) showArrivedAlert();

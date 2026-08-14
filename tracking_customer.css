@@ -18,6 +18,11 @@
   --card-border: rgba(0, 0, 0, 0.05);
 }
 
+/* ===== UTILITY ===== */
+.hidden {
+  display: none !important;
+}
+
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background: linear-gradient(135deg, var(--primary), var(--secondary));
@@ -67,21 +72,23 @@ body {
   visibility: hidden;
 }
 
-/* Tombol Cancel di Header */
+/* Tombol Cancel di Header - UKURAN BESAR */
 .header-cancel-btn {
   background: none;
   border: none;
   color: var(--danger);
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 1.1rem;  /* Diperbesar dari 0.85rem */
+  font-weight: 700;   /* Ditebalkan dari 600 */
   cursor: pointer;
-  padding: 4px 8px;
+  padding: 8px 14px;  /* Diperbesar dari 4px 8px */
   transition: 0.2s;
   font-family: inherit;
   white-space: nowrap;
+  border-radius: 8px;  /* Tambahan: bikin lebih rapi */
 }
 .header-cancel-btn:hover {
   opacity: 0.7;
+  background: rgba(244, 67, 54, 0.05);  /* Tambahan: efek hover */
 }
 .header-cancel-btn:active {
   transform: scale(0.95);
