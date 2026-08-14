@@ -50,12 +50,12 @@ body {
 
 /* ===== HEADER ===== */
 .header {
-  background: white;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
   padding: 12px 16px;
   text-align: center;
   flex-shrink: 0;
   position: relative;
-  border-bottom: 1px solid #eee;
+  border-bottom: none;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -63,7 +63,7 @@ body {
 .header h2 {
   font-size: 1rem;
   font-weight: 600;
-  color: var(--dark-text);
+  color: white;
   flex: 1;
   text-align: center;
 }
@@ -74,21 +74,21 @@ body {
 
 /* Tombol Cancel di Header - UKURAN BESAR */
 .header-cancel-btn {
-  background: none;
-  border: none;
-  color: var(--danger);
-  font-size: 1.1rem;  /* Diperbesar dari 0.85rem */
-  font-weight: 700;   /* Ditebalkan dari 600 */
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 700;
   cursor: pointer;
-  padding: 8px 14px;  /* Diperbesar dari 4px 8px */
+  padding: 8px 14px;
   transition: 0.2s;
   font-family: inherit;
   white-space: nowrap;
-  border-radius: 8px;  /* Tambahan: bikin lebih rapi */
+  border-radius: 8px;
 }
 .header-cancel-btn:hover {
-  opacity: 0.7;
-  background: rgba(244, 67, 54, 0.05);  /* Tambahan: efek hover */
+  opacity: 0.8;
+  background: rgba(255, 255, 255, 0.3);
 }
 .header-cancel-btn:active {
   transform: scale(0.95);
