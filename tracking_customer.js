@@ -1,5 +1,3 @@
-// ===== script.js =====
-
 // ==================== FIREBASE CONFIG ====================
 const firebaseConfig = {
   apiKey: "AIzaSyCD0pgeZio-LdKqYDtWxcdXcZwyL4ngYQI",
@@ -150,9 +148,7 @@ function showCancelledWarning() {
     contentWrapper.prepend(warningDiv);
   }
   const chatBtn = document.getElementById('chatBtn');
-  const cancelBtn = document.getElementById('cancelBtn');
   if (chatBtn) chatBtn.classList.add('disabled');
-  if (cancelBtn) cancelBtn.classList.add('disabled');
 }
 
 function extractDriverFromOrder(order, driverId) {
@@ -596,12 +592,14 @@ function updateStatusUI(status, cancelledBy = null) {
     cancelledDiv.style.display = 'block';
   } else cancelledDiv.style.display = 'none';
 
-  const cancelBtn = document.getElementById('cancelBtn');
+  // Update tombol cancel di header
+  const cancelBtn = document.getElementById('cancelHeaderBtn');
   if (status === 'on_trip' || status === 'completed' || status === 'cancelled') {
     cancelBtn.classList.add('disabled');
   } else {
     cancelBtn.classList.remove('disabled');
   }
+
   document.getElementById('orderStatus').innerText = info.text;
   if (status === 'arrived' && !isArrivedAlertShowing) showArrivedAlert();
 
@@ -870,7 +868,7 @@ function closeChat() {
 
 // ==================== CANCEL ORDER ====================
 async function cancelOrder() {
-  if (document.getElementById('cancelBtn').classList.contains('disabled')) {
+  if (document.getElementById('cancelHeaderBtn').classList.contains('disabled')) {
     await showCustomAlert('Perhatian', 'Perjalanan sudah dalam perjalanan atau selesai, tidak dapat dibatalkan.');
     return;
   }
@@ -1078,8 +1076,8 @@ document.addEventListener('DOMContentLoaded', () => {
       sendCustomerChatMessage(); }
   });
 
-  // Cancel
-  document.getElementById('cancelBtn').onclick = cancelOrder;
+  // Cancel di Header
+  document.getElementById('cancelHeaderBtn').onclick = cancelOrder;
 
   // Retry
   document.getElementById('retryBtn')?.addEventListener('click', () => window.location.reload());

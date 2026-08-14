@@ -1,4 +1,4 @@
-/* ===== style.css ===== */
+/* ===== RESET & VARIABLES ===== */
 * {
   margin: 0;
   padding: 0;
@@ -43,7 +43,7 @@ body {
   position: relative;
 }
 
-/* HEADER */
+/* ===== HEADER ===== */
 .header {
   background: white;
   padding: 12px 16px;
@@ -67,7 +67,32 @@ body {
   visibility: hidden;
 }
 
-/* MAP */
+/* Tombol Cancel di Header */
+.header-cancel-btn {
+  background: none;
+  border: none;
+  color: var(--danger);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 8px;
+  transition: 0.2s;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.header-cancel-btn:hover {
+  opacity: 0.7;
+}
+.header-cancel-btn:active {
+  transform: scale(0.95);
+}
+.header-cancel-btn.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ===== MAP ===== */
 .map-section {
   height: 40dvh;
   min-height: 200px;
@@ -115,7 +140,7 @@ body {
   display: block;
 }
 
-/* CONTENT WRAPPER */
+/* ===== CONTENT WRAPPER ===== */
 .content-wrapper {
   flex: 1;
   min-height: 0;
@@ -132,7 +157,7 @@ body {
   touch-action: pan-y;
 }
 
-/* CARDS */
+/* ===== CARDS ===== */
 .status-card,
 .driver-card,
 .route-card,
@@ -216,7 +241,7 @@ body {
   color: #2e7d32;
 }
 
-/* ROUTE */
+/* ===== ROUTE ===== */
 .route-point {
   display: flex;
   gap: 10px;
@@ -257,7 +282,7 @@ body {
   font-size: 0.85rem;
 }
 
-/* INFO */
+/* ===== INFO ===== */
 .info-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -276,7 +301,7 @@ body {
   font-size: 0.85rem;
 }
 
-/* STATUS BADGE */
+/* ===== STATUS BADGE ===== */
 .status-badge {
   display: inline-block;
   background: var(--primary);
@@ -287,7 +312,7 @@ body {
   font-size: 0.75rem;
 }
 
-/* ACTION BUTTONS */
+/* ===== ACTION BUTTONS ===== */
 .actions-section {
   position: fixed;
   bottom: 0;
@@ -330,16 +355,8 @@ body {
 .call-btn.active-call {
   background: #f44336;
 }
-.cancel-btn {
-  background: var(--danger);
-  color: white;
-}
-.cancel-btn.disabled {
-  opacity: 0.5;
-  pointer-events: none;
-}
 
-/* LOADING / ERROR */
+/* ===== LOADING / ERROR ===== */
 .loading,
 .error-state {
   display: flex;
@@ -365,7 +382,7 @@ body {
   }
 }
 
-/* CHAT OVERLAY */
+/* ===== CHAT OVERLAY ===== */
 .chat-overlay {
   position: fixed;
   top: 0;
@@ -469,7 +486,7 @@ body {
   cursor: pointer;
 }
 
-/* CUSTOM ALERT (arrived) */
+/* ===== CUSTOM ALERT (arrived) ===== */
 .custom-alert {
   position: fixed;
   top: 0;
@@ -518,7 +535,7 @@ body {
   cursor: pointer;
 }
 
-/* RATING MODAL */
+/* ===== RATING MODAL ===== */
 .rating-modal,
 .confirmation-modal {
   display: none;
@@ -609,7 +626,7 @@ body {
   border-color: var(--primary);
 }
 
-/* BONUS */
+/* ===== BONUS ===== */
 .bonus-row {
   margin-top: 12px;
   padding-top: 10px;
@@ -726,7 +743,7 @@ body {
   margin-bottom: 2px;
 }
 
-/* CONFIRM MODAL */
+/* ===== CONFIRM MODAL (digunakan juga untuk custom alert) ===== */
 .confirmation-modal {
   display: none;
   position: fixed;
@@ -797,7 +814,7 @@ body {
   color: white;
 }
 
-/* RESPONSIVE */
+/* ===== RESPONSIVE ===== */
 @media (max-height: 600px) {
   .map-section {
     height: 28dvh;
