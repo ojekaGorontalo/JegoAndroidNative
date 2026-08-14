@@ -669,16 +669,29 @@ async function submitRating() {
   if (selectedRating === 0) { showToast("Pilih rating"); return; }
   let comment = document.getElementById('ratingComment').value;
   let driverData = getDriverData();
-  await database.ref(`ratings/${orderId}/customer_rating`).set({
-    rating: selectedRating,
-    driver_id: driverData.uid,
-    order_id: orderId,
-    customer_id: customerId,
-    comment: comment,
-    created_at: new Date().toISOString()
-  });
-  closeRatingModal();
-  showToast("Terima kasih atas ratingnya");
+  
+  try {
+    await database.ref(`ratings/${orderId}/customer_rating`).set({
+      rating: selectedRating,
+      driver_id: driverData.uid,
+      order_id: orderId,
+      customer_id: customerId,
+      comment: comment,
+      created_at: new Date().toISOString()
+    });
+    closeRatingModal();
+    showToast("✅ Rating berhasil! Kembali ke beranda...");
+    
+    // ===== TAMBAHKAN REDIRECT KE home_pack.html =====
+    setTimeout(() => {
+      window.location.href = 'home_pack.html';
+    }, 1500);
+    // ================================================
+    
+  } catch (err) {
+    console.error(err);
+    showToast("Gagal menyimpan rating: " + err.message);
+  }
 }
 
 function closeRatingModal() { document.getElementById('ratingModal').style.display = 'none'; }
