@@ -18,12 +18,10 @@ body {
   color: #1e293b;
 }
 
-/* ===== UTILITY ===== */
 .hidden {
   display: none !important;
 }
 
-/* ===== APP WRAPPER ===== */
 .app-container {
   display: flex;
   flex-direction: column;
@@ -34,10 +32,9 @@ body {
   overflow: hidden;
 }
 
-/* ===== HEADER ===== */
 .app-header {
   background: linear-gradient(135deg, #FF9800, #FF5722);
-  padding: 12px 16px;
+  padding: 10px 16px;
   flex-shrink: 0;
   display: flex;
   justify-content: space-between;
@@ -45,7 +42,7 @@ body {
   border-bottom: none;
   z-index: 10;
   position: relative;
-  min-height: 56px;
+  min-height: 48px;
 }
 .app-header h1 {
   font-size: 1rem;
@@ -61,23 +58,22 @@ body {
   flex-shrink: 0;
 }
 .app-header .header-right .order-id {
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.8);
-  background: rgba(255, 255, 255, 0.2);
-  padding: 4px 12px;
+  background: rgba(255, 255, 255, 0.15);
+  padding: 3px 10px;
   border-radius: 20px;
 }
 
-/* Tombol Cancel di Header */
 .header-cancel-btn {
   background: rgba(255, 255, 255, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.3);
   color: white;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 700;
   cursor: pointer;
-  padding: 6px 12px;
+  padding: 5px 10px;
   transition: 0.2s;
   font-family: inherit;
   white-space: nowrap;
@@ -96,18 +92,17 @@ body {
   pointer-events: none;
 }
 
-/* ===== MAP AREA ===== */
 .map-area {
   width: 100%;
-  height: 40vh;
-  min-height: 200px;
+  height: 38vh;
+  min-height: 180px;
   background: #dce1e8;
   position: relative;
   flex-shrink: 0;
-  border-bottom-left-radius: 24px;
-  border-bottom-right-radius: 24px;
+  border-bottom-left-radius: 20px;
+  border-bottom-right-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
 }
 #orderMap {
   width: 100%;
@@ -117,25 +112,24 @@ body {
 }
 .map-float-btn {
   position: absolute;
-  bottom: 18px;
-  right: 16px;
+  bottom: 14px;
+  right: 14px;
   background: linear-gradient(95deg, #FF8A00, #e67a00);
   color: #fff;
   border: none;
-  border-radius: 48px;
-  padding: 12px 22px;
+  border-radius: 40px;
+  padding: 10px 18px;
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   display: flex;
   align-items: center;
-  gap: 8px;
-  box-shadow: 0 4px 16px rgba(255, 138, 0, 0.35);
+  gap: 6px;
+  box-shadow: 0 4px 14px rgba(255, 138, 0, 0.3);
   cursor: pointer;
   z-index: 9999;
   transition: all 0.2s ease;
   pointer-events: auto;
   touch-action: manipulation;
-  letter-spacing: 0.3px;
 }
 .map-float-btn:active {
   transform: scale(0.96);
@@ -146,30 +140,28 @@ body {
 }
 .call-status-indicator {
   position: absolute;
-  top: 12px;
+  top: 10px;
   left: 50%;
   transform: translateX(-50%);
   background: rgba(0, 0, 0, 0.75);
   backdrop-filter: blur(6px);
   color: #fff;
-  padding: 6px 18px;
-  border-radius: 30px;
-  font-size: 0.75rem;
+  padding: 4px 14px;
+  border-radius: 24px;
+  font-size: 0.7rem;
   font-weight: 500;
   z-index: 2;
   display: none;
-  letter-spacing: 0.3px;
 }
 .call-status-indicator.active {
   display: block;
 }
 
-/* ===== SCROLL CONTENT ===== */
 .scroll-content {
   flex: 1;
   overflow-y: auto;
-  padding: 14px 16px 120px 16px;
-  padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px));
+  padding: 10px 14px 100px 14px;
+  padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
   background: #f2f4f7;
   -webkit-overflow-scrolling: touch;
 }
@@ -178,7 +170,6 @@ body {
   background: transparent;
 }
 
-/* ===== LOADING / ERROR ===== */
 #loadingView {
   flex: 1;
   display: flex;
@@ -192,8 +183,8 @@ body {
   border: 3px solid #ffe0b2;
   border-top-color: #FF8A00;
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   animation: spin 0.8s linear infinite;
   margin: 0 auto;
 }
@@ -211,77 +202,73 @@ body {
   background: #f2f4f7;
 }
 #errorView .error-icon {
-  font-size: 48px;
-  margin-bottom: 12px;
+  font-size: 42px;
+  margin-bottom: 10px;
 }
 #errorView h3 {
-  font-size: 1.1rem;
+  font-size: 1rem;
   color: #0f172a;
   margin-bottom: 6px;
 }
 #errorView p {
   color: #64748b;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   max-width: 280px;
   line-height: 1.5;
 }
 #errorView .btn-back {
-  margin-top: 20px;
+  margin-top: 16px;
   background: #FF8A00;
   border: none;
-  padding: 12px 28px;
+  padding: 10px 24px;
   border-radius: 40px;
   color: #fff;
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   cursor: pointer;
   transition: 0.15s;
-  box-shadow: 0 4px 12px rgba(255, 138, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(255, 138, 0, 0.25);
 }
 #errorView .btn-back:active {
   transform: scale(0.96);
 }
 
-/* ===== CARDS ===== */
 .card-modern {
   background: #ffffff;
-  border-radius: 20px;
-  padding: 16px 18px;
-  margin-bottom: 14px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+  border-radius: 16px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
   border: 1px solid rgba(0, 0, 0, 0.02);
-  transition: box-shadow 0.15s;
 }
 
-/* ===== STATUS CARD ===== */
 .status-card {
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 8px 12px;
+  gap: 6px 10px;
 }
 .status-card .status-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   flex: 1;
-  min-width: 140px;
+  min-width: 120px;
 }
 .status-card .status-badge {
   background: #fff3e0;
   border-radius: 40px;
-  padding: 6px 16px;
+  padding: 4px 14px;
   font-weight: 700;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: #e65100;
-  letter-spacing: 0.3px;
   white-space: nowrap;
   border: 1px solid rgba(255, 138, 0, 0.15);
 }
 .status-card .status-text {
   font-weight: 500;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: #1e293b;
 }
 .status-card .status-right {
@@ -289,7 +276,7 @@ body {
   flex-shrink: 0;
 }
 .status-card .status-right .eta-label {
-  font-size: 0.6rem;
+  font-size: 0.55rem;
   text-transform: uppercase;
   font-weight: 600;
   color: #94a3b8;
@@ -297,19 +284,18 @@ body {
 }
 .status-card .status-right .eta-value {
   font-weight: 700;
-  font-size: 1rem;
+  font-size: 0.9rem;
   color: #0f172a;
 }
 
-/* ===== DRIVER CARD ===== */
 .driver-card .driver-row {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
 }
 .driver-card .driver-avatar {
-  width: 60px;
-  height: 60px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid #FF8A00;
@@ -321,7 +307,7 @@ body {
   min-width: 0;
 }
 .driver-card .driver-name {
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   font-weight: 700;
   color: #0f172a;
   line-height: 1.2;
@@ -330,18 +316,18 @@ body {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: #64748b;
-  margin: 2px 0;
+  margin: 1px 0;
 }
 .driver-card .driver-rating .stars {
   color: #f59e0b;
   letter-spacing: 1px;
 }
 .driver-card .customer-phone {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: #475569;
-  margin-top: 2px;
+  margin-top: 1px;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -356,23 +342,22 @@ body {
   margin-left: 4px;
 }
 .driver-card .driver-price .price-label {
-  font-size: 0.6rem;
+  font-size: 0.55rem;
   text-transform: uppercase;
   font-weight: 600;
   color: #94a3b8;
   letter-spacing: 0.5px;
 }
 .driver-card .driver-price .price-value {
-  font-size: 1.4rem;
+  font-size: 1.2rem;
   font-weight: 800;
   color: #2e7d32;
   line-height: 1.1;
 }
 
-/* bonus di bawah driver card */
 .bonus-info-driver {
-  margin-top: 12px;
-  padding-top: 12px;
+  margin-top: 8px;
+  padding-top: 8px;
   border-top: 1px dashed #e2e8f0;
   display: none;
   justify-content: flex-end;
@@ -384,40 +369,39 @@ body {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   color: #f97316;
   line-height: 1.6;
   text-align: right;
 }
 .bonus-info-driver .bonus-text .orig-price {
   text-decoration: line-through;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: #94a3b8;
 }
 
-/* ===== ROUTE CARD ===== */
 .route-card-modern .route-item {
   display: flex;
-  gap: 14px;
-  padding: 6px 0;
+  gap: 12px;
+  padding: 4px 0;
   align-items: flex-start;
 }
 .route-card-modern .route-item:not(:last-child) {
   border-bottom: 1px solid #f1f5f9;
-  padding-bottom: 10px;
+  padding-bottom: 8px;
 }
 .route-card-modern .route-icon {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 0.8rem;
+  font-size: 0.7rem;
   flex-shrink: 0;
   color: #fff;
-  margin-top: 2px;
+  margin-top: 1px;
 }
 .route-icon.pickup {
   background: #4caf50;
@@ -434,7 +418,7 @@ body {
 }
 .route-card-modern .route-body .route-addr {
   font-weight: 500;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: #0f172a;
   cursor: pointer;
   text-decoration: underline dotted #94a3b8;
@@ -445,7 +429,7 @@ body {
   opacity: 0.6;
 }
 .route-card-modern .route-body .route-label {
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   color: #94a3b8;
   font-weight: 500;
   letter-spacing: 0.3px;
@@ -453,19 +437,18 @@ body {
   margin-top: 1px;
 }
 
-/* ===== DELIVERY CARD ===== */
 .delivery-card-modern {
   background: #fff8ed;
-  border-radius: 20px;
-  padding: 16px 18px;
-  margin-bottom: 14px;
+  border-radius: 16px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
   border-left: 4px solid #FF8A00;
 }
 .delivery-card-modern .delivery-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px 16px;
-  font-size: 0.82rem;
+  gap: 6px 12px;
+  font-size: 0.78rem;
 }
 .delivery-card-modern .delivery-grid .field {
   display: flex;
@@ -474,7 +457,7 @@ body {
 .delivery-card-modern .delivery-grid .field .label {
   font-weight: 600;
   color: #475569;
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   text-transform: uppercase;
   letter-spacing: 0.3px;
   display: flex;
@@ -488,42 +471,41 @@ body {
   margin-top: 1px;
 }
 
-/* ===== ACTION BAR ===== */
+/* ===== ACTION BAR - LEBIH RENDAH ===== */
 .action-bar-modern {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
   background: linear-gradient(135deg, #FF9800, #FF5722);
-  padding: 10px 16px 24px 16px;
-  padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  padding: 8px 14px 14px 14px;
+  padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
   border-top: none;
-  box-shadow: 0 -4px 20px rgba(255, 138, 0, 0.15);
+  box-shadow: 0 -4px 16px rgba(255, 138, 0, 0.12);
   display: flex;
   justify-content: space-between;
-  gap: 10px;
+  gap: 8px;
   z-index: 20;
   pointer-events: none;
 }
 .action-bar-modern .action-btn-modern {
   flex: 1;
-  height: 54px;
-  border-radius: 48px;
+  height: 44px;
+  border-radius: 40px;
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   border: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 4px;
   cursor: pointer;
   transition: all 0.15s ease;
   pointer-events: auto;
   touch-action: manipulation;
   position: relative;
-  padding: 0 8px;
-  letter-spacing: 0.2px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  padding: 0 6px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
 }
 .action-btn-modern:active {
   transform: scale(0.96);
@@ -537,7 +519,6 @@ body {
   background: rgba(255, 255, 255, 0.2);
   color: white;
   border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
 }
 .action-btn-modern.btn-outline:active {
   background: rgba(255, 255, 255, 0.35);
@@ -548,40 +529,37 @@ body {
   right: -4px;
   background: #ef4444;
   color: #fff;
-  font-size: 0.6rem;
+  font-size: 0.55rem;
   font-weight: 700;
-  min-width: 20px;
-  height: 20px;
-  border-radius: 20px;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 6px;
+  padding: 0 5px;
   box-shadow: 0 2px 8px rgba(239, 68, 68, 0.35);
-  transform: scale(1);
-  transition: transform 0.2s;
 }
 .action-btn-modern .badge-unread.hidden {
   display: none;
 }
 
-/* ===== TOAST ===== */
 .toast-modern {
   position: fixed;
-  bottom: 100px;
+  bottom: 80px;
   left: 20px;
   right: 20px;
   background: #1e293b;
   color: #fff;
   text-align: center;
-  padding: 14px 20px;
+  padding: 12px 18px;
   border-radius: 40px;
   opacity: 0;
   transition: opacity 0.25s ease, transform 0.25s ease;
   z-index: 1100;
   pointer-events: none;
   font-weight: 500;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
   transform: translateY(8px);
 }
@@ -590,7 +568,6 @@ body {
   transform: translateY(0);
 }
 
-/* ===== MODAL ===== */
 .modal-overlay {
   display: none;
   position: fixed;
@@ -612,9 +589,9 @@ body {
 .modal-card {
   background: #fff;
   width: 100%;
-  max-width: 340px;
-  border-radius: 28px;
-  padding: 28px 24px 24px;
+  max-width: 320px;
+  border-radius: 24px;
+  padding: 24px 20px 20px;
   text-align: center;
   box-shadow: 0 24px 48px rgba(0, 0, 0, 0.2);
   animation: modalFade 0.2s ease;
@@ -624,28 +601,28 @@ body {
   to { opacity: 1; transform: scale(1) translateY(0); }
 }
 .modal-card h3 {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   color: #0f172a;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 .modal-card p {
   color: #475569;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   line-height: 1.6;
-  margin-bottom: 18px;
+  margin-bottom: 16px;
 }
 .modal-card .modal-actions {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   margin-top: 4px;
 }
 .modal-card .modal-actions .modal-btn {
   flex: 1;
-  padding: 12px;
+  padding: 10px;
   border: none;
   border-radius: 40px;
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   cursor: pointer;
   transition: 0.15s;
 }
@@ -659,21 +636,15 @@ body {
 .modal-btn-confirm {
   background: linear-gradient(135deg, #FF8A00, #e67a00);
   color: #fff;
-  box-shadow: 0 4px 12px rgba(255, 138, 0, 0.3);
-}
-.modal-btn-danger {
-  background: #f44336;
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
+  box-shadow: 0 4px 12px rgba(255, 138, 0, 0.25);
 }
 
-/* ===== RATING MODAL ===== */
 .rating-stars {
   display: flex;
   justify-content: center;
-  gap: 10px;
-  font-size: 2.2rem;
-  margin: 12px 0;
+  gap: 8px;
+  font-size: 2rem;
+  margin: 10px 0;
 }
 .rating-stars span {
   cursor: pointer;
@@ -690,15 +661,15 @@ body {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 6px;
-  margin: 10px 0;
+  gap: 4px;
+  margin: 8px 0;
 }
 .preset-btns .preset-btn {
   background: #f1f5f9;
   border: none;
   border-radius: 30px;
-  padding: 5px 14px;
-  font-size: 0.7rem;
+  padding: 4px 12px;
+  font-size: 0.65rem;
   font-weight: 500;
   color: #1e293b;
   cursor: pointer;
@@ -710,23 +681,22 @@ body {
 }
 .rating-comment {
   width: 100%;
-  margin: 12px 0 16px;
-  padding: 10px 14px;
-  border-radius: 16px;
+  margin: 10px 0 14px;
+  padding: 8px 12px;
+  border-radius: 14px;
   border: 1px solid #e2e8f0;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-family: inherit;
   resize: vertical;
-  min-height: 60px;
+  min-height: 50px;
   outline: none;
   transition: 0.15s;
 }
 .rating-comment:focus {
   border-color: #FF8A00;
-  box-shadow: 0 0 0 3px rgba(255, 138, 0, 0.1);
+  box-shadow: 0 0 0 3px rgba(255, 138, 0, 0.08);
 }
 
-/* ===== CHAT OVERLAY ===== */
 .chat-overlay {
   position: fixed;
   top: 0;
@@ -743,17 +713,16 @@ body {
 }
 .chat-header-modern {
   background: linear-gradient(135deg, #FF9800, #FF5722);
-  padding: 14px 18px;
+  padding: 12px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   border-bottom: none;
   flex-shrink: 0;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
 }
 .chat-header-modern .chat-title {
   font-weight: 700;
-  font-size: 1rem;
+  font-size: 0.95rem;
   color: white;
   display: flex;
   align-items: center;
@@ -762,7 +731,7 @@ body {
 .chat-header-modern .chat-close {
   background: none;
   border: none;
-  font-size: 1.6rem;
+  font-size: 1.4rem;
   color: rgba(255, 255, 255, 0.8);
   cursor: pointer;
   padding: 0 4px;
@@ -774,7 +743,7 @@ body {
 .chat-messages {
   flex: 1;
   overflow-y: auto;
-  padding: 16px 14px;
+  padding: 12px 12px;
   background: #f2f4f7;
   display: flex;
   flex-direction: column;
@@ -782,9 +751,9 @@ body {
 }
 .chat-messages .message {
   max-width: 80%;
-  padding: 8px 14px;
-  border-radius: 18px;
-  font-size: 0.9rem;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 0.85rem;
   word-wrap: break-word;
   position: relative;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
@@ -801,7 +770,7 @@ body {
   border-bottom-left-radius: 4px;
 }
 .chat-messages .message .tick {
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   margin-left: 4px;
   color: #9e9e9e;
 }
@@ -812,27 +781,27 @@ body {
   color: #2196f3;
 }
 .chat-messages .message .time {
-  font-size: 0.6rem;
+  font-size: 0.55rem;
   color: #94a3b8;
   display: block;
   text-align: right;
-  margin-top: 4px;
+  margin-top: 3px;
 }
 .chat-input-area {
   display: flex;
-  padding: 10px 14px;
+  padding: 8px 12px;
   background: #ffffff;
   border-top: 1px solid #e2e8f0;
-  gap: 10px;
+  gap: 8px;
   flex-shrink: 0;
-  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
 }
 .chat-input-area .chat-input {
   flex: 1;
-  padding: 10px 16px;
+  padding: 8px 14px;
   border: 1px solid #e2e8f0;
   border-radius: 30px;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-family: inherit;
   outline: none;
   background: #f8fafc;
@@ -841,25 +810,24 @@ body {
 .chat-input-area .chat-input:focus {
   border-color: #FF8A00;
   background: #fff;
-  box-shadow: 0 0 0 3px rgba(255, 138, 0, 0.08);
+  box-shadow: 0 0 0 3px rgba(255, 138, 0, 0.06);
 }
 .chat-input-area .chat-send {
   background: #FF8A00;
   color: #fff;
   border: none;
   border-radius: 30px;
-  padding: 0 20px;
+  padding: 0 16px;
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   cursor: pointer;
   transition: 0.15s;
-  box-shadow: 0 2px 8px rgba(255, 138, 0, 0.25);
+  box-shadow: 0 2px 8px rgba(255, 138, 0, 0.2);
 }
 .chat-input-area .chat-send:active {
   transform: scale(0.95);
 }
 
-/* ===== CALL OVERLAY ===== */
 .call-overlay {
   position: fixed;
   top: 0;
@@ -882,35 +850,34 @@ body {
   display: flex;
 }
 .call-overlay .call-status {
-  font-size: 2.6rem;
+  font-size: 2.2rem;
   font-weight: 700;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 .call-overlay .call-sub {
-  font-size: 1.1rem;
+  font-size: 1rem;
   opacity: 0.8;
-  margin-bottom: 44px;
+  margin-bottom: 36px;
 }
 .call-overlay .call-end-btn {
   background: #f44336;
   border: none;
-  padding: 16px 48px;
+  padding: 14px 40px;
   border-radius: 50px;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: #fff;
   cursor: pointer;
-  box-shadow: 0 4px 24px rgba(244, 67, 54, 0.4);
+  box-shadow: 0 4px 20px rgba(244, 67, 54, 0.35);
   transition: transform 0.15s;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 .call-overlay .call-end-btn:active {
   transform: scale(0.95);
 }
 
-/* ===== UTILITY ===== */
 #mainContent {
   display: none;
   flex-direction: column;
@@ -927,88 +894,38 @@ body {
   display: flex;
 }
 
-/* ===== MAP MARKER VEHICLE ===== */
 .vehicle-marker {
   background: transparent !important;
   border: none !important;
 }
 
-/* ===== input, textarea user-select ===== */
-input,
-textarea {
+.distance-label {
+  background: transparent !important;
+  border: none !important;
+  pointer-events: none;
+  z-index: 10000 !important;
+}
+
+input, textarea {
   user-select: text !important;
   -webkit-user-select: text !important;
   -moz-user-select: text !important;
   -ms-user-select: text !important;
 }
 
-/* ===== DEBUG LOG ===== */
-#debugLog {
-  position: fixed;
-  bottom: 100px;
-  left: 10px;
-  right: 10px;
-  background: rgba(0, 0, 0, 0.85);
-  color: #0f0;
-  font-size: 12px;
-  padding: 8px;
-  border-radius: 8px;
-  z-index: 9999;
-  max-height: 120px;
-  overflow-y: auto;
-  display: none;
-  pointer-events: none;
-  font-family: monospace;
-  line-height: 1.4;
-  border: 1px solid #333;
-}
-
-/* ===== RESPONSIVE ===== */
 @media (max-width: 400px) {
-  .app-header h1 {
-    font-size: 1rem;
-  }
-  .driver-card .driver-price .price-value {
-    font-size: 1.2rem;
-  }
-  .action-bar-modern .action-btn-modern {
-    font-size: 0.75rem;
-    height: 48px;
-    gap: 4px;
-  }
-  .driver-card .driver-name {
-    font-size: 0.95rem;
-  }
-  .delivery-card-modern .delivery-grid {
-    grid-template-columns: 1fr;
-    gap: 4px 0;
-  }
-  .delivery-card-modern .delivery-grid .field {
-    flex-direction: row;
-    justify-content: space-between;
-    padding: 4px 0;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
-  }
-  .delivery-card-modern .delivery-grid .field .label {
-    font-size: 0.7rem;
-  }
-  .delivery-card-modern .delivery-grid .field .value {
-    font-size: 0.8rem;
-    text-align: right;
-  }
-  .header-cancel-btn {
-    font-size: 0.75rem;
-    padding: 4px 10px;
-  }
+  .app-header h1 { font-size: 0.9rem; }
+  .driver-card .driver-price .price-value { font-size: 1rem; }
+  .action-bar-modern .action-btn-modern { font-size: 0.7rem; height: 40px; }
+  .driver-card .driver-name { font-size: 0.85rem; }
+  .delivery-card-modern .delivery-grid { grid-template-columns: 1fr; gap: 4px 0; }
+  .delivery-card-modern .delivery-grid .field { flex-direction: row; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid rgba(0,0,0,0.04); }
+  .delivery-card-modern .delivery-grid .field .label { font-size: 0.65rem; }
+  .delivery-card-modern .delivery-grid .field .value { font-size: 0.75rem; text-align: right; }
+  .header-cancel-btn { font-size: 0.7rem; padding: 4px 8px; }
 }
 @media (min-width: 600px) {
-  .scroll-content {
-    padding: 18px 24px 120px 24px;
-  }
-  .card-modern {
-    padding: 20px 24px;
-  }
-  .action-bar-modern {
-    padding: 12px 24px 28px 24px;
-  }
+  .scroll-content { padding: 14px 20px 100px 20px; }
+  .card-modern { padding: 16px 20px; }
+  .action-bar-modern { padding: 10px 20px 16px 20px; }
 }

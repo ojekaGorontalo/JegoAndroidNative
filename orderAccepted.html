@@ -5,14 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Lacak Pengiriman - JeGo Driver</title>
 
-  <!-- External Libraries -->
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <!-- Eruda Debugger -->
   <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -26,7 +24,6 @@
 <body>
 
   <div class="app-container">
-    <!-- ===== HEADER ===== -->
     <header class="app-header">
       <button id="cancelHeaderBtn" class="header-cancel-btn hidden">✖ Batalkan Perjalanan</button>
       <h1></h1>
@@ -35,13 +32,11 @@
       </div>
     </header>
 
-    <!-- ===== LOADING ===== -->
     <div id="loadingView">
       <div class="spinner"></div>
       <p style="color:#64748b; font-weight:500;">Memuat perjalanan...</p>
     </div>
 
-    <!-- ===== ERROR ===== -->
     <div id="errorView">
       <div class="error-icon">⚠️</div>
       <h3>Data Tidak Tersedia</h3>
@@ -49,19 +44,14 @@
       <button class="btn-back" onclick="window.location.href='index.html'">Kembali</button>
     </div>
 
-    <!-- ===== MAIN CONTENT ===== -->
     <div id="mainContent">
-      <!-- MAP -->
       <div class="map-area" id="mapSection">
         <div id="orderMap"></div>
         <div id="callStatusIndicator" class="call-status-indicator">📞 Panggilan berlangsung</div>
         <button id="mapActionBtn" class="map-float-btn" style="display:none;">📍 Sampai di Lokasi</button>
       </div>
 
-      <!-- SCROLL -->
       <div class="scroll-content">
-
-        <!-- === CARD STATUS === -->
         <div class="card-modern status-card">
           <div class="status-left">
             <span class="status-badge" id="statusBadge">⏳ Memuat</span>
@@ -73,7 +63,6 @@
           </div>
         </div>
 
-        <!-- === CARD DRIVER (customer) === -->
         <div class="card-modern driver-card">
           <div class="driver-row">
             <img id="customerPhoto" class="driver-avatar" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Foto" />
@@ -93,8 +82,6 @@
               <div class="price-value" id="tripPriceLarge">Rp 0</div>
             </div>
           </div>
-
-          <!-- Bonus info -->
           <div class="bonus-info-driver" id="bonusInfoDriver">
             <div class="bonus-text">
               <span class="orig-price" id="originalPriceSpan">Rp 0</span>
@@ -102,17 +89,12 @@
               <span>💰 Anda terima: <strong id="finalPriceSpan">Rp 0</strong></span>
             </div>
           </div>
-
-          <!-- Jarak -->
           <div style="display:flex; justify-content:flex-end; margin-top:6px; font-size:0.75rem; color:#94a3b8;">
             <span>📏 Jarak: <strong id="tripDistance" style="color:#1e293b;">-</strong></span>
           </div>
-
-          <!-- Tombol hubungi native (sembunyi, tetap ada untuk JS) -->
           <button class="call-button" id="nativeCallBtn" style="display:none;">📞 Hubungi</button>
         </div>
 
-        <!-- === CARD LOKASI === -->
         <div class="card-modern route-card-modern">
           <div class="route-item" id="pickupRouteItem">
             <div class="route-icon pickup">A</div>
@@ -137,7 +119,6 @@
           </div>
         </div>
 
-        <!-- === CARD PENGIRIMAN (kurir) === -->
         <div class="delivery-card-modern" id="deliveryInfoCard" style="display:none;">
           <div class="delivery-grid">
             <div class="field">
@@ -158,11 +139,9 @@
             </div>
           </div>
         </div>
+      </div>
+    </div>
 
-      </div><!-- /scroll-content -->
-    </div><!-- /mainContent -->
-
-    <!-- ===== ACTION BAR ===== -->
     <div class="action-bar-modern" id="actionsSection" style="display:none;">
       <button class="action-btn-modern btn-outline" id="chatIconBtn">
         💬 Chat
@@ -172,13 +151,10 @@
         📞 Telepon
       </button>
     </div>
+  </div>
 
-  </div><!-- /app-container -->
-
-  <!-- ===== TOAST ===== -->
   <div id="toast" class="toast-modern"></div>
 
-  <!-- ===== RATING MODAL ===== -->
   <div id="ratingModal" class="modal-overlay">
     <div class="modal-card">
       <h3>⭐ Beri Rating Customer</h3>
@@ -198,7 +174,6 @@
     </div>
   </div>
 
-  <!-- ===== CONFIRM MODAL ===== -->
   <div id="confirmModal" class="modal-overlay">
     <div class="modal-card">
       <h3 id="confirmTitle">Konfirmasi</h3>
@@ -210,7 +185,6 @@
     </div>
   </div>
 
-  <!-- ===== CHAT OVERLAY ===== -->
   <div id="chatOverlay" class="chat-overlay">
     <div class="chat-header-modern">
       <span class="chat-title">💬 Chat dengan Customer</span>
@@ -223,15 +197,11 @@
     </div>
   </div>
 
-  <!-- ===== CALL OVERLAY ===== -->
   <div id="callOverlay" class="call-overlay">
     <div class="call-status" id="callOverlayStatus">📞 Memanggil...</div>
     <div class="call-sub" id="callOverlaySub">Menghubungkan ke customer</div>
     <button class="call-end-btn" id="callOverlayEndBtn">❌ Akhiri Panggilan</button>
   </div>
-
-  <!-- ===== DEBUG LOG ===== -->
-  <div id="debugLog"></div>
 
   <script src="orderAccepted.js"></script>
 </body>

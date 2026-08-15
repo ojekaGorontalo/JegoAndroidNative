@@ -1,33 +1,3 @@
-// ==================== DEBUG ====================
-function debug(msg) {
-  console.log('[DEBUG]', msg);
-  const el = document.getElementById('debugLog');
-  if (el) {
-    const entry = document.createElement('div');
-    entry.textContent = new Date().toLocaleTimeString() + ' ' + msg;
-    el.appendChild(entry);
-    el.scrollTop = el.scrollHeight;
-    el.style.display = 'block';
-    clearTimeout(el._hideTimer);
-    el._hideTimer = setTimeout(() => { el.style.display = 'none'; }, 30000);
-  }
-}
-
-// Cek objek Android
-debug('🔍 Memeriksa objek Android...');
-debug('typeof Android: ' + typeof Android);
-if (typeof Android !== 'undefined') {
-  var methods = [];
-  if (Android) {
-    var proto = Object.getPrototypeOf(Android);
-    if (proto) methods = Object.getOwnPropertyNames(proto);
-    else methods = Object.getOwnPropertyNames(Android);
-  }
-  debug('✅ Android tersedia, method: ' + methods.join(', '));
-} else {
-  debug('❌ Android TIDAK tersedia!');
-}
-
 // ==================== FIREBASE CONFIG ====================
 const firebaseConfig = {
   apiKey: "AIzaSyCD0pgeZio-LdKqYDtWxcdXcZwyL4ngYQI",
@@ -42,12 +12,9 @@ const auth = firebase.auth();
 const database = firebase.database();
 
 // ==================== GLOBAL ====================
-let orderData = null,
-  orderId = null,
-  orderRef = null;
+let orderData = null, orderId = null, orderRef = null;
 let currentStatus = '';
-let orderMap = null,
-  routePolyline = null;
+let orderMap = null, routePolyline = null;
 let selectedRating = 0;
 let customerId = null;
 let chatRef = null;
@@ -56,9 +23,15 @@ let onesignalApiKey = null;
 let driverUid = null;
 let driverMarker = null;
 
+let currentDriverLat = null;
+let currentDriverLng = null;
+let routeDriverToPickup = null;
+let routePickupToDest = null;
+let distanceLabelMarkers = [];
+let routesDrawn = false;
+
 // ==================== LOCATION ====================
-let lastSentLat = null;
-let lastSentLng = null;
+let lastSentLat = null, lastSentLng = null;
 const LOCATION_THRESHOLD_KM = 0.05;
 let locationWatchId = null;
 let isLocationTracking = false;
@@ -68,8 +41,8 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
   const R = 6371;
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
   return R * c;
 }
 
@@ -84,7 +57,7 @@ function showToast(msg) {
 
 function getDriverData() { return JSON.parse(localStorage.getItem('jego_logged_in_driver') || '{}'); }
 
-function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m])); }
+function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;' }[m])); }
 
 // ==================== CALL OVERLAY ====================
 function showCallOverlay(status, sub) {
@@ -97,9 +70,7 @@ function hideCallOverlay() {
   document.getElementById('callOverlay').classList.remove('active');
 }
 
-// === FUNGSI DIPANGGIL DARI KOTLIN ===
 window.updateCallStatus = function(status) {
-  debug('📞 updateCallStatus: ' + status);
   const btn = document.getElementById('callBtn');
   if (status === 'idle') {
     btn.innerHTML = '📞 Telepon';
@@ -174,11 +145,11 @@ function getVehicleIcon(transportType) {
     else if (t.includes('bus')) iconHtml = '🚌';
   }
   return L.divIcon({
-    html: `<div style="font-size:32px; text-align:center; line-height:32px; background:rgba(255,255,255,0.9); border-radius:50%; padding:6px; border:3px solid #FF8A00; box-shadow: 0 4px 16px rgba(0,0,0,0.2);">${iconHtml}</div>`,
+    html: `<div style="font-size:32px; text-align:center; line-height:32px; background:rgba(255,255,255,0.9); border-radius:50%; padding:6px; border:3px solid #FF8A00; box-shadow:0 4px 16px rgba(0,0,0,0.2);">${iconHtml}</div>`,
     className: 'vehicle-marker',
-    iconSize: [44, 44],
-    iconAnchor: [22, 22],
-    popupAnchor: [0, -22]
+    iconSize: [44,44],
+    iconAnchor: [22,22],
+    popupAnchor: [0,-22]
   });
 }
 
@@ -186,11 +157,11 @@ function updateDriverMarker(lat, lng, heading) {
   if (!orderMap) return;
   if (!driverMarker) {
     const icon = getVehicleIcon(orderData?.transport_type);
-    driverMarker = L.marker([lat, lng], { icon, rotationAngle: heading || 0, rotationOrigin: 'center center' }).addTo(orderMap);
+    driverMarker = L.marker([lat,lng], { icon, rotationAngle: heading||0, rotationOrigin:'center center' }).addTo(orderMap);
     driverMarker.bindPopup('🚗 Posisi Anda');
   } else {
-    driverMarker.setLatLng([lat, lng]);
-    if (driverMarker.setRotationAngle) driverMarker.setRotationAngle(heading || 0);
+    driverMarker.setLatLng([lat,lng]);
+    if (driverMarker.setRotationAngle) driverMarker.setRotationAngle(heading||0);
   }
 }
 
@@ -198,11 +169,32 @@ function updateDriverMarker(lat, lng, heading) {
 function startLocationTracking() {
   if (!navigator.geolocation || isLocationTracking) return;
   isLocationTracking = true;
+  let firstLocation = true;
+
   locationWatchId = navigator.geolocation.watchPosition(
     (position) => {
       const { latitude, longitude, heading, speed } = position.coords;
       if (!driverUid) return;
-      updateDriverMarker(latitude, longitude, heading || 0);
+
+      currentDriverLat = latitude;
+      currentDriverLng = longitude;
+      updateDriverMarker(latitude, longitude, heading||0);
+
+      // Jika lokasi pertama kali didapat, perbarui rute
+      if (firstLocation && orderData && orderData.pickup_lat && orderData.dest_lat) {
+        firstLocation = false;
+        fetchAndDisplayRoutes(
+          latitude, longitude,
+          orderData.pickup_lat, orderData.pickup_lng,
+          orderData.via_lat, orderData.via_lng,
+          orderData.dest_lat, orderData.dest_lng
+        );
+        // Perbarui bounds peta agar semua rute terlihat
+        if (routePickupToDest && orderMap) {
+          orderMap.fitBounds(routePickupToDest.getBounds(), { padding: [40, 40] });
+        }
+      }
+
       let shouldUpdate = false;
       if (lastSentLat === null || lastSentLng === null) {
         shouldUpdate = true;
@@ -212,18 +204,15 @@ function startLocationTracking() {
       }
       if (shouldUpdate) {
         database.ref(`driver_locations/${driverUid}`).update({
-          latitude,
-          longitude,
-          heading: heading || 0,
-          speed: speed || 0,
-          timestamp: Date.now(),
-          orderId: orderId
-        }).catch(() => {});
+          latitude, longitude, heading: heading||0, speed: speed||0,
+          timestamp: Date.now(), orderId: orderId
+        }).catch(()=>{});
         lastSentLat = latitude;
         lastSentLng = longitude;
       }
     },
-    (error) => console.warn("Geolocation error:", error.message), { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
+    (error) => console.warn("Geolocation error:", error.message),
+    { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
   );
 }
 
@@ -344,7 +333,7 @@ function addMessageToChat(msg) {
   let div = document.createElement('div');
   let senderClass = (msg.sender === 'driver') ? 'driver' : 'customer';
   div.className = `message ${senderClass}`;
-  let timeStr = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+  let timeStr = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' }) : '';
   let tickHtml = '';
   if (msg.sender === 'driver') {
     tickHtml = (msg.readBy && msg.readBy.customer) ? '<span class="tick read">✓✓</span>' : '<span class="tick delivered">✓</span>';
@@ -373,7 +362,8 @@ async function sendDriverChatMessage() {
     input.value = '';
     await sendNotificationToCustomer(
       `💬 Pesan dari driver ${driverData.name || 'Driver'}`,
-      text.length > 60 ? text.slice(0, 60) + '...' : text, { chat: true, sender: 'driver' }
+      text.length > 60 ? text.slice(0,60)+'...' : text,
+      { chat: true, sender: 'driver' }
     );
   } catch (err) {
     console.error('Gagal mengirim chat:', err);
@@ -418,7 +408,7 @@ async function getOrderId() {
   const snapshot = await database.ref('orders').orderByChild('driver_id').equalTo(driver.uid).once('value');
   const orders = snapshot.val();
   if (orders) {
-    const activeStatus = ['accepted', 'on_the_way', 'arrived', 'on_trip'];
+    const activeStatus = ['accepted','on_the_way','arrived','on_trip'];
     for (let key in orders) {
       if (activeStatus.includes(orders[key].status)) return key;
     }
@@ -466,8 +456,7 @@ function updateActionButtons() {
   const mapBtn = document.getElementById('mapActionBtn');
   const cancelBtn = document.getElementById('cancelHeaderBtn');
   if (!mapBtn) return;
-  
-  // Update cancel button di header
+
   if (currentStatus === 'completed' || currentStatus === 'cancelled') {
     mapBtn.style.display = 'none';
     cancelBtn.classList.add('disabled');
@@ -477,68 +466,47 @@ function updateActionButtons() {
     cancelBtn.classList.remove('disabled');
     cancelBtn.classList.remove('hidden');
   }
-  
+
   switch (currentStatus) {
-    case 'accepted':
-      mapBtn.style.display = 'flex';
-      mapBtn.innerHTML = '🚗 Saya Berangkat';
-      break;
-    case 'on_the_way':
-      mapBtn.style.display = 'flex';
-      mapBtn.innerHTML = '📍 Sampai di Lokasi Jemput';
-      break;
-    case 'arrived':
-      mapBtn.style.display = 'flex';
-      mapBtn.innerHTML = '🏁 Mulai Perjalanan';
-      break;
-    case 'on_trip':
-      mapBtn.style.display = 'flex';
-      mapBtn.innerHTML = '✅ Selesaikan Perjalanan';
-      break;
-    default:
-      mapBtn.style.display = 'none';
+    case 'accepted':   mapBtn.style.display = 'flex'; mapBtn.innerHTML = '🚗 Saya Berangkat'; break;
+    case 'on_the_way': mapBtn.style.display = 'flex'; mapBtn.innerHTML = '📍 Sampai di Lokasi Jemput'; break;
+    case 'arrived':    mapBtn.style.display = 'flex'; mapBtn.innerHTML = '🏁 Mulai Perjalanan'; break;
+    case 'on_trip':    mapBtn.style.display = 'flex'; mapBtn.innerHTML = '✅ Selesaikan Perjalanan'; break;
+    default:           mapBtn.style.display = 'none';
   }
-  // update subtext status
   const subText = document.getElementById('statusSubText');
   if (subText) {
     const map = {
-      'accepted': 'Menunggu konfirmasi driver',
-      'on_the_way': 'Sedang menuju lokasi Jemput',
-      'arrived': 'Anda telah tiba di lokasi',
-      'on_trip': 'Perjalanan sedang berlangsung',
-      'completed': 'Perjalanan selesai',
-      'cancelled': 'Perjalanan dibatalkan'
+      'accepted':'Menunggu konfirmasi driver',
+      'on_the_way':'Sedang menuju lokasi Jemput',
+      'arrived':'Anda telah tiba di lokasi',
+      'on_trip':'Perjalanan sedang berlangsung',
+      'completed':'Perjalanan selesai',
+      'cancelled':'Perjalanan dibatalkan'
     };
     subText.textContent = map[currentStatus] || 'Memuat status...';
   }
-  // estimasi waktu (placeholder)
   const eta = document.getElementById('etaValue');
   if (eta) {
-    if (currentStatus === 'on_the_way' || currentStatus === 'accepted') {
-      eta.textContent = '5–8 menit';
-    } else if (currentStatus === 'arrived') {
-      eta.textContent = 'Telah tiba';
-    } else if (currentStatus === 'on_trip') {
-      eta.textContent = 'Dalam perjalanan';
-    } else if (currentStatus === 'completed') {
-      eta.textContent = 'Selesai';
-    } else {
-      eta.textContent = '-';
-    }
+    if (currentStatus === 'on_the_way' || currentStatus === 'accepted') eta.textContent = '5–8 menit';
+    else if (currentStatus === 'arrived') eta.textContent = 'Telah tiba';
+    else if (currentStatus === 'on_trip') eta.textContent = 'Dalam perjalanan';
+    else if (currentStatus === 'completed') eta.textContent = 'Selesai';
+    else eta.textContent = '-';
   }
 }
 
 async function onMapAction() {
   if (!orderData) { showToast("Data order belum siap"); return; }
   if (currentStatus === 'accepted') {
-    await database.ref('orders/' + orderId).update({ status: 'on_the_way', updated_at: new Date().toISOString() });
+    await database.ref('orders/'+orderId).update({ status:'on_the_way', updated_at: new Date().toISOString() });
     showToast("Status: Menuju lokasi jemput");
   } else if (currentStatus === 'on_the_way') {
-    await database.ref('orders/' + orderId).update({ status: 'arrived', arrived_at: new Date().toISOString() });
+    await database.ref('orders/'+orderId).update({ status:'arrived', arrived_at: new Date().toISOString() });
     showToast("Kami telah memberi tahu customer bahwa Anda telah tiba");
-    await sendNotificationToCustomer("📍 Driver Telah Tiba", `Driver ${getDriverData().name || 'Anda'} sudah sampai di lokasi jemput.`, { arrived: true });
+    await sendNotificationToCustomer("📍 Driver Telah Tiba", `Driver ${getDriverData().name||'Anda'} sudah sampai di lokasi jemput.`, { arrived: true });
   } else if (currentStatus === 'arrived') {
-    await database.ref('orders/' + orderId).update({ status: 'on_trip', trip_started_at: new Date().toISOString() });
+    await database.ref('orders/'+orderId).update({ status:'on_trip', trip_started_at: new Date().toISOString() });
     showToast("Perjalanan dimulai");
   } else if (currentStatus === 'on_trip') completeTrip();
   else showToast("Aksi tidak tersedia");
@@ -552,7 +520,7 @@ async function completeTrip() {
     'Apakah Anda yakin ingin menyelesaikan perjalanan ini?',
     async () => {
       try {
-        await database.ref('orders/' + orderId).update({ status: 'completed', completed_at: new Date().toISOString() });
+        await database.ref('orders/'+orderId).update({ status:'completed', completed_at: new Date().toISOString() });
         const price = orderData.price || 0;
         const [potonganSnap, pajakSnap] = await Promise.all([
           database.ref('data-jego/potongan').once('value'),
@@ -560,21 +528,17 @@ async function completeTrip() {
         ]);
         const potongan = potonganSnap.val() !== null ? potonganSnap.val() : 0;
         const pajak = pajakSnap.val() !== null ? pajakSnap.val() : 0;
-        const potonganRupiah = price * (potongan / 100);
-        const pajakRupiah = potonganRupiah * (pajak / 100);
+        const potonganRupiah = price * (potongan/100);
+        const pajakRupiah = potonganRupiah * (pajak/100);
         const totalPotongan = potonganRupiah + pajakRupiah;
         const driverEarnings = price - totalPotongan;
         const driverUid = getDriverData().uid;
         const today = new Date().toISOString().split('T')[0];
-        await database.ref(`drivers/${driverUid}/daily_earnings/${today}`).transaction(current => (current || 0) + price);
-        await database.ref(`drivers/${driverUid}/total_earnings`).transaction(current => (current || 0) + price);
+        await database.ref(`drivers/${driverUid}/daily_earnings/${today}`).transaction(cur => (cur||0) + price);
+        await database.ref(`drivers/${driverUid}/total_earnings`).transaction(cur => (cur||0) + price);
         await database.ref(`drivers/${driverUid}/earnings_history/${orderId}`).set({
-          orderId: orderId,
-          amount: driverEarnings,
-          originalPrice: price,
-          potongan: potongan,
-          pajak: pajak,
-          totalPotongan: totalPotongan,
+          orderId, amount: driverEarnings, originalPrice: price,
+          potongan, pajak, totalPotongan,
           completed_at: new Date().toISOString(),
           customer_name: orderData.customer_name || 'Customer'
         });
@@ -593,9 +557,7 @@ async function createPendingRefund(orderId, bonusUsed, driverId, customerId) {
   try {
     const refundRef = database.ref(`customer_refund_pending/${customerId}`).push();
     await refundRef.set({
-      orderId: orderId,
-      amount: bonusUsed,
-      driverId: driverId,
+      orderId, amount: bonusUsed, driverId,
       driverName: getDriverData().name || 'Driver',
       createdAt: new Date().toISOString(),
       status: 'pending'
@@ -619,11 +581,7 @@ async function cancelTrip() {
           await createPendingRefund(orderId, bonusUsed, driver.uid, custId);
           showToast("Bonus refund telah dicatat, customer dapat mengklaimnya nanti.");
         }
-        await database.ref('orders/' + orderId).update({
-          status: 'cancelled',
-          cancelled_by: 'driver',
-          cancelled_at: new Date().toISOString()
-        });
+        await database.ref('orders/'+orderId).update({ status:'cancelled', cancelled_by:'driver', cancelled_at: new Date().toISOString() });
         showToast("Perjalanan dibatalkan.");
         setTimeout(() => { window.location.href = 'index.html'; }, 1500);
       } catch (err) {
@@ -655,7 +613,7 @@ function showRatingModal() {
 function generatePresets(rating) {
   let container = document.getElementById('ratingPresetsContainer');
   container.innerHTML = '';
-  let presets = { 1: ["Tidak sopan", "Membuat menunggu lama"], 2: ["Kurang kooperatif"], 3: ["Cukup"], 4: ["Ramah", "Tepat waktu"], 5: ["Sangat ramah", "Perjalanan menyenangkan"] };
+  let presets = { 1:["Tidak sopan","Membuat menunggu lama"], 2:["Kurang kooperatif"], 3:["Cukup"], 4:["Ramah","Tepat waktu"], 5:["Sangat ramah","Perjalanan menyenangkan"] };
   (presets[rating] || []).forEach(text => {
     let btn = document.createElement('button');
     btn.innerText = text;
@@ -669,7 +627,7 @@ async function submitRating() {
   if (selectedRating === 0) { showToast("Pilih rating"); return; }
   let comment = document.getElementById('ratingComment').value;
   let driverData = getDriverData();
-  
+
   try {
     await database.ref(`ratings/${orderId}/customer_rating`).set({
       rating: selectedRating,
@@ -681,13 +639,7 @@ async function submitRating() {
     });
     closeRatingModal();
     showToast("✅ Rating berhasil! Kembali ke beranda...");
-    
-    // ===== TAMBAHKAN REDIRECT KE home_pack.html =====
-    setTimeout(() => {
-      window.location.href = 'home_pack.html';
-    }, 1500);
-    // ================================================
-    
+    setTimeout(() => { window.location.href = 'home_pack.html'; }, 1500);
   } catch (err) {
     console.error(err);
     showToast("Gagal menyimpan rating: " + err.message);
@@ -695,6 +647,98 @@ async function submitRating() {
 }
 
 function closeRatingModal() { document.getElementById('ratingModal').style.display = 'none'; }
+
+// ==================== ROUTE & DISTANCE ====================
+function formatDistance(meters) {
+  if (meters < 1000) {
+    return Math.round(meters) + 'm';
+  } else {
+    return (meters/1000).toFixed(1) + 'km';
+  }
+}
+
+function fetchAndDisplayRoutes(driverLat, driverLng, pickupLat, pickupLng, viaLat, viaLng, destLat, destLng) {
+  if (!orderMap) return;
+
+  if (routeDriverToPickup) { orderMap.removeLayer(routeDriverToPickup); routeDriverToPickup = null; }
+  if (routePickupToDest) { orderMap.removeLayer(routePickupToDest); routePickupToDest = null; }
+  distanceLabelMarkers.forEach(m => orderMap.removeLayer(m));
+  distanceLabelMarkers = [];
+
+  async function fetchRoute(waypoints) {
+    const coordString = waypoints.map(wp => `${wp.lng},${wp.lat}`).join(';');
+    const url = `https://router.project-osrm.org/route/v1/driving/${coordString}?overview=full&geometries=geojson`;
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      if (data.routes && data.routes.length > 0) {
+        const route = data.routes[0];
+        const coords = route.geometry.coordinates.map(c => [c[1], c[0]]);
+        const distance = route.distance;
+        return { coords, distance };
+      }
+    } catch (e) { console.warn('OSRM error:', e); }
+    return null;
+  }
+
+  // Rute driver → pickup (garis putus-putus biru)
+  if (driverLat && driverLng && pickupLat && pickupLng) {
+    const waypoints = [
+      { lng: driverLng, lat: driverLat },
+      { lng: pickupLng, lat: pickupLat }
+    ];
+    fetchRoute(waypoints).then(result => {
+      if (result) {
+        routeDriverToPickup = L.polyline(result.coords, {
+          color: '#2196F3',
+          weight: 4,
+          opacity: 0.7,
+          dashArray: '8, 8'
+        }).addTo(orderMap);
+
+        const distanceText = formatDistance(result.distance);
+        const labelIcon = L.divIcon({
+          html: `<div style="font-size:20px; font-weight:900; color:#0d47a1; text-shadow: -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 2px 2px 0 #fff, 0 0 8px rgba(255,255,255,0.9);">${distanceText}</div>`,
+          className: 'distance-label',
+          iconSize: [0, 0],
+          iconAnchor: [0, 0]
+        });
+        const label = L.marker([pickupLat, pickupLng], { icon: labelIcon, interactive: false, keyboard: false })
+          .addTo(orderMap)
+          .setZIndexOffset(10000);
+        distanceLabelMarkers.push(label);
+        routesDrawn = true;
+      }
+    });
+  }
+
+  // Rute pickup → dest (garis oranye)
+  const waypoints2 = [{ lng: pickupLng, lat: pickupLat }];
+  if (viaLat && viaLng) waypoints2.push({ lng: viaLng, lat: viaLat });
+  waypoints2.push({ lng: destLng, lat: destLat });
+  fetchRoute(waypoints2).then(result => {
+    if (result) {
+      routePickupToDest = L.polyline(result.coords, {
+        color: '#FF8A00',
+        weight: 5,
+        opacity: 0.9
+      }).addTo(orderMap);
+
+      const distanceText = formatDistance(result.distance);
+      const labelIcon = L.divIcon({
+        html: `<div style="font-size:20px; font-weight:900; color:#d32f2f; text-shadow: -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 2px 2px 0 #fff, 0 0 8px rgba(255,255,255,0.9);">${distanceText}</div>`,
+        className: 'distance-label',
+        iconSize: [0, 0],
+        iconAnchor: [0, 0]
+      });
+      const label = L.marker([destLat, destLng], { icon: labelIcon, interactive: false, keyboard: false })
+        .addTo(orderMap)
+        .setZIndexOffset(10000);
+      distanceLabelMarkers.push(label);
+      routesDrawn = true;
+    }
+  });
+}
 
 // ==================== DISPLAY UI ====================
 function updateBonusDisplay() {
@@ -715,6 +759,8 @@ function updateBonusDisplay() {
 }
 
 function displayOrderUI() {
+  routesDrawn = false;
+
   document.getElementById('loadingView').style.display = 'none';
   document.getElementById('mainContent').classList.add('show');
   document.getElementById('actionsSection').style.display = 'flex';
@@ -747,10 +793,10 @@ function displayOrderUI() {
   }
   updateBonusDisplay();
   let distanceText = '-';
-  if (orderData.distance_meters) distanceText = (orderData.distance_meters / 1000).toFixed(1) + ' km';
-  else if (orderData.distance) distanceText = typeof orderData.distance === 'number' ? orderData.distance.toFixed(1) + ' km' : orderData.distance;
-  else if (orderData.distance_km) distanceText = orderData.distance_km.toFixed(1) + ' km';
-  else if (orderData.jarak) distanceText = typeof orderData.jarak === 'number' ? orderData.jarak.toFixed(1) + ' km' : orderData.jarak;
+  if (orderData.distance_meters) distanceText = (orderData.distance_meters/1000).toFixed(1)+' km';
+  else if (orderData.distance) distanceText = typeof orderData.distance === 'number' ? orderData.distance.toFixed(1)+' km' : orderData.distance;
+  else if (orderData.distance_km) distanceText = orderData.distance_km.toFixed(1)+' km';
+  else if (orderData.jarak) distanceText = typeof orderData.jarak === 'number' ? orderData.jarak.toFixed(1)+' km' : orderData.jarak;
   document.getElementById('tripDistance').innerText = distanceText;
   setupAddressClick();
 
@@ -777,6 +823,12 @@ function displayOrderUI() {
 
     updateDriverMarker(orderData.pickup_lat, orderData.pickup_lng, 0);
 
+    // Gambar rute & jarak (sementara dengan posisi pickup, nanti diupdate oleh GPS)
+    let dLat = currentDriverLat || orderData.pickup_lat;
+    let dLng = currentDriverLng || orderData.pickup_lng;
+    fetchAndDisplayRoutes(dLat, dLng, orderData.pickup_lat, orderData.pickup_lng, orderData.via_lat, orderData.via_lng, orderData.dest_lat, orderData.dest_lng);
+
+    // Rute OSRM utama (tetap dipertahankan)
     let waypoints = [];
     waypoints.push({ lng: orderData.pickup_lng, lat: orderData.pickup_lat });
     if (orderData.via_lng && orderData.via_lat) waypoints.push({ lng: orderData.via_lng, lat: orderData.via_lat });
@@ -788,7 +840,7 @@ function displayOrderUI() {
           let coords = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
           if (routePolyline) orderMap.removeLayer(routePolyline);
           routePolyline = L.polyline(coords, { color: '#FF8A00', weight: 5, opacity: 0.9 }).addTo(orderMap);
-          orderMap.fitBounds(routePolyline.getBounds());
+          // Jangan fit bounds agar tidak mengganggu rute driver ke pickup
         }
       }).catch(e => console.warn);
   }
@@ -894,12 +946,6 @@ async function loadOrder() {
   document.getElementById('mapActionBtn').addEventListener('click', onMapAction);
   document.getElementById('cancelHeaderBtn').addEventListener('click', cancelTrip);
   document.getElementById('callBtn').addEventListener('click', function() {
-    debug('📞 Tombol Telepon diklik');
-    debug('Android tersedia? ' + (typeof Android !== 'undefined'));
-    if (typeof Android !== 'undefined') {
-      debug('Android.startVoiceCall ada? ' + (typeof Android.startVoiceCall === 'function'));
-    }
-
     if (this.innerHTML.includes('Akhiri')) {
       if (typeof Android !== 'undefined' && Android.endVoiceCall) {
         Android.endVoiceCall();
@@ -910,10 +956,8 @@ async function loadOrder() {
         'Anda akan menghubungi customer melalui panggilan suara. Lanjutkan?',
         function() {
           if (typeof Android !== 'undefined' && Android.startVoiceCall) {
-            debug('Memanggil Android.startVoiceCall(' + orderId + ', ' + customerId + ')');
             Android.startVoiceCall(orderId, customerId);
           } else {
-            debug('❌ Android.startVoiceCall tidak tersedia');
             showToast('Fitur tidak tersedia');
           }
         },
@@ -932,12 +976,9 @@ async function loadOrder() {
   document.getElementById('chatInput').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') { e.preventDefault(); sendDriverChatMessage(); }
   });
-  
-  // Rating buttons
+
   document.getElementById('ratingCancelBtn').addEventListener('click', closeRatingModal);
   document.getElementById('ratingSubmitBtn').addEventListener('click', submitRating);
-  
-  // Close chat
   document.getElementById('closeChatBtn').addEventListener('click', closeChat);
 }
 
