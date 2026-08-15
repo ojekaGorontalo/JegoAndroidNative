@@ -956,8 +956,8 @@ async function loadOrder() {
         'Anda akan menghubungi customer melalui panggilan suara. Lanjutkan?',
         function() {
           if (typeof Android !== 'undefined' && Android.startVoiceCall) {
-            Android.startVoiceCall(orderId, customerId);
-          } else {
+    Android.startVoiceCall(orderId, customerId, 'driver');
+} else {
             showToast('Fitur tidak tersedia');
           }
         },
