@@ -1061,6 +1061,38 @@ function updateCallUI(status) {
   }
 }
 
+// ===== 🔥 AUTO JOIN CALL DARI NOTIFIKASI =====
+window.autoJoinCall = function(channelName, callerName) {
+    console.log('📞 Auto join call:', channelName, callerName);
+    
+    // Tunggu sampai orderId siap
+    if (!orderId) {
+        console.log('⏳ Menunggu orderId siap...');
+        setTimeout(() => window.autoJoinCall(channelName, callerName), 1000);
+        return;
+    }
+    
+    // Tunggu sampai halaman selesai loading
+    const loadingScreen = document.getElementById('loadingScreen');
+    if (loadingScreen && loadingScreen.style.display !== 'none') {
+        console.log('⏳ Menunggu halaman selesai loading...');
+        setTimeout(() => window.autoJoinCall(channelName, callerName), 1000);
+        return;
+    }
+    
+    // Jika sudah ada panggilan, abaikan
+    if (isCallInProgress || isCallActive) {
+        console.log('ℹ️ Panggilan sudah berlangsung');
+        return;
+    }
+    
+    // Tampilkan toast dan mulai panggilan
+    showToast('📞 Panggilan dari ' + (callerName || 'Driver'));
+    setTimeout(() => {
+        startCall();
+    }, 1500);
+};
+
 // ==================== BACK BUTTON HANDLER ====================
 window.addEventListener('popstate', function(event) {
   if (document.getElementById('chatOverlay').classList.contains('open')) {
@@ -1084,7 +1116,7 @@ document.addEventListener('copy', function(e) {
   
   if (!isInput && !isChat && !isRating && !isBonus) {
     e.preventDefault();
-    showToast('📋 Menyalin teks tidak diizinkan di halaman ini');
+    showToast('⛔ Menyalin teks tidak diizinkan di halaman ini');
     return false;
   }
 });
