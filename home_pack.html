@@ -1223,6 +1223,14 @@
             <span class="toggle-slider"></span>
           </label>
         </div>
+        <!-- ===== TAMBAHAN: Tombol Pintasan ===== -->
+        <div class="menu-item">
+          <span>📌 Tombol Pintasan</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="floatingToggle">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
       </div>
       <div class="menu-section">
         <h4>Bantuan & Sosial</h4>
@@ -1373,6 +1381,9 @@ const MAX_DISTANCE_KM = 20;
 const STORAGE_TRACKING = 'jego_location_tracking';
 const STORAGE_AUTOBID = 'jego_autobid_enabled';
 const STORAGE_ACCEPT_KURIR = 'jego_accept_kurir';
+// ===== TAMBAHAN: konstanta untuk floating button =====
+const STORAGE_FLOATING = 'jego_floating_button';
+let floatingButtonEnabled = false;
 
 // ==================== FUNGSI BANTUAN ====================
 function applyTheme() {
@@ -1607,7 +1618,12 @@ function loadStoredSettings() {
     acceptKurirEnabled = localStorage.getItem(STORAGE_ACCEPT_KURIR) === 'true';
     const kurirToggle = document.getElementById('acceptKurirToggle');
     if (kurirToggle) kurirToggle.checked = acceptKurirEnabled;
+
+    // ===== TAMBAHAN: baca status floating =====
+    floatingButtonEnabled = localStorage.getItem(STORAGE_FLOATING) === 'true';
+    updateFloatingButtonUI();
 }
+
 function updateTrackingButton() {
   const toggleBtn = document.getElementById('locationToggleBtn');
   const icon = toggleBtn.querySelector('.icon');
@@ -1619,9 +1635,49 @@ function updateTrackingButton() {
     icon.textContent = '📍';
   }
 }
+
 function updateAutobidButton() {
   const toggle = document.getElementById('autobidToggle');
   if (toggle) toggle.checked = autobidEnabled;
+}
+
+// ===== TAMBAHAN: update UI floating toggle =====
+function updateFloatingButtonUI() {
+  const toggle = document.getElementById('floatingToggle');
+  if (toggle) toggle.checked = floatingButtonEnabled;
+}
+
+// ===== TAMBAHAN: fungsi untuk mengatur floating button =====
+function toggleFloatingButton() {
+  // Hanya bisa diubah jika tracking aktif
+  if (!locationTrackingEnabled) {
+    showToast('Aktifkan tracking terlebih dahulu untuk mengatur tombol pintasan.', 'warning');
+    // Kembalikan checkbox ke posisi semula
+    document.getElementById('floatingToggle').checked = floatingButtonEnabled;
+    return;
+  }
+
+  floatingButtonEnabled = !floatingButtonEnabled;
+  localStorage.setItem(STORAGE_FLOATING, floatingButtonEnabled);
+  updateFloatingButtonUI();
+
+  if (isAndroidAvailable()) {
+    if (floatingButtonEnabled) {
+      Android.startFloatingButton();
+      console.log('📌 Floating button diaktifkan');
+    } else {
+      Android.stopFloatingButton();
+      console.log('📌 Floating button dimatikan');
+    }
+  }
+
+  // Simpan ke Firebase
+  if (globalCurrentUid) {
+    database.ref('drivers/' + globalCurrentUid).update({
+      floating_button_enabled: floatingButtonEnabled,
+      last_update: new Date().toISOString()
+    }).catch(console.error);
+  }
 }
 
 // ===== PERBAIKAN: toggleLocationTrackingWithConfirm async =====
@@ -1674,6 +1730,16 @@ function toggleLocationTracking() {
             soundOn.currentTime = 0;
             soundOn.play().catch(e => console.log('Audio error:', e));
         }
+        // Mulai tracking lokasi
+        if (isAndroidAvailable()) {
+            Android.startDriverTracking();
+            console.log('📍 Service tracking dimulai dari tombol');
+        }
+        // Jika floating button aktif, nyalakan juga
+        if (floatingButtonEnabled && isAndroidAvailable()) {
+            Android.startFloatingButton();
+            console.log('📌 Floating button dinyalakan karena tracking aktif dan tombol pintasan ON');
+        }
     } else {
         toggleBtn.classList.remove('active');
         icon.textContent = '📍';
@@ -1682,20 +1748,32 @@ function toggleLocationTracking() {
             soundOff.currentTime = 0;
             soundOff.play().catch(e => console.log('Audio error:', e));
         }
-    }
-
-    if (isAndroidAvailable()) {
-        if (locationTrackingEnabled) {
-            Android.startDriverTracking();
-            Android.startFloatingButton();
-            console.log('📍 Service tracking dimulai dari tombol');
-        } else {
+        // Matikan tracking lokasi
+        if (isAndroidAvailable()) {
             Android.stopDriverTracking();
-            Android.stopFloatingButton();
             console.log('⏹️ Service tracking dihentikan dari tombol');
+        }
+        // Matikan floating button (karena tracking mati)
+        if (floatingButtonEnabled && isAndroidAvailable()) {
+            Android.stopFloatingButton();
+            console.log('📌 Floating button dimatikan karena tracking dimatikan');
+        }
+        // Set status floating menjadi false (karena tidak boleh aktif)
+        if (floatingButtonEnabled) {
+            floatingButtonEnabled = false;
+            localStorage.setItem(STORAGE_FLOATING, false);
+            updateFloatingButtonUI();
+            // Update Firebase
+            if (globalCurrentUid) {
+                database.ref('drivers/' + globalCurrentUid).update({
+                    floating_button_enabled: false,
+                    last_update: new Date().toISOString()
+                }).catch(console.error);
+            }
         }
     }
 
+    // Simpan status ke Firebase
     if (globalCurrentUid) {
         database.ref('drivers/' + globalCurrentUid).update({
             tracking_enabled: locationTrackingEnabled,
@@ -1703,6 +1781,8 @@ function toggleLocationTracking() {
         }).catch(console.error);
         database.ref(`driver_locations/${globalCurrentUid}`).update({
             tracking_enabled: locationTrackingEnabled,
+            autobid_enabled: autobidEnabled,
+            floating_button_enabled: floatingButtonEnabled,
             last_update: new Date().toISOString()
         }).catch(console.error);
     }
@@ -1829,6 +1909,7 @@ function updateDriverLocation(position) {
       longitude: lng,
       tracking_enabled: locationTrackingEnabled,
       autobid_enabled: autobidEnabled,
+      floating_button_enabled: floatingButtonEnabled,
       last_update: new Date().toISOString()
     }).catch(console.error);
     lastSentLat = lat;
@@ -2182,6 +2263,7 @@ function loadOrders() {
                             longitude: loc.lng,
                             tracking_enabled: locationTrackingEnabled,
                             autobid_enabled: autobidEnabled,
+                            floating_button_enabled: floatingButtonEnabled,
                             last_update: new Date().toISOString()
                         }).catch(console.error);
                     }
@@ -3140,6 +3222,17 @@ document.addEventListener('DOMContentLoaded', async () => {
               localStorage.setItem(STORAGE_AUTOBID, autobidEnabled);
               updateAutobidButton();
             }
+            // ===== TAMBAHAN: sinkron floating dari Firebase =====
+            if (data.floating_button_enabled !== undefined) {
+              floatingButtonEnabled = data.floating_button_enabled;
+              localStorage.setItem(STORAGE_FLOATING, floatingButtonEnabled);
+              updateFloatingButtonUI();
+              // Jika tracking aktif dan floating aktif, start floating
+              if (locationTrackingEnabled && floatingButtonEnabled && isAndroidAvailable()) {
+                Android.startFloatingButton();
+                console.log('📌 Floating button dinyalakan dari Firebase');
+              }
+            }
           }
         }).catch(console.error);
       }
@@ -3194,6 +3287,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
   document.getElementById('autobidToggle').addEventListener('change', toggleAutobid);
   document.getElementById('acceptKurirToggle').addEventListener('change', updateAcceptKurirSetting);
+  // ===== TAMBAHAN: event listener untuk floating toggle =====
+  document.getElementById('floatingToggle').addEventListener('change', toggleFloatingButton);
   document.getElementById('promptAllowBtn')?.addEventListener('click', async () => {
     closeNotifPrompt();
     await initOneSignal();
