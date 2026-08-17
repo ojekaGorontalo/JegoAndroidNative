@@ -110,33 +110,46 @@ body {
   position: relative;
   z-index: 1;
 }
-.map-float-btn {
+
+/* ===== CHAT OVERLAY BUTTON ===== */
+.chat-overlay-btn {
   position: absolute;
-  bottom: 14px;
-  right: 14px;
-  background: linear-gradient(95deg, #FF8A00, #e67a00);
-  color: #fff;
+  bottom: 12px;
+  left: auto;
+  right: 12px;
+  z-index: 10;
+  pointer-events: none;
+}
+.chat-overlay-btn .action-btn-modern {
+  pointer-events: auto;
+  background: linear-gradient(135deg, #FF9800, #FF5722);
+  color: white;
   border: none;
-  border-radius: 40px;
+  border-radius: 30px;
   padding: 10px 18px;
   font-weight: 700;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   display: flex;
   align-items: center;
-  gap: 6px;
-  box-shadow: 0 4px 14px rgba(255, 138, 0, 0.3);
-  cursor: pointer;
-  z-index: 9999;
-  transition: all 0.2s ease;
-  pointer-events: auto;
-  touch-action: manipulation;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(255, 138, 0, 0.3);
+  transition: 0.2s;
 }
-.map-float-btn:active {
-  transform: scale(0.96);
+.chat-overlay-btn .action-btn-modern:active {
+  transform: scale(0.95);
 }
-.map-float-btn:disabled {
-  opacity: 0.5;
-  pointer-events: none;
+.chat-overlay-btn .badge-unread {
+  background: #ef4444;
+  color: white;
+  border-radius: 50%;
+  padding: 2px 8px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  min-width: 20px;
+  text-align: center;
+}
+.chat-overlay-btn .badge-unread.hidden {
+  display: none;
 }
 
 .scroll-content {
@@ -453,77 +466,46 @@ body {
   margin-top: 1px;
 }
 
-/* ===== ACTION BAR - LEBIH RENDAH ===== */
+/* ===== ACTION BAR BAWAH ===== */
 .action-bar-modern {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
   background: linear-gradient(135deg, #FF9800, #FF5722);
-  padding: 8px 14px 14px 14px;
-  padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+  padding: 10px 14px 16px 14px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
   border-top: none;
   box-shadow: 0 -4px 16px rgba(255, 138, 0, 0.12);
   display: flex;
-  justify-content: space-between;
-  gap: 8px;
+  justify-content: center;
+  align-items: center;
   z-index: 20;
   pointer-events: none;
 }
-.action-bar-modern .action-btn-modern {
-  flex: 1;
-  height: 44px;
+.action-bar-modern .action-btn-main {
+  width: 100%;
+  height: 50px;
   border-radius: 40px;
-  font-weight: 700;
-  font-size: 0.8rem;
   border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
+  background: rgba(255, 255, 255, 0.25);
+  color: white;
+  font-weight: 700;
+  font-size: 1.1rem;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  font-family: inherit;
+  letter-spacing: 0.5px;
   pointer-events: auto;
   touch-action: manipulation;
-  position: relative;
-  padding: 0 6px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
 }
-.action-btn-modern:active {
-  transform: scale(0.96);
+.action-bar-modern .action-btn-main:active {
+  transform: scale(0.97);
 }
-.action-btn-modern:disabled {
+.action-bar-modern .action-btn-main:disabled {
   opacity: 0.5;
   pointer-events: none;
-  transform: none;
-}
-.action-btn-modern.btn-outline {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-}
-.action-btn-modern.btn-outline:active {
-  background: rgba(255, 255, 255, 0.35);
-}
-.action-btn-modern .badge-unread {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  background: #ef4444;
-  color: #fff;
-  font-size: 0.55rem;
-  font-weight: 700;
-  min-width: 18px;
-  height: 18px;
-  border-radius: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 5px;
-  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.35);
-}
-.action-btn-modern .badge-unread.hidden {
-  display: none;
 }
 
 .toast-modern {
@@ -848,7 +830,7 @@ input, textarea {
 @media (max-width: 400px) {
   .app-header h1 { font-size: 0.9rem; }
   .driver-card .driver-price .price-value { font-size: 1rem; }
-  .action-bar-modern .action-btn-modern { font-size: 0.7rem; height: 40px; }
+  .action-bar-modern .action-btn-main { font-size: 0.9rem; height: 44px; }
   .driver-card .driver-name { font-size: 0.85rem; }
   .delivery-card-modern .delivery-grid { grid-template-columns: 1fr; gap: 4px 0; }
   .delivery-card-modern .delivery-grid .field { flex-direction: row; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid rgba(0,0,0,0.04); }
@@ -859,5 +841,6 @@ input, textarea {
 @media (min-width: 600px) {
   .scroll-content { padding: 14px 20px 100px 20px; }
   .card-modern { padding: 16px 20px; }
-  .action-bar-modern { padding: 10px 20px 16px 20px; }
+  .action-bar-modern { padding: 12px 24px 20px 24px; }
+  .action-bar-modern .action-btn-main { height: 56px; font-size: 1.2rem; }
 }
