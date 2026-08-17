@@ -47,7 +47,13 @@
     <div id="mainContent">
       <div class="map-area" id="mapSection">
         <div id="orderMap"></div>
-        <button id="mapActionBtn" class="map-float-btn" style="display:none;">📍 Sampai di Lokasi</button>
+        <!-- Tombol Chat Overlay -->
+        <div id="chatOverlayBtn" class="chat-overlay-btn" style="display:none;">
+          <button id="chatIconBtnMap" class="action-btn-modern btn-outline">
+            💬 Chat
+            <span id="chatBadgeMap" class="badge-unread hidden">0</span>
+          </button>
+        </div>
       </div>
 
       <div class="scroll-content">
@@ -141,12 +147,9 @@
       </div>
     </div>
 
+    <!-- ACTION BAR BAWAH (HANYA SATU TOMBOL UTAMA) -->
     <div class="action-bar-modern" id="actionsSection" style="display:none;">
-      <button class="action-btn-modern btn-outline" id="chatIconBtn">
-        💬 Chat
-        <span id="chatBadge" class="badge-unread hidden">0</span>
-      </button>
-      <!-- Tombol panggil telah dihapus -->
+      <button class="action-btn-main" id="mainActionBtn">🚗 Saya Berangkat</button>
     </div>
   </div>
 
@@ -193,8 +196,6 @@
       <button id="chatSendBtn" class="chat-send">Kirim</button>
     </div>
   </div>
-
-  <!-- Call overlay dihapus -->
 
   <script src="orderAccepted.js"></script>
 </body>
