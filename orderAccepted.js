@@ -144,7 +144,6 @@ function startLocationTracking() {
       currentDriverLng = longitude;
       updateDriverMarker(latitude, longitude, heading||0);
 
-      // Jika lokasi pertama kali didapat, perbarui rute
       if (firstLocation && orderData && orderData.pickup_lat && orderData.dest_lat) {
         firstLocation = false;
         fetchAndDisplayRoutes(
@@ -225,6 +224,7 @@ async function sendNotificationToCustomer(title, message, extraData = {}) {
 // ==================== CHAT ====================
 function updateUnreadBadge() {
   const badge = document.getElementById('chatBadge');
+  const badgeMap = document.getElementById('chatBadgeMap');
   if (!chatRef || !driverUid) return;
   chatRef.once('value', snap => {
     const msgs = snap.val() || {};
@@ -237,10 +237,11 @@ function updateUnreadBadge() {
       }
     }
     if (unreadCount > 0) {
-      badge.textContent = unreadCount;
-      badge.classList.remove('hidden');
+      if (badge) { badge.textContent = unreadCount; badge.classList.remove('hidden'); }
+      if (badgeMap) { badgeMap.textContent = unreadCount; badgeMap.classList.remove('hidden'); }
     } else {
-      badge.classList.add('hidden');
+      if (badge) badge.classList.add('hidden');
+      if (badgeMap) badgeMap.classList.add('hidden');
     }
   });
 }
@@ -262,6 +263,8 @@ function markMessagesAsRead() {
     }
     if (Object.keys(updates).length > 0) chatRef.update(updates);
     document.getElementById('chatBadge').classList.add('hidden');
+    const badgeMap = document.getElementById('chatBadgeMap');
+    if (badgeMap) badgeMap.classList.add('hidden');
   });
 }
 
@@ -271,8 +274,7 @@ function openChat() {
   document.getElementById('chatOverlay').classList.add('open');
   loadChatHistory();
   markMessagesAsRead();
-  document.getElementById('chatBadge').classList.add('hidden');
-  document.getElementById('mapActionBtn').style.display = 'none';
+  document.getElementById('chatOverlayBtn').style.display = 'none';
 }
 
 function closeChat() {
@@ -281,6 +283,7 @@ function closeChat() {
   document.getElementById('chatOverlay').classList.remove('open');
   updateUnreadBadge();
   updateActionButtons();
+  document.getElementById('chatOverlayBtn').style.display = 'block';
 }
 
 function loadChatHistory() {
@@ -379,24 +382,18 @@ async function getOrderId() {
   return null;
 }
 
+// ==================== NAVIGASI ====================
 function openNavigationDirect(lat, lng) {
   if (!lat || !lng) {
     showToast("Koordinat tidak tersedia");
     return false;
   }
-  showConfirmPopup(
-    '🗺️ Navigasi',
-    'Mulai navigasi ke lokasi ini?',
-    function() {
-      if (typeof Android !== 'undefined' && Android.startNavigation) {
-        Android.startNavigation(lat, lng);
-      } else {
-        var url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
-        window.open(url, '_system');
-      }
-    },
-    function() { showToast('Navigasi dibatalkan'); }
-  );
+  if (typeof Android !== 'undefined' && Android.startNavigation) {
+    Android.startNavigation(lat, lng);
+  } else {
+    var url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
+    window.open(url, '_system');
+  }
   return true;
 }
 
@@ -415,28 +412,31 @@ function setupAddressClick() {
   }
 }
 
+// ==================== UPDATE ACTION BUTTONS ====================
 function updateActionButtons() {
-  const mapBtn = document.getElementById('mapActionBtn');
+  const mainBtn = document.getElementById('mainActionBtn');
   const cancelBtn = document.getElementById('cancelHeaderBtn');
-  if (!mapBtn) return;
+  if (!mainBtn) return;
 
   if (currentStatus === 'completed' || currentStatus === 'cancelled') {
-    mapBtn.style.display = 'none';
+    mainBtn.style.display = 'none';
     cancelBtn.classList.add('disabled');
     cancelBtn.classList.add('hidden');
     return;
   } else {
+    mainBtn.style.display = 'block';
     cancelBtn.classList.remove('disabled');
     cancelBtn.classList.remove('hidden');
   }
 
   switch (currentStatus) {
-    case 'accepted':   mapBtn.style.display = 'flex'; mapBtn.innerHTML = '🚗 Saya Berangkat'; break;
-    case 'on_the_way': mapBtn.style.display = 'flex'; mapBtn.innerHTML = '📍 Sampai di Lokasi Jemput'; break;
-    case 'arrived':    mapBtn.style.display = 'flex'; mapBtn.innerHTML = '🏁 Mulai Perjalanan'; break;
-    case 'on_trip':    mapBtn.style.display = 'flex'; mapBtn.innerHTML = '✅ Selesaikan Perjalanan'; break;
-    default:           mapBtn.style.display = 'none';
+    case 'accepted':   mainBtn.textContent = '🚗 Saya Berangkat'; break;
+    case 'on_the_way': mainBtn.textContent = '📍 Sampai di Lokasi Jemput'; break;
+    case 'arrived':    mainBtn.textContent = '🏁 Mulai Perjalanan'; break;
+    case 'on_trip':    mainBtn.textContent = '✅ Selesaikan Perjalanan'; break;
+    default:           mainBtn.style.display = 'none';
   }
+
   const subText = document.getElementById('statusSubText');
   if (subText) {
     const map = {
@@ -459,20 +459,57 @@ function updateActionButtons() {
   }
 }
 
-async function onMapAction() {
+// ==================== AKSI TOMBOL UTAMA ====================
+async function onMainAction() {
   if (!orderData) { showToast("Data order belum siap"); return; }
-  if (currentStatus === 'accepted') {
-    await database.ref('orders/'+orderId).update({ status:'on_the_way', updated_at: new Date().toISOString() });
-    showToast("Status: Menuju lokasi jemput");
-  } else if (currentStatus === 'on_the_way') {
-    await database.ref('orders/'+orderId).update({ status:'arrived', arrived_at: new Date().toISOString() });
-    showToast("Kami telah memberi tahu customer bahwa Anda telah tiba");
-    await sendNotificationToCustomer("📍 Driver Telah Tiba", `Driver ${getDriverData().name||'Anda'} sudah sampai di lokasi jemput.`, { arrived: true });
-  } else if (currentStatus === 'arrived') {
-    await database.ref('orders/'+orderId).update({ status:'on_trip', trip_started_at: new Date().toISOString() });
-    showToast("Perjalanan dimulai");
-  } else if (currentStatus === 'on_trip') completeTrip();
-  else showToast("Aksi tidak tersedia");
+
+  switch (currentStatus) {
+    case 'accepted':
+      await database.ref('orders/' + orderId).update({ 
+        status: 'on_the_way', 
+        updated_at: new Date().toISOString() 
+      });
+      showToast("🚗 Berangkat menuju lokasi jemput");
+      if (orderData.pickup_lat && orderData.pickup_lng) {
+        openNavigationDirect(orderData.pickup_lat, orderData.pickup_lng);
+      } else {
+        showToast("Koordinat jemput tidak tersedia");
+      }
+      break;
+
+    case 'on_the_way':
+      await database.ref('orders/' + orderId).update({ 
+        status: 'arrived', 
+        arrived_at: new Date().toISOString() 
+      });
+      showToast("📍 Anda telah tiba di lokasi jemput");
+      await sendNotificationToCustomer(
+        "📍 Driver Telah Tiba", 
+        `Driver ${getDriverData().name || 'Anda'} sudah sampai di lokasi jemput.`, 
+        { arrived: true }
+      );
+      break;
+
+    case 'arrived':
+      await database.ref('orders/' + orderId).update({ 
+        status: 'on_trip', 
+        trip_started_at: new Date().toISOString() 
+      });
+      showToast("🛣️ Perjalanan dimulai");
+      if (orderData.dest_lat && orderData.dest_lng) {
+        openNavigationDirect(orderData.dest_lat, orderData.dest_lng);
+      } else {
+        showToast("Koordinat tujuan tidak tersedia");
+      }
+      break;
+
+    case 'on_trip':
+      await completeTrip();
+      break;
+
+    default:
+      showToast("Aksi tidak tersedia untuk status ini");
+  }
 }
 
 // ==================== COMPLETE TRIP ====================
@@ -644,7 +681,6 @@ function fetchAndDisplayRoutes(driverLat, driverLng, pickupLat, pickupLng, viaLa
     return null;
   }
 
-  // Rute driver → pickup (garis putus-putus biru)
   if (driverLat && driverLng && pickupLat && pickupLng) {
     const waypoints = [
       { lng: driverLng, lat: driverLat },
@@ -675,7 +711,6 @@ function fetchAndDisplayRoutes(driverLat, driverLng, pickupLat, pickupLng, viaLa
     });
   }
 
-  // Rute pickup → dest (garis oranye)
   const waypoints2 = [{ lng: pickupLng, lat: pickupLat }];
   if (viaLat && viaLng) waypoints2.push({ lng: viaLng, lat: viaLat });
   waypoints2.push({ lng: destLng, lat: destLat });
@@ -765,6 +800,7 @@ function displayOrderUI() {
 
   if (orderData.pickup_lat && orderData.dest_lat) {
     document.getElementById('mapSection').style.display = 'block';
+    document.getElementById('chatOverlayBtn').style.display = 'block';
     if (!orderMap) {
       orderMap = L.map('orderMap').setView([orderData.pickup_lat, orderData.pickup_lng], 14);
       L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png').addTo(orderMap);
@@ -786,12 +822,10 @@ function displayOrderUI() {
 
     updateDriverMarker(orderData.pickup_lat, orderData.pickup_lng, 0);
 
-    // Gambar rute & jarak (sementara dengan posisi pickup, nanti diupdate oleh GPS)
     let dLat = currentDriverLat || orderData.pickup_lat;
     let dLng = currentDriverLng || orderData.pickup_lng;
     fetchAndDisplayRoutes(dLat, dLng, orderData.pickup_lat, orderData.pickup_lng, orderData.via_lat, orderData.via_lng, orderData.dest_lat, orderData.dest_lng);
 
-    // Rute OSRM utama (tetap dipertahankan)
     let waypoints = [];
     waypoints.push({ lng: orderData.pickup_lng, lat: orderData.pickup_lat });
     if (orderData.via_lng && orderData.via_lat) waypoints.push({ lng: orderData.via_lng, lat: orderData.via_lat });
@@ -826,10 +860,11 @@ function updateStatusDisplay(status) {
   updateActionButtons();
   if (status === 'completed' || status === 'cancelled') {
     document.getElementById('actionsSection').style.display = 'none';
-    document.getElementById('mapActionBtn').style.display = 'none';
+    document.getElementById('chatOverlayBtn').style.display = 'none';
     stopLocationTracking();
   } else {
     document.getElementById('actionsSection').style.display = 'flex';
+    document.getElementById('chatOverlayBtn').style.display = 'block';
   }
 }
 
@@ -901,18 +936,18 @@ async function loadOrder() {
   startLocationTracking();
 
   // Event listeners
-  document.getElementById('mapActionBtn').addEventListener('click', onMapAction);
+  document.getElementById('mainActionBtn').addEventListener('click', onMainAction);
   document.getElementById('cancelHeaderBtn').addEventListener('click', cancelTrip);
-  document.getElementById('chatIconBtn').addEventListener('click', openChat);
+  document.getElementById('chatIconBtnMap').addEventListener('click', openChat);
   document.getElementById('nativeCallBtn').addEventListener('click', callCustomerNative);
   document.getElementById('chatSendBtn').onclick = sendDriverChatMessage;
   document.getElementById('chatInput').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') { e.preventDefault(); sendDriverChatMessage(); }
   });
+  document.getElementById('closeChatBtn').addEventListener('click', closeChat);
 
   document.getElementById('ratingCancelBtn').addEventListener('click', closeRatingModal);
   document.getElementById('ratingSubmitBtn').addEventListener('click', submitRating);
-  document.getElementById('closeChatBtn').addEventListener('click', closeChat);
 }
 
 function showErrorPage(msg) {
