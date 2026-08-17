@@ -59,42 +59,6 @@ function getDriverData() { return JSON.parse(localStorage.getItem('jego_logged_i
 
 function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;' }[m])); }
 
-// ==================== CALL OVERLAY ====================
-function showCallOverlay(status, sub) {
-  document.getElementById('callOverlay').classList.add('active');
-  document.getElementById('callOverlayStatus').innerText = status || '📞 Memanggil...';
-  document.getElementById('callOverlaySub').innerText = sub || 'Menghubungkan ke customer';
-}
-
-function hideCallOverlay() {
-  document.getElementById('callOverlay').classList.remove('active');
-}
-
-window.updateCallStatus = function(status) {
-  const btn = document.getElementById('callBtn');
-  if (status === 'idle') {
-    btn.innerHTML = '📞 Telepon';
-    btn.className = 'action-btn-modern btn-outline';
-    btn.disabled = false;
-    document.getElementById('callStatusIndicator').style.display = 'none';
-    hideCallOverlay();
-  } else if (status === 'calling') {
-    btn.innerHTML = '⏳ Menghubungi...';
-    btn.className = 'action-btn-modern btn-outline';
-    btn.disabled = true;
-    document.getElementById('callStatusIndicator').style.display = 'none';
-    showCallOverlay('📞 Memanggil...', 'Menghubungkan ke customer');
-  } else if (status === 'connected') {
-    btn.innerHTML = '🔴 Akhiri Panggilan';
-    btn.className = 'action-btn-modern btn-outline';
-    btn.disabled = false;
-    document.getElementById('callStatusIndicator').style.display = 'block';
-    showCallOverlay('📞 Panggilan Aktif', 'Terhubung dengan customer');
-  }
-};
-
-window.showToastAndroid = function(msg) { showToast(msg); };
-
 // ==================== CUSTOM CONFIRM ====================
 function showConfirmPopup(title, message, onConfirm, onCancel) {
   const modal = document.getElementById('confirmModal');
@@ -189,7 +153,6 @@ function startLocationTracking() {
           orderData.via_lat, orderData.via_lng,
           orderData.dest_lat, orderData.dest_lng
         );
-        // Perbarui bounds peta agar semua rute terlihat
         if (routePickupToDest && orderMap) {
           orderMap.fitBounds(routePickupToDest.getBounds(), { padding: [40, 40] });
         }
@@ -840,7 +803,6 @@ function displayOrderUI() {
           let coords = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
           if (routePolyline) orderMap.removeLayer(routePolyline);
           routePolyline = L.polyline(coords, { color: '#FF8A00', weight: 5, opacity: 0.9 }).addTo(orderMap);
-          // Jangan fit bounds agar tidak mengganggu rute driver ke pickup
         }
       }).catch(e => console.warn);
   }
@@ -866,9 +828,6 @@ function updateStatusDisplay(status) {
     document.getElementById('actionsSection').style.display = 'none';
     document.getElementById('mapActionBtn').style.display = 'none';
     stopLocationTracking();
-    if (typeof Android !== 'undefined' && Android.endVoiceCall) {
-      Android.endVoiceCall();
-    }
   } else {
     document.getElementById('actionsSection').style.display = 'flex';
   }
@@ -934,7 +893,6 @@ async function loadOrder() {
   displayOrderUI();
   listenOrder();
   initChat();
-  window.updateCallStatus('idle');
 
   if (orderData.status === 'accepted') {
     await sendAutoWelcomeMessage();
@@ -945,31 +903,6 @@ async function loadOrder() {
   // Event listeners
   document.getElementById('mapActionBtn').addEventListener('click', onMapAction);
   document.getElementById('cancelHeaderBtn').addEventListener('click', cancelTrip);
-  document.getElementById('callBtn').addEventListener('click', function() {
-    if (this.innerHTML.includes('Akhiri')) {
-      if (typeof Android !== 'undefined' && Android.endVoiceCall) {
-        Android.endVoiceCall();
-      }
-    } else {
-      showConfirmPopup(
-        '📞 Panggil Customer',
-        'Anda akan menghubungi customer melalui panggilan suara. Lanjutkan?',
-        function() {
-          if (typeof Android !== 'undefined' && Android.startVoiceCall) {
-    Android.startVoiceCall(orderId, customerId, 'driver');
-} else {
-            showToast('Fitur tidak tersedia');
-          }
-        },
-        function() { showToast('Panggilan dibatalkan'); }
-      );
-    }
-  });
-  document.getElementById('callOverlayEndBtn').addEventListener('click', function() {
-    if (typeof Android !== 'undefined' && Android.endVoiceCall) {
-      Android.endVoiceCall();
-    }
-  });
   document.getElementById('chatIconBtn').addEventListener('click', openChat);
   document.getElementById('nativeCallBtn').addEventListener('click', callCustomerNative);
   document.getElementById('chatSendBtn').onclick = sendDriverChatMessage;
@@ -1003,9 +936,6 @@ history.pushState(null, null, location.href);
 
 window.addEventListener('beforeunload', function() {
   stopLocationTracking();
-  if (typeof Android !== 'undefined' && Android.endVoiceCall) {
-    Android.endVoiceCall();
-  }
 });
 
 auth.onAuthStateChanged(user => {
