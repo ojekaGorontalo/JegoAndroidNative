@@ -333,7 +333,9 @@ function loadStoredSettings() {
 
 function updateTrackingButton() {
   const toggleBtn = document.getElementById('locationToggleBtn');
+  if (!toggleBtn) return;
   const icon = toggleBtn.querySelector('.icon');
+  if (!icon) return;
   if (locationTrackingEnabled) {
     toggleBtn.classList.add('active');
     icon.textContent = '📡';
@@ -360,7 +362,8 @@ function toggleFloatingButton() {
   if (!locationTrackingEnabled) {
     showToast('Aktifkan tracking terlebih dahulu untuk mengatur tombol pintasan.', 'warning');
     // Kembalikan checkbox ke posisi semula
-    document.getElementById('floatingToggle').checked = floatingButtonEnabled;
+    const toggle = document.getElementById('floatingToggle');
+    if (toggle) toggle.checked = floatingButtonEnabled;
     return;
   }
 
@@ -426,7 +429,9 @@ function toggleLocationTracking() {
     localStorage.setItem(STORAGE_TRACKING, locationTrackingEnabled);
 
     const toggleBtn = document.getElementById('locationToggleBtn');
+    if (!toggleBtn) return;
     const icon = toggleBtn.querySelector('.icon');
+    if (!icon) return;
 
     if (locationTrackingEnabled) {
         toggleBtn.classList.add('active');
@@ -525,7 +530,9 @@ function toggleAutobid() {
 }
 
 function updateAcceptKurirSetting() {
-    acceptKurirEnabled = document.getElementById('acceptKurirToggle').checked;
+    const toggle = document.getElementById('acceptKurirToggle');
+    if (!toggle) return;
+    acceptKurirEnabled = toggle.checked;
     localStorage.setItem(STORAGE_ACCEPT_KURIR, acceptKurirEnabled);
     refreshDisplay();
 }
@@ -556,14 +563,14 @@ function startGPSMonitoring() {
   navigator.geolocation.getCurrentPosition(
     (position) => { updateDriverLocation(position); },
     handleGpsError,
-    { timeout: 10000, enableHighAccuracy: true }
+    { timeout: 5000, enableHighAccuracy: true } // Dipercepat dari 10000 ke 5000
   );
 
   if (locationWatchId) navigator.geolocation.clearWatch(locationWatchId);
   locationWatchId = navigator.geolocation.watchPosition(
     updateDriverLocation,
     handleGpsError,
-    { timeout: 10000, enableHighAccuracy: true }
+    { timeout: 5000, enableHighAccuracy: true } // Dipercepat
   );
 }
 
@@ -889,6 +896,19 @@ function loadOrders() {
     const ordersList = document.getElementById('ordersList');
     if (!ordersList) return;
 
+    // 🔥 PERCEPATAN: Gunakan lokasi terakhir dari storage jika GPS belum siap
+    if (!gpsReady || !driverLocation.latitude || !driverLocation.longitude) {
+        const lastLocation = localStorage.getItem('jego_last_driver_location');
+        if (lastLocation) {
+            try {
+                const loc = JSON.parse(lastLocation);
+                driverLocation = { latitude: loc.lat, longitude: loc.lng };
+                gpsReady = true;
+                console.log('📍 Menggunakan lokasi terakhir dari storage untuk memuat order');
+            } catch(e) {}
+        }
+    }
+
     if (!globalCurrentUid) {
         ordersList.innerHTML = '<div class="empty-state"><div>🔐</div><p>Menunggu autentikasi driver...</p></div>';
         return;
@@ -1150,16 +1170,18 @@ function initBottomSheetMap() {
         mapContainer.innerHTML = '';
     }
     bottomSheetMap = new google.maps.Map(mapContainer, {
-        center: { lat: 0.5441, lng: 123.0595 },
-        zoom: 12,
-        mapTypeControl: false,
-        fullscreenControl: false,
-        streetViewControl: false,
-        zoomControl: false,
-        // ⬇️ TAMBAHKAN INI ⬇️
-        clickableIcons: false,     // Menonaktifkan klik pada ikon POI
-        disableDefaultUI: true,    // Menonaktifkan UI default (termasuk info window)
-    });
+    center: { lat: 0.5441, lng: 123.0595 },
+    zoom: 12,
+    // Semua kontrol dimatikan
+    mapTypeControl: false,
+    fullscreenControl: false,
+    streetViewControl: false,
+    zoomControl: false,
+    rotateControl: false,      // ⬅️ Tambahan: matikan tombol rotasi
+    scaleControl: false,       // ⬅️ Tambahan: matikan skala
+    clickableIcons: false,
+    disableDefaultUI: true,
+});
 }
 
 function showRouteOnBottomSheetMap(order) {
@@ -1962,8 +1984,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  document.getElementById('menuBtn').addEventListener('click', () => document.getElementById('sidebar').style.display = 'flex');
-  document.getElementById('sidebarOverlay').addEventListener('click', () => document.getElementById('sidebar').style.display = 'none');
+  const menuBtn = document.getElementById('menuBtn');
+  if (menuBtn) {
+    menuBtn.addEventListener('click', () => document.getElementById('sidebar').style.display = 'flex');
+  }
+
+  const sidebarOverlay = document.getElementById('sidebarOverlay');
+  if (sidebarOverlay) {
+    sidebarOverlay.addEventListener('click', () => document.getElementById('sidebar').style.display = 'none');
+  }
+
   document.querySelectorAll('.sidebar-nav-button').forEach(btn => {
     btn.addEventListener('click', () => {
       const url = btn.dataset.url;
@@ -1990,20 +2020,45 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
   }
 
-  document.getElementById('refreshBtn').addEventListener('click', refreshData);
-  document.getElementById('closeBottomSheet').addEventListener('click', closeBottomSheet);
-  document.getElementById('orderBottomSheet').addEventListener('click', function(e) {
-    if (e.target === this) closeBottomSheet();
-  });
-  document.getElementById('autobidToggle').addEventListener('change', toggleAutobid);
-  document.getElementById('acceptKurirToggle').addEventListener('change', updateAcceptKurirSetting);
-  // ===== TAMBAHAN: event listener untuk floating toggle =====
-  document.getElementById('floatingToggle').addEventListener('change', toggleFloatingButton);
-  document.getElementById('promptAllowBtn')?.addEventListener('click', async () => {
-    closeNotifPrompt();
-    await initOneSignal();
-  });
-  document.getElementById('promptLaterBtn')?.addEventListener('click', closeNotifPrompt);
+  // === PERBAIKAN: Cek null sebelum addEventListener ===
+  const refreshBtn = document.getElementById('refreshBtn');
+  if (refreshBtn) refreshBtn.addEventListener('click', refreshData);
+
+  const closeSheetBtn = document.getElementById('closeBottomSheet');
+  if (closeSheetBtn) {
+      closeSheetBtn.addEventListener('click', closeBottomSheet);
+  } else {
+      console.warn('⚠️ closeBottomSheet tidak ditemukan di HTML (akan dibuat dinamis)');
+  }
+
+  const orderSheet = document.getElementById('orderBottomSheet');
+  if (orderSheet) {
+      orderSheet.addEventListener('click', function(e) {
+          if (e.target === this) closeBottomSheet();
+      });
+  }
+
+  const autobidToggle = document.getElementById('autobidToggle');
+  if (autobidToggle) autobidToggle.addEventListener('change', toggleAutobid);
+
+  const acceptKurirToggle = document.getElementById('acceptKurirToggle');
+  if (acceptKurirToggle) acceptKurirToggle.addEventListener('change', updateAcceptKurirSetting);
+
+  const floatingToggle = document.getElementById('floatingToggle');
+  if (floatingToggle) floatingToggle.addEventListener('change', toggleFloatingButton);
+
+  const promptAllow = document.getElementById('promptAllowBtn');
+  if (promptAllow) {
+      promptAllow.addEventListener('click', async () => {
+          closeNotifPrompt();
+          await initOneSignal();
+      });
+  }
+
+  const promptLater = document.getElementById('promptLaterBtn');
+  if (promptLater) {
+      promptLater.addEventListener('click', closeNotifPrompt);
+  }
 });
 
 function refreshData() {
