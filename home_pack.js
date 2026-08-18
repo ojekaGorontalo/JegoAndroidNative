@@ -1150,18 +1150,16 @@ function initBottomSheetMap() {
         mapContainer.innerHTML = '';
     }
     bottomSheetMap = new google.maps.Map(mapContainer, {
-    center: { lat: 0.5441, lng: 123.0595 },
-    zoom: 12,
-    // Semua kontrol dimatikan
-    mapTypeControl: false,
-    fullscreenControl: false,
-    streetViewControl: false,
-    zoomControl: false,
-    rotateControl: false,      // ⬅️ Tambahan: matikan tombol rotasi
-    scaleControl: false,       // ⬅️ Tambahan: matikan skala
-    clickableIcons: false,
-    disableDefaultUI: true,
-});
+        center: { lat: 0.5441, lng: 123.0595 },
+        zoom: 12,
+        mapTypeControl: false,
+        fullscreenControl: false,
+        streetViewControl: false,
+        zoomControl: false,
+        // ⬇️ TAMBAHKAN INI ⬇️
+        clickableIcons: false,     // Menonaktifkan klik pada ikon POI
+        disableDefaultUI: true,    // Menonaktifkan UI default (termasuk info window)
+    });
 }
 
 function showRouteOnBottomSheetMap(order) {
