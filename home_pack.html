@@ -599,12 +599,11 @@
     .order-bottom-sheet .info-row .label { color: #666; }
     .order-bottom-sheet .info-row .value { font-weight: 600; text-align: right; }
     .order-bottom-sheet .map-container {
-      height: 400px; /* lebih besar */
-      width: 100%;
-      margin: 0;
-      border-radius: 12px;
-      overflow: hidden;
-    }
+  width: calc(100% + 40px);
+  margin-left: -20px;
+  margin-right: -20px;
+  height: 400px;
+}
     .order-bottom-sheet .modal-order-details {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
