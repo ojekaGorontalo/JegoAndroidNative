@@ -534,26 +534,28 @@
 
     /* ===== ORDER BOTTOM SHEET (MODIFIED) ===== */
     .order-bottom-sheet {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      top: 0;
-      background: white;
-      border-radius: 28px 28px 0 0;
-      box-shadow: 0 -8px 30px rgba(0,0,0,0.2);
-      z-index: 2000;
-      transform: translateY(100%);
-      transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
-      max-height: 100vh;
-      overflow-y: auto;
-      padding: 0 20px 20px;
-      display: none;
-    }
-    .order-bottom-sheet.open {
-      transform: translateY(0);
-      display: block;
-    }
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  top: 0;
+  background: white;
+  border-radius: 28px 28px 0 0;
+  box-shadow: 0 -8px 30px rgba(0,0,0,0.2);
+  z-index: 2000;
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  max-height: 100vh;
+  overflow-y: auto;
+  padding: 0 20px 20px;
+  display: none;
+  display: flex;           /* BARU */
+  flex-direction: column;  /* BARU */
+}
+.order-bottom-sheet.open {
+  transform: translateY(0);
+  display: flex;           /* BARU: block → flex */
+}
     /* Sembunyikan handle */
     .order-bottom-sheet .handle {
       display: none;
@@ -588,7 +590,20 @@
   width: calc(100% + 40px);
   margin-left: -20px;
   margin-right: -20px;
-  height: 400px;
+  flex: 1;                 /* BARU: mengisi sisa ruang */
+  min-height: 200px;       /* BARU: tinggi minimum */
+  border-radius: 28px 28px 0 0; /* BARU */
+  overflow: hidden;        /* BARU */
+}
+#bottomSheetContent {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  height: 100%;
+}
+
+#bottomSheetContent > *:not(.map-container) {
+  flex-shrink: 0;
 }
     .order-bottom-sheet .modal-order-details {
       display: grid;
