@@ -64,7 +64,7 @@ let gpsLoadingInterval = null;
 let currentDriverData = null;
 let autobidEnabled = false, driverLocation = { latitude: null, longitude: null };
 let locationWatchId = null, locationTrackingEnabled = false;
-let mapboxAccessToken = null;
+let googleApiKey = ''; // akan diisi dari Firebase
 let countdownInterval = null, countdownOrderId = null, countdownDriverId = null, orderStatusListener = null;
 let acceptKurirEnabled = false;
 let previousOrderIds = new Set();
@@ -81,15 +81,16 @@ console.log(`Loaded ${autobidOfferedOrders.size} offered orders from localStorag
 let isWaitingForConfirmation = false;
 let lastSentLat = null;
 let lastSentLng = null;
-
 let orderMap = new Map();
 let ordersChildListeners = {};
 let isInitialLoad = true;
 const MAX_DISTANCE_KM = 20;
-
 const STORAGE_TRACKING = 'jego_location_tracking';
 const STORAGE_AUTOBID = 'jego_autobid_enabled';
 const STORAGE_ACCEPT_KURIR = 'jego_accept_kurir';
+// ===== TAMBAHAN: konstanta untuk floating button =====
+const STORAGE_FLOATING = 'jego_floating_button';
+let floatingButtonEnabled = false;
 
 // ==================== FUNGSI BANTUAN ====================
 function applyTheme() {
@@ -133,6 +134,32 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
   return R * c;
 }
 
+// ==================== LOAD GOOGLE MAPS DYNAMICALLY ====================
+function loadGoogleMaps(apiKey) {
+  return new Promise((resolve, reject) => {
+    // Cek apakah sudah termuat
+    if (typeof google !== 'undefined' && google.maps) {
+      console.log('✅ Google Maps sudah termuat sebelumnya');
+      resolve();
+      return;
+    }
+    // Definisikan callback global yang dipanggil oleh script
+    window.initMap = function() {
+      console.log('✅ Google Maps callback initMap dipanggil');
+      resolve();
+    };
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initMap`;
+    script.async = true;
+    script.defer = true;
+    script.onerror = () => {
+      console.error('❌ Gagal memuat Google Maps');
+      reject(new Error('Gagal memuat Google Maps'));
+    };
+    document.head.appendChild(script);
+  });
+}
+
 // ==================== TOAST, POPUP, AUDIO ====================
 let toastTimeout = null;
 function showToast(message, type = 'info') {
@@ -172,15 +199,14 @@ function hidePopup() {
   document.getElementById('popupOverlay').style.display = 'none'; 
 }
 
-// ===== PERBAIKAN UTAMA: showConfirmPopupTracking =====
+// ===== PERBAIKAN: showConfirmPopupTracking dengan Promise =====
 function showConfirmPopupTracking(title, message, onConfirm, onCancel) {
     console.log('🔄 showConfirmPopupTracking dipanggil dengan title:', title);
     const overlay = document.getElementById('popupOverlay');
     if (!overlay) {
         console.error('❌ Elemen popupOverlay tidak ditemukan!');
-        return;
+        return Promise.resolve(false);
     }
-    console.log('✅ Elemen overlay ditemukan:', overlay);
 
     const icon = document.getElementById('popupIcon');
     const titleEl = document.getElementById('popupTitle');
@@ -189,7 +215,7 @@ function showConfirmPopupTracking(title, message, onConfirm, onCancel) {
 
     if (!icon || !titleEl || !msg || !footer) {
         console.error('❌ Salah satu elemen popup tidak ditemukan!');
-        return;
+        return Promise.resolve(false);
     }
 
     icon.textContent = '⚠️';
@@ -197,31 +223,44 @@ function showConfirmPopupTracking(title, message, onConfirm, onCancel) {
     msg.textContent = message || '';
 
     footer.innerHTML = `
-        <button id="confirmYes" class="popup-button" style="background: var(--primary); margin-right: 10px;">Batal</button>
-        <button id="confirmNo" class="popup-button" style="background: #ccc; color: #333;">Lanjutkan</button>
+        <button id="confirmYes" class="popup-button" style="background: #ccc; color: #333; margin-right: 10px;">Batal</button>
+        <button id="confirmNo" class="popup-button" style="background: var(--primary);">Lanjutkan</button>
     `;
 
-    // Gunakan requestAnimationFrame untuk memastikan rendering sebelum menampilkan
-    requestAnimationFrame(() => {
+    return new Promise((resolve) => {
+        overlay.style.display = 'flex';
         overlay.classList.add('show');
-        console.log('✅ Popup tracking ditampilkan (class .show ditambahkan)');
-    });
+        requestAnimationFrame(() => {
+            overlay.style.opacity = '0.99';
+            requestAnimationFrame(() => {
+                overlay.style.opacity = '1';
+            });
+        });
+        console.log('✅ Popup tracking ditampilkan');
 
-    document.getElementById('confirmYes').onclick = function(e) {
-        e.stopPropagation();
-        overlay.classList.remove('show');
-        if (typeof onCancel === 'function') onCancel();
-    };
-    document.getElementById('confirmNo').onclick = function(e) {
-        e.stopPropagation();
-        overlay.classList.remove('show');
-        if (typeof onConfirm === 'function') onConfirm();
-    };
-    overlay.onclick = function(e) {
-        if (e.target === overlay) {
+        document.getElementById('confirmYes').onclick = function(e) {
+            e.stopPropagation();
             overlay.classList.remove('show');
-        }
-    };
+            overlay.style.display = 'none';
+            if (typeof onCancel === 'function') onCancel();
+            resolve(false);
+        };
+        document.getElementById('confirmNo').onclick = function(e) {
+            e.stopPropagation();
+            overlay.classList.remove('show');
+            overlay.style.display = 'none';
+            if (typeof onConfirm === 'function') onConfirm();
+            resolve(true);
+        };
+        overlay.onclick = function(e) {
+            if (e.target === overlay) {
+                overlay.classList.remove('show');
+                overlay.style.display = 'none';
+                if (typeof onCancel === 'function') onCancel();
+                resolve(false);
+            }
+        };
+    });
 }
 
 function stopAllSounds() {
@@ -286,7 +325,12 @@ function loadStoredSettings() {
     acceptKurirEnabled = localStorage.getItem(STORAGE_ACCEPT_KURIR) === 'true';
     const kurirToggle = document.getElementById('acceptKurirToggle');
     if (kurirToggle) kurirToggle.checked = acceptKurirEnabled;
+
+    // ===== TAMBAHAN: baca status floating =====
+    floatingButtonEnabled = localStorage.getItem(STORAGE_FLOATING) === 'true';
+    updateFloatingButtonUI();
 }
+
 function updateTrackingButton() {
   const toggleBtn = document.getElementById('locationToggleBtn');
   const icon = toggleBtn.querySelector('.icon');
@@ -298,27 +342,81 @@ function updateTrackingButton() {
     icon.textContent = '📍';
   }
 }
+
 function updateAutobidButton() {
   const toggle = document.getElementById('autobidToggle');
   if (toggle) toggle.checked = autobidEnabled;
 }
 
-function toggleLocationTrackingWithConfirm() {
-    console.log('🔄 toggleLocationTrackingWithConfirm dipanggil (dari event)');
+// ===== TAMBAHAN: update UI floating toggle =====
+function updateFloatingButtonUI() {
+  const toggle = document.getElementById('floatingToggle');
+  if (toggle) toggle.checked = floatingButtonEnabled;
+}
+
+// ===== TAMBAHAN: fungsi untuk mengatur floating button =====
+function toggleFloatingButton() {
+  // Hanya bisa diubah jika tracking aktif
+  if (!locationTrackingEnabled) {
+    showToast('Aktifkan tracking terlebih dahulu untuk mengatur tombol pintasan.', 'warning');
+    // Kembalikan checkbox ke posisi semula
+    document.getElementById('floatingToggle').checked = floatingButtonEnabled;
+    return;
+  }
+
+  floatingButtonEnabled = !floatingButtonEnabled;
+  localStorage.setItem(STORAGE_FLOATING, floatingButtonEnabled);
+  updateFloatingButtonUI();
+
+  if (isAndroidAvailable()) {
+    if (floatingButtonEnabled) {
+      Android.startFloatingButton();
+      console.log('📌 Floating button diaktifkan');
+    } else {
+      Android.stopFloatingButton();
+      console.log('📌 Floating button dimatikan');
+    }
+  }
+
+  // Simpan ke Firebase
+  if (globalCurrentUid) {
+    database.ref('drivers/' + globalCurrentUid).update({
+      floating_button_enabled: floatingButtonEnabled,
+      last_update: new Date().toISOString()
+    }).catch(console.error);
+  }
+}
+
+// ===== PERBAIKAN: toggleLocationTrackingWithConfirm async =====
+async function toggleLocationTrackingWithConfirm() {
+    console.log('🔄 toggleLocationTrackingWithConfirm dipanggil');
+    
     if (locationTrackingEnabled) {
-        showConfirmPopupTracking(
+        const confirmed = await showConfirmPopupTracking(
             '📴 Nonaktifkan Mode',
             'Anda akan berhenti menerima order baru.\n\n⚠️ Order yang sedang berjalan TIDAK akan terpengaruh.',
-            () => { toggleLocationTracking(); },
-            () => { console.log('Batal nonaktifkan mode'); }
+            () => {},
+            () => {}
         );
+        if (confirmed) {
+            console.log('✅ User mengkonfirmasi NONAKTIF');
+            toggleLocationTracking();
+        } else {
+            console.log('❌ User membatalkan NONAKTIF');
+        }
     } else {
-        showConfirmPopupTracking(
+        const confirmed = await showConfirmPopupTracking(
             '🚗 Siap Menerima Order',
             'Sekarang kamu akan menerima order dari pelanggan terdekat.\n\n💡 Pastikan:\n• GPS menyala\n• Kuota data stabil\n• Baterai cukup',
-            () => { toggleLocationTracking(); },
-            () => { console.log('Batal aktifkan mode'); }
+            () => {},
+            () => {}
         );
+        if (confirmed) {
+            console.log('✅ User mengkonfirmasi AKTIF');
+            toggleLocationTracking();
+        } else {
+            console.log('❌ User membatalkan AKTIF');
+        }
     }
 }
 
@@ -339,6 +437,16 @@ function toggleLocationTracking() {
             soundOn.currentTime = 0;
             soundOn.play().catch(e => console.log('Audio error:', e));
         }
+        // Mulai tracking lokasi
+        if (isAndroidAvailable()) {
+            Android.startDriverTracking();
+            console.log('📍 Service tracking dimulai dari tombol');
+        }
+        // Jika floating button aktif, nyalakan juga
+        if (floatingButtonEnabled && isAndroidAvailable()) {
+            Android.startFloatingButton();
+            console.log('📌 Floating button dinyalakan karena tracking aktif dan tombol pintasan ON');
+        }
     } else {
         toggleBtn.classList.remove('active');
         icon.textContent = '📍';
@@ -347,20 +455,32 @@ function toggleLocationTracking() {
             soundOff.currentTime = 0;
             soundOff.play().catch(e => console.log('Audio error:', e));
         }
-    }
-
-    if (isAndroidAvailable()) {
-        if (locationTrackingEnabled) {
-            Android.startDriverTracking();
-            Android.startFloatingButton();
-            console.log('📍 Service tracking dimulai dari tombol');
-        } else {
+        // Matikan tracking lokasi
+        if (isAndroidAvailable()) {
             Android.stopDriverTracking();
-            Android.stopFloatingButton();
             console.log('⏹️ Service tracking dihentikan dari tombol');
+        }
+        // Matikan floating button (karena tracking mati)
+        if (floatingButtonEnabled && isAndroidAvailable()) {
+            Android.stopFloatingButton();
+            console.log('📌 Floating button dimatikan karena tracking dimatikan');
+        }
+        // Set status floating menjadi false (karena tidak boleh aktif)
+        if (floatingButtonEnabled) {
+            floatingButtonEnabled = false;
+            localStorage.setItem(STORAGE_FLOATING, false);
+            updateFloatingButtonUI();
+            // Update Firebase
+            if (globalCurrentUid) {
+                database.ref('drivers/' + globalCurrentUid).update({
+                    floating_button_enabled: false,
+                    last_update: new Date().toISOString()
+                }).catch(console.error);
+            }
         }
     }
 
+    // Simpan status ke Firebase
     if (globalCurrentUid) {
         database.ref('drivers/' + globalCurrentUid).update({
             tracking_enabled: locationTrackingEnabled,
@@ -368,6 +488,8 @@ function toggleLocationTracking() {
         }).catch(console.error);
         database.ref(`driver_locations/${globalCurrentUid}`).update({
             tracking_enabled: locationTrackingEnabled,
+            autobid_enabled: autobidEnabled,
+            floating_button_enabled: floatingButtonEnabled,
             last_update: new Date().toISOString()
         }).catch(console.error);
     }
@@ -494,6 +616,7 @@ function updateDriverLocation(position) {
       longitude: lng,
       tracking_enabled: locationTrackingEnabled,
       autobid_enabled: autobidEnabled,
+      floating_button_enabled: floatingButtonEnabled,
       last_update: new Date().toISOString()
     }).catch(console.error);
     lastSentLat = lat;
@@ -554,7 +677,6 @@ function checkDriverData() {
       document.getElementById('sidebarDriverRating').textContent = currentDriverData.rating.toFixed(1);
       document.getElementById('sidebarDriverTrips').innerHTML = `(${currentDriverData.perjalanan || 0})`;
 
-      // Set foto profil driver di sidebar
       const sidebarPhoto = document.getElementById('sidebarDriverPhoto');
       sidebarPhoto.src = currentDriverData.profilePhotoUrl || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
       sidebarPhoto.onerror = function() {
@@ -571,7 +693,7 @@ function showDriverNotRegistered() {
   if (ordersList) ordersList.innerHTML = `<div class="empty-state"><div>🚫</div><p>Anda belum terdaftar sebagai driver atau belum login</p><p><a href="loginDriver.html" style="color:var(--primary);">Login sebagai Driver</a></p></div>`;
 }
 
-// ==================== ORDERS LIST (OPTIMASI) ====================
+// ==================== ORDERS LIST ====================
 function detachOrdersListeners() {
     if (ordersRef) {
         if (ordersChildListeners.child_added) {
@@ -848,6 +970,7 @@ function loadOrders() {
                             longitude: loc.lng,
                             tracking_enabled: locationTrackingEnabled,
                             autobid_enabled: autobidEnabled,
+                            floating_button_enabled: floatingButtonEnabled,
                             last_update: new Date().toISOString()
                         }).catch(console.error);
                     }
@@ -1015,73 +1138,120 @@ function createBidOptionsInContainer(originalPrice, orderId, container) {
     container.appendChild(extraContainer);
 }
 
-function initBottomSheetMapbox() {
-  mapboxgl.accessToken = mapboxAccessToken;
-  bottomSheetMap = new mapboxgl.Map({
-    container: 'bottomSheetMap',
-    style: 'mapbox://styles/mapbox/streets-v11',
-    center: [123.0595, 0.5441],
-    zoom: 12
-  });
-  bottomSheetMap.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+function initBottomSheetMap() {
+    if (typeof google === 'undefined' || !google.maps) {
+        console.warn('Google Maps belum siap, coba lagi nanti');
+        return;
+    }
+    const mapContainer = document.getElementById('bottomSheetMap');
+    if (!mapContainer) return;
+    if (bottomSheetMap) {
+        bottomSheetMap = null;
+        mapContainer.innerHTML = '';
+    }
+    bottomSheetMap = new google.maps.Map(mapContainer, {
+        center: { lat: 0.5441, lng: 123.0595 },
+        zoom: 12,
+        mapTypeControl: false,
+        fullscreenControl: false,
+        streetViewControl: false,
+        zoomControl: true,
+    });
 }
 
 function showRouteOnBottomSheetMap(order) {
-  if (!order.pickup_lng || !order.pickup_lat || !order.dest_lng || !order.dest_lat) return;
-  if (mapMarkers.length) mapMarkers.forEach(m => m.remove());
-  if (bottomSheetMap.getLayer('route')) bottomSheetMap.removeLayer('route');
-  if (bottomSheetMap.getSource('route')) bottomSheetMap.removeSource('route');
+    if (!bottomSheetMap) return;
+    if (!order.pickup_lng || !order.pickup_lat || !order.dest_lng || !order.dest_lat) return;
 
-  const waypoints = [];
-  waypoints.push({ lng: order.pickup_lng, lat: order.pickup_lat });
-  if (order.via_lng && order.via_lat) {
-    waypoints.push({ lng: order.via_lng, lat: order.via_lat });
-  }
-  waypoints.push({ lng: order.dest_lng, lat: order.dest_lat });
+    if (mapMarkers.length) {
+        mapMarkers.forEach(m => m.setMap(null));
+        mapMarkers = [];
+    }
 
-  const pickupIcon = 'https://cdn-icons-png.flaticon.com/128/5811/5811823.png';
-  const viaIcon = 'https://cdn-icons-png.flaticon.com/128/684/684908.png';
-  const destIcon = 'https://cdn-icons-png.flaticon.com/128/684/684908.png';
+    const bounds = new google.maps.LatLngBounds();
+    const pickupPos = { lat: order.pickup_lat, lng: order.pickup_lng };
+    const destPos = { lat: order.dest_lat, lng: order.dest_lng };
 
-  const pickupEl = document.createElement('div');
-  pickupEl.innerHTML = `<img src="${pickupIcon}" style="width:40px;">`;
-  const pickupMarker = new mapboxgl.Marker({ element: pickupEl }).setLngLat([waypoints[0].lng, waypoints[0].lat]).addTo(bottomSheetMap);
-  mapMarkers.push(pickupMarker);
+    const pickupMarker = new google.maps.Marker({
+        position: pickupPos,
+        map: bottomSheetMap,
+        icon: {
+            url: 'https://cdn-icons-png.flaticon.com/128/5811/5811823.png',
+            scaledSize: new google.maps.Size(40, 40)
+        },
+        title: 'Jemput'
+    });
+    mapMarkers.push(pickupMarker);
+    bounds.extend(pickupPos);
 
-  if (waypoints.length === 3 && order.via_lng) {
-    const viaEl = document.createElement('div');
-    viaEl.innerHTML = `<img src="${viaIcon}" style="width:40px; filter: hue-rotate(200deg);">`;
-    const viaMarker = new mapboxgl.Marker({ element: viaEl }).setLngLat([waypoints[1].lng, waypoints[1].lat]).addTo(bottomSheetMap);
-    mapMarkers.push(viaMarker);
-  }
+    if (order.via_lng && order.via_lat) {
+        const viaPos = { lat: order.via_lat, lng: order.via_lng };
+        const viaMarker = new google.maps.Marker({
+            position: viaPos,
+            map: bottomSheetMap,
+            icon: {
+                url: 'https://cdn-icons-png.flaticon.com/128/684/684908.png',
+                scaledSize: new google.maps.Size(40, 40)
+            },
+            title: 'Via'
+        });
+        mapMarkers.push(viaMarker);
+        bounds.extend(viaPos);
+    }
 
-  const destEl = document.createElement('div');
-  destEl.innerHTML = `<img src="${destIcon}" style="width:40px;">`;
-  const destMarker = new mapboxgl.Marker({ element: destEl }).setLngLat([waypoints[waypoints.length-1].lng, waypoints[waypoints.length-1].lat]).addTo(bottomSheetMap);
-  mapMarkers.push(destMarker);
+    const destMarker = new google.maps.Marker({
+        position: destPos,
+        map: bottomSheetMap,
+        icon: {
+            url: 'https://cdn-icons-png.flaticon.com/128/684/684908.png',
+            scaledSize: new google.maps.Size(40, 40)
+        },
+        title: 'Tujuan'
+    });
+    mapMarkers.push(destMarker);
+    bounds.extend(destPos);
 
-  const bounds = new mapboxgl.LngLatBounds();
-  waypoints.forEach(wp => bounds.extend([wp.lng, wp.lat]));
-  bottomSheetMap.fitBounds(bounds, { padding: 40 });
+    bottomSheetMap.fitBounds(bounds, { padding: 40 });
 
-  let coordString = waypoints.map(wp => `${wp.lng},${wp.lat}`).join(';');
-  const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${coordString}?geometries=geojson&access_token=${mapboxAccessToken}`;
+    const directionsService = new google.maps.DirectionsService();
+    const directionsRenderer = new google.maps.DirectionsRenderer({
+        map: bottomSheetMap,
+        suppressMarkers: true,
+        polylineOptions: {
+            strokeColor: '#289672',
+            strokeWeight: 4
+        }
+    });
 
-  fetch(url).then(res => res.json()).then(data => {
-    if (data.routes && data.routes.length) {
-      bottomSheetMap.addSource('route', { type: 'geojson', data: data.routes[0].geometry });
-      bottomSheetMap.addLayer({ id: 'route', type: 'line', source: 'route', paint: { 'line-color': '#289672', 'line-width': 4 } });
-    } else fallbackLine();
-  }).catch(fallbackLine);
+    const waypoints = [];
+    if (order.via_lng && order.via_lat) {
+        waypoints.push({
+            location: { lat: order.via_lat, lng: order.via_lng },
+            stopover: true
+        });
+    }
 
-  function fallbackLine() {
-    const lineGeo = {
-      type: 'Feature',
-      geometry: { type: 'LineString', coordinates: waypoints.map(wp => [wp.lng, wp.lat]) }
-    };
-    bottomSheetMap.addSource('route', { type: 'geojson', data: lineGeo });
-    bottomSheetMap.addLayer({ id: 'route', type: 'line', source: 'route', paint: { 'line-color': '#289672', 'line-width': 4, 'line-dasharray': [2,1] } });
-  }
+    directionsService.route({
+        origin: pickupPos,
+        destination: destPos,
+        waypoints: waypoints,
+        travelMode: google.maps.TravelMode.DRIVING,
+    }, (result, status) => {
+        if (status === google.maps.DirectionsStatus.OK) {
+            directionsRenderer.setDirections(result);
+        } else {
+            console.warn('Gagal mengambil rute:', status);
+            const line = new google.maps.Polyline({
+                path: [pickupPos, destPos],
+                geodesic: true,
+                strokeColor: '#289672',
+                strokeWeight: 4,
+                strokeOpacity: 0.7,
+                map: bottomSheetMap,
+            });
+            mapMarkers.push(line);
+        }
+    });
 }
 
 async function showOrderDetail(orderObj, fromAuto = false, isAutoTrigger = false) {
@@ -1148,18 +1318,22 @@ async function showOrderDetail(orderObj, fromAuto = false, isAutoTrigger = false
     const sheet = document.getElementById('orderBottomSheet');
     sheet.classList.add('open');
 
-    if (mapboxAccessToken) {
-        if (!bottomSheetMap) initBottomSheetMapbox();
+    if (typeof google !== 'undefined' && google.maps) {
+        initBottomSheetMap();
         setTimeout(() => {
             showRouteOnBottomSheetMap(currentOrder);
         }, 300);
     } else {
-        fetchMapboxToken().then(() => {
-            if (!bottomSheetMap) initBottomSheetMapbox();
-            setTimeout(() => {
-                showRouteOnBottomSheetMap(currentOrder);
-            }, 300);
-        }).catch(console.error);
+        const checkMap = setInterval(() => {
+            if (typeof google !== 'undefined' && google.maps) {
+                clearInterval(checkMap);
+                initBottomSheetMap();
+                setTimeout(() => {
+                    showRouteOnBottomSheetMap(currentOrder);
+                }, 300);
+            }
+        }, 500);
+        setTimeout(() => clearInterval(checkMap), 10000);
     }
 
     const ambilBtn = document.getElementById('bottomSheetAmbilBtn');
@@ -1235,13 +1409,6 @@ async function showOrderDetail(orderObj, fromAuto = false, isAutoTrigger = false
         ambilBtn.textContent = 'Mengirim Penawaran...';
         await sendDriverOffer(true, currentOrder.price, 0, null);
     }
-}
-
-async function fetchMapboxToken() {
-  const snapshot = await database.ref('data-jego/mapbox_acces_token').once('value');
-  const token = snapshot.val();
-  if (token) { mapboxAccessToken = token; return token; }
-  throw new Error('Token tidak valid');
 }
 
 // ==================== SEND OFFER & COUNTDOWN ====================
@@ -1483,8 +1650,8 @@ function closeBottomSheet() {
   stopCountdown();
   currentSelectedOrder = null;
   if (bottomSheetMap) {
-    bottomSheetMap.remove();
     bottomSheetMap = null;
+    document.getElementById('bottomSheetMap').innerHTML = '';
   }
   if (currentModalOrderListener && currentModalOrderRef) {
     currentModalOrderRef.off('value', currentModalOrderListener);
@@ -1555,6 +1722,8 @@ function loadDriverNotifications() {
   if (!globalCurrentUid) return;
   const container = document.getElementById('notifListBody');
   if (!container) return;
+
+  container.style.display = 'block';
 
   if (notifListener && notifListenerRef) {
     notifListenerRef.off('value', notifListener);
@@ -1704,6 +1873,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (closeNotifSheet) {
         closeNotifSheet.addEventListener('click', () => {
           document.getElementById('notifBottomSheet').classList.remove('open');
+          document.getElementById('notifListBody').style.display = 'none';
         });
       }
       const notifSheet = document.getElementById('notifBottomSheet');
@@ -1711,6 +1881,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         notifSheet.addEventListener('click', function(e) {
           if (e.target === this) {
             this.classList.remove('open');
+            document.getElementById('notifListBody').style.display = 'none';
           }
         });
       }
@@ -1722,7 +1893,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.location.href = 'loginDriver.html';
         return;
       }
-      await fetchMapboxToken().catch(()=>console.warn('Mapbox token tidak tersedia'));
+      
+      // 🔥 Ambil API key Google Maps dari Firebase
+      try {
+        const keySnap = await database.ref('data-jego/apikey-google-maps').once('value');
+        const apiKey = keySnap.val();
+        if (apiKey) {
+          await loadGoogleMaps(apiKey);
+          console.log('✅ Google Maps berhasil dimuat dengan API key dari Firebase');
+        } else {
+          console.warn('⚠️ API key Google Maps tidak ditemukan di Firebase. Peta tidak akan berfungsi.');
+          showToast('API key Google Maps tidak ditemukan', 'warning');
+        }
+      } catch (error) {
+        console.error('❌ Gagal mengambil API key dari Firebase:', error);
+        showToast('Gagal memuat Google Maps', 'error');
+      }
+
       loadStoredSettings();
       if (globalCurrentUid) {
         database.ref('drivers/' + globalCurrentUid).once('value').then(snap => {
@@ -1741,6 +1928,17 @@ document.addEventListener('DOMContentLoaded', async () => {
               autobidEnabled = data.autobid_enabled;
               localStorage.setItem(STORAGE_AUTOBID, autobidEnabled);
               updateAutobidButton();
+            }
+            // ===== TAMBAHAN: sinkron floating dari Firebase =====
+            if (data.floating_button_enabled !== undefined) {
+              floatingButtonEnabled = data.floating_button_enabled;
+              localStorage.setItem(STORAGE_FLOATING, floatingButtonEnabled);
+              updateFloatingButtonUI();
+              // Jika tracking aktif dan floating aktif, start floating
+              if (locationTrackingEnabled && floatingButtonEnabled && isAndroidAvailable()) {
+                Android.startFloatingButton();
+                console.log('📌 Floating button dinyalakan dari Firebase');
+              }
             }
           }
         }).catch(console.error);
@@ -1778,12 +1976,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
-  // ===== PERBAIKAN: hanya SATU event listener untuk tombol tracking =====
   const locationToggleBtn = document.getElementById('locationToggleBtn');
   if (locationToggleBtn) {
       console.log('🔍 Tombol tracking ditemukan');
-      // Pastikan tidak ada event listener lain sebelumnya (dengan mengganti yang sudah ada)
-      // Hanya tambahkan satu listener
       locationToggleBtn.addEventListener('click', function(e) {
           e.preventDefault();
           e.stopPropagation();
@@ -1799,6 +1994,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
   document.getElementById('autobidToggle').addEventListener('change', toggleAutobid);
   document.getElementById('acceptKurirToggle').addEventListener('change', updateAcceptKurirSetting);
+  // ===== TAMBAHAN: event listener untuk floating toggle =====
+  document.getElementById('floatingToggle').addEventListener('change', toggleFloatingButton);
   document.getElementById('promptAllowBtn')?.addEventListener('click', async () => {
     closeNotifPrompt();
     await initOneSignal();
