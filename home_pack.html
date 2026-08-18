@@ -546,31 +546,33 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ===== ORDER BOTTOM SHEET (MODIFIED) ===== */
+    /* ===== ORDER BOTTOM SHEET ===== */
     .order-bottom-sheet {
       position: fixed;
       bottom: 0;
       left: 0;
       right: 0;
-      top: 0;
       background: white;
       border-radius: 28px 28px 0 0;
       box-shadow: 0 -8px 30px rgba(0,0,0,0.2);
       z-index: 2000;
       transform: translateY(100%);
       transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
-      max-height: 100vh;
+      max-height: 85vh;
       overflow-y: auto;
-      padding: 0 20px 20px;
+      padding: 20px 20px 30px;
       display: none;
     }
     .order-bottom-sheet.open {
       transform: translateY(0);
       display: block;
     }
-    /* Sembunyikan handle */
     .order-bottom-sheet .handle {
-      display: none;
+      width: 40px;
+      height: 4px;
+      background: #ccc;
+      border-radius: 4px;
+      margin: 0 auto 12px;
     }
     .order-bottom-sheet .header {
       display: flex;
@@ -599,11 +601,12 @@
     .order-bottom-sheet .info-row .label { color: #666; }
     .order-bottom-sheet .info-row .value { font-weight: 600; text-align: right; }
     .order-bottom-sheet .map-container {
-  width: calc(100% + 40px);
-  margin-left: -20px;
-  margin-right: -20px;
-  height: 400px;
-}
+      height: 200px;
+      width: 100%;
+      margin: 10px 0;
+      border-radius: 12px;
+      overflow: hidden;
+    }
     .order-bottom-sheet .modal-order-details {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
@@ -751,7 +754,7 @@
     input:checked + .toggle-slider { background-color: var(--primary); }
     input:checked + .toggle-slider:before { transform: translateX(26px); }
 
-    /* ===== POPUP ===== */
+    /* ===== POPUP (PERBAIKAN) ===== */
     .popup-overlay {
       display: none;
       position: fixed;
@@ -1151,10 +1154,13 @@
   </div>
 </div>
 
-<!-- ===== ORDER BOTTOM SHEET (modified) ===== -->
+<!-- ===== ORDER BOTTOM SHEET ===== -->
 <div id="orderBottomSheet" class="order-bottom-sheet">
-  <!-- handle dihapus -->
-  <!-- konten akan diisi oleh JavaScript -->
+  <div class="handle"></div>
+  <div class="header">
+    <h2 id="bottomSheetTitle">Detail Permintaan</h2>
+    <button class="close-sheet" id="closeBottomSheet">&times;</button>
+  </div>
   <div id="bottomSheetContent"></div>
 </div>
 
@@ -1217,6 +1223,7 @@
             <span class="toggle-slider"></span>
           </label>
         </div>
+        <!-- ===== TAMBAHAN: Tombol Pintasan ===== -->
         <div class="menu-item">
           <span>📌 Tombol Pintasan</span>
           <label class="toggle-switch">
@@ -1374,6 +1381,7 @@ const MAX_DISTANCE_KM = 20;
 const STORAGE_TRACKING = 'jego_location_tracking';
 const STORAGE_AUTOBID = 'jego_autobid_enabled';
 const STORAGE_ACCEPT_KURIR = 'jego_accept_kurir';
+// ===== TAMBAHAN: konstanta untuk floating button =====
 const STORAGE_FLOATING = 'jego_floating_button';
 let floatingButtonEnabled = false;
 
@@ -1422,11 +1430,13 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 // ==================== LOAD GOOGLE MAPS DYNAMICALLY ====================
 function loadGoogleMaps(apiKey) {
   return new Promise((resolve, reject) => {
+    // Cek apakah sudah termuat
     if (typeof google !== 'undefined' && google.maps) {
       console.log('✅ Google Maps sudah termuat sebelumnya');
       resolve();
       return;
     }
+    // Definisikan callback global yang dipanggil oleh script
     window.initMap = function() {
       console.log('✅ Google Maps callback initMap dipanggil');
       resolve();
@@ -1482,6 +1492,7 @@ function hidePopup() {
   document.getElementById('popupOverlay').style.display = 'none'; 
 }
 
+// ===== PERBAIKAN: showConfirmPopupTracking dengan Promise =====
 function showConfirmPopupTracking(title, message, onConfirm, onCancel) {
     console.log('🔄 showConfirmPopupTracking dipanggil dengan title:', title);
     const overlay = document.getElementById('popupOverlay');
@@ -1608,6 +1619,7 @@ function loadStoredSettings() {
     const kurirToggle = document.getElementById('acceptKurirToggle');
     if (kurirToggle) kurirToggle.checked = acceptKurirEnabled;
 
+    // ===== TAMBAHAN: baca status floating =====
     floatingButtonEnabled = localStorage.getItem(STORAGE_FLOATING) === 'true';
     updateFloatingButtonUI();
 }
@@ -1629,14 +1641,18 @@ function updateAutobidButton() {
   if (toggle) toggle.checked = autobidEnabled;
 }
 
+// ===== TAMBAHAN: update UI floating toggle =====
 function updateFloatingButtonUI() {
   const toggle = document.getElementById('floatingToggle');
   if (toggle) toggle.checked = floatingButtonEnabled;
 }
 
+// ===== TAMBAHAN: fungsi untuk mengatur floating button =====
 function toggleFloatingButton() {
+  // Hanya bisa diubah jika tracking aktif
   if (!locationTrackingEnabled) {
     showToast('Aktifkan tracking terlebih dahulu untuk mengatur tombol pintasan.', 'warning');
+    // Kembalikan checkbox ke posisi semula
     document.getElementById('floatingToggle').checked = floatingButtonEnabled;
     return;
   }
@@ -1655,6 +1671,7 @@ function toggleFloatingButton() {
     }
   }
 
+  // Simpan ke Firebase
   if (globalCurrentUid) {
     database.ref('drivers/' + globalCurrentUid).update({
       floating_button_enabled: floatingButtonEnabled,
@@ -1663,6 +1680,7 @@ function toggleFloatingButton() {
   }
 }
 
+// ===== PERBAIKAN: toggleLocationTrackingWithConfirm async =====
 async function toggleLocationTrackingWithConfirm() {
     console.log('🔄 toggleLocationTrackingWithConfirm dipanggil');
     
@@ -1712,10 +1730,12 @@ function toggleLocationTracking() {
             soundOn.currentTime = 0;
             soundOn.play().catch(e => console.log('Audio error:', e));
         }
+        // Mulai tracking lokasi
         if (isAndroidAvailable()) {
             Android.startDriverTracking();
             console.log('📍 Service tracking dimulai dari tombol');
         }
+        // Jika floating button aktif, nyalakan juga
         if (floatingButtonEnabled && isAndroidAvailable()) {
             Android.startFloatingButton();
             console.log('📌 Floating button dinyalakan karena tracking aktif dan tombol pintasan ON');
@@ -1728,18 +1748,22 @@ function toggleLocationTracking() {
             soundOff.currentTime = 0;
             soundOff.play().catch(e => console.log('Audio error:', e));
         }
+        // Matikan tracking lokasi
         if (isAndroidAvailable()) {
             Android.stopDriverTracking();
             console.log('⏹️ Service tracking dihentikan dari tombol');
         }
+        // Matikan floating button (karena tracking mati)
         if (floatingButtonEnabled && isAndroidAvailable()) {
             Android.stopFloatingButton();
             console.log('📌 Floating button dimatikan karena tracking dimatikan');
         }
+        // Set status floating menjadi false (karena tidak boleh aktif)
         if (floatingButtonEnabled) {
             floatingButtonEnabled = false;
             localStorage.setItem(STORAGE_FLOATING, false);
             updateFloatingButtonUI();
+            // Update Firebase
             if (globalCurrentUid) {
                 database.ref('drivers/' + globalCurrentUid).update({
                     floating_button_enabled: false,
@@ -1749,6 +1773,7 @@ function toggleLocationTracking() {
         }
     }
 
+    // Simpan status ke Firebase
     if (globalCurrentUid) {
         database.ref('drivers/' + globalCurrentUid).update({
             tracking_enabled: locationTrackingEnabled,
@@ -2540,10 +2565,10 @@ async function showOrderDetail(orderObj, fromAuto = false, isAutoTrigger = false
     }
     currentSelectedOrder = { orderId: orderId, orderData: currentOrder };
 
-    // --- HTML konten bottom sheet (tanpa header) ---
+    const content = document.getElementById('bottomSheetContent');
     let html = `
-        <div id="bottomSheetMap" class="map-container" style="height:400px; margin: -20px -20px 12px -20px; border-radius:28px 28px 0 0;"></div>
-        <div style="display:flex; align-items:center; gap:8px; margin:12px 0 8px 0;">
+        <div id="bottomSheetMap" class="map-container" style="height:180px; margin-bottom:12px;"></div>
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
             <img src="${currentOrder.photoURL || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'}" style="width:36px; height:36px; border-radius:50%; object-fit:cover; border:2px solid var(--primary);">
             <div>
                 <div style="font-weight:600; font-size:0.95rem;">${escapeHtml(currentOrder.customer_name || 'Customer')}</div>
@@ -2581,7 +2606,7 @@ async function showOrderDetail(orderObj, fromAuto = false, isAutoTrigger = false
             <button class="ambil-btn" id="bottomSheetSkipBtn" style="flex:1; background:#ccc; color:#333;">Lewati</button>
         </div>
     `;
-    document.getElementById('bottomSheetContent').innerHTML = html;
+    content.innerHTML = html;
 
     const sheet = document.getElementById('orderBottomSheet');
     sheet.classList.add('open');
@@ -3162,6 +3187,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
       }
       
+      // 🔥 Ambil API key Google Maps dari Firebase
       try {
         const keySnap = await database.ref('data-jego/apikey-google-maps').once('value');
         const apiKey = keySnap.val();
@@ -3196,10 +3222,12 @@ document.addEventListener('DOMContentLoaded', async () => {
               localStorage.setItem(STORAGE_AUTOBID, autobidEnabled);
               updateAutobidButton();
             }
+            // ===== TAMBAHAN: sinkron floating dari Firebase =====
             if (data.floating_button_enabled !== undefined) {
               floatingButtonEnabled = data.floating_button_enabled;
               localStorage.setItem(STORAGE_FLOATING, floatingButtonEnabled);
               updateFloatingButtonUI();
+              // Jika tracking aktif dan floating aktif, start floating
               if (locationTrackingEnabled && floatingButtonEnabled && isAndroidAvailable()) {
                 Android.startFloatingButton();
                 console.log('📌 Floating button dinyalakan dari Firebase');
@@ -3259,6 +3287,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
   document.getElementById('autobidToggle').addEventListener('change', toggleAutobid);
   document.getElementById('acceptKurirToggle').addEventListener('change', updateAcceptKurirSetting);
+  // ===== TAMBAHAN: event listener untuk floating toggle =====
   document.getElementById('floatingToggle').addEventListener('change', toggleFloatingButton);
   document.getElementById('promptAllowBtn')?.addEventListener('click', async () => {
     closeNotifPrompt();
