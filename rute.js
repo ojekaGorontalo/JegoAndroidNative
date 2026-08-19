@@ -49,7 +49,6 @@ let pickFromMapActive = false;
 let searchTimeout = null;
 let minAllowedNego = 0;
 let mapIdleTimer = null;
-let isCalculatingRoute = false;
 
 // Data kendaraan dari Firebase
 let transportData = {};
@@ -360,28 +359,14 @@ function initNegosiasi(originalPriceVal) {
 
 function handleNegoInput() {
     const input = document.getElementById('negoInput');
-    let val = input.value.trim();
-
-    // Cek dan bersihkan titik/koma
-    if (val.includes('.') || val.includes(',')) {
-        val = val.replace(/[.,]/g, '');
-        input.value = val;
-        document.getElementById('negoError').innerHTML = '⚠️ Hanya angka, tidak boleh pakai titik atau koma.';
-        document.getElementById('negoError').style.display = 'block';
-        currentPrice = 0;
-        document.getElementById('labelTawaran').innerText = 'Rp 0';
-        const confirmBtn = document.getElementById('confirmBtn');
-        if (confirmBtn) confirmBtn.innerHTML = '🚀 CARI DRIVER | Rp 0';
-        return;
-    } else {
-        document.getElementById('negoError').style.display = 'none';
-    }
+    const val = input.value.trim();
 
     if (val === '') {
         currentPrice = 0;
         document.getElementById('labelTawaran').innerText = 'Rp 0';
         const confirmBtn = document.getElementById('confirmBtn');
         if (confirmBtn) confirmBtn.innerHTML = '🚀 CARI DRIVER | Rp 0';
+        document.getElementById('negoError').style.display = 'none';
         return;
     }
 
@@ -391,12 +376,13 @@ function handleNegoInput() {
         document.getElementById('labelTawaran').innerText = 'Rp 0';
         const confirmBtn = document.getElementById('confirmBtn');
         if (confirmBtn) confirmBtn.innerHTML = '🚀 CARI DRIVER | Rp 0';
+        document.getElementById('negoError').style.display = 'none';
         return;
     }
 
     if (numVal < minAllowedNego) {
-        document.getElementById('negoError').innerHTML = `Minimal tawaran ${formatRupiah(minAllowedNego)}`;
         document.getElementById('negoError').style.display = 'block';
+        document.getElementById('minErrorVal').innerText = formatRupiah(minAllowedNego);
     } else {
         document.getElementById('negoError').style.display = 'none';
     }
@@ -955,7 +941,7 @@ function searchAddressFallback(keyword) {
     });
 }
 
-// ==================== SELECT ADDRESS ====================
+// ==================== SELECT ADDRESS (DIPERBAIKI) ====================
 function selectAddress(feature) {
     const coords = feature.geometry.coordinates;
     const address = getFullAddress(feature);
@@ -977,6 +963,7 @@ function selectAddress(feature) {
         document.getElementById('viaInput').value = viaAddress;
         document.getElementById('clearViaBtn').style.display = 'block';
         updateMarkers();
+        // PERBAIKAN: panggil updateRoute jika pickup dan dest sudah ada
         if (pickupCoord && destCoord) {
             console.log('🔄 Via ditambahkan, perbarui rute');
             updateRoute();
@@ -987,7 +974,9 @@ function selectAddress(feature) {
         document.getElementById('destInput').value = destAddress;
     }
 
+    // Jika pickup dan dest sudah ada, perbarui rute (untuk kasus pickup/dest)
     if (pickupCoord && destCoord) {
+        // Hanya panggil jika bukan mode via (karena via sudah memanggil di atas)
         if (searchOverlayMode !== 'via') {
             updateRoute();
         }
@@ -1094,58 +1083,16 @@ function updateMarkers() {
     }
 }
 
-// ==================== VALIDASI KOORDINAT ====================
-function isValidCoordinatePair(coord) {
-    if (!coord || !Array.isArray(coord) || coord.length !== 2) return false;
-    const [lng, lat] = coord;
-    if (typeof lng !== 'number' || typeof lat !== 'number') return false;
-    if (isNaN(lng) || isNaN(lat)) return false;
-    if (lng === 0 && lat === 0) return false;
-    if (lat < -90 || lat > 90) return false;
-    if (lng < -180 || lng > 180) return false;
-    return true;
-}
-
 // ==================== UPDATE ROUTE (DIPERBAIKI) ====================
 async function updateRoute() {
     console.log('🛣️ updateRoute() dipanggil');
     console.log('📍 pickupCoord:', pickupCoord);
     console.log('📍 destCoord:', destCoord);
     console.log('📍 viaCoord:', viaCoord);
-
-    // Cegah multiple call bersamaan
-    if (isCalculatingRoute) {
-        console.log('⏳ Sedang menghitung rute, lewati...');
-        return;
-    }
-
     if (!pickupCoord || !destCoord) {
         console.warn('⚠️ updateRoute: pickup atau dest belum ada');
         return;
     }
-
-    // Validasi koordinat
-    if (!isValidCoordinatePair(pickupCoord) || !isValidCoordinatePair(destCoord)) {
-        console.error('❌ Koordinat tidak valid:', { pickupCoord, destCoord });
-        showToast('⚠️ Koordinat lokasi tidak valid', 'error');
-        return;
-    }
-
-    if (viaCoord && !isValidCoordinatePair(viaCoord)) {
-        console.error('❌ Koordinat Via tidak valid:', viaCoord);
-        showToast('⚠️ Koordinat titik singgah tidak valid', 'error');
-        viaCoord = null;
-        viaAddress = '';
-        document.getElementById('viaInput').value = '';
-        document.getElementById('clearViaBtn').style.display = 'none';
-        if (viaMarker) { viaMarker.setMap(null); viaMarker = null; }
-    }
-
-    isCalculatingRoute = true;
-
-    // Tampilkan loading
-    document.getElementById('routeDetails').style.display = 'none';
-    document.getElementById('routeLoading').style.display = 'block';
 
     if (window.directionsRenderer) {
         window.directionsRenderer.setMap(null);
@@ -1154,12 +1101,14 @@ async function updateRoute() {
 
     try {
         const waypoints = [];
-        if (viaCoord && viaCoord.length === 2 && isValidCoordinatePair(viaCoord)) {
+        if (viaCoord && viaCoord.length === 2) {
             console.log('📍 Menambahkan via ke rute:', viaAddress);
             waypoints.push({
                 location: { lat: viaCoord[1], lng: viaCoord[0] },
                 stopover: true
             });
+        } else {
+            console.log('📍 Tidak ada via, rute langsung');
         }
 
         if (!directionsService) {
@@ -1178,51 +1127,33 @@ async function updateRoute() {
 
         const result = await new Promise((resolve, reject) => {
             directionsService.route(request, (response, status) => {
-                if (status === google.maps.DirectionsStatus.OK && response) {
+                if (status === google.maps.DirectionsStatus.OK) {
                     resolve(response);
                 } else {
-                    let errorMsg = status;
-                    if (status === 'REQUEST_DENIED') {
-                        errorMsg = 'API Key tidak memiliki akses ke Directions API. Aktifkan di Google Cloud Console.';
-                    } else if (status === 'OVER_QUERY_LIMIT') {
-                        errorMsg = 'Kuota API habis, coba lagi nanti.';
-                    } else if (status === 'ZERO_RESULTS') {
-                        errorMsg = 'Tidak ada rute yang ditemukan antara lokasi tersebut.';
-                    }
-                    reject(new Error(errorMsg));
+                    reject(new Error(status));
                 }
             });
         });
 
         const route = result.routes[0];
-        if (!route || !route.legs || route.legs.length === 0) {
-            throw new Error('Tidak ada leg dalam rute');
-        }
-
+        // ===== PERBAIKAN: jumlahkan seluruh legs =====
         let distanceMeters = 0;
         let durationSeconds = 0;
         route.legs.forEach(leg => {
-            if (leg.distance && leg.distance.value) distanceMeters += leg.distance.value;
-            if (leg.duration && leg.duration.value) durationSeconds += leg.duration.value;
+            distanceMeters += leg.distance.value;
+            durationSeconds += leg.duration.value;
         });
-
-        if (distanceMeters === 0) {
-            throw new Error('Jarak rute 0, mungkin lokasi terlalu dekat');
-        }
+        // ============================================
 
         const price = calculatePrice(distanceMeters);
         currentPrice = price;
         initNegosiasi(price);
 
-        // Sembunyikan loading, tampilkan detail
-        document.getElementById('routeLoading').style.display = 'none';
-        document.getElementById('routeDetails').style.display = 'block';
-
         currentRoute = { distance: distanceMeters, duration: durationSeconds, price: price };
 
         document.getElementById('routeFrom').innerText = pickupAddress;
         document.getElementById('routeTo').innerText = destAddress;
-        if (viaAddress && viaCoord && isValidCoordinatePair(viaCoord)) {
+        if (viaAddress && viaCoord) {
             document.getElementById('viaAddressRow').style.display = 'flex';
             document.getElementById('routeVia').innerText = viaAddress;
         } else {
@@ -1230,19 +1161,11 @@ async function updateRoute() {
         }
         document.getElementById('routeDuration').innerText = Math.round(durationSeconds / 60) + ' menit';
         document.getElementById('routePrice').innerHTML = formatRupiah(price);
+        document.getElementById('routeDetails').style.display = 'block';
         document.getElementById('confirmBtn').disabled = false;
         document.getElementById('confirmBtn').innerHTML = `🚀 CARI DRIVER | ${formatRupiah(price)}`;
 
-        // Fokus ke input negosiasi
-        const negoInput = document.getElementById('negoInput');
-        setTimeout(() => {
-            negoInput.focus();
-            if (typeof window !== 'undefined' && 'ontouchstart' in window) {
-                negoInput.click();
-            }
-        }, 300);
-
-        const newDirectionsRenderer = new google.maps.DirectionsRenderer({
+        const directionsRenderer = new google.maps.DirectionsRenderer({
             map: map,
             suppressMarkers: true,
             polylineOptions: {
@@ -1250,49 +1173,25 @@ async function updateRoute() {
                 strokeWeight: 5
             }
         });
-        window.directionsRenderer = newDirectionsRenderer;
-        newDirectionsRenderer.setDirections(result);
+        window.directionsRenderer = directionsRenderer;
+        directionsRenderer.setDirections(result);
 
         updateMarkers();
 
         const bounds = new google.maps.LatLngBounds();
         bounds.extend(new google.maps.LatLng(pickupCoord[1], pickupCoord[0]));
         bounds.extend(new google.maps.LatLng(destCoord[1], destCoord[0]));
-        if (viaCoord && isValidCoordinatePair(viaCoord)) {
-            bounds.extend(new google.maps.LatLng(viaCoord[1], viaCoord[0]));
-        }
+        if (viaCoord) bounds.extend(new google.maps.LatLng(viaCoord[1], viaCoord[0]));
         map.fitBounds(bounds, { top: 160, bottom: 220, left: 50, right: 50 });
 
         console.log('✅ Rute berhasil digambar');
-
     } catch(err) {
         console.error('❌ updateRoute error:', err);
-        document.getElementById('routeLoading').style.display = 'none';
-        
-        let errorMessage = 'Gagal menghitung rute. ';
-        if (err.message.includes('REQUEST_DENIED')) {
-            errorMessage += 'API Google Maps tidak aktif. Hubungi admin.';
-        } else if (err.message.includes('OVER_QUERY_LIMIT')) {
-            errorMessage += 'Kuota API habis, coba lagi nanti.';
-        } else if (err.message.includes('ZERO_RESULTS')) {
-            errorMessage += 'Tidak ada rute antara lokasi tersebut. Coba lokasi lain.';
-        } else {
-            errorMessage += 'Coba periksa koneksi internet atau pilih lokasi lain.';
-        }
-        showToast('⚠️ ' + errorMessage, 'error');
-        
-        // Tampilkan detail rute dengan pesan error
-        document.getElementById('routeDetails').style.display = 'block';
-        document.getElementById('routeDuration').innerText = 'Gagal';
-        document.getElementById('routePrice').innerHTML = 'Rp 0';
-        document.getElementById('confirmBtn').disabled = true;
-        document.getElementById('confirmBtn').innerHTML = '⚠️ Gagal hitung rute';
-    } finally {
-        isCalculatingRoute = false;
+        showPopup('Error', 'Gagal menghitung rute.');
     }
 }
 
-// ==================== CLEAR VIA ====================
+// ==================== CLEAR VIA (SUDAH BENAR) ====================
 function clearViaPoint() {
     if (viaCoord) {
         viaCoord = null;
@@ -1358,6 +1257,7 @@ function useCurrentLocation() {
 function pickFromMap() {
     closeSearchOverlay();
     closeVehicleOverlay();
+    // Sembunyikan bottom sheet detail rute
     document.getElementById('routeDetails').style.display = 'none';
 
     if (!map) return;
