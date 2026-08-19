@@ -359,14 +359,28 @@ function initNegosiasi(originalPriceVal) {
 
 function handleNegoInput() {
     const input = document.getElementById('negoInput');
-    const val = input.value.trim();
+    let val = input.value.trim();
+
+    // Cek dan bersihkan titik/koma
+    if (val.includes('.') || val.includes(',')) {
+        val = val.replace(/[.,]/g, '');
+        input.value = val;
+        document.getElementById('negoError').innerHTML = '⚠️ Hanya angka, tidak boleh pakai titik atau koma.';
+        document.getElementById('negoError').style.display = 'block';
+        currentPrice = 0;
+        document.getElementById('labelTawaran').innerText = 'Rp 0';
+        const confirmBtn = document.getElementById('confirmBtn');
+        if (confirmBtn) confirmBtn.innerHTML = '🚀 CARI DRIVER | Rp 0';
+        return;
+    } else {
+        document.getElementById('negoError').style.display = 'none';
+    }
 
     if (val === '') {
         currentPrice = 0;
         document.getElementById('labelTawaran').innerText = 'Rp 0';
         const confirmBtn = document.getElementById('confirmBtn');
         if (confirmBtn) confirmBtn.innerHTML = '🚀 CARI DRIVER | Rp 0';
-        document.getElementById('negoError').style.display = 'none';
         return;
     }
 
@@ -376,13 +390,12 @@ function handleNegoInput() {
         document.getElementById('labelTawaran').innerText = 'Rp 0';
         const confirmBtn = document.getElementById('confirmBtn');
         if (confirmBtn) confirmBtn.innerHTML = '🚀 CARI DRIVER | Rp 0';
-        document.getElementById('negoError').style.display = 'none';
         return;
     }
 
     if (numVal < minAllowedNego) {
+        document.getElementById('negoError').innerHTML = `Minimal tawaran ${formatRupiah(minAllowedNego)}`;
         document.getElementById('negoError').style.display = 'block';
-        document.getElementById('minErrorVal').innerText = formatRupiah(minAllowedNego);
     } else {
         document.getElementById('negoError').style.display = 'none';
     }
@@ -1148,6 +1161,16 @@ async function updateRoute() {
         const price = calculatePrice(distanceMeters);
         currentPrice = price;
         initNegosiasi(price);
+
+        // Fokus ke input negosiasi agar keyboard HP terbuka
+        const negoInput = document.getElementById('negoInput');
+        setTimeout(() => {
+            negoInput.focus();
+            // Untuk perangkat mobile, sentuh/klik untuk memunculkan keyboard
+            if (typeof window !== 'undefined' && 'ontouchstart' in window) {
+                negoInput.click();
+            }
+        }, 300);
 
         currentRoute = { distance: distanceMeters, duration: durationSeconds, price: price };
 
