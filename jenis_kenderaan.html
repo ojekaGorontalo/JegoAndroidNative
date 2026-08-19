@@ -842,6 +842,110 @@
         .log-btn:active {
             background: #E65100;
         }
+
+        /* ===== CUSTOM POPUP ===== */
+        .custom-popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(8px);
+            z-index: 3000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .custom-popup-overlay.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(30px) scale(0.95); opacity: 0; }
+            to { transform: translateY(0) scale(1); opacity: 1; }
+        }
+
+        .custom-popup {
+            background: var(--surface);
+            border-radius: 28px;
+            max-width: 380px;
+            width: 100%;
+            padding: 32px 24px 24px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideUp 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .custom-popup .popup-icon {
+            font-size: 56px;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .custom-popup .popup-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .custom-popup .popup-message {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 24px;
+        }
+
+        .custom-popup .popup-btn {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 12px 40px;
+            border-radius: 40px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+        }
+
+        .custom-popup .popup-btn:active {
+            transform: scale(0.96);
+        }
+
+        /* Tipe popup */
+        .custom-popup.success .popup-icon { color: var(--success); }
+        .custom-popup.warning .popup-icon { color: #FF9800; }
+        .custom-popup.error .popup-icon { color: var(--danger); }
+        .custom-popup.info .popup-icon { color: #2196F3; }
+
+        .custom-popup.success .popup-btn {
+            background: linear-gradient(135deg, var(--success), #66BB6A);
+        }
+        .custom-popup.warning .popup-btn {
+            background: linear-gradient(135deg, #FF9800, #FFB74D);
+        }
+        .custom-popup.error .popup-btn {
+            background: linear-gradient(135deg, var(--danger), #EF5350);
+        }
+        .custom-popup.info .popup-btn {
+            background: linear-gradient(135deg, #2196F3, #64B5F6);
+        }
+
+        body.dark-mode .custom-popup {
+            background: var(--surface);
+        }
     </style>
 </head>
 <body>
@@ -877,11 +981,9 @@
         <div class="sidebar-item" data-link="help"><span class="icon">❓</span> Bantuan & Dukungan</div>
         <div class="sidebar-item" data-link="about"><span class="icon">ℹ️</span> Tentang JeGo</div>
         <div class="sidebar-item" id="shareToFriend"><span class="icon">📤</span> Bagikan ke teman</div>
-
-        <!-- ===== TOMBOL NOTIFIKASI (BARU) ===== -->
+        <!-- Tombol Notifikasi -->
         <div class="sidebar-item" id="notificationBtn"><span class="icon">🔔</span> Notifikasi</div>
-
-        <!-- ===== TOMBOL JUAL PRODUK ===== -->
+        <!-- Tombol Jual Produk -->
         <div class="sidebar-item" id="merchantMenuBtn"><span class="icon">🏪</span> Jual Produk Anda</div>
         <div class="sidebar-item" data-link="logout"><span class="icon">🚪</span> Logout</div>
     </div>
@@ -958,8 +1060,19 @@
                 </div>
                 <div style="font-size:1.5rem; color:var(--primary);">→</div>
             </div>
+            <!-- JEGO FOOD DISEMBUNYIKAN SEMENTARA -->
             <button class="modal-close" id="closeChoiceModal">Batal</button>
         </div>
+    </div>
+</div>
+
+<!-- ===== CUSTOM POPUP ===== -->
+<div class="custom-popup-overlay" id="customPopup">
+    <div class="custom-popup" id="customPopupContent">
+        <span class="popup-icon" id="popupIcon">🔔</span>
+        <div class="popup-title" id="popupTitle">Notifikasi</div>
+        <div class="popup-message" id="popupMessage">Pesan Anda</div>
+        <button class="popup-btn" id="popupBtn">OK</button>
     </div>
 </div>
 
@@ -1050,22 +1163,37 @@
     async function switchToDriver() {
         const customerDataStr = localStorage.getItem('jego_logged_in_user');
         if (!customerDataStr) {
-            alert('Anda belum login sebagai customer. Silakan login terlebih dahulu.');
-            window.location.href = 'loginUser.html';
+            showCustomPopup(
+                'Login Diperlukan',
+                'Anda belum login sebagai customer. Silakan login terlebih dahulu.',
+                'warning',
+                '⚠️'
+            );
+            setTimeout(() => window.location.href = 'loginUser.html', 1500);
             return;
         }
         let customerData;
         try {
             customerData = JSON.parse(customerDataStr);
         } catch(e) {
-            alert('Data sesi tidak valid. Silakan login ulang.');
-            window.location.href = 'loginUser.html';
+            showCustomPopup(
+                'Error',
+                'Data sesi tidak valid. Silakan login ulang.',
+                'error',
+                '❌'
+            );
+            setTimeout(() => window.location.href = 'loginUser.html', 1500);
             return;
         }
         const uid = customerData.uid;
         if (!uid) {
-            alert('UID tidak ditemukan. Silakan login ulang.');
-            window.location.href = 'loginUser.html';
+            showCustomPopup(
+                'Error',
+                'UID tidak ditemukan. Silakan login ulang.',
+                'error',
+                '❌'
+            );
+            setTimeout(() => window.location.href = 'loginUser.html', 1500);
             return;
         }
 
@@ -1119,7 +1247,12 @@
         } catch (err) {
             console.error('Gagal beralih ke mode driver:', err);
             showGlobalLoading(false);
-            alert('Terjadi kesalahan, silakan coba lagi.');
+            showCustomPopup(
+                'Error',
+                'Terjadi kesalahan, silakan coba lagi.',
+                'error',
+                '❌'
+            );
         }
     }
 
@@ -1161,7 +1294,7 @@
                     window.location.href = 'merchant_ket.html';
                     return;
                 }
-                // ===== TOMBOL NOTIFIKASI =====
+                // Tombol Notifikasi
                 if (item.id === 'notificationBtn') {
                     toggleSidebar(false);
                     await checkNotificationStatus();
@@ -1175,7 +1308,12 @@
                 } else if (link === 'help') {
                     window.location.href = 'cs_jego.html';
                 } else if (link === 'about') {
-                    alert('JeGo v1.0 - Aplikasi transportasi & ekspedisi.');
+                    showCustomPopup(
+                        'Tentang JeGo',
+                        'JeGo v1.0 - Aplikasi transportasi & ekspedisi.',
+                        'info',
+                        'ℹ️'
+                    );
                 } else if (link === 'logout') {
                     if (firebaseAuth) {
                         await firebaseAuth.signOut();
@@ -1201,7 +1339,12 @@
     // ========== CEK STATUS NOTIFIKASI (FCM) ==========
     async function checkNotificationStatus() {
         if (!currentUser || !currentUser.uid) {
-            alert('⚠️ Silakan login terlebih dahulu untuk melihat status notifikasi.');
+            showCustomPopup(
+                'Login Diperlukan',
+                'Silakan login terlebih dahulu untuk melihat status notifikasi.',
+                'warning',
+                '⚠️'
+            );
             return;
         }
 
@@ -1211,16 +1354,69 @@
             const tokens = snapshot.val();
 
             if (tokens && Object.keys(tokens).length > 0) {
-                // Ada token FCM terdaftar
-                alert('✅ Notifikasi aktif.\nAnda akan menerima notifikasi terbaru dari JeGo.');
+                showCustomPopup(
+                    'Notifikasi Aktif ✅',
+                    'Anda akan menerima notifikasi terbaru dari JeGo.',
+                    'success',
+                    '✅'
+                );
             } else {
-                // Tidak ada token
-                alert('⚠️ Notifikasi belum aktif.\nSilakan aktifkan notifikasi di pengaturan aplikasi Anda.');
+                showCustomPopup(
+                    'Notifikasi Belum Aktif ⚠️',
+                    'Silakan aktifkan notifikasi di pengaturan aplikasi Anda.',
+                    'warning',
+                    '⚠️'
+                );
             }
         } catch (error) {
             console.error('Gagal cek status notifikasi:', error);
-            alert('❌ Gagal memeriksa status notifikasi. Silakan coba lagi nanti.');
+            showCustomPopup(
+                'Gagal Memeriksa ❌',
+                'Terjadi kesalahan. Silakan coba lagi nanti.',
+                'error',
+                '❌'
+            );
         }
+    }
+
+    // ========== CUSTOM POPUP ==========
+    function showCustomPopup(title, message, type = 'info', icon = '🔔') {
+        const overlay = document.getElementById('customPopup');
+        const content = document.getElementById('customPopupContent');
+        const iconEl = document.getElementById('popupIcon');
+        const titleEl = document.getElementById('popupTitle');
+        const msgEl = document.getElementById('popupMessage');
+        const btn = document.getElementById('popupBtn');
+
+        // Set icon berdasarkan tipe jika tidak ditentukan
+        const iconMap = {
+            success: '✅',
+            warning: '⚠️',
+            error: '❌',
+            info: 'ℹ️'
+        };
+        
+        iconEl.textContent = icon || iconMap[type] || '🔔';
+        titleEl.textContent = title || 'Notifikasi';
+        msgEl.textContent = message || '';
+
+        // Reset class
+        content.className = 'custom-popup';
+        content.classList.add(type);
+
+        overlay.classList.add('active');
+
+        // Event klik tombol
+        btn.onclick = function() {
+            overlay.classList.remove('active');
+        };
+
+        // Klik di luar popup untuk menutup
+        overlay.onclick = function(e) {
+            if (e.target === overlay) {
+                overlay.classList.remove('active');
+            }
+        };
     }
 
     async function cekOrderAktifDanRedirect() {
