@@ -1136,9 +1136,15 @@ async function updateRoute() {
         });
 
         const route = result.routes[0];
-        const leg = route.legs[0];
-        const distanceMeters = leg.distance.value;
-        const durationSeconds = leg.duration.value;
+        // ===== PERBAIKAN: jumlahkan seluruh legs =====
+        let distanceMeters = 0;
+        let durationSeconds = 0;
+        route.legs.forEach(leg => {
+            distanceMeters += leg.distance.value;
+            durationSeconds += leg.duration.value;
+        });
+        // ============================================
+
         const price = calculatePrice(distanceMeters);
         currentPrice = price;
         initNegosiasi(price);
