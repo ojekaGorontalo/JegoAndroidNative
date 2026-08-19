@@ -447,7 +447,6 @@ async function loadWaitingOrderData() {
             document.getElementById('clearViaBtn').style.display = 'block';
             document.getElementById('viaAddressRow').style.display = 'flex';
             document.getElementById('routeVia').innerText = viaAddress;
-            console.log('📍 Load via dari order:', viaAddress);
         } else {
             viaCoord = null;
             viaAddress = '';
@@ -942,7 +941,7 @@ function searchAddressFallback(keyword) {
     });
 }
 
-// ==================== SELECT ADDRESS (DENGAN PERBAIKAN VIA) ====================
+// ==================== SELECT ADDRESS (DIPERBAIKI) ====================
 function selectAddress(feature) {
     const coords = feature.geometry.coordinates;
     const address = getFullAddress(feature);
@@ -975,9 +974,68 @@ function selectAddress(feature) {
         document.getElementById('destInput').value = destAddress;
     }
 
-    if (pickupCoord && destCoord) updateRoute();
+    // Jika pickup dan dest sudah ada, perbarui rute (untuk kasus pickup/dest)
+    if (pickupCoord && destCoord) {
+        // Hanya panggil jika bukan mode via (karena via sudah memanggil di atas)
+        if (searchOverlayMode !== 'via') {
+            updateRoute();
+        }
+    }
     closeSearchOverlay();
     closeVehicleOverlay();
+}
+
+// ==================== AUTO FILL PICKUP ====================
+async function autoFillPickupLocation() {
+    console.log('📍 autoFillPickupLocation() dipanggil');
+
+    const pickupInput = document.getElementById('pickupInput');
+    const originalPlaceholder = pickupInput.placeholder;
+    pickupInput.placeholder = '⏳ Mendeteksi lokasi Anda...';
+    pickupInput.style.color = '#999';
+
+    return new Promise((resolve) => {
+        if (!navigator.geolocation) {
+            console.warn('⚠️ Geolokasi tidak didukung');
+            pickupInput.placeholder = originalPlaceholder;
+            pickupInput.style.color = '';
+            resolve(false);
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(async (position) => {
+            const { latitude, longitude } = position.coords;
+            console.log(`📍 Lokasi pengguna: ${latitude}, ${longitude}`);
+
+            pickupInput.placeholder = '⏳ Mengambil alamat...';
+
+            let address = await reverseGeocode(longitude, latitude);
+            if (!address || address.trim() === '') address = '(Jalan Tanpa Nama)';
+
+            pickupCoord = [longitude, latitude];
+            pickupAddress = address;
+            pickupInput.value = pickupAddress;
+            pickupInput.placeholder = originalPlaceholder;
+            pickupInput.style.color = '';
+
+            updateMarkers();
+            if (map) {
+                map.setCenter({ lat: latitude, lng: longitude });
+                map.setZoom(14);
+            }
+            if (destCoord) await updateRoute();
+
+            showToast('✅ Lokasi Anda digunakan sebagai titik penjemputan', 'success');
+            resolve(true);
+
+        }, () => {
+            console.warn('⚠️ Gagal mendapatkan lokasi');
+            pickupInput.placeholder = originalPlaceholder;
+            pickupInput.style.color = '';
+            showToast('⚠️ Gagal mendeteksi lokasi, silakan pilih manual', 'error');
+            resolve(false);
+        }, { enableHighAccuracy: true, timeout: 10000 });
+    });
 }
 
 // ==================== UPDATE MARKERS ====================
@@ -1025,7 +1083,7 @@ function updateMarkers() {
     }
 }
 
-// ==================== UPDATE ROUTE (DENGAN PERBAIKAN) ====================
+// ==================== UPDATE ROUTE (DIPERBAIKI) ====================
 async function updateRoute() {
     console.log('🛣️ updateRoute() dipanggil');
     console.log('📍 pickupCoord:', pickupCoord);
@@ -1127,7 +1185,7 @@ async function updateRoute() {
     }
 }
 
-// ==================== CLEAR VIA (DENGAN PERBAIKAN) ====================
+// ==================== CLEAR VIA (SUDAH BENAR) ====================
 function clearViaPoint() {
     if (viaCoord) {
         viaCoord = null;
@@ -1193,6 +1251,7 @@ function useCurrentLocation() {
 function pickFromMap() {
     closeSearchOverlay();
     closeVehicleOverlay();
+    // Sembunyikan bottom sheet detail rute
     document.getElementById('routeDetails').style.display = 'none';
 
     if (!map) return;
@@ -1754,59 +1813,6 @@ function cleanupSearch() {
     stopSlowZoomOut();
 }
 
-// ==================== AUTO FILL PICKUP ====================
-async function autoFillPickupLocation() {
-    console.log('📍 autoFillPickupLocation() dipanggil');
-
-    const pickupInput = document.getElementById('pickupInput');
-    const originalPlaceholder = pickupInput.placeholder;
-    pickupInput.placeholder = '⏳ Mendeteksi lokasi Anda...';
-    pickupInput.style.color = '#999';
-
-    return new Promise((resolve) => {
-        if (!navigator.geolocation) {
-            console.warn('⚠️ Geolokasi tidak didukung');
-            pickupInput.placeholder = originalPlaceholder;
-            pickupInput.style.color = '';
-            resolve(false);
-            return;
-        }
-
-        navigator.geolocation.getCurrentPosition(async (position) => {
-            const { latitude, longitude } = position.coords;
-            console.log(`📍 Lokasi pengguna: ${latitude}, ${longitude}`);
-
-            pickupInput.placeholder = '⏳ Mengambil alamat...';
-
-            let address = await reverseGeocode(longitude, latitude);
-            if (!address || address.trim() === '') address = '(Jalan Tanpa Nama)';
-
-            pickupCoord = [longitude, latitude];
-            pickupAddress = address;
-            pickupInput.value = pickupAddress;
-            pickupInput.placeholder = originalPlaceholder;
-            pickupInput.style.color = '';
-
-            updateMarkers();
-            if (map) {
-                map.setCenter({ lat: latitude, lng: longitude });
-                map.setZoom(14);
-            }
-            if (destCoord) await updateRoute();
-
-            showToast('✅ Lokasi Anda digunakan sebagai titik penjemputan', 'success');
-            resolve(true);
-
-        }, () => {
-            console.warn('⚠️ Gagal mendapatkan lokasi');
-            pickupInput.placeholder = originalPlaceholder;
-            pickupInput.style.color = '';
-            showToast('⚠️ Gagal mendeteksi lokasi, silakan pilih manual', 'error');
-            resolve(false);
-        }, { enableHighAccuracy: true, timeout: 10000 });
-    });
-}
-
 // ==================== INISIALISASI ====================
 window.onload = async () => {
     console.log('📱 JeGo Rute Customer - window.onload');
@@ -1817,7 +1823,7 @@ window.onload = async () => {
 
     await fetchTransportData();
 
-    // Ambil API key Google Maps dari Firebase
+    // 🔥 Ambil API key Google Maps dari Firebase
     try {
         const keySnap = await database.ref('data-jego/apikey-google-maps').once('value');
         const apiKey = keySnap.val();
@@ -1833,6 +1839,7 @@ window.onload = async () => {
         showToast('Gagal memuat Google Maps', 'error');
     }
 
+    // Setelah Google Maps termuat, lakukan inisialisasi lainnya
     const orderActive = await cekOrderAktifDanRedirect();
 
     if (orderActive) {
@@ -1854,7 +1861,7 @@ window.onload = async () => {
         }
     }
 
-    // Force tampilkan tombol cancel jika ada order waiting
+    // Force tampilkan tombol cancel jika ada order waiting (backup)
     setTimeout(async () => {
         const orderId = localStorage.getItem('current_order_id');
         if (orderId) {
