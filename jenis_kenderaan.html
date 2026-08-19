@@ -734,6 +734,7 @@
         .sidebar-menu {
             flex: 1;
             padding: 16px 0;
+            overflow-y: auto;
         }
         .sidebar-item {
             display: flex;
@@ -762,6 +763,11 @@
             z-index: 1002;
         }
 
+        /* ===== SEMBUNYIKAN LOG UI ===== */
+        #logContainer, .log-btn {
+            display: none !important;
+        }
+
         @media (max-width: 480px) {
             .app-bar-title {
                 font-size: 1.2rem;
@@ -779,7 +785,7 @@
             }
         }
 
-        /* ===== LOG UI ===== */
+        /* ===== LOG UI (tetap ada di DOM tapi tersembunyi) ===== */
         #logContainer {
             position: fixed;
             bottom: 80px;
@@ -794,7 +800,6 @@
             max-height: 200px;
             overflow-y: auto;
             z-index: 9999;
-            display: none;
             border: 1px solid #0f0;
             box-shadow: 0 4px 12px rgba(0,0,0,0.5);
         }
@@ -872,10 +877,14 @@
         <div class="sidebar-item" data-link="help"><span class="icon">❓</span> Bantuan & Dukungan</div>
         <div class="sidebar-item" data-link="about"><span class="icon">ℹ️</span> Tentang JeGo</div>
         <div class="sidebar-item" id="shareToFriend"><span class="icon">📤</span> Bagikan ke teman</div>
-         <!-- ===== TAMBAHKAN INI ===== -->
-    <div class="sidebar-item" id="merchantMenuBtn"><span class="icon">🏪</span> Jual Produk Anda</div>
-    <div class="sidebar-item" data-link="logout"><span class="icon">🚪</span> Logout</div>
-</div>
+
+        <!-- ===== TOMBOL NOTIFIKASI (BARU) ===== -->
+        <div class="sidebar-item" id="notificationBtn"><span class="icon">🔔</span> Notifikasi</div>
+
+        <!-- ===== TOMBOL JUAL PRODUK ===== -->
+        <div class="sidebar-item" id="merchantMenuBtn"><span class="icon">🏪</span> Jual Produk Anda</div>
+        <div class="sidebar-item" data-link="logout"><span class="icon">🚪</span> Logout</div>
+    </div>
     <div class="sidebar-bottom">
         <div class="menu-section">
             <div class="mode-penumpang-card" id="modeDriverBtn">
@@ -949,23 +958,12 @@
                 </div>
                 <div style="font-size:1.5rem; color:var(--primary);">→</div>
             </div>
-            <!-- JEGO FOOD DISEMBUNYIKAN SEMENTARA -->
-            <!--
-            <div class="modal-option" id="chooseFood">
-                <div class="icon">🍔</div>
-                <div class="info">
-                    <div class="title">Jego Food</div>
-                    <div class="desc">Pembelian makanan &amp; produk lain</div>
-                </div>
-                <div style="font-size:1.5rem; color:var(--primary);">→</div>
-            </div>
-            -->
             <button class="modal-close" id="closeChoiceModal">Batal</button>
         </div>
     </div>
 </div>
 
-<!-- ===== LOG CONSOLE UI ===== -->
+<!-- ===== LOG CONSOLE UI (tetap ada tapi disembunyikan) ===== -->
 <div id="logContainer">
     <div class="log-header">
         <span>📋 LOG</span>
@@ -1149,40 +1147,45 @@
     }
 
     function setupSidebarActions() {
-    const menuItems = document.querySelectorAll('.sidebar-item');
-    menuItems.forEach(item => {
-        item.addEventListener('click', async (e) => {
-            const link = item.getAttribute('data-link');
-            if (item.id === 'shareToFriend') {
-                toggleSidebar(false);
-                shareToWhatsApp();
-                return;
-            }
-            // ===== TAMBAHKAN INI =====
-            if (item.id === 'merchantMenuBtn') {
-                toggleSidebar(false);
-                window.location.href = 'merchant_ket.html';
-                return;
-            }
-            toggleSidebar(false);
-            if (link === 'profile') {
-                window.location.href = 'userAccount.html';
-            } else if (link === 'referral') {
-                window.location.href = 'programReferral.html';
-            } else if (link === 'help') {
-                window.location.href = 'cs_jego.html';
-            } else if (link === 'about') {
-                alert('JeGo v1.0 - Aplikasi transportasi & ekspedisi.');
-            } else if (link === 'logout') {
-                if (firebaseAuth) {
-                    await firebaseAuth.signOut();
+        const menuItems = document.querySelectorAll('.sidebar-item');
+        menuItems.forEach(item => {
+            item.addEventListener('click', async (e) => {
+                const link = item.getAttribute('data-link');
+                if (item.id === 'shareToFriend') {
+                    toggleSidebar(false);
+                    shareToWhatsApp();
+                    return;
                 }
-                localStorage.removeItem('jego_logged_in_user');
-                localStorage.removeItem('current_order_id');
-                window.location.href = 'loginUser.html';
-            }
+                if (item.id === 'merchantMenuBtn') {
+                    toggleSidebar(false);
+                    window.location.href = 'merchant_ket.html';
+                    return;
+                }
+                // ===== TOMBOL NOTIFIKASI =====
+                if (item.id === 'notificationBtn') {
+                    toggleSidebar(false);
+                    await checkNotificationStatus();
+                    return;
+                }
+                toggleSidebar(false);
+                if (link === 'profile') {
+                    window.location.href = 'userAccount.html';
+                } else if (link === 'referral') {
+                    window.location.href = 'programReferral.html';
+                } else if (link === 'help') {
+                    window.location.href = 'cs_jego.html';
+                } else if (link === 'about') {
+                    alert('JeGo v1.0 - Aplikasi transportasi & ekspedisi.');
+                } else if (link === 'logout') {
+                    if (firebaseAuth) {
+                        await firebaseAuth.signOut();
+                    }
+                    localStorage.removeItem('jego_logged_in_user');
+                    localStorage.removeItem('current_order_id');
+                    window.location.href = 'loginUser.html';
+                }
+            });
         });
-    });
 
         document.getElementById('modeDriverBtn')?.addEventListener('click', async (e) => {
             e.stopPropagation();
@@ -1193,6 +1196,31 @@
         document.getElementById('menuButton').addEventListener('click', () => toggleSidebar(true));
         document.getElementById('closeSidebar').addEventListener('click', () => toggleSidebar(false));
         document.getElementById('sidebarOverlay').addEventListener('click', () => toggleSidebar(false));
+    }
+
+    // ========== CEK STATUS NOTIFIKASI (FCM) ==========
+    async function checkNotificationStatus() {
+        if (!currentUser || !currentUser.uid) {
+            alert('⚠️ Silakan login terlebih dahulu untuk melihat status notifikasi.');
+            return;
+        }
+
+        try {
+            if (!firebaseDatabase) await initializeFirebase();
+            const snapshot = await firebaseDatabase.ref(`users/${currentUser.uid}/fcmTokens`).once('value');
+            const tokens = snapshot.val();
+
+            if (tokens && Object.keys(tokens).length > 0) {
+                // Ada token FCM terdaftar
+                alert('✅ Notifikasi aktif.\nAnda akan menerima notifikasi terbaru dari JeGo.');
+            } else {
+                // Tidak ada token
+                alert('⚠️ Notifikasi belum aktif.\nSilakan aktifkan notifikasi di pengaturan aplikasi Anda.');
+            }
+        } catch (error) {
+            console.error('Gagal cek status notifikasi:', error);
+            alert('❌ Gagal memeriksa status notifikasi. Silakan coba lagi nanti.');
+        }
     }
 
     async function cekOrderAktifDanRedirect() {
@@ -1497,17 +1525,6 @@
             setTimeout(() => processTransportSelection(selectedTransport, 'rute_kurir.html'), 400);
         }
     });
-
-    // JEGO FOOD DISEMBUNYIKAN SEMENTARA
-/*
-document.getElementById('chooseFood').addEventListener('click', () => {
-    if (selectedTransport) {
-        document.getElementById('kurirChoiceModal').classList.remove('active');
-        showGlobalLoading(true);
-        setTimeout(() => processTransportSelection(selectedTransport, 'jego_food.html'), 400);
-    }
-});
-*/
 
     document.getElementById('closeChoiceModal').addEventListener('click', closeKurirChoiceModal);
     // Tutup modal jika klik di luar konten
