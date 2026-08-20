@@ -199,6 +199,24 @@
             background: rgba(255,255,255,0.4);
         }
 
+        /* ===== BANNER ===== */
+        #bannerContainer {
+            padding: 12px 16px;
+            background: var(--background);
+            display: none;
+        }
+        #bannerImage {
+            width: 100%;
+            border-radius: 16px;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        #bannerImage:active {
+            transform: scale(0.98);
+        }
+
+        /* ===== MAIN ===== */
         .main-container {
             flex: 1;
             padding: 20px 16px 80px;
@@ -263,19 +281,28 @@
             display: inline-block;
         }
 
-        .transport-grid {
-            display: flex;
-            flex-direction: column;
+        /* ===== GRID KENDARAAN ===== */
+        .transport-grid-top {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
             gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .transport-grid-bottom {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
         }
 
         .transport-card {
             background: var(--surface);
-            border-radius: 24px;
-            padding: 16px;
+            border-radius: 20px;
+            padding: 16px 12px;
             display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 16px;
+            text-align: center;
             cursor: pointer;
             transition: all 0.25s ease;
             border: 1px solid var(--gray-light);
@@ -285,7 +312,7 @@
         }
 
         .transport-card:active {
-            transform: scale(0.98);
+            transform: scale(0.96);
             background: #fef9f0;
         }
         body.dark-mode .transport-card:active {
@@ -301,7 +328,75 @@
             background: linear-gradient(135deg, #2a2418, #1f1a12);
         }
 
-        /* ===== MODE PENUMPANG CARD (untuk customer) ===== */
+        .transport-icon {
+            width: 60px;
+            height: 60px;
+            background: #FFF2E5;
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-bottom: 8px;
+        }
+        body.dark-mode .transport-icon {
+            background: #3a2a1a;
+        }
+
+        .transport-icon img {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+        }
+
+        .transport-info {
+            width: 100%;
+        }
+
+        .transport-name {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+
+        .transport-capacity {
+            font-size: 0.7rem;
+            color: var(--primary);
+            font-weight: 600;
+            background: rgba(255,109,0,0.1);
+            display: inline-block;
+            padding: 1px 10px;
+            border-radius: 20px;
+            margin-bottom: 4px;
+        }
+
+        .transport-description {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            line-height: 1.2;
+        }
+
+        /* penyesuaian untuk grid 3 kolom */
+        .transport-grid-bottom .transport-card {
+            padding: 12px 8px;
+        }
+        .transport-grid-bottom .transport-icon {
+            width: 50px;
+            height: 50px;
+        }
+        .transport-grid-bottom .transport-icon img {
+            width: 35px;
+            height: 35px;
+        }
+        .transport-grid-bottom .transport-name {
+            font-size: 0.95rem;
+        }
+        .transport-grid-bottom .transport-description {
+            font-size: 0.65rem;
+        }
+
+        /* ===== MODE PENUMPANG ===== */
         .mode-penumpang-card {
             background: linear-gradient(135deg, #FF9800, #FF5722);
             border-radius: 12px;
@@ -387,60 +482,6 @@
         }
         body.dark-mode .social-icons a:hover {
             background: #3a3a3a;
-        }
-
-        .transport-icon {
-            width: 70px;
-            height: 70px;
-            background: #FFF2E5;
-            border-radius: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-        body.dark-mode .transport-icon {
-            background: #3a2a1a;
-        }
-
-        .transport-icon img {
-            width: 50px;
-            height: 50px;
-            object-fit: contain;
-        }
-
-        .transport-info {
-            flex: 1;
-        }
-
-        .transport-name {
-            font-size: 1.25rem;
-            font-weight: 800;
-            color: var(--text-primary);
-            margin-bottom: 4px;
-        }
-
-        .transport-capacity {
-            font-size: 0.75rem;
-            color: var(--primary);
-            font-weight: 600;
-            background: rgba(255,109,0,0.1);
-            display: inline-block;
-            padding: 2px 10px;
-            border-radius: 20px;
-            margin-bottom: 6px;
-        }
-
-        .transport-description {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            line-height: 1.3;
-        }
-
-        .card-arrow {
-            color: var(--gray-light);
-            font-size: 20px;
-            font-weight: 300;
         }
 
         .loading-container {
@@ -549,7 +590,7 @@
             font-weight: 500;
         }
 
-        /* ===== MODAL PILIHAN KURIR (Jego Kurir vs Jego Food) ===== */
+        /* ===== MODAL PILIHAN KURIR ===== */
         .modal {
             display: none;
             position: fixed;
@@ -772,16 +813,33 @@
             .app-bar-title {
                 font-size: 1.2rem;
             }
+            .transport-card {
+                padding: 12px 8px;
+            }
             .transport-icon {
-                width: 60px;
-                height: 60px;
+                width: 50px;
+                height: 50px;
             }
             .transport-icon img {
-                width: 40px;
-                height: 40px;
+                width: 35px;
+                height: 35px;
             }
             .transport-name {
-                font-size: 1.1rem;
+                font-size: 0.95rem;
+            }
+            .transport-grid-bottom .transport-card {
+                padding: 10px 6px;
+            }
+            .transport-grid-bottom .transport-icon {
+                width: 44px;
+                height: 44px;
+            }
+            .transport-grid-bottom .transport-icon img {
+                width: 30px;
+                height: 30px;
+            }
+            .transport-grid-bottom .transport-name {
+                font-size: 0.85rem;
             }
         }
 
@@ -924,7 +982,6 @@
             transform: scale(0.96);
         }
 
-        /* Tipe popup */
         .custom-popup.success .popup-icon { color: var(--success); }
         .custom-popup.warning .popup-icon { color: #FF9800; }
         .custom-popup.error .popup-icon { color: var(--danger); }
@@ -967,6 +1024,11 @@
     </div>
 </div>
 
+<!-- ===== BANNER IKLAN ===== -->
+<div id="bannerContainer">
+    <img id="bannerImage" src="" alt="Banner Promo">
+</div>
+
 <!-- Sidebar -->
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 <div class="sidebar" id="sidebar">
@@ -981,9 +1043,7 @@
         <div class="sidebar-item" data-link="help"><span class="icon">❓</span> Bantuan & Dukungan</div>
         <div class="sidebar-item" data-link="about"><span class="icon">ℹ️</span> Tentang JeGo</div>
         <div class="sidebar-item" id="shareToFriend"><span class="icon">📤</span> Bagikan ke teman</div>
-        <!-- Tombol Notifikasi -->
         <div class="sidebar-item" id="notificationBtn"><span class="icon">🔔</span> Notifikasi</div>
-        <!-- Tombol Jual Produk -->
         <div class="sidebar-item" id="merchantMenuBtn"><span class="icon">🏪</span> Jual Produk Anda</div>
         <div class="sidebar-item" data-link="logout"><span class="icon">🚪</span> Logout</div>
     </div>
@@ -1025,7 +1085,10 @@
 
         <div class="section-title"><span></span> Pilih Kendaraan</div>
         <div id="loadingSpinner" class="loading-container" style="display: none;"><div class="spinner"></div></div>
-        <div id="transportGrid" class="transport-grid"></div>
+
+        <!-- Grid kendaraan: 2 kolom atas (motor, bentor), 3 kolom bawah (mobil, kurir motor, kurir bentor) -->
+        <div class="transport-grid-top" id="transportGridTop"></div>
+        <div class="transport-grid-bottom" id="transportGridBottom"></div>
     </div>
 
     <div id="loginRequiredContent" style="display: none;">
@@ -1060,7 +1123,6 @@
                 </div>
                 <div style="font-size:1.5rem; color:var(--primary);">→</div>
             </div>
-            <!-- JEGO FOOD DISEMBUNYIKAN SEMENTARA -->
             <button class="modal-close" id="closeChoiceModal">Batal</button>
         </div>
     </div>
@@ -1294,7 +1356,6 @@
                     window.location.href = 'merchant_ket.html';
                     return;
                 }
-                // Tombol Notifikasi
                 if (item.id === 'notificationBtn') {
                     toggleSidebar(false);
                     await checkNotificationStatus();
@@ -1388,7 +1449,6 @@
         const msgEl = document.getElementById('popupMessage');
         const btn = document.getElementById('popupBtn');
 
-        // Set icon berdasarkan tipe jika tidak ditentukan
         const iconMap = {
             success: '✅',
             warning: '⚠️',
@@ -1400,18 +1460,15 @@
         titleEl.textContent = title || 'Notifikasi';
         msgEl.textContent = message || '';
 
-        // Reset class
         content.className = 'custom-popup';
         content.classList.add(type);
 
         overlay.classList.add('active');
 
-        // Event klik tombol
         btn.onclick = function() {
             overlay.classList.remove('active');
         };
 
-        // Klik di luar popup untuk menutup
         overlay.onclick = function(e) {
             if (e.target === overlay) {
                 overlay.classList.remove('active');
@@ -1552,6 +1609,7 @@
                 const orderAktif = await cekOrderAktifDanRedirect();
                 if (orderAktif) return true;
                 await fetchTransportData();
+                await loadBanner(); // <-- ambil banner setelah login
 
                 const requiredFields = ['name', 'phone', 'address'];
                 const missingFields = requiredFields.filter(field => !currentUser[field] || currentUser[field].trim() === '');
@@ -1600,6 +1658,31 @@
         return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
     }
 
+    // ========== LOAD BANNER DARI FIREBASE ==========
+    async function loadBanner() {
+        try {
+            if (!firebaseDatabase) return;
+            const snapshot = await firebaseDatabase.ref('data-jego/banner-iklan/banner').once('value');
+            const bannerUrl = snapshot.val();
+            const container = document.getElementById('bannerContainer');
+            const img = document.getElementById('bannerImage');
+            if (bannerUrl && typeof bannerUrl === 'string' && bannerUrl.trim() !== '') {
+                img.src = bannerUrl;
+                container.style.display = 'block';
+                img.onclick = function() {
+                    window.location.href = 'bannerPromo.html';
+                };
+                console.log('✅ Banner dimuat');
+            } else {
+                container.style.display = 'none';
+            }
+        } catch (error) {
+            console.warn('Gagal memuat banner:', error);
+            document.getElementById('bannerContainer').style.display = 'none';
+        }
+    }
+
+    // ========== FETCH DATA KENDARAAN ==========
     async function fetchTransportData() {
         try {
             if (!firebaseDatabase) throw new Error('Firebase null');
@@ -1647,32 +1730,48 @@
         renderTransportCards();
     }
 
+    // ========== RENDER KENDARAAN GRID ==========
     function renderTransportCards() {
-        const grid = document.getElementById('transportGrid');
-        if (!grid) return;
-        grid.innerHTML = '';
-        const order = ['motor', 'bentor', 'mobil', 'kurir_motor', 'kurir_bentor'];
-        order.forEach(type => {
+        const topGrid = document.getElementById('transportGridTop');
+        const bottomGrid = document.getElementById('transportGridBottom');
+        if (!topGrid || !bottomGrid) return;
+        topGrid.innerHTML = '';
+        bottomGrid.innerHTML = '';
+
+        const topOrder = ['motor', 'bentor'];
+        const bottomOrder = ['mobil', 'kurir_motor', 'kurir_bentor'];
+
+        function createCard(type, t) {
+            const card = document.createElement('div');
+            card.className = 'transport-card';
+            card.innerHTML = `
+                <div class="transport-icon"><img src="${t.icon}" alt="${t.name}" loading="lazy"></div>
+                <div class="transport-info">
+                    <div class="transport-name">${t.name}</div>
+                    <div class="transport-capacity">${t.capacity}</div>
+                    <div class="transport-description">${t.description}</div>
+                </div>
+            `;
+            card.addEventListener('click', () => selectTransport(type, t, card));
+            return card;
+        }
+
+        topOrder.forEach(type => {
             const t = transportData[type];
             if (t) {
-                const card = document.createElement('div');
-                card.className = 'transport-card';
-                card.innerHTML = `
-                    <div class="transport-icon"><img src="${t.icon}" alt="${t.name}" loading="lazy"></div>
-                    <div class="transport-info">
-                        <div class="transport-name">${t.name}</div>
-                        <div class="transport-capacity">${t.capacity}</div>
-                        <div class="transport-description">${t.description}</div>
-                    </div>
-                    <div class="card-arrow">›</div>
-                `;
-                card.addEventListener('click', () => selectTransport(type, t, card));
-                grid.appendChild(card);
+                topGrid.appendChild(createCard(type, t));
+            }
+        });
+
+        bottomOrder.forEach(type => {
+            const t = transportData[type];
+            if (t) {
+                bottomGrid.appendChild(createCard(type, t));
             }
         });
     }
 
-    // ==================== FUNGSI UTAMA PILIH KENDARAAN ====================
+    // ========== PILIH KENDARAAN ==========
     function selectTransport(type, t, card) {
         if (isProcessing) return;
         showGlobalLoading(true);
@@ -1690,25 +1789,22 @@
             minimalPrice: t.minimalPrice
         };
 
-        // Jika jenis adalah kurir (kurir_motor atau kurir_bentor) -> tampilkan modal pilihan
         if (type === 'kurir_motor' || type === 'kurir_bentor') {
             showGlobalLoading(false);
             isProcessing = false;
             showKurirChoiceModal();
         } else {
-            // Non-kurir langsung ke rute_kurir.html
             setTimeout(() => processTransportSelection(selectedTransport, 'rute.html'), 600);
         }
     }
 
-    // ==================== MODAL PILIHAN KURIR ====================
+    // ========== MODAL KURIR ==========
     function showKurirChoiceModal() {
         document.getElementById('kurirChoiceModal').classList.add('active');
     }
 
     function closeKurirChoiceModal() {
         document.getElementById('kurirChoiceModal').classList.remove('active');
-        // Reset selected transport agar bisa pilih ulang
         selectedTransport = null;
         document.querySelectorAll('.transport-card').forEach(c => c.classList.remove('selected'));
         isProcessing = false;
@@ -1723,23 +1819,23 @@
     });
 
     document.getElementById('closeChoiceModal').addEventListener('click', closeKurirChoiceModal);
-    // Tutup modal jika klik di luar konten
     document.getElementById('kurirChoiceModal').addEventListener('click', function(e) {
         if (e.target === this) closeKurirChoiceModal();
     });
 
-    // ==================== PROSES REDIRECT ====================
     function processTransportSelection(transport, targetPage) {
         localStorage.setItem('jego_last_transport', JSON.stringify(transport));
         window.location.href = targetPage;
     }
 
-    // ==================== FUNGSI LAINNYA ====================
+    // ========== LOADING ==========
     function showLoading(show) {
         const spinner = document.getElementById('loadingSpinner');
-        const grid = document.getElementById('transportGrid');
+        const topGrid = document.getElementById('transportGridTop');
+        const bottomGrid = document.getElementById('transportGridBottom');
         if (spinner) spinner.style.display = show ? 'flex' : 'none';
-        if (grid) grid.style.display = show ? 'none' : 'flex';
+        if (topGrid) topGrid.style.display = show ? 'none' : 'grid';
+        if (bottomGrid) bottomGrid.style.display = show ? 'none' : 'grid';
     }
 
     function showGlobalLoading(show) {
@@ -1781,22 +1877,13 @@
         console.log(message);
     }
 
-    // ========== MODAL EDIT PROFIL (tetap ada) ==========
-    let newPhotoBase64 = null;
-
+    // ========== EDIT PROFIL (placeholder) ==========
     function openEditProfileModal() {
-        if (!currentUser) return;
-        document.getElementById('editName').value = currentUser.name || '';
-        document.getElementById('editPhone').value = currentUser.phone || '';
-        document.getElementById('editAddress').value = currentUser.address || '';
-        const preview = document.getElementById('photoPreviewEdit');
-        preview.src = currentUser.photoURL || 'https://www.gravatar.com/avatar/?d=mp';
-        newPhotoBase64 = null;
-        document.getElementById('uploadStatusEdit').innerHTML = '';
-        document.getElementById('editProfileModal').style.display = 'flex';
+        // Fungsi ini hanya placeholder, tidak digunakan secara langsung
+        showCustomPopup('Lengkapi Data', 'Silakan perbarui profil Anda di menu Akun.', 'warning', '⚠️');
     }
 
-    // ========== UPDATE FCM TOKEN DARI ANDROID ==========
+    // ========== UPDATE FCM TOKEN ==========
     function updateFCMToken(token) {
         uiLog('📩 FCM Token diterima dari Android', 'info');
         uiLog('Token: ' + token.substring(0, 20) + '...', 'info');
