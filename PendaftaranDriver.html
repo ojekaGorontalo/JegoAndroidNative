@@ -62,8 +62,8 @@
 <body>
     <header>
         <div class="container">
-            <div class="logo">🚗 JeGo Driver</div>
-            <div style="font-size: 14px; opacity: 0.9;">Gabung jadi mitra – mudah & cepat</div>
+            <div class="logo">ðŸš— JeGo Driver</div>
+            <div style="font-size: 14px; opacity: 0.9;">Gabung jadi mitra â€“ mudah & cepat</div>
         </div>
     </header>
 
@@ -85,14 +85,14 @@
                     <label>Password <span class="required-star">*</span></label>
                     <div class="password-wrapper">
                         <input type="password" id="password" placeholder="Minimal 6 karakter" minlength="6" required>
-                        <button type="button" class="toggle-password" data-target="password">👁️</button>
+                        <button type="button" class="toggle-password" data-target="password">ðŸ‘ï¸</button>
                     </div>
                 </div>
                 <div class="form-group">
                     <label>Konfirmasi Password <span class="required-star">*</span></label>
                     <div class="password-wrapper">
                         <input type="password" id="confirmPassword" placeholder="Ulangi password" minlength="6" required>
-                        <button type="button" class="toggle-password" data-target="confirmPassword">👁️</button>
+                        <button type="button" class="toggle-password" data-target="confirmPassword">ðŸ‘ï¸</button>
                     </div>
                 </div>
                 <div class="form-group">
@@ -133,7 +133,7 @@
                     <div class="upload-area">
                         <img id="photoPreview" class="photo-preview" src="https://www.gravatar.com/avatar/?d=mp" alt="Preview">
                         <input type="file" id="photoFile" accept="image/*" style="display: none;">
-                        <button type="button" class="upload-btn" id="uploadPhotoBtn">📷 Upload Foto</button>
+                        <button type="button" class="upload-btn" id="uploadPhotoBtn">ðŸ“· Upload Foto</button>
                         <div id="uploadStatus" class="upload-status"></div>
                     </div>
                 </div>
@@ -154,22 +154,22 @@
                 </div>
 
                 <div class="info-box">
-                    ⚡ Dengan mendaftar, Anda setuju untuk mengikuti aturan JeGo. Data akan diverifikasi oleh admin. Pendaftaran GRATIS!
+                    âš¡ Dengan mendaftar, Anda setuju untuk mengikuti aturan JeGo. Data akan diverifikasi oleh admin. Pendaftaran GRATIS!
                 </div>
                 <button type="submit" id="submitBtn" class="btn">Daftar Sekarang</button>
             </form>
         </div>
-        <footer>© 2026 JeGo - Solusi Transportasi & Kurir</footer>
+        <footer>Â© 2026 JeGo - Solusi Transportasi & Kurir</footer>
     </div>
 
     <!-- Modal Verifikasi -->
     <div id="verificationModal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">
-                <h2>✅ Pendaftaran Berhasil</h2>
+                <h2>âœ… Pendaftaran Berhasil</h2>
             </div>
             <div class="modal-body">
-                <p>Akun Anda akan <span class="highlight">diverifikasi oleh admin</span> dalam <strong>1–2 hari kerja</strong>.</p>
+                <p>Akun Anda akan <span class="highlight">diverifikasi oleh admin</span> dalam <strong>1â€“2 hari kerja</strong>.</p>
                 <p class="small-text">Anda akan diberitahu melalui email/notifikasi setelah akun aktif.<br>
                 Mohon tunggu dan <strong>jangan login</strong> sebelum diverifikasi.</p>
             </div>
@@ -181,7 +181,7 @@
 
     <script>
         // ========== KONFIGURASI API ==========
-        const API_BASE_URL = 'http://178.105.213.148:3000/api';
+        const API_BASE_URL = 'https://movego.my.id/api';
 
         // ========== DOM REFS ==========
         const form = document.getElementById('driverForm');
@@ -215,10 +215,10 @@
                 const target = document.getElementById(this.dataset.target);
                 if (target.type === 'password') {
                     target.type = 'text';
-                    this.textContent = '🙈';
+                    this.textContent = 'ðŸ™ˆ';
                 } else {
                     target.type = 'password';
-                    this.textContent = '👁️';
+                    this.textContent = 'ðŸ‘ï¸';
                 }
             });
         });
@@ -232,7 +232,7 @@
                 // Untuk keamanan, lebih baik ambil dari backend, tapi untuk demo kita hardcode sementara
                 apiKey = 'YOUR_IMGBB_API_KEY'; // <-- GANTI DENGAN KEY ANDA
                 if (apiKey === 'YOUR_IMGBB_API_KEY') {
-                    console.warn('⚠️ ImgBB API Key tidak diset. Gunakan placeholder URL.');
+                    console.warn('âš ï¸ ImgBB API Key tidak diset. Gunakan placeholder URL.');
                     return 'https://via.placeholder.com/150?text=No+Photo';
                 }
             }
@@ -268,7 +268,7 @@
             const file = e.target.files[0];
             if (!file) return;
             if (!file.type.startsWith('image/')) {
-                alert('⚠️ Hanya file gambar yang diperbolehkan!');
+                alert('âš ï¸ Hanya file gambar yang diperbolehkan!');
                 return;
             }
             
@@ -278,7 +278,7 @@
             reader.readAsDataURL(file);
 
             uploadedFile = file;
-            uploadStatus.innerHTML = '📸 Foto siap diupload';
+            uploadStatus.innerHTML = 'ðŸ“¸ Foto siap diupload';
         });
 
         // ========== HELPER: FORMAT NOMOR ==========
@@ -313,7 +313,7 @@
             if (submitBtn.disabled) return;
 
             if (!privacyCheckbox.checked) {
-                alert('⚠️ Anda harus menyetujui kebijakan privasi untuk melanjutkan pendaftaran.');
+                alert('âš ï¸ Anda harus menyetujui kebijakan privasi untuk melanjutkan pendaftaran.');
                 return;
             }
 
@@ -331,32 +331,32 @@
             const addressVal = addressInput.value.trim();
 
             if (!nameVal || !emailVal || !passVal || !confirmPassVal || !phoneVal || !vehicleVal || !brandVal || !plateVal || !addressVal) {
-                alert('⚠️ Semua field wajib diisi (kecuali tanggal lahir dan tahun kendaraan)!');
+                alert('âš ï¸ Semua field wajib diisi (kecuali tanggal lahir dan tahun kendaraan)!');
                 return;
             }
             if (passVal.length < 6) {
-                alert('⚠️ Password minimal 6 karakter.');
+                alert('âš ï¸ Password minimal 6 karakter.');
                 return;
             }
             if (passVal !== confirmPassVal) {
-                alert('⚠️ Password dan konfirmasi password tidak cocok!');
+                alert('âš ï¸ Password dan konfirmasi password tidak cocok!');
                 return;
             }
             if (!emailVal.includes('@')) {
-                alert('⚠️ Email tidak valid.');
+                alert('âš ï¸ Email tidak valid.');
                 return;
             }
             const phoneDigits = phoneVal.replace(/\D/g, '');
             if (phoneDigits.length < 9 || phoneDigits.length > 15) {
-                alert('⚠️ Nomor HP tidak valid (minimal 9 digit).');
+                alert('âš ï¸ Nomor HP tidak valid (minimal 9 digit).');
                 return;
             }
             if (yearVal && (yearVal < 1980 || yearVal > new Date().getFullYear())) {
-                alert('⚠️ Tahun kendaraan tidak valid (1980 - sekarang).');
+                alert('âš ï¸ Tahun kendaraan tidak valid (1980 - sekarang).');
                 return;
             }
             if (!uploadedFile) {
-                alert('⚠️ Silakan upload foto profil terlebih dahulu.');
+                alert('âš ï¸ Silakan upload foto profil terlebih dahulu.');
                 return;
             }
 
@@ -367,9 +367,9 @@
 
             try {
                 // Upload foto ke imgBB
-                uploadStatus.innerHTML = '📤 Mengupload foto...';
+                uploadStatus.innerHTML = 'ðŸ“¤ Mengupload foto...';
                 const photoUrl = await uploadToImgBB(uploadedFile);
-                uploadStatus.innerHTML = '✅ Foto berhasil diupload';
+                uploadStatus.innerHTML = 'âœ… Foto berhasil diupload';
 
                 // Siapkan data untuk dikirim
                 const payload = {
@@ -388,7 +388,7 @@
                 };
 
                 const result = await registerDriver(payload);
-                console.log('✅ Registrasi berhasil:', result);
+                console.log('âœ… Registrasi berhasil:', result);
 
                 // Tampilkan modal sukses
                 verificationModal.classList.add('active');
@@ -401,8 +401,8 @@
                 privacyCheckbox.checked = false;
 
             } catch (err) {
-                console.error('❌ Registrasi gagal:', err);
-                alert('⚠️ ' + err.message);
+                console.error('âŒ Registrasi gagal:', err);
+                alert('âš ï¸ ' + err.message);
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = 'Daftar Sekarang';
