@@ -5,11 +5,15 @@
   <title>Login Driver - JeGo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover" />
 
+  <!-- Firebase SDKs: Auth + Database -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
   <!-- Font Awesome 6 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
   <style>
-    /* ==================== GAYA (SAMA PERSIS) ==================== */
+    /* ==================== GAYA ==================== */
     :root {
       --primary: #FF9800;
       --secondary: #FF5722;
@@ -557,8 +561,20 @@
 </div>
 
 <script>
-  // ================= KONFIGURASI API =================
-  const API_BASE_URL = 'https://movego.my.id/api';
+  // Konfigurasi Firebase
+  const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyCD0pgeZio-LdKqYDtWxcdXcZwyL4ngYQI",
+    authDomain: "jego-35a2b.firebaseapp.com",
+    databaseURL: "https://jego-35a2b-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "jego-35a2b",
+    storageBucket: "jego-35a2b.firebasestorage.app",
+    messagingSenderId: "600037007040",
+    appId: "1:600037007040:web:ac3243ad9b472647ffd725"
+  };
+
+  if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+  const auth = firebase.auth();
+  const database = firebase.database();
 
   // Fungsi komunikasi dengan Kodular (tetap dipertahankan)
   function sendToKodular(action, data = {}) {
@@ -610,135 +626,113 @@
   function showSuccess(msg, autoHide = true) { showPopup('Sukses', msg, 'success', { autoHide, autoHideDelay: 2000 }); }
 
   // ================= HANDLE STATUS DRIVER =================
-  function handleDriverStatus(driverData) {
+  function handleDriverStatus(driverData, driverId) {
     const status = driverData.status || 'pending';
-    const ketGagal = driverData.rejectionReason || driverData.rejection_reason || 'Tidak ada keterangan.';
-    const driverName = driverData.name || driverData.fullName || 'Driver';
-    const driverId = driverData.id || driverData.driverId || 'Tidak tersedia';
+    const ketGagal = driverData.ketGagal || driverData.rejectionReason || driverData.blockReason || 'Tidak ada keterangan.';
 
     switch(status) {
+      case 'accepted':
+      case 'approved':
       case 'active':
-        // Simpan session driver
         const sessionDriver = {
-          uid: driverData.id || driverData.driverId,
-          id: driverData.id || driverData.driverId,
+          uid: driverId,
           name: driverData.name || driverData.fullName || '',
           phone: driverData.phone || '',
           email: driverData.email || '',
           address: driverData.address || '',
           status: 'active',
           role: 'driver',
-          photoUrl: driverData.photoUrl || driverData.photo_url || '',
-          vehicleType: driverData.vehicleType || driverData.vehicle_type || '',
-          plateNumber: driverData.plateNumber || driverData.plate_number || '',
-          vehicleBrand: driverData.vehicleBrand || driverData.vehicle_brand || '',
-          idCardNumber: driverData.ktpUrl || driverData.ktp_url || '',
+          photoUrl: driverData.photoURL || driverData.fotoProfilURL || '',
+          vehicleType: driverData.vehicle_type || '',
+          plateNumber: driverData.plate_number || '',
+          vehicleBrand: driverData.vehicle_brand || '',
+          idCardNumber: driverData.ktp_url || '',
           rating: driverData.rating || 5,
           perjalanan: driverData.perjalanan || 0,
           Balance: driverData.balance || 0,
           Potongan: driverData.potongan || 0,
-          registered_at: driverData.registered_at || new Date().toISOString()
+          createdAt: driverData.registered_at || new Date().toISOString()
         };
         localStorage.setItem('jego_logged_in_driver', JSON.stringify(sessionDriver));
         sendToKodular('login_success', { driver: sessionDriver });
         showSuccess('Login berhasil! Mengalihkan...', true);
-        setTimeout(() => { window.location.href = 'index.html'; }, 1500);
+        setTimeout(() => { window.location.href = 'home_pack.html'; }, 1500);
         break;
 
       case 'rejected':
-        showPopup(
-          'Akun Ditolak',
+        showPopup('Akun Ditolak',
           `<p><strong>Status akun Anda: <span style="color: #f44336">DITOLAK</span></strong></p>
            <p><strong>Alasan penolakan:</strong> ${ketGagal}</p>
-           <p>Silakan hubungi admin untuk informasi lebih lanjut.</p>
-           <hr style="margin: 12px 0; border-color: #e9ecef;">
-           <p><strong>ID Driver Anda:</strong> <code>${driverId}</code></p>`,
-          'error',
-          {
+           <p>Silakan hubungi admin untuk informasi lebih lanjut.</p>`,
+          'error', {
             showCancel: true,
             confirmText: 'Hubungi Admin',
             cancelText: 'Tutup',
             onConfirm: () => {
-              const msg = `Halo Admin JeGo, saya ${driverName} ingin menanyakan alasan penolakan akun driver saya. Status: Ditolak. Alasan: ${ketGagal}. ID Driver: ${driverId}`;
-              window.open(`https://wa.me/6281994174297?text=${encodeURIComponent(msg)}`, '_blank');
-              hidePopup();
-            },
-            onCancel: () => { hidePopup(); }
-          }
-        );
+              const msg = `Halo Admin JeGo, saya ${driverData.name || ''} ingin menanyakan alasan penolakan akun driver saya. Status: Ditolak. Alasan: ${ketGagal}`;
+              window.open(`https://wa.me/6283142889149?text=${encodeURIComponent(msg)}`, '_blank');
+            }
+          });
         break;
 
       case 'blocked':
-        showPopup(
-          'Akun Diblokir',
+        showPopup('Akun Diblokir',
           `<p><strong>Status akun Anda: <span style="color: #dc3545">DIBLOKIR</span></strong></p>
            <p><strong>Alasan pemblokiran:</strong> ${ketGagal}</p>
-           <p>Hubungi admin untuk mengajukan pembukaan blokir.</p>
-           <hr style="margin: 12px 0; border-color: #e9ecef;">
-           <p><strong>ID Driver Anda:</strong> <code>${driverId}</code></p>`,
-          'error',
-          {
+           <p>Hubungi admin untuk mengajukan pembukaan blokir.</p>`,
+          'error', {
             showCancel: true,
             confirmText: 'Hubungi Admin',
             cancelText: 'Tutup',
             onConfirm: () => {
-              const msg = `Halo Admin JeGo, saya ${driverName} ingin menanyakan alasan pemblokiran akun driver saya. Status: Diblokir. Alasan: ${ketGagal}. ID Driver: ${driverId}`;
-              window.open(`https://wa.me/6281994174297?text=${encodeURIComponent(msg)}`, '_blank');
-              hidePopup();
-            },
-            onCancel: () => { hidePopup(); }
-          }
-        );
+              const msg = `Halo Admin JeGo, saya ${driverData.name || ''} ingin menanyakan alasan pemblokiran akun driver saya. Status: Diblokir. Alasan: ${ketGagal}`;
+              window.open(`https://wa.me/6283142889149?text=${encodeURIComponent(msg)}`, '_blank');
+            }
+          });
         break;
 
       case 'pending':
-        showPopup(
-          'Akun Belum Aktif',
-          `<p>Akun driver Anda masih dalam proses verifikasi oleh admin.</p>
-           <p>Proses ini biasanya membutuhkan waktu 1-2 hari kerja.</p>
-           <p>Anda akan menerima notifikasi via WhatsApp setelah diverifikasi.</p>
-           <hr style="margin: 12px 0; border-color: #e9ecef;">
-           <p><strong>ID Driver Anda:</strong></p>
-           <div style="background: #f1f5f9; padding: 8px 12px; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-             <code style="font-size: 0.9rem; word-break: break-all; flex: 1;">${driverId}</code>
-             <button id="copyUidBtn" style="background: #FF9800; border: none; color: white; padding: 6px 14px; border-radius: 30px; cursor: pointer; font-weight: 600; font-size: 0.8rem; white-space: nowrap;">
-               <i class="fas fa-copy"></i> Salin
-             </button>
-           </div>
-           <p style="font-size: 0.75rem; color: #6c757d; margin-top: 6px;">Gunakan ID ini jika menghubungi admin.</p>`,
-          'warning',
-          {
-            showCancel: true,
-            confirmText: 'Hubungi Admin',
-            cancelText: 'Tutup',
-            onConfirm: () => {
-              const msg = `Halo Admin JeGo, saya ${driverName} ingin menanyakan status verifikasi akun driver saya. ID Driver: ${driverId}`;
-              window.open(`https://wa.me/6281994174297?text=${encodeURIComponent(msg)}`, '_blank');
-              hidePopup();
-            },
-            onCancel: () => { hidePopup(); }
-          }
-        );
-        // Event listener untuk tombol salin
-        setTimeout(() => {
-          const copyBtn = document.getElementById('copyUidBtn');
-          if (copyBtn) {
-            copyBtn.addEventListener('click', () => {
-              navigator.clipboard.writeText(driverId.toString()).then(() => {
-                showPopup('Berhasil', 'ID driver telah disalin ke clipboard!', 'success', { autoHide: true, autoHideDelay: 1500 });
-              }).catch(() => {
-                const textarea = document.createElement('textarea');
-                textarea.value = driverId;
-                document.body.appendChild(textarea);
-                textarea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textarea);
-                showPopup('Berhasil', 'ID driver disalin!', 'success', { autoHide: true, autoHideDelay: 1500 });
-              });
-            });
-          }
-        }, 100);
-        break;
+  const uidDisplay = driverId || 'Tidak tersedia';
+  showPopup('Akun Belum Aktif',
+    `<p>Akun driver Anda masih dalam proses verifikasi oleh admin.</p>
+     <p>Proses ini biasanya membutuhkan waktu 1-2 hari kerja.</p>
+     <p>Anda akan menerima notifikasi via WhatsApp setelah diverifikasi.</p>
+     <hr style="margin: 12px 0; border-color: #e9ecef;">
+     <p><strong>ID Driver Anda:</strong></p>
+     <div style="background: #f1f5f9; padding: 8px 12px; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+       <code style="font-size: 0.9rem; word-break: break-all; flex: 1;">${uidDisplay}</code>
+       <button id="copyUidBtn" style="background: #FF9800; border: none; color: white; padding: 6px 14px; border-radius: 30px; cursor: pointer; font-weight: 600; font-size: 0.8rem; white-space: nowrap;">
+         <i class="fas fa-copy"></i> Salin
+       </button>
+     </div>
+     <p style="font-size: 0.75rem; color: #6c757d; margin-top: 6px;">Gunakan ID ini jika menghubungi admin.</p>`,
+    'warning',
+    {
+      confirmText: 'OK',
+      onConfirm: () => { /* tutup modal */ }
+    }
+  );
+  // Event listener untuk tombol salin (dijalankan setelah modal tampil)
+  setTimeout(() => {
+    const copyBtn = document.getElementById('copyUidBtn');
+    if (copyBtn) {
+      copyBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(uidDisplay).then(() => {
+          showPopup('Berhasil', 'ID driver telah disalin ke clipboard!', 'success', { autoHide: true, autoHideDelay: 1500 });
+        }).catch(() => {
+          // Fallback untuk browser yang tidak support clipboard API
+          const textarea = document.createElement('textarea');
+          textarea.value = uidDisplay;
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textarea);
+          showPopup('Berhasil', 'ID driver disalin!', 'success', { autoHide: true, autoHideDelay: 1500 });
+        });
+      });
+    }
+  }, 100);
+  break;
 
       default:
         showError('Status akun tidak dikenal. Hubungi admin.');
@@ -762,47 +756,19 @@
     showLoading('Memverifikasi kredensial...');
 
     try {
-      const response = await fetch(`${API_BASE_URL}/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ email, password })
-      });
+      const userCredential = await auth.signInWithEmailAndPassword(email, password);
+      const user = userCredential.user;
+      const uid = user.uid;
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        // Tangani error dari server
-        if (response.status === 403) {
-          // Status driver tidak aktif (pending, rejected, blocked)
-          hideLoading();
-          // Panggil handleDriverStatus dengan data driver (walau tidak lengkap)
-          const driverPartial = {
-            status: data.status || 'pending',
-            rejectionReason: data.rejectionReason || data.message,
-            id: data.driverId || 'Tidak tersedia',
-            name: data.driverName || 'Driver'
-          };
-          handleDriverStatus(driverPartial);
-          loginBtn.disabled = false;
-          loginBtn.textContent = 'Login';
-          return;
-        } else {
-          throw new Error(data.message || 'Login gagal');
-        }
+      const driverSnap = await database.ref(`drivers/${uid}`).once('value');
+      if (!driverSnap.exists()) {
+        throw new Error('Data driver tidak ditemukan. Pastikan Anda terdaftar sebagai driver.');
       }
-
-      // Login sukses
-      const { token, driver } = data;
-      // Simpan token JWT untuk permintaan selanjutnya (opsional)
-      localStorage.setItem('jego_token', token);
-      // Proses data driver
-      handleDriverStatus(driver);
-
+      const driverData = driverSnap.val();
+      handleDriverStatus(driverData, uid);
     } catch (error) {
       console.error(error);
-      showError(error.message || 'Login Gagal, Silakan periksa email atau password');
+      showError('Login Gagal, Silakan periksa email atau password');
     } finally {
       hideLoading();
       loginBtn.disabled = false;
@@ -810,12 +776,10 @@
     }
   });
 
-  // ================= REGISTER =================
   document.getElementById('registerBtn').addEventListener('click', () => {
     window.location.href = 'pendaftaranDriver.html';
   });
 
-  // ================= FORGOT PASSWORD =================
   document.getElementById('forgotPasswordLink').addEventListener('click', async (e) => {
     e.preventDefault();
     const email = document.getElementById('email').value.trim();
@@ -825,27 +789,26 @@
     }
     showLoading('Mengirim email reset password...');
     try {
-      const response = await fetch(`${API_BASE_URL}/forgot-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      });
-      const data = await response.json();
+      await auth.sendPasswordResetEmail(email);
       hideLoading();
-      if (response.ok) {
-        showPopup(
-          'Cek Email Anda',
-          `Link reset password telah dikirim ke <strong>${email}</strong>.<br><br>Ikuti instruksi di email untuk membuat password baru.`,
-          'success',
-          { autoHide: false, confirmText: 'OK' }
-        );
-      } else {
-        showError(data.message || 'Gagal mengirim email reset.');
-      }
+      showPopup(
+        'Cek Email Anda',
+        `Link reset password telah dikirim ke <strong>${email}</strong>.<br><br>Ikuti instruksi di email untuk membuat password baru.`,
+        'success',
+        { autoHide: false, confirmText: 'OK' }
+      );
     } catch (error) {
       hideLoading();
       console.error(error);
-      showError('Gagal mengirim email reset. Coba lagi nanti.');
+      let pesan = 'Gagal mengirim email reset. ';
+      if (error.code === 'auth/user-not-found') {
+        pesan += 'Email tidak terdaftar sebagai driver.';
+      } else if (error.code === 'auth/invalid-email') {
+        pesan += 'Format email tidak valid.';
+      } else {
+        pesan += 'Coba lagi nanti.';
+      }
+      showError(pesan);
     }
   });
 
@@ -886,7 +849,7 @@
   // Tombol Mode Penumpang (arah ke login user)
   document.getElementById('modePenumpangBtn').addEventListener('click', () => {
     toggleSidebar(false);
-    window.location.href = 'customer/loginUser.html';
+    window.location.href = 'loginUser.html';
   });
 
   // Tombol menu buka sidebar
@@ -902,7 +865,7 @@
         const driver = JSON.parse(loggedInDriver);
         if (driver.status === 'active') {
           sendToKodular('already_logged_in', { driver: driver });
-          window.location.href = 'index.html';
+          window.location.href = 'home_pack.html';
         } else {
           localStorage.removeItem('jego_logged_in_driver');
         }
