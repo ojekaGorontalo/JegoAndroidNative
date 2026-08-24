@@ -91,6 +91,9 @@ const STORAGE_ACCEPT_KURIR = 'jego_accept_kurir';
 const STORAGE_FLOATING = 'jego_floating_button';
 let floatingButtonEnabled = false;
 
+// ==================== CONFIG REDIS ====================
+const REDIS_API_URL = 'https://movego.my.id';
+
 // ==================== FUNGSI BANTUAN ====================
 function applyTheme() {
   const savedTheme = localStorage.getItem('jego_driver_theme');
@@ -350,6 +353,60 @@ function updateFloatingButtonUI() {
   if (toggle) toggle.checked = floatingButtonEnabled;
 }
 
+// ============ FUNGSI KIRIM KE REDIS ============
+async function sendLocationToRedis(lat, lng) {
+    try {
+        const response = await fetch(`${REDIS_API_URL}/api/driver/location`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                driverId: globalCurrentUid,
+                latitude: lat,
+                longitude: lng,
+                tracking_enabled: locationTrackingEnabled,
+                autobid_enabled: autobidEnabled
+            })
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        const result = await response.json();
+        console.log('✅ Lokasi terkirim ke Redis:', result);
+        return result;
+    } catch (error) {
+        console.error('❌ Gagal kirim lokasi ke Redis:', error.message);
+    }
+}
+
+async function sendStatusToRedis() {
+    try {
+        const response = await fetch(`${REDIS_API_URL}/api/driver/status`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                driverId: globalCurrentUid,
+                tracking_enabled: locationTrackingEnabled,
+                autobid_enabled: autobidEnabled
+            })
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        const result = await response.json();
+        console.log('✅ Status terkirim ke Redis:', result);
+        return result;
+    } catch (error) {
+        console.error('❌ Gagal kirim status ke Redis:', error.message);
+    }
+}
+
+// ===== TAMBAHAN: fungsi untuk mengatur floating button =====
 function toggleFloatingButton() {
   if (!locationTrackingEnabled) {
     showToast('Aktifkan tracking terlebih dahulu untuk mengatur tombol pintasan.', 'warning');
@@ -380,48 +437,7 @@ function toggleFloatingButton() {
   }
 }
 
-// ==================== FUNGSI KIRIM KE REDIS ====================
-async function sendLocationToRedis(lat, lng) {
-    try {
-        const response = await fetch('http://178.105.213.148:3000/api/driver/location', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                driverId: globalCurrentUid,
-                latitude: lat,
-                longitude: lng,
-                tracking_enabled: locationTrackingEnabled,
-                autobid_enabled: autobidEnabled
-            })
-        });
-        const result = await response.json();
-        console.log('✅ Lokasi terkirim ke Redis:', result);
-        return result;
-    } catch (error) {
-        console.error('❌ Gagal kirim lokasi ke Redis:', error);
-    }
-}
-
-async function sendStatusToRedis() {
-    try {
-        const response = await fetch('http://178.105.213.148:3000/api/driver/status', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                driverId: globalCurrentUid,
-                tracking_enabled: locationTrackingEnabled,
-                autobid_enabled: autobidEnabled
-            })
-        });
-        const result = await response.json();
-        console.log('✅ Status terkirim ke Redis:', result);
-        return result;
-    } catch (error) {
-        console.error('❌ Gagal kirim status ke Redis:', error);
-    }
-}
-
-// ==================== TRACKING ====================
+// ===== PERBAIKAN: toggleLocationTrackingWithConfirm async =====
 async function toggleLocationTrackingWithConfirm() {
     console.log('🔄 toggleLocationTrackingWithConfirm dipanggil');
     
@@ -510,15 +526,23 @@ function toggleLocationTracking() {
         }
     }
 
-    // Kirim status ke Redis dan Firebase (hanya data yang tetap)
     if (globalCurrentUid) {
+        // ✅ KIRIM KE REDIS
         sendStatusToRedis();
 
+        // ✅ KIRIM KE FIREBASE (HANYA DATA YANG TETAP)
         database.ref('drivers/' + globalCurrentUid).update({
+            // tracking_enabled: locationTrackingEnabled, // ❌ DIHAPUS - sudah di Redis
+            // autobid_enabled: autobidEnabled, // ❌ DIHAPUS - sudah di Redis
             last_update: new Date().toISOString()
         }).catch(console.error);
 
         database.ref(`driver_locations/${globalCurrentUid}`).update({
+            // tracking_enabled: locationTrackingEnabled, // ❌ DIHAPUS - sudah di Redis
+            // autobid_enabled: autobidEnabled, // ❌ DIHAPUS - sudah di Redis
+            // last_update: new Date().toISOString(), // ❌ DIHAPUS - sudah di Redis
+            
+            // ✅ HANYA DATA INI YANG TETAP:
             floating_button_enabled: floatingButtonEnabled
         }).catch(console.error);
     }
@@ -532,22 +556,26 @@ function toggleLocationTracking() {
 }
 
 function toggleAutobid() {
-    if (!locationTrackingEnabled) {
-        showToast('Aktifkan tracking terlebih dahulu', 'warning');
-        return;
-    }
+    if (!locationTrackingEnabled) { showToast('Aktifkan tracking terlebih dahulu', 'warning'); return; }
     autobidEnabled = !autobidEnabled;
     localStorage.setItem(STORAGE_AUTOBID, autobidEnabled);
     updateAutobidButton();
 
     if (globalCurrentUid) {
+        // ✅ KIRIM KE REDIS
         sendStatusToRedis();
 
+        // ✅ KIRIM KE FIREBASE (HANYA DATA YANG TETAP)
         database.ref('drivers/' + globalCurrentUid).update({
+            // autobid_enabled: autobidEnabled, // ❌ DIHAPUS - sudah di Redis
             last_update: new Date().toISOString()
         }).catch(console.error);
 
         database.ref(`driver_locations/${globalCurrentUid}`).update({
+            // autobid_enabled: autobidEnabled, // ❌ DIHAPUS - sudah di Redis
+            // last_update: new Date().toISOString(), // ❌ DIHAPUS - sudah di Redis
+            
+            // ✅ HANYA DATA INI YANG TETAP:
             floating_button_enabled: floatingButtonEnabled
         }).catch(console.error);
     }
@@ -637,17 +665,24 @@ function updateDriverLocation(position) {
     }
 
     if (shouldUpdate && locationTrackingEnabled && currentDriverData && globalCurrentUid) {
-        // Kirim ke Redis
+        // ✅ KIRIM KE REDIS
         sendLocationToRedis(lat, lng);
 
-        // Kirim ke Firebase hanya untuk data yang tetap
+        // ✅ KIRIM KE FIREBASE (HANYA DATA YANG TETAP)
         database.ref('drivers/' + globalCurrentUid).update({
-            latitude: lat,
-            longitude: lng,
+            // latitude: lat,  // ❌ DIHAPUS - sudah di Redis
+            // longitude: lng,  // ❌ DIHAPUS - sudah di Redis
             last_update: new Date().toISOString()
         }).catch(console.error);
 
         database.ref(`driver_locations/${globalCurrentUid}`).update({
+            // latitude: lat,  // ❌ DIHAPUS - sudah di Redis
+            // longitude: lng,  // ❌ DIHAPUS - sudah di Redis
+            // tracking_enabled: locationTrackingEnabled, // ❌ DIHAPUS - sudah di Redis
+            // autobid_enabled: autobidEnabled, // ❌ DIHAPUS - sudah di Redis
+            // last_update: new Date().toISOString(), // ❌ DIHAPUS - sudah di Redis
+            
+            // ✅ HANYA DATA INI YANG TETAP:
             floating_button_enabled: floatingButtonEnabled,
             playerId: currentDriverData?.playerId || null,
             fcmToken: localStorage.getItem('fcmToken') || null
@@ -1006,12 +1041,24 @@ function loadOrders() {
                     driverLocation.longitude = loc.lng;
 
                     if (globalCurrentUid) {
+                        // ✅ KIRIM KE REDIS
+                        sendLocationToRedis(loc.lat, loc.lng);
+
+                        // ✅ KIRIM KE FIREBASE (HANYA DATA YANG TETAP)
                         database.ref('drivers/' + globalCurrentUid).update({
-                            latitude: loc.lat,
-                            longitude: loc.lng,
+                            // latitude: loc.lat,  // ❌ DIHAPUS - sudah di Redis
+                            // longitude: loc.lng,  // ❌ DIHAPUS - sudah di Redis
                             last_update: new Date().toISOString()
                         }).catch(console.error);
+
                         database.ref('driver_locations/' + globalCurrentUid).update({
+                            // latitude: loc.lat,  // ❌ DIHAPUS - sudah di Redis
+                            // longitude: loc.lng,  // ❌ DIHAPUS - sudah di Redis
+                            // tracking_enabled: locationTrackingEnabled, // ❌ DIHAPUS - sudah di Redis
+                            // autobid_enabled: autobidEnabled, // ❌ DIHAPUS - sudah di Redis
+                            // last_update: new Date().toISOString(), // ❌ DIHAPUS - sudah di Redis
+                            
+                            // ✅ HANYA DATA INI YANG TETAP:
                             floating_button_enabled: floatingButtonEnabled,
                             playerId: currentDriverData?.playerId || null,
                             fcmToken: localStorage.getItem('fcmToken') || null
