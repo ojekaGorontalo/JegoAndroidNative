@@ -532,17 +532,10 @@ function toggleLocationTracking() {
 
         // ✅ KIRIM KE FIREBASE (HANYA DATA YANG TETAP)
         database.ref('drivers/' + globalCurrentUid).update({
-            // tracking_enabled: locationTrackingEnabled, // ❌ DIHAPUS - sudah di Redis
-            // autobid_enabled: autobidEnabled, // ❌ DIHAPUS - sudah di Redis
             last_update: new Date().toISOString()
         }).catch(console.error);
 
         database.ref(`driver_locations/${globalCurrentUid}`).update({
-            // tracking_enabled: locationTrackingEnabled, // ❌ DIHAPUS - sudah di Redis
-            // autobid_enabled: autobidEnabled, // ❌ DIHAPUS - sudah di Redis
-            // last_update: new Date().toISOString(), // ❌ DIHAPUS - sudah di Redis
-            
-            // ✅ HANYA DATA INI YANG TETAP:
             floating_button_enabled: floatingButtonEnabled
         }).catch(console.error);
     }
@@ -567,15 +560,10 @@ function toggleAutobid() {
 
         // ✅ KIRIM KE FIREBASE (HANYA DATA YANG TETAP)
         database.ref('drivers/' + globalCurrentUid).update({
-            // autobid_enabled: autobidEnabled, // ❌ DIHAPUS - sudah di Redis
             last_update: new Date().toISOString()
         }).catch(console.error);
 
         database.ref(`driver_locations/${globalCurrentUid}`).update({
-            // autobid_enabled: autobidEnabled, // ❌ DIHAPUS - sudah di Redis
-            // last_update: new Date().toISOString(), // ❌ DIHAPUS - sudah di Redis
-            
-            // ✅ HANYA DATA INI YANG TETAP:
             floating_button_enabled: floatingButtonEnabled
         }).catch(console.error);
     }
@@ -670,19 +658,10 @@ function updateDriverLocation(position) {
 
         // ✅ KIRIM KE FIREBASE (HANYA DATA YANG TETAP)
         database.ref('drivers/' + globalCurrentUid).update({
-            // latitude: lat,  // ❌ DIHAPUS - sudah di Redis
-            // longitude: lng,  // ❌ DIHAPUS - sudah di Redis
             last_update: new Date().toISOString()
         }).catch(console.error);
 
         database.ref(`driver_locations/${globalCurrentUid}`).update({
-            // latitude: lat,  // ❌ DIHAPUS - sudah di Redis
-            // longitude: lng,  // ❌ DIHAPUS - sudah di Redis
-            // tracking_enabled: locationTrackingEnabled, // ❌ DIHAPUS - sudah di Redis
-            // autobid_enabled: autobidEnabled, // ❌ DIHAPUS - sudah di Redis
-            // last_update: new Date().toISOString(), // ❌ DIHAPUS - sudah di Redis
-            
-            // ✅ HANYA DATA INI YANG TETAP:
             floating_button_enabled: floatingButtonEnabled,
             playerId: currentDriverData?.playerId || null,
             fcmToken: localStorage.getItem('fcmToken') || null
@@ -1046,19 +1025,10 @@ function loadOrders() {
 
                         // ✅ KIRIM KE FIREBASE (HANYA DATA YANG TETAP)
                         database.ref('drivers/' + globalCurrentUid).update({
-                            // latitude: loc.lat,  // ❌ DIHAPUS - sudah di Redis
-                            // longitude: loc.lng,  // ❌ DIHAPUS - sudah di Redis
                             last_update: new Date().toISOString()
                         }).catch(console.error);
 
                         database.ref('driver_locations/' + globalCurrentUid).update({
-                            // latitude: loc.lat,  // ❌ DIHAPUS - sudah di Redis
-                            // longitude: loc.lng,  // ❌ DIHAPUS - sudah di Redis
-                            // tracking_enabled: locationTrackingEnabled, // ❌ DIHAPUS - sudah di Redis
-                            // autobid_enabled: autobidEnabled, // ❌ DIHAPUS - sudah di Redis
-                            // last_update: new Date().toISOString(), // ❌ DIHAPUS - sudah di Redis
-                            
-                            // ✅ HANYA DATA INI YANG TETAP:
                             floating_button_enabled: floatingButtonEnabled,
                             playerId: currentDriverData?.playerId || null,
                             fcmToken: localStorage.getItem('fcmToken') || null
@@ -1924,6 +1894,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (user) {
       console.log('🔐 Driver terautentikasi dengan UID:', user.uid);
       globalCurrentUid = user.uid;
+
+      // 🔥 TAMBAHAN: KIRIM UID KE ANDROID (SharedPreferences)
+      if (isAndroidAvailable()) {
+        try {
+          Android.setDriverUid(user.uid);
+          console.log('📤 UID dikirim ke Android');
+        } catch (e) {
+          console.warn('Gagal kirim UID ke Android:', e);
+        }
+      }
+
       loadDriverNotifications();
       processPendingFCMToken();
 
