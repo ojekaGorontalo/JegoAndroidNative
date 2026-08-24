@@ -315,12 +315,47 @@ function stopRadarMessages() {
   }
 }
 
+// ==================== FUNGSI AMBIL STATUS DARI REDIS ====================
+async function getDriverStatusFromRedis(driverId) {
+    try {
+        const response = await fetch(`${REDIS_API_URL}/api/driver/status/${driverId}`);
+        if (!response.ok) {
+            console.warn('⚠️ Gagal ambil status dari Redis (HTTP ' + response.status + '), fallback ke localStorage');
+            return null;
+        }
+        const result = await response.json();
+        if (result.success && result.data) {
+            return result.data;
+        }
+        return null;
+    } catch (error) {
+        console.warn('⚠️ Error ambil status dari Redis:', error.message);
+        return null;
+    }
+}
+
 // ==================== SETTINGS ====================
-function loadStoredSettings() {
-    locationTrackingEnabled = localStorage.getItem(STORAGE_TRACKING) === 'true';
+async function loadStoredSettings() {
+    // Prioritas: Redis -> localStorage -> default
+    if (globalCurrentUid) {
+        const redisStatus = await getDriverStatusFromRedis(globalCurrentUid);
+        if (redisStatus && redisStatus.tracking_enabled !== undefined) {
+            locationTrackingEnabled = redisStatus.tracking_enabled;
+            localStorage.setItem(STORAGE_TRACKING, locationTrackingEnabled);
+            console.log('✅ Status tracking dari Redis:', locationTrackingEnabled);
+        } else {
+            // fallback ke localStorage
+            locationTrackingEnabled = localStorage.getItem(STORAGE_TRACKING) === 'true';
+            console.log('📦 Status tracking dari localStorage (fallback):', locationTrackingEnabled);
+        }
+    } else {
+        locationTrackingEnabled = localStorage.getItem(STORAGE_TRACKING) === 'true';
+    }
     updateTrackingButton();
+
     autobidEnabled = localStorage.getItem(STORAGE_AUTOBID) === 'true';
     updateAutobidButton();
+
     acceptKurirEnabled = localStorage.getItem(STORAGE_ACCEPT_KURIR) === 'true';
     const kurirToggle = document.getElementById('acceptKurirToggle');
     if (kurirToggle) kurirToggle.checked = acceptKurirEnabled;
@@ -1984,20 +2019,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         showToast('Gagal memuat Google Maps', 'error');
       }
 
-      loadStoredSettings();
+      // 🔥 PRIORITASKAN AMBIL STATUS DARI REDIS
+      await loadStoredSettings();
+
+      // Sinkronkan dengan Android service
+      if (locationTrackingEnabled && isAndroidAvailable()) {
+        Android.startDriverTracking();
+        console.log('📍 Service tracking dimulai (sinkron dari Redis)');
+      } else if (!locationTrackingEnabled && isAndroidAvailable()) {
+        Android.stopDriverTracking();
+        console.log('⏹️ Service tracking dihentikan (sinkron dari Redis)');
+      }
+
+      // Load autobid dan floating dari Firebase (untuk kompatibilitas)
       if (globalCurrentUid) {
         database.ref('drivers/' + globalCurrentUid).once('value').then(snap => {
           const data = snap.val();
           if (data) {
-            if (data.tracking_enabled !== undefined) {
-              locationTrackingEnabled = data.tracking_enabled;
-              localStorage.setItem(STORAGE_TRACKING, locationTrackingEnabled);
-              updateTrackingButton();
-              if (locationTrackingEnabled && isAndroidAvailable()) {
-                Android.startDriverTracking();
-                console.log('📍 Service tracking dimulai otomatis saat login');
-              }
-            }
             if (data.autobid_enabled !== undefined) {
               autobidEnabled = data.autobid_enabled;
               localStorage.setItem(STORAGE_AUTOBID, autobidEnabled);
