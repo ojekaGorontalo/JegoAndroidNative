@@ -64,7 +64,7 @@ let gpsLoadingInterval = null;
 let currentDriverData = null;
 let autobidEnabled = false, driverLocation = { latitude: null, longitude: null };
 let locationWatchId = null, locationTrackingEnabled = false;
-let googleApiKey = ''; // akan diisi dari Firebase
+let googleApiKey = '';
 let countdownInterval = null, countdownOrderId = null, countdownDriverId = null, orderStatusListener = null;
 let acceptKurirEnabled = false;
 let previousOrderIds = new Set();
@@ -88,7 +88,6 @@ const MAX_DISTANCE_KM = 20;
 const STORAGE_TRACKING = 'jego_location_tracking';
 const STORAGE_AUTOBID = 'jego_autobid_enabled';
 const STORAGE_ACCEPT_KURIR = 'jego_accept_kurir';
-// ===== TAMBAHAN: konstanta untuk floating button =====
 const STORAGE_FLOATING = 'jego_floating_button';
 let floatingButtonEnabled = false;
 
@@ -137,13 +136,11 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 // ==================== LOAD GOOGLE MAPS DYNAMICALLY ====================
 function loadGoogleMaps(apiKey) {
   return new Promise((resolve, reject) => {
-    // Cek apakah sudah termuat
     if (typeof google !== 'undefined' && google.maps) {
       console.log('✅ Google Maps sudah termuat sebelumnya');
       resolve();
       return;
     }
-    // Definisikan callback global yang dipanggil oleh script
     window.initMap = function() {
       console.log('✅ Google Maps callback initMap dipanggil');
       resolve();
@@ -199,7 +196,6 @@ function hidePopup() {
   document.getElementById('popupOverlay').style.display = 'none'; 
 }
 
-// ===== PERBAIKAN: showConfirmPopupTracking dengan Promise =====
 function showConfirmPopupTracking(title, message, onConfirm, onCancel) {
     console.log('🔄 showConfirmPopupTracking dipanggil dengan title:', title);
     const overlay = document.getElementById('popupOverlay');
@@ -326,7 +322,6 @@ function loadStoredSettings() {
     const kurirToggle = document.getElementById('acceptKurirToggle');
     if (kurirToggle) kurirToggle.checked = acceptKurirEnabled;
 
-    // ===== TAMBAHAN: baca status floating =====
     floatingButtonEnabled = localStorage.getItem(STORAGE_FLOATING) === 'true';
     updateFloatingButtonUI();
 }
@@ -350,18 +345,14 @@ function updateAutobidButton() {
   if (toggle) toggle.checked = autobidEnabled;
 }
 
-// ===== TAMBAHAN: update UI floating toggle =====
 function updateFloatingButtonUI() {
   const toggle = document.getElementById('floatingToggle');
   if (toggle) toggle.checked = floatingButtonEnabled;
 }
 
-// ===== TAMBAHAN: fungsi untuk mengatur floating button =====
 function toggleFloatingButton() {
-  // Hanya bisa diubah jika tracking aktif
   if (!locationTrackingEnabled) {
     showToast('Aktifkan tracking terlebih dahulu untuk mengatur tombol pintasan.', 'warning');
-    // Kembalikan checkbox ke posisi semula
     const toggle = document.getElementById('floatingToggle');
     if (toggle) toggle.checked = floatingButtonEnabled;
     return;
@@ -381,7 +372,6 @@ function toggleFloatingButton() {
     }
   }
 
-  // Simpan ke Firebase
   if (globalCurrentUid) {
     database.ref('drivers/' + globalCurrentUid).update({
       floating_button_enabled: floatingButtonEnabled,
@@ -390,7 +380,48 @@ function toggleFloatingButton() {
   }
 }
 
-// ===== PERBAIKAN: toggleLocationTrackingWithConfirm async =====
+// ==================== FUNGSI KIRIM KE REDIS ====================
+async function sendLocationToRedis(lat, lng) {
+    try {
+        const response = await fetch('http://178.105.213.148:3000/api/driver/location', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                driverId: globalCurrentUid,
+                latitude: lat,
+                longitude: lng,
+                tracking_enabled: locationTrackingEnabled,
+                autobid_enabled: autobidEnabled
+            })
+        });
+        const result = await response.json();
+        console.log('✅ Lokasi terkirim ke Redis:', result);
+        return result;
+    } catch (error) {
+        console.error('❌ Gagal kirim lokasi ke Redis:', error);
+    }
+}
+
+async function sendStatusToRedis() {
+    try {
+        const response = await fetch('http://178.105.213.148:3000/api/driver/status', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                driverId: globalCurrentUid,
+                tracking_enabled: locationTrackingEnabled,
+                autobid_enabled: autobidEnabled
+            })
+        });
+        const result = await response.json();
+        console.log('✅ Status terkirim ke Redis:', result);
+        return result;
+    } catch (error) {
+        console.error('❌ Gagal kirim status ke Redis:', error);
+    }
+}
+
+// ==================== TRACKING ====================
 async function toggleLocationTrackingWithConfirm() {
     console.log('🔄 toggleLocationTrackingWithConfirm dipanggil');
     
@@ -442,12 +473,10 @@ function toggleLocationTracking() {
             soundOn.currentTime = 0;
             soundOn.play().catch(e => console.log('Audio error:', e));
         }
-        // Mulai tracking lokasi
         if (isAndroidAvailable()) {
             Android.startDriverTracking();
             console.log('📍 Service tracking dimulai dari tombol');
         }
-        // Jika floating button aktif, nyalakan juga
         if (floatingButtonEnabled && isAndroidAvailable()) {
             Android.startFloatingButton();
             console.log('📌 Floating button dinyalakan karena tracking aktif dan tombol pintasan ON');
@@ -460,22 +489,18 @@ function toggleLocationTracking() {
             soundOff.currentTime = 0;
             soundOff.play().catch(e => console.log('Audio error:', e));
         }
-        // Matikan tracking lokasi
         if (isAndroidAvailable()) {
             Android.stopDriverTracking();
             console.log('⏹️ Service tracking dihentikan dari tombol');
         }
-        // Matikan floating button (karena tracking mati)
         if (floatingButtonEnabled && isAndroidAvailable()) {
             Android.stopFloatingButton();
             console.log('📌 Floating button dimatikan karena tracking dimatikan');
         }
-        // Set status floating menjadi false (karena tidak boleh aktif)
         if (floatingButtonEnabled) {
             floatingButtonEnabled = false;
             localStorage.setItem(STORAGE_FLOATING, false);
             updateFloatingButtonUI();
-            // Update Firebase
             if (globalCurrentUid) {
                 database.ref('drivers/' + globalCurrentUid).update({
                     floating_button_enabled: false,
@@ -485,17 +510,16 @@ function toggleLocationTracking() {
         }
     }
 
-    // Simpan status ke Firebase
+    // Kirim status ke Redis dan Firebase (hanya data yang tetap)
     if (globalCurrentUid) {
+        sendStatusToRedis();
+
         database.ref('drivers/' + globalCurrentUid).update({
-            tracking_enabled: locationTrackingEnabled,
             last_update: new Date().toISOString()
         }).catch(console.error);
+
         database.ref(`driver_locations/${globalCurrentUid}`).update({
-            tracking_enabled: locationTrackingEnabled,
-            autobid_enabled: autobidEnabled,
-            floating_button_enabled: floatingButtonEnabled,
-            last_update: new Date().toISOString()
+            floating_button_enabled: floatingButtonEnabled
         }).catch(console.error);
     }
 
@@ -504,29 +528,29 @@ function toggleLocationTracking() {
             latitude: driverLocation.latitude,
             longitude: driverLocation.longitude
         }).catch(console.error);
-        database.ref(`driver_locations/${globalCurrentUid}`).update({
-            latitude: driverLocation.latitude,
-            longitude: driverLocation.longitude
-        }).catch(console.error);
     }
 }
 
 function toggleAutobid() {
-  if (!locationTrackingEnabled) { showToast('Aktifkan tracking terlebih dahulu', 'warning'); return; }
-  autobidEnabled = !autobidEnabled;
-  localStorage.setItem(STORAGE_AUTOBID, autobidEnabled);
-  updateAutobidButton();
+    if (!locationTrackingEnabled) {
+        showToast('Aktifkan tracking terlebih dahulu', 'warning');
+        return;
+    }
+    autobidEnabled = !autobidEnabled;
+    localStorage.setItem(STORAGE_AUTOBID, autobidEnabled);
+    updateAutobidButton();
 
-  if (globalCurrentUid) {
-    database.ref('drivers/' + globalCurrentUid).update({
-      autobid_enabled: autobidEnabled,
-      last_update: new Date().toISOString()
-    }).catch(console.error);
-    database.ref(`driver_locations/${globalCurrentUid}`).update({
-      autobid_enabled: autobidEnabled,
-      last_update: new Date().toISOString()
-    }).catch(console.error);
-  }
+    if (globalCurrentUid) {
+        sendStatusToRedis();
+
+        database.ref('drivers/' + globalCurrentUid).update({
+            last_update: new Date().toISOString()
+        }).catch(console.error);
+
+        database.ref(`driver_locations/${globalCurrentUid}`).update({
+            floating_button_enabled: floatingButtonEnabled
+        }).catch(console.error);
+    }
 }
 
 function updateAcceptKurirSetting() {
@@ -563,75 +587,78 @@ function startGPSMonitoring() {
   navigator.geolocation.getCurrentPosition(
     (position) => { updateDriverLocation(position); },
     handleGpsError,
-    { timeout: 5000, enableHighAccuracy: true } // Dipercepat dari 10000 ke 5000
+    { timeout: 5000, enableHighAccuracy: true }
   );
 
   if (locationWatchId) navigator.geolocation.clearWatch(locationWatchId);
   locationWatchId = navigator.geolocation.watchPosition(
     updateDriverLocation,
     handleGpsError,
-    { timeout: 5000, enableHighAccuracy: true } // Dipercepat
+    { timeout: 5000, enableHighAccuracy: true }
   );
 }
 
 function updateDriverLocation(position) {
-  if (!position || !position.coords) return;
-  const lat = position.coords.latitude;
-  const lng = position.coords.longitude;
-  if (!lat || !lng) return;
+    if (!position || !position.coords) return;
+    const lat = position.coords.latitude;
+    const lng = position.coords.longitude;
+    if (!lat || !lng) return;
 
-  const thresholdKm = 0.10;
-  let shouldUpdate = false;
+    const thresholdKm = 0.10;
+    let shouldUpdate = false;
 
-  if (lastSentLat === null || lastSentLng === null) {
-    shouldUpdate = true;
-  } else {
-    const dist = calculateDistance(lastSentLat, lastSentLng, lat, lng);
-    if (dist !== null && dist > thresholdKm) {
-      shouldUpdate = true;
+    if (lastSentLat === null || lastSentLng === null) {
+        shouldUpdate = true;
     } else {
-      console.log(`⏭️ Lokasi tidak berubah signifikan (${dist?.toFixed(3)} km), lewati update.`);
+        const dist = calculateDistance(lastSentLat, lastSentLng, lat, lng);
+        if (dist !== null && dist > thresholdKm) {
+            shouldUpdate = true;
+        } else {
+            console.log(`⏭️ Lokasi tidak berubah signifikan (${dist?.toFixed(3)} km), lewati update.`);
+        }
     }
-  }
 
-  driverLocation = { latitude: lat, longitude: lng };
-  localStorage.setItem('jego_last_driver_location', JSON.stringify({ lat, lng }));
+    driverLocation = { latitude: lat, longitude: lng };
+    localStorage.setItem('jego_last_driver_location', JSON.stringify({ lat, lng }));
 
-  document.getElementById('gpsDot').className = 'gps-dot gps-active';
-  document.getElementById('gpsText').textContent = 'GPS';
+    document.getElementById('gpsDot').className = 'gps-dot gps-active';
+    document.getElementById('gpsText').textContent = 'GPS';
 
-  if (!gpsReady) {
-    gpsReady = true;
-    if (gpsLoadingInterval) {
-      clearInterval(gpsLoadingInterval);
-      gpsLoadingInterval = null;
+    if (!gpsReady) {
+        gpsReady = true;
+        if (gpsLoadingInterval) {
+            clearInterval(gpsLoadingInterval);
+            gpsLoadingInterval = null;
+        }
+        loadOrders();
+        lastSentLat = lat;
+        lastSentLng = lng;
+        return;
     }
-    loadOrders();
-    lastSentLat = lat;
-    lastSentLng = lng;
-    return;
-  }
 
-  if (shouldUpdate && locationTrackingEnabled && currentDriverData && globalCurrentUid) {
-    database.ref('drivers/' + globalCurrentUid).update({
-      latitude: lat,
-      longitude: lng,
-      last_update: new Date().toISOString()
-    }).catch(console.error);
-    database.ref(`driver_locations/${globalCurrentUid}`).update({
-      latitude: lat,
-      longitude: lng,
-      tracking_enabled: locationTrackingEnabled,
-      autobid_enabled: autobidEnabled,
-      floating_button_enabled: floatingButtonEnabled,
-      last_update: new Date().toISOString()
-    }).catch(console.error);
-    lastSentLat = lat;
-    lastSentLng = lng;
-    console.log(`📍 Kirim lokasi: ${lat}, ${lng}`);
-  } else {
-    refreshDisplay();
-  }
+    if (shouldUpdate && locationTrackingEnabled && currentDriverData && globalCurrentUid) {
+        // Kirim ke Redis
+        sendLocationToRedis(lat, lng);
+
+        // Kirim ke Firebase hanya untuk data yang tetap
+        database.ref('drivers/' + globalCurrentUid).update({
+            latitude: lat,
+            longitude: lng,
+            last_update: new Date().toISOString()
+        }).catch(console.error);
+
+        database.ref(`driver_locations/${globalCurrentUid}`).update({
+            floating_button_enabled: floatingButtonEnabled,
+            playerId: currentDriverData?.playerId || null,
+            fcmToken: localStorage.getItem('fcmToken') || null
+        }).catch(console.error);
+
+        lastSentLat = lat;
+        lastSentLng = lng;
+        console.log(`📍 Kirim lokasi ke Redis: ${lat}, ${lng}`);
+    } else {
+        refreshDisplay();
+    }
 }
 
 function handleGpsError(error) {
@@ -896,7 +923,6 @@ function loadOrders() {
     const ordersList = document.getElementById('ordersList');
     if (!ordersList) return;
 
-    // 🔥 PERCEPATAN: Gunakan lokasi terakhir dari storage jika GPS belum siap
     if (!gpsReady || !driverLocation.latitude || !driverLocation.longitude) {
         const lastLocation = localStorage.getItem('jego_last_driver_location');
         if (lastLocation) {
@@ -986,12 +1012,9 @@ function loadOrders() {
                             last_update: new Date().toISOString()
                         }).catch(console.error);
                         database.ref('driver_locations/' + globalCurrentUid).update({
-                            latitude: loc.lat,
-                            longitude: loc.lng,
-                            tracking_enabled: locationTrackingEnabled,
-                            autobid_enabled: autobidEnabled,
                             floating_button_enabled: floatingButtonEnabled,
-                            last_update: new Date().toISOString()
+                            playerId: currentDriverData?.playerId || null,
+                            fcmToken: localStorage.getItem('fcmToken') || null
                         }).catch(console.error);
                     }
 
@@ -1172,13 +1195,12 @@ function initBottomSheetMap() {
     bottomSheetMap = new google.maps.Map(mapContainer, {
     center: { lat: 0.5441, lng: 123.0595 },
     zoom: 12,
-    // Semua kontrol dimatikan
     mapTypeControl: false,
     fullscreenControl: false,
     streetViewControl: false,
     zoomControl: false,
-    rotateControl: false,      // ⬅️ Tambahan: matikan tombol rotasi
-    scaleControl: false,       // ⬅️ Tambahan: matikan skala
+    rotateControl: false,
+    scaleControl: false,
     clickableIcons: false,
     disableDefaultUI: true,
 });
@@ -1919,7 +1941,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
       }
       
-      // 🔥 Ambil API key Google Maps dari Firebase
       try {
         const keySnap = await database.ref('data-jego/apikey-google-maps').once('value');
         const apiKey = keySnap.val();
@@ -1954,12 +1975,10 @@ document.addEventListener('DOMContentLoaded', async () => {
               localStorage.setItem(STORAGE_AUTOBID, autobidEnabled);
               updateAutobidButton();
             }
-            // ===== TAMBAHAN: sinkron floating dari Firebase =====
             if (data.floating_button_enabled !== undefined) {
               floatingButtonEnabled = data.floating_button_enabled;
               localStorage.setItem(STORAGE_FLOATING, floatingButtonEnabled);
               updateFloatingButtonUI();
-              // Jika tracking aktif dan floating aktif, start floating
               if (locationTrackingEnabled && floatingButtonEnabled && isAndroidAvailable()) {
                 Android.startFloatingButton();
                 console.log('📌 Floating button dinyalakan dari Firebase');
@@ -2020,7 +2039,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
   }
 
-  // === PERBAIKAN: Cek null sebelum addEventListener ===
   const refreshBtn = document.getElementById('refreshBtn');
   if (refreshBtn) refreshBtn.addEventListener('click', refreshData);
 
