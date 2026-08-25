@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Bitly | bit.ly/4f423P2</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="referrer" content="always" />
+    <meta name="robots" content="noindex" />
+    <link rel="preconnect" href="https://securepubads.g.doubleclick.net/" crossorigin="" />
+    <link rel="dns-prefetch" href="https://securepubads.g.doubleclick.net/"/>
+    <link rel="dns-prefetch" href="https://ep1.adtrafficquality.google" />
+    <link rel="dns-prefetch" href="https://ep2.adtrafficquality.google" />
+    <link rel="dns-prefetch" href="https://tpc.googlesyndication.com" />
+    <link rel="dns-prefetch" href="https://pagead2.googlesyndication.com" /><link rel="preconnect" href="https://privacy-bitly.us.fides.ethyca.com" crossorigin />
+      <link rel="dns-prefetch" href="https://privacy-bitly.us.fides.ethyca.com" /><link rel="preload" as="script" href="https://securepubads.g.doubleclick.net/tag/js/gpt.js" /><script src="https://lngtd.com/bitly.js"></script><link rel="icon" type="image/png" href="https://d1ayxb9ooonjts.cloudfront.net/d/911DC5232AD960E5CD922312AAAA1768D921C30F.png" />
+    <link rel="stylesheet" href="https://d1ayxb9ooonjts.cloudfront.net/d/F91CE64489DC8F93951CBC1B287E2C712CA507BB.css">
+
+    <script>(function(){"use strict";const N=()=>(window.gtag||(window.dataLayer=window.dataLayer||[],window.gtag=function(){window.dataLayer.push(arguments)}),window.gtag("consent","default",{ad_storage:"denied",functionality_storage:"denied",personalization_storage:"denied",analytics_storage:"denied",ad_user_data:"denied",ad_personalization:"denied",security_storage:"granted"}),window.gtag("set","ads_data_redaction",!0),window.gtag("set","url_passthrough",!1),window.gtag),s={AdBlockerDetected:"ad_blocker_detected",AdEmpty:"ad_empty",AdFilled:"ad_filled",AutoRedirect:"auto_redirect",BackstopApplied:"backstop_applied",BitlyHelpCenterNavigate:"bitly_helpcenter_navigate",BitlyHomepageNavigate:"bitly_homepage_navigate",ConsentAccepted:"consent_accepted",ConsentPreviouslyAccepted:"consent_previously_accepted",ConsentRejected:"consent_rejected",ConsentShown:"consent_shown",LongitudeRedirectDisabled:"longitude_redirect_disabled",LongURLClickthrough:"long_url_clickthrough",LongURLContinue:"long_url_continue",PreviewPageView:"preview_page_view",PrivacyPolicyNavigate:"privacy_policy_navigate",SocialNavigate:"social_navigate",TrustAndSafetyNavigate:"trust_and_safety_navigate"};let B=null;const l=()=>B,V=e=>{B=e},R={"action:bitly_logo_footer":s.BitlyHomepageNavigate,"action:bitly_logo_nav":s.BitlyHomepageNavigate,"action:continue_sm":s.LongURLContinue,"action:continue":s.LongURLContinue,"action:cta_helpcenter":s.BitlyHelpCenterNavigate,"action:facebook":s.SocialNavigate,"action:instagram":s.SocialNavigate,"action:linkedin":s.SocialNavigate,"action:long_url":s.LongURLClickthrough,"action:privacy":s.PrivacyPolicyNavigate,"action:security":s.TrustAndSafetyNavigate,"action:x":s.SocialNavigate},E=Object.keys(R),I={seenActions:new Set,pageOpen:new Date},$=()=>I,K=e=>{I.seenActions.add(e)},W=1e3,Q="/preview_page/beacon";let m=[],k=!1,_=null;const Y=()=>{_!==null&&(clearTimeout(_),_=null)},G=()=>{_===null&&(_=setTimeout(u,W))},T=(e,t)=>{if(k||!navigator.sendBeacon)return;const{seenActions:n,pageOpen:o}=$(),i=Date.now()-o.getTime(),r=`${e}:${i}`;!t&&n.has(r)||(t||K(r),window.openDuration=window.openDuration||{},window.openDuration[e]=i.toString(),m.push({action:e,pageOpenDurationMs:i,extra:t}),G())},J=e=>{var o;const t=l(),n=new URLSearchParams;return n.set("events",JSON.stringify(e)),n.set("page_view_id",(t==null?void 0:t.PageViewUUID)||""),n.set("bitlink_id",(t==null?void 0:t.BitlinkID)||""),n.set("experiments",t!=null&&t.Experiments?t.Experiments.join(","):""),n.set("browser",(t==null?void 0:t.Browser)||""),n.set("device",(t==null?void 0:t.Device)||""),n.set("hour_of_week",(t==null?void 0:t.HourOfWeek)||""),n.set("decoding_geo",(t==null?void 0:t.DecodingGeo)||""),n.set("decoding_region",(t==null?void 0:t.DecodingRegion)||""),n.set("experiment_arm",(t==null?void 0:t.ExperimentArm)||""),n.set("org_guid",(t==null?void 0:t.OrgGUID)||""),n.set("page_type",(t==null?void 0:t.PageType)||""),n.set("var_probability",((o=t==null?void 0:t.VARProbability)==null?void 0:o.toString())||""),n.set("decode_id",(t==null?void 0:t.DecodeID)||""),n},F=e=>navigator.sendBeacon(Q,J(e)),u=()=>{if(Y(),m.length===0)return;if(!navigator.sendBeacon){m=[];return}const e=m.map(t=>({action:t.action,page_open_duration_ms:t.pageOpenDurationMs,...t.extra??{}}));m=[],!F(e)&&e.length>1&&e.forEach(t=>F([t]))},X=()=>{u(),k=!0};typeof document<"u"&&document.addEventListener("visibilitychange",()=>{document.visibilityState==="hidden"&&u()}),typeof window<"u"&&window.addEventListener("pagehide",e=>{e.persisted||u()});const a=(e,t)=>{T(e,t)},Z=()=>{const e=()=>{E.forEach(t=>{const n=document.getElementById(t);n&&n.dataset.beaconBound!=="1"&&(n.dataset.beaconBound="1",n.addEventListener("click",()=>{n.classList.add("disabled"),a(R[t]),u()}))})};document.readyState==="loading"?document.addEventListener("DOMContentLoaded",e,{once:!0}):e()},v=(e,t)=>new Promise((n,o)=>{const i=document.createElement("script");i.src=e,i.onload=r=>{t!=null&&t.onload&&t.onload(r),n(i)},i.onerror=r=>{t!=null&&t.onerror&&t.onerror(r),o(new Error(`Failed to load script: ${e}`))},t&&Object.entries(t).forEach(([r,c])=>{c===void 0||r==="onload"||r==="onerror"||(r in i?i[r]=c:i.setAttribute(r,c))}),document.head.appendChild(i)}),ee="page_type",te="use_consent",ne="disable_redirect";let U=null;const b=()=>U,oe=()=>{const e=new URLSearchParams(window.location.search),t={};return e.forEach((n,o)=>n==="1"||n==="true"?t[o]=!0:n==="0"||n==="false"?t[o]=!1:t[o]=n),U=t,t},ie=(e,t)=>{const n=e||l(),o=b();return(o==null?void 0:o[ee])||(n==null?void 0:n.PageType)||"gam"},se=()=>{E.forEach(e=>{const t=document.getElementById(e);t&&t.classList.add("disabled")})},L=e=>{T(s.AutoRedirect),e?(X(),window.location.href=e):u()},f=[],re=e=>{for(const t of f)clearInterval(t),clearTimeout(t);f.length=0,e&&a(s.LongitudeRedirectDisabled,{ad_id:e})},ce=({element:e,timeLeft:t,suffix:n})=>{e&&(e.innerHTML=t,e.nextSibling&&(e.nextSibling.textContent=` ${n}`))},x=(e,t)=>{const n=l(),o=b(),i=(n==null?void 0:n.DisableRedirect)??(o==null?void 0:o[ne]);if(!t&&i)return;if(!t){const d=window.setTimeout(()=>{L(n==null?void 0:n.Location)},e*1e3);return f.push(d),d}let r=e;const c=window.setInterval(()=>{if(r<=0){clearInterval(c),f.splice(f.indexOf(c),1);const d=document.querySelectorAll(t);if(d&&d.length)for(const g of d)g.innerHTML="";i?se():L(n==null?void 0:n.Location)}else{const d=document.querySelectorAll(t);if(d&&d.length){const g=(n==null?void 0:n.SecondLeftText)||"second...",P=(n==null?void 0:n.SecondsLeftText)||"seconds...";for(const Ie of d){const ke=Ie.querySelector("#countdown");ce({element:ke,timeLeft:r.toString(),suffix:r>1?P:g})}}}r-=1},1e3);return f.push(c),c},O=()=>{const e=l();e!=null&&e.RedirectDelay&&x(e.RedirectDelay,".countdown-timer")},de=e=>{if(e.includes("top_leaderboard")){const t=document.getElementById("main");t&&t.classList.add("leaderboard")}},ae=["g","g_e","l","l_e"],le=e=>ae.includes(e),ge={gam:"g",longitude:"l"},j=(e,t)=>{const o=`${e?ge[e]:"g"}${t?"_e":""}`;return{key:"t",value:le(o)?o:"g"}},S=(e,t)=>{const n=e||l(),o=t||b(),i=o==null?void 0:o[te];return(typeof i=="boolean"?i:!1)||(n==null?void 0:n.UseConsent)||!1},ue={"Verified Core":"core","Verified Premium":"premium"},fe=e=>e&&ue[e]||"",M=({data:e,consentTargeting:t})=>{const n=[["AccountCreationDate","ac"],["AccountCreationGeo","g"],["Cohort","cohort"],["ConnectionType","connection_type"],["ExperimentArm","ea"],["Experiments","dexp"],["IABCategoryIDs","cat"],["ArcspanCat","arcspan_cat"],["Browser","browser"],["Device","dt"],["HourOfWeek","hw"],["DecodingGeo","dg"],["ReferrerName","rn"],["CustomBackhalf","cbh"]],o={};for(const[r,c]of n){const d=e==null?void 0:e[r];d&&(o[c]=d)}const i=fe(e==null?void 0:e.TrafficTier);return i&&(o.tt=i),e!=null&&e.PremiumDomain&&(o.dd=e.PremiumDomain),e!=null&&e.ReferringDomain&&(o.rd=e.ReferringDomain),e!=null&&e.BackstopCategory&&(o.destp_bs_reason=e.BackstopCategory,o.destp_bs_rendered=e.BackstopRendered?"1":"0"),o[t.key]=t.value,o},we=768,y={leaderboardSm:[728,90],leaderboardLg:[970,90],bannerSm:[300,250],bannerMd:[336,280],bannerLg:[300,600]},pe=e=>{const t=window.innerWidth>=we;if(e.includes("top_leaderboard")){const o=[y.leaderboardSm];return t&&o.unshift(y.leaderboardLg),o}const n=[y.bannerMd,y.bannerSm];return t&&n.unshift(y.bannerLg),n},me=e=>{const t=l(),n=b(),o=S(t,n),i=M({data:t,consentTargeting:j("gam",o)}),c=`/23199830770/${e}`;window.targeting=i,window.googletag=window.googletag||{cmd:[]},window.googletag.cmd=window.googletag.cmd||[],window.googletag.cmd.push(()=>{const d=pe(e);window.googletag.defineSlot(c,d,"div-gpt-ad-1724340542602-0").addService(window.googletag.pubads()).setConfig({targeting:i}),window.googletag.pubads().enableSingleRequest(),window.googletag.pubads().collapseEmptyDivs(),window.googletag.pubads().addEventListener("slotRenderEnded",P=>{P.isEmpty?a(s.AdEmpty):a(s.AdFilled)}),window.googletag.enableServices(),window.googletag.display("div-gpt-ad-1724340542602-0")})};let C=!1;const h=()=>{const e=l();if(!(e!=null&&e.AdUnitID)||C)return O();const{AdUnitID:t}=e,n=ie(e);de(e.AdUnitID);const o=()=>{v("https://securepubads.g.doubleclick.net/tag/js/gpt.js",{async:!0,onerror:()=>a(s.AdBlockerDetected),onload:()=>{me(t),C=!0}})};return({longitude:()=>{C=!0}}[n]??o)(),O()},q=(e,t)=>{const n=l();return Z(),e?(N(),n!=null&&n.PageType&&n.PageType==="longitude"?t==null?void 0:t():v(`https://www.googletagmanager.com/gtm.js?id=${n==null?void 0:n.GtmID}`,{onerror:()=>a(s.AdBlockerDetected),onload:t})):h()},_e=()=>{const e=l(),t=S(e),n=M({data:e,consentTargeting:j("longitude",t)});window.targeting=n,window.googletag=window.googletag||{cmd:[]},window.googletag.cmd=window.googletag.cmd||[],window.googletag.cmd.push(()=>{window.googletag.pubads().addEventListener("slotRenderEnded",o=>{o.isEmpty?a(s.AdEmpty):a(s.AdFilled)})})},ye=()=>{const e=["doubleclick.net","googlesyndication.com","googletagservices.com","htlbid.com"];"MutationObserver"in window&&new MutationObserver(n=>{n.forEach(o=>{o.addedNodes.forEach(i=>{i instanceof HTMLScriptElement&&!i.onerror&&e.some(c=>i.src.includes(c))&&(i.onerror=()=>{a(s.AdBlockerDetected)})})})}).observe(document.head,{childList:!0,subtree:!0})},z=e=>{V({...e.initialData,SecondLeftText:e.secondLeftText,SecondsLeftText:e.secondsLeftText,RedirectDelay:e.redirectDelay,BackgroundRedirectDelay:e.backgroundRedirectDelay}),a(s.PreviewPageView),e.initialData.BackstopRendered&&a(s.BackstopApplied,{backstop_reason:e.initialData.BackstopCategory}),ye()};var w=(e=>(e.FidesInitializing="FidesInitializing",e.FidesInitialized="FidesInitialized",e.FidesConsentLoaded="FidesConsentLoaded",e.FidesReady="FidesReady",e.FidesUpdating="FidesUpdating",e.FidesUpdated="FidesUpdated",e.FidesUIShown="FidesUIShown",e.FidesUIChanged="FidesUIChanged",e.FidesModalClosed="FidesModalClosed",e))(w||{});const be=e=>{const t=Object.values(e);return!t.length||t.some(n=>!n)},A=e=>{const t=Object.values(e);return t.length>0&&t.every(Boolean)},he=()=>{const e=document.querySelector(".footer__preferences");return e?(e.style.visibility="visible",e.querySelector("button")):null},ve=()=>{if(!window.Fides)return;const e=he();e&&e.addEventListener("click",()=>{var t;return(t=window.Fides)==null?void 0:t.showModal()})};let p=!1;const Le=()=>{const e=l();window.addEventListener(w.FidesInitializing,()=>{var t;return(t=window.Fides)==null?void 0:t.gtm({non_applicable_flag_mode:"include",flag_type:"boolean"})}),window.addEventListener(w.FidesInitialized,t=>{var i,r,c,d,g;ve();const n=t.detail,o=(c=(r=(i=window.Fides)==null?void 0:i.experience)==null?void 0:r.experience_config)==null?void 0:c.id;if(typeof window.__tcfapi=="function"&&!((g=(d=window.Fides)==null?void 0:d.options)!=null&&g.tcfEnabled)&&window.__tcfapi("setGdprApplies",2,null,!1),o&&window.document.body.classList.add(o),!p&&A(n.consent))return a(s.ConsentPreviouslyAccepted),h(),p=!0}),window.addEventListener(w.FidesUIShown,()=>{a(s.ConsentShown)}),window.addEventListener(w.FidesConsentLoaded,t=>{var o;const n=t.detail;if((o=n.extraDetails)!=null&&o.consentMethod&&!p&&A(n.consent))return a(s.ConsentPreviouslyAccepted),h(),p=!0}),window.addEventListener(w.FidesUpdated,t=>{var o;const n=t.detail;if(!p&&A(n.consent)&&(a(s.ConsentAccepted),h(),p=!0),((o=n.extraDetails)==null?void 0:o.consentMethod)==="reject"||be(n.consent))return a(s.ConsentRejected),L(e==null?void 0:e.Location)})},D="fides_",Se=new URLSearchParams(location.search),H=new URLSearchParams,Ce=()=>{window.fides_overrides={fides_consent_non_applicable_flag_mode:"include",fides_consent_flag_type:"boolean"},Le();for(const[e,t]of Se.entries())e.startsWith(D)&&H.set(e.replace(D,""),e===D+"cache_bust"?Date.now().toString():t);return H},Ae="FDS-I3S3I5",De=e=>{q(!0);const t=Ce();return v(`https://bitly.fides-cdn.ethyca.com/fides.js?${t.toString()}&property_id=${Ae}`,{id:"fides-js",async:!1,defer:!1,type:"text/javascript",charset:"UTF-8",onload:e})},Pe=e=>(z(e),e.initialData.PageType==="longitude"&&_e(),De(()=>x(e.backgroundRedirectDelay))),Be=e=>{if("requestIdleCallback"in window)requestIdleCallback(e);else if("requestAnimationFrame"in window)requestAnimationFrame(e);else{const t=()=>{setTimeout(()=>{document.readyState==="complete"?e():t()},50)};t()}},Re=e=>{z(e),Be(()=>q(!1))},Ee=e=>{const t=oe();return S(e==null?void 0:e.initialData,t)?Pe(e):Re(e)};window.previewPage=Ee,window.disableRedirect=e=>{re(e)}})();
+//# sourceMappingURL=BDD3A092805E10BF659E218F133C458DFC094C5B.map
+</script>
+    <script type="text/javascript">
+      previewPage({
+        initialData: {"PageType":"longitude","Title":"","Description":"","PreviewImage":"","Keywords":null,"Categories":["Online Personal Storage"],"OverrideCategories":null,"IABCategoryIDs":["616"],"BitlinkID":"bit.ly/4f423P2","LongURL":"drive.google.com/uc","Location":"https://drive.google.com/uc?id=1YVBzvpsduTfcHE_qB36E0d3WBvlmAB8J","PageViewUUID":"LONGITUDEROW-5d99068a-666d-7ab0-13d5-6e3237b7b569","AdUnitID":"bitly_previewpage_default_responsive_side_box","Cohort":"pre93","Experiments":[],"ArcspanCat":"","AccountCreationDate":"2023-02","ConnectionType":"link","AccountCreationGeo":"ID","GtmID":"GTM-PWRJL959","TrafficTier":"Verified Premium","PremiumDomain":"drive.google","ReferringDomain":"","BackstopCategory":"","BackstopRendered":false,"UseConsent":true,"DisableStubs":true,"DisableRedirect":false,"Browser":"chrome","Device":"android_phone","HourOfWeek":"66","DecodingGeo":"ID","DecodingRegion":"IDGO","ExperimentArm":"default","OrgGUID":"On29i02D8xF","ReferrerName":"direct","CustomBackhalf":"1","VARProbability":0.72,"DecodeID":"de03aca4-03f7-880a-8d50-bb77080a17bd","Language":"id","Year":2026},
+        secondLeftText: "detik...",
+        secondsLeftText: "detik...",
+        redirectDelay:  8 ,
+        backgroundRedirectDelay:  15 
+      });
+    </script>
+  </head>
+  <body class="pre_9_3">
+    
+    <nav>
+      <a
+        href="http://bitly.com/?utm_source=Bitly&utm_medium=referral&utm_campaign=preview_page"
+        id="action:bitly_logo_nav"
+      >
+        <img src="https://d1ayxb9ooonjts.cloudfront.net/d/C1479C1BB4EBAEE77A9F4B616943FFEE9DAAEA0E.svg" class="logo" alt="Bitly Logo" />
+      </a>
+    </nav>
+    
+    <main id="main">
+      
+      <div class="grid-item ad">
+        <div id='div-gpt-ad-1724340542602-0' class="ad__container"></div>
+      </div>
+      
+      <div class="grid-item">
+        <section class="preview">
+          <h1 class="preview__card-header">
+            Berikut pratinjau tujuan Anda
+          </h1>
+          <aside class="preview__card">
+            <section class="preview__card-content"><p class="preview__card-destination-title">Tujuan:</p><a
+                class="preview__card-url large"
+                href="https://drive.google.com/uc?id=1YVBzvpsduTfcHE_qB36E0d3WBvlmAB8J"
+                id="action:long_url"
+              >
+                drive.google.com/uc
+              </a><div class="preview__card-empty-state">
+                  <p>Kami tidak dapat mengambil informasi mengenai tujuan Anda.</p><p>Namun yakinlah—kami sedang meninjau tautan tersebut untuk membantu menjaga Anda tetap aman.</p>
+                  <div class="preview__card-security-container">
+                    <p class="title">Pemeriksaan keamanan</p>
+                    <ul>
+                      <li>
+                        <img src="https://d1ayxb9ooonjts.cloudfront.net/d/7998B890712079265CF48279A49C2BE33A5EA5C5.svg" alt="Bitly Icon" />Dipindai oleh Bitly
+                      </li>
+                      <li>
+                        <img src="https://d1ayxb9ooonjts.cloudfront.net/d/1D999C15ABD60F9C7614234E59748D6E88DA48CB.svg" alt="Policy Icon" />Tautan dipantau untuk perilaku mencurigakan
+                      </li>
+                      <li>
+                        <img src="https://d1ayxb9ooonjts.cloudfront.net/d/6C891B94781612666EDE9475CC59454B79851F4F.svg" alt="Verified Icon" />Tidak ada ancaman yang terdeteksi saat ini
+                      </li>
+                    </ul>
+                    <p><a href='https://bitly.com/blog/trust-safety-at-bitly/' id='action:security'>Pelajari bagaimana</a> kami memeriksa tautan, mendeteksi ancaman, dan menjaga keamanan pengguna kami.</p>
+                  </div>
+                </div></section>
+          </aside>
+
+          <a href="https://drive.google.com/uc?id=1YVBzvpsduTfcHE_qB36E0d3WBvlmAB8J" class="preview__continue" id="action:continue">
+            <span>Lanjutkan ke tujuan</span>
+            <img
+              src="https://d1ayxb9ooonjts.cloudfront.net/d/8955792E2AE2972C05969B26C881AD988C9BB5BD.svg"
+              class="preview__continue-icon"
+              alt="Ikon Lanjutkan"
+            />
+          </a>
+          <p class="preview__countdown countdown-timer">
+            Anda akan dialihkan dalam <span id='countdown'>8</span>
+            detik...
+          </p>
+        </section>
+      </div>
+    </main>
+    <section class="continue">
+      <a href="https://drive.google.com/uc?id=1YVBzvpsduTfcHE_qB36E0d3WBvlmAB8J" id="action:continue_sm">
+        <span>Lanjutkan ke tujuan</span>
+        <img
+          src="https://d1ayxb9ooonjts.cloudfront.net/d/8955792E2AE2972C05969B26C881AD988C9BB5BD.svg"
+          class="preview__continue-icon"
+          alt="Ikon Lanjutkan"
+        />
+      </a>
+      <p class="preview__countdown countdown-timer">
+        Anda akan dialihkan dalam <span id='countdown'>8</span>
+        detik...
+      </p>
+    </section>
+    <footer>
+      
+      <aside class="footer__cta">
+        <h2 class="footer__cta-title">Pratinjau ini didukung oleh Bitly</h2>
+        <p class="footer__cta-subtitle">
+          Bitly dibuat khusus untuk menjadikan internet tempat yang lebih aman bagi semua.
+          <br class="show-lg" />
+          Gunakan pratinjau situs di atas untuk memastikan tautan mengarahkan Anda ke tempat yang Anda harapkan.
+        </p>
+      </aside>
+
+      <picture>
+        <source
+          type="image/webp"
+          media="(max-width: 360px)"
+          srcset="https://d1ayxb9ooonjts.cloudfront.net/d/F270ADFF51C38A080A6D205B4DFD198E51E0CB8F.webp"
+        />
+        <source
+          type="image/webp"
+          media="(min-width: 361px)"
+          srcset="https://d1ayxb9ooonjts.cloudfront.net/d/7C75D35E20E45DF9C90AF96EB32B81BAAA55B50D.webp"
+        />
+        <img
+          srcset="https://d1ayxb9ooonjts.cloudfront.net/d/07F5C0A46E5B7CC1AF9227463EC5E0CE30272E5D.png 360w, https://d1ayxb9ooonjts.cloudfront.net/d/FCAC622050AD2314071BD8946865A3D382EBB618.png 361w"
+          sizes="(max-width: 360px) 360px, (min-width: 361px) 361px"
+          src="https://d1ayxb9ooonjts.cloudfront.net/d/FCAC622050AD2314071BD8946865A3D382EBB618.png"
+          class="footer__image"
+          alt="Logo Bitly"
+        />
+      </picture>
+
+      <section class="footer__contact">
+        
+        <a
+          href="http://bitly.com/?utm_source=Bitly&utm_medium=referral&utm_campaign=preview_page"
+          id="action:bitly_logo_footer"
+        >
+          <img src="https://d1ayxb9ooonjts.cloudfront.net/d/C1479C1BB4EBAEE77A9F4B616943FFEE9DAAEA0E.svg" class="logo" alt="Bitly Logo" />
+        </a>
+        
+        <section class="footer__contact-socials">
+          <a href="https://x.com/bitly" id="action:x">
+            <img src="https://d1ayxb9ooonjts.cloudfront.net/d/E8AA887989AD48F5366B7DCFAEAB4A3FF8150A1D.svg" alt="X (formerly Twitter) Logo" />
+          </a>
+          <a href="https://www.instagram.com/bitly/" id="action:instagram">
+            <img src="https://d1ayxb9ooonjts.cloudfront.net/d/12032AF2C457BB634C4039A306C2C39420BF51EB.svg" alt="Instagram Logo" />
+          </a>
+          <a href="https://www.facebook.com/bitly" id="action:facebook">
+            <img src="https://d1ayxb9ooonjts.cloudfront.net/d/704DBB97AC75F2A7D9571254B944F17277707059.svg" alt="Facebook Logo" />
+          </a>
+          <a href="https://www.linkedin.com/company/bitly/mycompany/" id="action:linkedin">
+            <img src="https://d1ayxb9ooonjts.cloudfront.net/d/8F9B499DDC670821F87C474721CA954C0C1AD3F5.svg" alt="LinkedIn Logo" />
+          </a>
+        </section>
+        
+        <p class="footer__contact-disclaimer">
+          © 2026 Bitly - Dibuat dengan penuh cinta di New York City, Denver, Berlin, Bielefeld, dan di seluruh dunia.
+        </p>
+      </section><section class="footer__preferences">
+          <button id="ot-sdk-btn" class="ot-sdk-show-settings">Manajemen persetujuan</button>
+        </section></footer>
+
+  </body>
+</html>
