@@ -1,171 +1,1074 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <title>Bitly | bit.ly/4f423P2</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="referrer" content="always" />
-    <meta name="robots" content="noindex" />
-    <link rel="preconnect" href="https://securepubads.g.doubleclick.net/" crossorigin="" />
-    <link rel="dns-prefetch" href="https://securepubads.g.doubleclick.net/"/>
-    <link rel="dns-prefetch" href="https://ep1.adtrafficquality.google" />
-    <link rel="dns-prefetch" href="https://ep2.adtrafficquality.google" />
-    <link rel="dns-prefetch" href="https://tpc.googlesyndication.com" />
-    <link rel="dns-prefetch" href="https://pagead2.googlesyndication.com" /><link rel="preconnect" href="https://privacy-bitly.us.fides.ethyca.com" crossorigin />
-      <link rel="dns-prefetch" href="https://privacy-bitly.us.fides.ethyca.com" /><link rel="preload" as="script" href="https://securepubads.g.doubleclick.net/tag/js/gpt.js" /><script src="https://lngtd.com/bitly.js"></script><link rel="icon" type="image/png" href="https://d1ayxb9ooonjts.cloudfront.net/d/911DC5232AD960E5CD922312AAAA1768D921C30F.png" />
-    <link rel="stylesheet" href="https://d1ayxb9ooonjts.cloudfront.net/d/F91CE64489DC8F93951CBC1B287E2C712CA507BB.css">
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IPTV TRIKARYA</title>
 
-    <script>(function(){"use strict";const N=()=>(window.gtag||(window.dataLayer=window.dataLayer||[],window.gtag=function(){window.dataLayer.push(arguments)}),window.gtag("consent","default",{ad_storage:"denied",functionality_storage:"denied",personalization_storage:"denied",analytics_storage:"denied",ad_user_data:"denied",ad_personalization:"denied",security_storage:"granted"}),window.gtag("set","ads_data_redaction",!0),window.gtag("set","url_passthrough",!1),window.gtag),s={AdBlockerDetected:"ad_blocker_detected",AdEmpty:"ad_empty",AdFilled:"ad_filled",AutoRedirect:"auto_redirect",BackstopApplied:"backstop_applied",BitlyHelpCenterNavigate:"bitly_helpcenter_navigate",BitlyHomepageNavigate:"bitly_homepage_navigate",ConsentAccepted:"consent_accepted",ConsentPreviouslyAccepted:"consent_previously_accepted",ConsentRejected:"consent_rejected",ConsentShown:"consent_shown",LongitudeRedirectDisabled:"longitude_redirect_disabled",LongURLClickthrough:"long_url_clickthrough",LongURLContinue:"long_url_continue",PreviewPageView:"preview_page_view",PrivacyPolicyNavigate:"privacy_policy_navigate",SocialNavigate:"social_navigate",TrustAndSafetyNavigate:"trust_and_safety_navigate"};let B=null;const l=()=>B,V=e=>{B=e},R={"action:bitly_logo_footer":s.BitlyHomepageNavigate,"action:bitly_logo_nav":s.BitlyHomepageNavigate,"action:continue_sm":s.LongURLContinue,"action:continue":s.LongURLContinue,"action:cta_helpcenter":s.BitlyHelpCenterNavigate,"action:facebook":s.SocialNavigate,"action:instagram":s.SocialNavigate,"action:linkedin":s.SocialNavigate,"action:long_url":s.LongURLClickthrough,"action:privacy":s.PrivacyPolicyNavigate,"action:security":s.TrustAndSafetyNavigate,"action:x":s.SocialNavigate},E=Object.keys(R),I={seenActions:new Set,pageOpen:new Date},$=()=>I,K=e=>{I.seenActions.add(e)},W=1e3,Q="/preview_page/beacon";let m=[],k=!1,_=null;const Y=()=>{_!==null&&(clearTimeout(_),_=null)},G=()=>{_===null&&(_=setTimeout(u,W))},T=(e,t)=>{if(k||!navigator.sendBeacon)return;const{seenActions:n,pageOpen:o}=$(),i=Date.now()-o.getTime(),r=`${e}:${i}`;!t&&n.has(r)||(t||K(r),window.openDuration=window.openDuration||{},window.openDuration[e]=i.toString(),m.push({action:e,pageOpenDurationMs:i,extra:t}),G())},J=e=>{var o;const t=l(),n=new URLSearchParams;return n.set("events",JSON.stringify(e)),n.set("page_view_id",(t==null?void 0:t.PageViewUUID)||""),n.set("bitlink_id",(t==null?void 0:t.BitlinkID)||""),n.set("experiments",t!=null&&t.Experiments?t.Experiments.join(","):""),n.set("browser",(t==null?void 0:t.Browser)||""),n.set("device",(t==null?void 0:t.Device)||""),n.set("hour_of_week",(t==null?void 0:t.HourOfWeek)||""),n.set("decoding_geo",(t==null?void 0:t.DecodingGeo)||""),n.set("decoding_region",(t==null?void 0:t.DecodingRegion)||""),n.set("experiment_arm",(t==null?void 0:t.ExperimentArm)||""),n.set("org_guid",(t==null?void 0:t.OrgGUID)||""),n.set("page_type",(t==null?void 0:t.PageType)||""),n.set("var_probability",((o=t==null?void 0:t.VARProbability)==null?void 0:o.toString())||""),n.set("decode_id",(t==null?void 0:t.DecodeID)||""),n},F=e=>navigator.sendBeacon(Q,J(e)),u=()=>{if(Y(),m.length===0)return;if(!navigator.sendBeacon){m=[];return}const e=m.map(t=>({action:t.action,page_open_duration_ms:t.pageOpenDurationMs,...t.extra??{}}));m=[],!F(e)&&e.length>1&&e.forEach(t=>F([t]))},X=()=>{u(),k=!0};typeof document<"u"&&document.addEventListener("visibilitychange",()=>{document.visibilityState==="hidden"&&u()}),typeof window<"u"&&window.addEventListener("pagehide",e=>{e.persisted||u()});const a=(e,t)=>{T(e,t)},Z=()=>{const e=()=>{E.forEach(t=>{const n=document.getElementById(t);n&&n.dataset.beaconBound!=="1"&&(n.dataset.beaconBound="1",n.addEventListener("click",()=>{n.classList.add("disabled"),a(R[t]),u()}))})};document.readyState==="loading"?document.addEventListener("DOMContentLoaded",e,{once:!0}):e()},v=(e,t)=>new Promise((n,o)=>{const i=document.createElement("script");i.src=e,i.onload=r=>{t!=null&&t.onload&&t.onload(r),n(i)},i.onerror=r=>{t!=null&&t.onerror&&t.onerror(r),o(new Error(`Failed to load script: ${e}`))},t&&Object.entries(t).forEach(([r,c])=>{c===void 0||r==="onload"||r==="onerror"||(r in i?i[r]=c:i.setAttribute(r,c))}),document.head.appendChild(i)}),ee="page_type",te="use_consent",ne="disable_redirect";let U=null;const b=()=>U,oe=()=>{const e=new URLSearchParams(window.location.search),t={};return e.forEach((n,o)=>n==="1"||n==="true"?t[o]=!0:n==="0"||n==="false"?t[o]=!1:t[o]=n),U=t,t},ie=(e,t)=>{const n=e||l(),o=b();return(o==null?void 0:o[ee])||(n==null?void 0:n.PageType)||"gam"},se=()=>{E.forEach(e=>{const t=document.getElementById(e);t&&t.classList.add("disabled")})},L=e=>{T(s.AutoRedirect),e?(X(),window.location.href=e):u()},f=[],re=e=>{for(const t of f)clearInterval(t),clearTimeout(t);f.length=0,e&&a(s.LongitudeRedirectDisabled,{ad_id:e})},ce=({element:e,timeLeft:t,suffix:n})=>{e&&(e.innerHTML=t,e.nextSibling&&(e.nextSibling.textContent=` ${n}`))},x=(e,t)=>{const n=l(),o=b(),i=(n==null?void 0:n.DisableRedirect)??(o==null?void 0:o[ne]);if(!t&&i)return;if(!t){const d=window.setTimeout(()=>{L(n==null?void 0:n.Location)},e*1e3);return f.push(d),d}let r=e;const c=window.setInterval(()=>{if(r<=0){clearInterval(c),f.splice(f.indexOf(c),1);const d=document.querySelectorAll(t);if(d&&d.length)for(const g of d)g.innerHTML="";i?se():L(n==null?void 0:n.Location)}else{const d=document.querySelectorAll(t);if(d&&d.length){const g=(n==null?void 0:n.SecondLeftText)||"second...",P=(n==null?void 0:n.SecondsLeftText)||"seconds...";for(const Ie of d){const ke=Ie.querySelector("#countdown");ce({element:ke,timeLeft:r.toString(),suffix:r>1?P:g})}}}r-=1},1e3);return f.push(c),c},O=()=>{const e=l();e!=null&&e.RedirectDelay&&x(e.RedirectDelay,".countdown-timer")},de=e=>{if(e.includes("top_leaderboard")){const t=document.getElementById("main");t&&t.classList.add("leaderboard")}},ae=["g","g_e","l","l_e"],le=e=>ae.includes(e),ge={gam:"g",longitude:"l"},j=(e,t)=>{const o=`${e?ge[e]:"g"}${t?"_e":""}`;return{key:"t",value:le(o)?o:"g"}},S=(e,t)=>{const n=e||l(),o=t||b(),i=o==null?void 0:o[te];return(typeof i=="boolean"?i:!1)||(n==null?void 0:n.UseConsent)||!1},ue={"Verified Core":"core","Verified Premium":"premium"},fe=e=>e&&ue[e]||"",M=({data:e,consentTargeting:t})=>{const n=[["AccountCreationDate","ac"],["AccountCreationGeo","g"],["Cohort","cohort"],["ConnectionType","connection_type"],["ExperimentArm","ea"],["Experiments","dexp"],["IABCategoryIDs","cat"],["ArcspanCat","arcspan_cat"],["Browser","browser"],["Device","dt"],["HourOfWeek","hw"],["DecodingGeo","dg"],["ReferrerName","rn"],["CustomBackhalf","cbh"]],o={};for(const[r,c]of n){const d=e==null?void 0:e[r];d&&(o[c]=d)}const i=fe(e==null?void 0:e.TrafficTier);return i&&(o.tt=i),e!=null&&e.PremiumDomain&&(o.dd=e.PremiumDomain),e!=null&&e.ReferringDomain&&(o.rd=e.ReferringDomain),e!=null&&e.BackstopCategory&&(o.destp_bs_reason=e.BackstopCategory,o.destp_bs_rendered=e.BackstopRendered?"1":"0"),o[t.key]=t.value,o},we=768,y={leaderboardSm:[728,90],leaderboardLg:[970,90],bannerSm:[300,250],bannerMd:[336,280],bannerLg:[300,600]},pe=e=>{const t=window.innerWidth>=we;if(e.includes("top_leaderboard")){const o=[y.leaderboardSm];return t&&o.unshift(y.leaderboardLg),o}const n=[y.bannerMd,y.bannerSm];return t&&n.unshift(y.bannerLg),n},me=e=>{const t=l(),n=b(),o=S(t,n),i=M({data:t,consentTargeting:j("gam",o)}),c=`/23199830770/${e}`;window.targeting=i,window.googletag=window.googletag||{cmd:[]},window.googletag.cmd=window.googletag.cmd||[],window.googletag.cmd.push(()=>{const d=pe(e);window.googletag.defineSlot(c,d,"div-gpt-ad-1724340542602-0").addService(window.googletag.pubads()).setConfig({targeting:i}),window.googletag.pubads().enableSingleRequest(),window.googletag.pubads().collapseEmptyDivs(),window.googletag.pubads().addEventListener("slotRenderEnded",P=>{P.isEmpty?a(s.AdEmpty):a(s.AdFilled)}),window.googletag.enableServices(),window.googletag.display("div-gpt-ad-1724340542602-0")})};let C=!1;const h=()=>{const e=l();if(!(e!=null&&e.AdUnitID)||C)return O();const{AdUnitID:t}=e,n=ie(e);de(e.AdUnitID);const o=()=>{v("https://securepubads.g.doubleclick.net/tag/js/gpt.js",{async:!0,onerror:()=>a(s.AdBlockerDetected),onload:()=>{me(t),C=!0}})};return({longitude:()=>{C=!0}}[n]??o)(),O()},q=(e,t)=>{const n=l();return Z(),e?(N(),n!=null&&n.PageType&&n.PageType==="longitude"?t==null?void 0:t():v(`https://www.googletagmanager.com/gtm.js?id=${n==null?void 0:n.GtmID}`,{onerror:()=>a(s.AdBlockerDetected),onload:t})):h()},_e=()=>{const e=l(),t=S(e),n=M({data:e,consentTargeting:j("longitude",t)});window.targeting=n,window.googletag=window.googletag||{cmd:[]},window.googletag.cmd=window.googletag.cmd||[],window.googletag.cmd.push(()=>{window.googletag.pubads().addEventListener("slotRenderEnded",o=>{o.isEmpty?a(s.AdEmpty):a(s.AdFilled)})})},ye=()=>{const e=["doubleclick.net","googlesyndication.com","googletagservices.com","htlbid.com"];"MutationObserver"in window&&new MutationObserver(n=>{n.forEach(o=>{o.addedNodes.forEach(i=>{i instanceof HTMLScriptElement&&!i.onerror&&e.some(c=>i.src.includes(c))&&(i.onerror=()=>{a(s.AdBlockerDetected)})})})}).observe(document.head,{childList:!0,subtree:!0})},z=e=>{V({...e.initialData,SecondLeftText:e.secondLeftText,SecondsLeftText:e.secondsLeftText,RedirectDelay:e.redirectDelay,BackgroundRedirectDelay:e.backgroundRedirectDelay}),a(s.PreviewPageView),e.initialData.BackstopRendered&&a(s.BackstopApplied,{backstop_reason:e.initialData.BackstopCategory}),ye()};var w=(e=>(e.FidesInitializing="FidesInitializing",e.FidesInitialized="FidesInitialized",e.FidesConsentLoaded="FidesConsentLoaded",e.FidesReady="FidesReady",e.FidesUpdating="FidesUpdating",e.FidesUpdated="FidesUpdated",e.FidesUIShown="FidesUIShown",e.FidesUIChanged="FidesUIChanged",e.FidesModalClosed="FidesModalClosed",e))(w||{});const be=e=>{const t=Object.values(e);return!t.length||t.some(n=>!n)},A=e=>{const t=Object.values(e);return t.length>0&&t.every(Boolean)},he=()=>{const e=document.querySelector(".footer__preferences");return e?(e.style.visibility="visible",e.querySelector("button")):null},ve=()=>{if(!window.Fides)return;const e=he();e&&e.addEventListener("click",()=>{var t;return(t=window.Fides)==null?void 0:t.showModal()})};let p=!1;const Le=()=>{const e=l();window.addEventListener(w.FidesInitializing,()=>{var t;return(t=window.Fides)==null?void 0:t.gtm({non_applicable_flag_mode:"include",flag_type:"boolean"})}),window.addEventListener(w.FidesInitialized,t=>{var i,r,c,d,g;ve();const n=t.detail,o=(c=(r=(i=window.Fides)==null?void 0:i.experience)==null?void 0:r.experience_config)==null?void 0:c.id;if(typeof window.__tcfapi=="function"&&!((g=(d=window.Fides)==null?void 0:d.options)!=null&&g.tcfEnabled)&&window.__tcfapi("setGdprApplies",2,null,!1),o&&window.document.body.classList.add(o),!p&&A(n.consent))return a(s.ConsentPreviouslyAccepted),h(),p=!0}),window.addEventListener(w.FidesUIShown,()=>{a(s.ConsentShown)}),window.addEventListener(w.FidesConsentLoaded,t=>{var o;const n=t.detail;if((o=n.extraDetails)!=null&&o.consentMethod&&!p&&A(n.consent))return a(s.ConsentPreviouslyAccepted),h(),p=!0}),window.addEventListener(w.FidesUpdated,t=>{var o;const n=t.detail;if(!p&&A(n.consent)&&(a(s.ConsentAccepted),h(),p=!0),((o=n.extraDetails)==null?void 0:o.consentMethod)==="reject"||be(n.consent))return a(s.ConsentRejected),L(e==null?void 0:e.Location)})},D="fides_",Se=new URLSearchParams(location.search),H=new URLSearchParams,Ce=()=>{window.fides_overrides={fides_consent_non_applicable_flag_mode:"include",fides_consent_flag_type:"boolean"},Le();for(const[e,t]of Se.entries())e.startsWith(D)&&H.set(e.replace(D,""),e===D+"cache_bust"?Date.now().toString():t);return H},Ae="FDS-I3S3I5",De=e=>{q(!0);const t=Ce();return v(`https://bitly.fides-cdn.ethyca.com/fides.js?${t.toString()}&property_id=${Ae}`,{id:"fides-js",async:!1,defer:!1,type:"text/javascript",charset:"UTF-8",onload:e})},Pe=e=>(z(e),e.initialData.PageType==="longitude"&&_e(),De(()=>x(e.backgroundRedirectDelay))),Be=e=>{if("requestIdleCallback"in window)requestIdleCallback(e);else if("requestAnimationFrame"in window)requestAnimationFrame(e);else{const t=()=>{setTimeout(()=>{document.readyState==="complete"?e():t()},50)};t()}},Re=e=>{z(e),Be(()=>q(!1))},Ee=e=>{const t=oe();return S(e==null?void 0:e.initialData,t)?Pe(e):Re(e)};window.previewPage=Ee,window.disableRedirect=e=>{re(e)}})();
-//# sourceMappingURL=BDD3A092805E10BF659E218F133C458DFC094C5B.map
-</script>
-    <script type="text/javascript">
-      previewPage({
-        initialData: {"PageType":"longitude","Title":"","Description":"","PreviewImage":"","Keywords":null,"Categories":["Online Personal Storage"],"OverrideCategories":null,"IABCategoryIDs":["616"],"BitlinkID":"bit.ly/4f423P2","LongURL":"drive.google.com/uc","Location":"https://drive.google.com/uc?id=1Xy6ibpRJ3k66iiRjbYk1GDnWo8tvIpaT","PageViewUUID":"LONGITUDEROW-5d99068a-666d-7ab0-13d5-6e3237b7b569","AdUnitID":"bitly_previewpage_default_responsive_side_box","Cohort":"pre93","Experiments":[],"ArcspanCat":"","AccountCreationDate":"2023-02","ConnectionType":"link","AccountCreationGeo":"ID","GtmID":"GTM-PWRJL959","TrafficTier":"Verified Premium","PremiumDomain":"drive.google","ReferringDomain":"","BackstopCategory":"","BackstopRendered":false,"UseConsent":true,"DisableStubs":true,"DisableRedirect":false,"Browser":"chrome","Device":"android_phone","HourOfWeek":"66","DecodingGeo":"ID","DecodingRegion":"IDGO","ExperimentArm":"default","OrgGUID":"On29i02D8xF","ReferrerName":"direct","CustomBackhalf":"1","VARProbability":0.72,"DecodeID":"de03aca4-03f7-880a-8d50-bb77080a17bd","Language":"id","Year":2026},
-        secondLeftText: "detik...",
-        secondsLeftText: "detik...",
-        redirectDelay:  8 ,
-        backgroundRedirectDelay:  15 
-      });
+    <!-- Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.12/shaka-player.compiled.js">
     </script>
-  </head>
-  <body class="pre_9_3">
-    
-    <nav>
-      <a
-        href="http://bitly.com/?utm_source=Bitly&utm_medium=referral&utm_campaign=preview_page"
-        id="action:bitly_logo_nav"
-      >
-        <img src="https://d1ayxb9ooonjts.cloudfront.net/d/C1479C1BB4EBAEE77A9F4B616943FFEE9DAAEA0E.svg" class="logo" alt="Bitly Logo" />
-      </a>
-    </nav>
-    
-    <main id="main">
-      
-      <div class="grid-item ad">
-        <div id='div-gpt-ad-1724340542602-0' class="ad__container"></div>
-      </div>
-      
-      <div class="grid-item">
-        <section class="preview">
-          <h1 class="preview__card-header">
-            Berikut pratinjau tujuan Anda
-          </h1>
-          <aside class="preview__card">
-            <section class="preview__card-content"><p class="preview__card-destination-title">Tujuan:</p><a
-                class="preview__card-url large"
-                href="https://drive.google.com/uc?id=1Xy6ibpRJ3k66iiRjbYk1GDnWo8tvIpaT"
-                id="action:long_url"
-              >
-                drive.google.com/uc
-              </a><div class="preview__card-empty-state">
-                  <p>Kami tidak dapat mengambil informasi mengenai tujuan Anda.</p><p>Namun yakinlah—kami sedang meninjau tautan tersebut untuk membantu menjaga Anda tetap aman.</p>
-                  <div class="preview__card-security-container">
-                    <p class="title">Pemeriksaan keamanan</p>
-                    <ul>
-                      <li>
-                        <img src="https://d1ayxb9ooonjts.cloudfront.net/d/7998B890712079265CF48279A49C2BE33A5EA5C5.svg" alt="Bitly Icon" />Dipindai oleh Bitly
-                      </li>
-                      <li>
-                        <img src="https://d1ayxb9ooonjts.cloudfront.net/d/1D999C15ABD60F9C7614234E59748D6E88DA48CB.svg" alt="Policy Icon" />Tautan dipantau untuk perilaku mencurigakan
-                      </li>
-                      <li>
-                        <img src="https://d1ayxb9ooonjts.cloudfront.net/d/6C891B94781612666EDE9475CC59454B79851F4F.svg" alt="Verified Icon" />Tidak ada ancaman yang terdeteksi saat ini
-                      </li>
-                    </ul>
-                    <p><a href='https://bitly.com/blog/trust-safety-at-bitly/' id='action:security'>Pelajari bagaimana</a> kami memeriksa tautan, mendeteksi ancaman, dan menjaga keamanan pengguna kami.</p>
-                  </div>
-                </div></section>
-          </aside>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@0.14.17/dist/hls.min.js">
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mpegts.js/0.16.6/mpegts.js">
+    </script>
 
-          <a href="https://drive.google.com/uc?id=1Xy6ibpRJ3k66iiRjbYk1GDnWo8tvIpaT" class="preview__continue" id="action:continue">
-            <span>Lanjutkan ke tujuan</span>
-            <img
-              src="https://d1ayxb9ooonjts.cloudfront.net/d/8955792E2AE2972C05969B26C881AD988C9BB5BD.svg"
-              class="preview__continue-icon"
-              alt="Ikon Lanjutkan"
-            />
-          </a>
-          <p class="preview__countdown countdown-timer">
-            Anda akan dialihkan dalam <span id='countdown'>8</span>
-            detik...
-          </p>
-        </section>
-      </div>
-    </main>
-    <section class="continue">
-      <a href="https://drive.google.com/uc?id=1Xy6ibpRJ3k66iiRjbYk1GDnWo8tvIpaT" id="action:continue_sm">
-        <span>Lanjutkan ke tujuan</span>
-        <img
-          src="https://d1ayxb9ooonjts.cloudfront.net/d/8955792E2AE2972C05969B26C881AD988C9BB5BD.svg"
-          class="preview__continue-icon"
-          alt="Ikon Lanjutkan"
-        />
-      </a>
-      <p class="preview__countdown countdown-timer">
-        Anda akan dialihkan dalam <span id='countdown'>8</span>
-        detik...
-      </p>
-    </section>
-    <footer>
-      
-      <aside class="footer__cta">
-        <h2 class="footer__cta-title">Pratinjau ini didukung oleh Bitly</h2>
-        <p class="footer__cta-subtitle">
-          Bitly dibuat khusus untuk menjadikan internet tempat yang lebih aman bagi semua.
-          <br class="show-lg" />
-          Gunakan pratinjau situs di atas untuk memastikan tautan mengarahkan Anda ke tempat yang Anda harapkan.
-        </p>
-      </aside>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-      <picture>
-        <source
-          type="image/webp"
-          media="(max-width: 360px)"
-          srcset="https://d1ayxb9ooonjts.cloudfront.net/d/F270ADFF51C38A080A6D205B4DFD198E51E0CB8F.webp"
-        />
-        <source
-          type="image/webp"
-          media="(min-width: 361px)"
-          srcset="https://d1ayxb9ooonjts.cloudfront.net/d/7C75D35E20E45DF9C90AF96EB32B81BAAA55B50D.webp"
-        />
-        <img
-          srcset="https://d1ayxb9ooonjts.cloudfront.net/d/07F5C0A46E5B7CC1AF9227463EC5E0CE30272E5D.png 360w, https://d1ayxb9ooonjts.cloudfront.net/d/FCAC622050AD2314071BD8946865A3D382EBB618.png 361w"
-          sizes="(max-width: 360px) 360px, (min-width: 361px) 361px"
-          src="https://d1ayxb9ooonjts.cloudfront.net/d/FCAC622050AD2314071BD8946865A3D382EBB618.png"
-          class="footer__image"
-          alt="Logo Bitly"
-        />
-      </picture>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 16px;
+        }
 
-      <section class="footer__contact">
-        
-        <a
-          href="http://bitly.com/?utm_source=Bitly&utm_medium=referral&utm_campaign=preview_page"
-          id="action:bitly_logo_footer"
-        >
-          <img src="https://d1ayxb9ooonjts.cloudfront.net/d/C1479C1BB4EBAEE77A9F4B616943FFEE9DAAEA0E.svg" class="logo" alt="Bitly Logo" />
-        </a>
-        
-        <section class="footer__contact-socials">
-          <a href="https://x.com/bitly" id="action:x">
-            <img src="https://d1ayxb9ooonjts.cloudfront.net/d/E8AA887989AD48F5366B7DCFAEAB4A3FF8150A1D.svg" alt="X (formerly Twitter) Logo" />
-          </a>
-          <a href="https://www.instagram.com/bitly/" id="action:instagram">
-            <img src="https://d1ayxb9ooonjts.cloudfront.net/d/12032AF2C457BB634C4039A306C2C39420BF51EB.svg" alt="Instagram Logo" />
-          </a>
-          <a href="https://www.facebook.com/bitly" id="action:facebook">
-            <img src="https://d1ayxb9ooonjts.cloudfront.net/d/704DBB97AC75F2A7D9571254B944F17277707059.svg" alt="Facebook Logo" />
-          </a>
-          <a href="https://www.linkedin.com/company/bitly/mycompany/" id="action:linkedin">
-            <img src="https://d1ayxb9ooonjts.cloudfront.net/d/8F9B499DDC670821F87C474721CA954C0C1AD3F5.svg" alt="LinkedIn Logo" />
-          </a>
-        </section>
-        
-        <p class="footer__contact-disclaimer">
-          © 2026 Bitly - Dibuat dengan penuh cinta di New York City, Denver, Berlin, Bielefeld, dan di seluruh dunia.
-        </p>
-      </section><section class="footer__preferences">
-          <button id="ot-sdk-btn" class="ot-sdk-show-settings">Manajemen persetujuan</button>
-        </section></footer>
+        .container {
+            max-width: 1024px;
+            width: 100%;
+        }
 
-  </body>
+        /* ===== HEADER COMPACT ===== */
+        .header {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px 16px;
+            background: #111;
+            padding: 10px 18px;
+            border-radius: 12px;
+            border: 1px solid #2a2a2a;
+            margin-bottom: 14px;
+            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.06);
+            min-height: 52px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .header-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #00d4ff;
+            letter-spacing: 0.2px;
+            white-space: nowrap;
+            line-height: 1.2;
+        }
+
+        .header-title span {
+            color: #fff;
+            font-weight: 300;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px 12px;
+        }
+
+        .file-info {
+            color: #aaa;
+            font-size: 13px;
+            background: #1a1a1a;
+            padding: 4px 14px;
+            border-radius: 20px;
+            border: 1px solid #2a2a2a;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            line-height: 1.4;
+        }
+
+        .file-info .fname {
+            color: #fff;
+            font-weight: 500;
+        }
+
+        /* ===== VIDEO ===== */
+        #videoContainer {
+            position: relative;
+            width: 100%;
+            background: #111;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 30px rgba(0, 212, 255, 0.10);
+            margin-bottom: 10px;
+            border: 1px solid #1e1e1e;
+        }
+
+        video {
+            width: 100%;
+            display: block;
+            max-height: 600px;
+            background: #000;
+        }
+
+        /* ===== STATUS ===== */
+        #status {
+            text-align: center;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            background: #1a1a1a;
+            min-height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 12px;
+            border: 1px solid #2a2a2a;
+        }
+
+        .status-loading {
+            color: #ffcc00;
+        }
+        .status-error {
+            color: #ff4444;
+        }
+        .status-playing {
+            color: #00ff88;
+        }
+        .status-idle {
+            color: #888;
+        }
+        .status-info {
+            color: #00d4ff;
+        }
+
+        /* ===== SEARCH ===== */
+        .search-bar {
+            margin-bottom: 12px;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 10px 16px 10px 44px;
+            border-radius: 30px;
+            border: 1px solid #2a2a2a;
+            background: #111;
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+            transition: 0.3s;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='M21 21l-4.35-4.35'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: 14px center;
+            background-size: 18px;
+        }
+
+        .search-bar input:focus {
+            border-color: #00d4ff;
+            box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.12);
+        }
+
+        .search-bar input::placeholder {
+            color: #555;
+        }
+
+        /* ===== CHANNEL SECTION ===== */
+        .channel-section {
+            margin-top: 2px;
+        }
+
+        .channel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+            gap: 6px 12px;
+        }
+
+        .channel-header .count {
+            color: #666;
+            font-size: 13px;
+        }
+
+        .toggle-btn {
+            background: #1e1e1e;
+            color: #00d4ff;
+            border: 2px solid #00d4ff;
+            padding: 6px 18px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 700;
+            transition: 0.3s;
+            line-height: 1.4;
+        }
+
+        .toggle-btn:hover {
+            background: #00d4ff;
+            color: #0a0a0a;
+        }
+
+        .channel-selector {
+            display: none;
+            gap: 6px;
+            justify-content: flex-start;
+            flex-wrap: wrap;
+            padding: 10px 12px 14px;
+            background: #111;
+            border-radius: 12px;
+            border: 1px solid #2a2a2a;
+            /* NO max-height restriction — flows naturally */
+        }
+
+        .channel-selector.show {
+            display: flex;
+        }
+
+        .channel-btn {
+            background: #1e1e1e;
+            color: #aaa;
+            border: 2px solid #333;
+            padding: 5px 14px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: 0.2s;
+            flex: 0 1 auto;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            line-height: 1.4;
+            min-height: 34px;
+        }
+
+        .channel-btn img {
+            width: 22px;
+            height: 22px;
+            border-radius: 4px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .channel-btn:hover {
+            background: #2a2a2a;
+            color: #fff;
+        }
+
+        .channel-btn.active {
+            background: #00d4ff;
+            color: #0a0a0a;
+            border-color: #00d4ff;
+        }
+
+        .channel-btn.hidden {
+            display: none;
+        }
+
+        .group-title {
+            width: 100%;
+            padding: 4px 10px;
+            background: #222;
+            color: #00d4ff;
+            font-weight: 700;
+            border-radius: 6px;
+            margin: 2px 0 4px;
+            font-size: 13px;
+            letter-spacing: 0.3px;
+        }
+
+        .no-result {
+            width: 100%;
+            text-align: center;
+            color: #555;
+            padding: 20px 0;
+            font-size: 14px;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .header {
+                flex-direction: row;
+                flex-wrap: wrap;
+                padding: 8px 14px;
+                gap: 6px 12px;
+                min-height: 46px;
+            }
+
+            .header-left {
+                flex: 0 1 auto;
+            }
+
+            .header-title {
+                font-size: 18px;
+            }
+
+            .header-right {
+                flex: 1 1 auto;
+                justify-content: flex-end;
+                gap: 5px 10px;
+            }
+
+            .file-info {
+                font-size: 12px;
+                padding: 3px 12px;
+            }
+
+            .search-bar input {
+                font-size: 13px;
+                padding: 9px 14px 9px 40px;
+                background-size: 16px;
+                background-position: 13px center;
+            }
+
+            .channel-btn {
+                font-size: 12px;
+                padding: 4px 12px;
+                min-height: 30px;
+            }
+            .channel-btn img {
+                width: 20px;
+                height: 20px;
+            }
+
+            #status {
+                font-size: 13px;
+                min-height: 34px;
+                padding: 6px 12px;
+            }
+
+            .toggle-btn {
+                font-size: 12px;
+                padding: 5px 14px;
+            }
+
+            .channel-selector {
+                padding: 8px 10px 12px;
+                gap: 5px;
+            }
+
+            .group-title {
+                font-size: 12px;
+                padding: 3px 8px;
+            }
+
+            .header-title span {
+                display: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 8px;
+            }
+
+            .header {
+                padding: 6px 10px;
+                gap: 4px 8px;
+                min-height: 40px;
+                border-radius: 10px;
+            }
+
+            .header-title {
+                font-size: 15px;
+            }
+
+            .file-info {
+                font-size: 10px;
+                padding: 2px 10px;
+                gap: 3px;
+            }
+
+            .file-info .fname {
+                max-width: 80px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .search-bar input {
+                font-size: 12px;
+                padding: 8px 12px 8px 36px;
+                background-size: 15px;
+                background-position: 11px center;
+            }
+
+            .channel-btn {
+                font-size: 11px;
+                padding: 3px 10px;
+                min-height: 26px;
+                gap: 4px;
+                border-width: 1.5px;
+            }
+            .channel-btn img {
+                width: 16px;
+                height: 16px;
+            }
+
+            #status {
+                font-size: 12px;
+                min-height: 30px;
+                padding: 5px 10px;
+                margin-bottom: 8px;
+            }
+
+            .toggle-btn {
+                font-size: 11px;
+                padding: 4px 12px;
+            }
+
+            .channel-header .count {
+                font-size: 11px;
+            }
+
+            .channel-selector {
+                padding: 6px 8px 10px;
+                gap: 4px;
+                border-radius: 10px;
+            }
+
+            .group-title {
+                font-size: 11px;
+                padding: 2px 6px;
+                margin: 1px 0 3px;
+            }
+
+            .no-result {
+                font-size: 12px;
+                padding: 14px 0;
+            }
+
+            #videoContainer {
+                border-radius: 10px;
+                margin-bottom: 8px;
+            }
+
+            .header-title span {
+                display: none;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .header-title {
+                font-size: 13px;
+            }
+            .file-info {
+                font-size: 9px;
+                padding: 2px 8px;
+            }
+            .file-info .fname {
+                max-width: 60px;
+            }
+            .channel-btn {
+                font-size: 10px;
+                padding: 2px 8px;
+                min-height: 22px;
+                gap: 3px;
+            }
+            .channel-btn img {
+                width: 14px;
+                height: 14px;
+            }
+            .search-bar input {
+                font-size: 11px;
+                padding: 7px 10px 7px 32px;
+                background-size: 13px;
+                background-position: 10px center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <!-- ===== HEADER COMPACT ===== -->
+        <div class="header">
+            <div class="header-left">
+                <div class="header-title">📺 IPTV <span>TRIKARYA</span></div>
+            </div>
+            <div class="header-right">
+                <div class="file-info" id="fileInfo">
+                    <span>📄</span>
+                    <span class="fname" id="fileName">Memuat daftar channel...</span>
+                    <span id="fileSize" style="color:#555;"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== VIDEO PLAYER ===== -->
+        <div id="videoContainer">
+            <video id="videoPlayer" controls playsinline></video>
+        </div>
+
+        <!-- ===== STATUS ===== -->
+        <div id="status" class="status-idle">⏳ Memuat daftar channel...</div>
+
+        <!-- ===== SEARCH ===== -->
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="🔍 Cari channel..." autocomplete="off" />
+        </div>
+
+        <!-- ===== CHANNEL LIST ===== -->
+        <div class="channel-section">
+            <div class="channel-header">
+                <span class="count" id="channelCount">0 channel</span>
+                <button class="toggle-btn" id="toggleChannelBtn">📋 Tampilkan Semua Channel</button>
+            </div>
+            <div class="channel-selector" id="channelSelector"></div>
+        </div>
+
+    </div>
+
+    <script>
+        // ============================================================
+        //  GLOBAL VARIABLES
+        // ============================================================
+        const video = document.getElementById('videoPlayer');
+        const status = document.getElementById('status');
+        const channelSelector = document.getElementById('channelSelector');
+        const toggleBtn = document.getElementById('toggleChannelBtn');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const searchInput = document.getElementById('searchInput');
+        const channelCount = document.getElementById('channelCount');
+
+        let channels = [];
+        let currentChannelIndex = 0;
+        let filteredChannels = [];
+
+        let shakaPlayer = null;
+        let hlsPlayer = null;
+        let mpegtsPlayer = null;
+
+        let _isPlaying = false;
+
+        // ============================================================
+        //  STATUS UPDATE
+        // ============================================================
+        function updateStatus(text, className = 'status-idle') {
+            status.textContent = text;
+            status.className = className;
+        }
+
+        // ============================================================
+        //  PARSER M3U
+        // ============================================================
+        function parseM3U(content) {
+            const lines = content.split(/\r?\n/);
+            const result = [];
+            let current = {};
+            let pendingKeyId = '';
+            let pendingKey = '';
+            let pendingLicenseUrl = '';
+            let pendingUserAgent = '';
+            let pendingReferer = '';
+            let groupTitle = '';
+
+            for (let i = 0; i < lines.length; i++) {
+                let line = lines[i].trim();
+                if (!line) continue;
+                if (line.startsWith('#') && !line.startsWith('#EXT') && !line.startsWith('#KODIPROP') && !line.startsWith(
+                        '#EXTVLCOPT')) continue;
+
+                if (line.startsWith('#EXTINF:')) {
+                    const nameMatch = line.match(/,([^,]*)$/);
+                    const name = nameMatch ? nameMatch[1].trim() : 'Channel';
+                    const logoMatch = line.match(/tvg-logo="([^"]*)"/);
+                    const logo = logoMatch ? logoMatch[1] : '';
+                    const groupMatch = line.match(/group-title="([^"]*)"/);
+                    if (groupMatch) groupTitle = groupMatch[1];
+                    current = {
+                        name,
+                        logo,
+                        group: groupTitle || '',
+                        userAgent: pendingUserAgent || '',
+                        referer: pendingReferer || '',
+                        keyId: pendingKeyId || '',
+                        key: pendingKey || '',
+                        licenseUrl: pendingLicenseUrl || '',
+                        url: ''
+                    };
+                    pendingUserAgent = '';
+                    pendingReferer = '';
+                    pendingKeyId = '';
+                    pendingKey = '';
+                    pendingLicenseUrl = '';
+                } else if (line.startsWith('#EXTVLCOPT:')) {
+                    const opt = line.replace('#EXTVLCOPT:', '').trim();
+                    if (opt.startsWith('http-user-agent=')) {
+                        const ua = opt.replace('http-user-agent=', '').trim();
+                        if (current.name) current.userAgent = ua;
+                        else pendingUserAgent = ua;
+                    } else if (opt.startsWith('http-referrer=') || opt.startsWith('http-referer=')) {
+                        const ref = opt.replace(/http-referrer=|http-referer=/, '').trim();
+                        if (current.name) current.referer = ref;
+                        else pendingReferer = ref;
+                    }
+                } else if (line.startsWith('#KODIPROP:')) {
+                    const prop = line.replace('#KODIPROP:', '').trim();
+                    if (prop.includes('license_key=')) {
+                        const keyPart = prop.split('license_key=')[1].trim();
+                        if (keyPart.startsWith('http://') || keyPart.startsWith('https://')) {
+                            if (current.name) current.licenseUrl = keyPart;
+                            else pendingLicenseUrl = keyPart;
+                        } else {
+                            const parts = keyPart.split(':');
+                            if (parts.length === 2) {
+                                const kid = parts[0].trim();
+                                const key = parts[1].trim();
+                                if (current.name) {
+                                    current.keyId = kid;
+                                    current.key = key;
+                                } else {
+                                    pendingKeyId = kid;
+                                    pendingKey = key;
+                                }
+                            }
+                        }
+                    } else if (prop.includes('license_url=')) {
+                        const url = prop.split('license_url=')[1].trim();
+                        if (current.name) current.licenseUrl = url;
+                    }
+                } else if (line.startsWith('http://') || line.startsWith('https://')) {
+                    if (current.name && !current.url) {
+                        current.url = line;
+                        if (pendingUserAgent && !current.userAgent) current.userAgent = pendingUserAgent;
+                        if (pendingReferer && !current.referer) current.referer = pendingReferer;
+                        if (pendingKeyId && !current.keyId) {
+                            current.keyId = pendingKeyId;
+                            current.key = pendingKey;
+                        }
+                        if (pendingLicenseUrl && !current.licenseUrl) current.licenseUrl = pendingLicenseUrl;
+
+                        result.push({ ...current });
+                        current = {};
+                        pendingUserAgent = '';
+                        pendingReferer = '';
+                        pendingKeyId = '';
+                        pendingKey = '';
+                        pendingLicenseUrl = '';
+                    }
+                }
+            }
+            if (current.name && current.url) result.push(current);
+            return result;
+        }
+
+        // ============================================================
+        //  DETECT STREAM TYPE
+        // ============================================================
+        function detectStreamType(url) {
+            const lower = url.toLowerCase();
+            if (lower.includes('.mpd') || lower.includes('manifest.mpd') || lower.includes('cenc.mpd')) return 'dash';
+            if (lower.includes('.m3u8') || lower.includes('playlist.m3u8')) return 'hls';
+            if (lower.includes('.ts') || lower.includes('extension=ts') || (lower.includes('stream=') && lower.includes(
+                'ts'))) return 'mpegts';
+            if (lower.includes('.mp4') || lower.includes('videoplayback')) return 'vod';
+            return 'unknown';
+        }
+
+        // ============================================================
+        //  DESTROY ALL PLAYERS
+        // ============================================================
+        function destroyAllPlayers() {
+            if (shakaPlayer) {
+                try { shakaPlayer.destroy(); } catch (e) {}
+                shakaPlayer = null;
+            }
+            if (hlsPlayer) {
+                try { hlsPlayer.destroy(); } catch (e) {}
+                hlsPlayer = null;
+            }
+            if (mpegtsPlayer) {
+                try { mpegtsPlayer.destroy(); } catch (e) {}
+                mpegtsPlayer = null;
+            }
+            video.pause();
+            video.removeAttribute('src');
+            video.load();
+        }
+
+        // ============================================================
+        //  PLAY CHANNEL
+        // ============================================================
+        async function playChannel(index) {
+            if (_isPlaying) return;
+
+            const channel = channels[index];
+            if (!channel || !channel.url) {
+                updateStatus('⚠️ Channel tidak valid', 'status-error');
+                return;
+            }
+
+            _isPlaying = true;
+            currentChannelIndex = index;
+
+            updateStatus(`⏳ Memuat ${channel.name}...`, 'status-loading');
+
+            document.querySelectorAll('.channel-btn').forEach((btn, i) => {
+                btn.classList.toggle('active', i === index);
+            });
+
+            destroyAllPlayers();
+
+            try {
+                const headers = {};
+                if (channel.userAgent) headers['User-Agent'] = channel.userAgent;
+                if (channel.referer) headers['Referer'] = channel.referer;
+
+                const type = detectStreamType(channel.url);
+
+                // ===== DASH =====
+                if (type === 'dash') {
+                    let manifestUrl = channel.url;
+                    let useProxy = false;
+
+                    try {
+                        const headResp = await fetch(manifestUrl, { method: 'HEAD', headers, mode: 'cors' });
+                        if (!headResp.ok) useProxy = true;
+                    } catch (e) {
+                        useProxy = true;
+                    }
+
+                    if (useProxy) {
+                        manifestUrl = 'https://corsproxy.io/?' + encodeURIComponent(channel.url);
+                    }
+
+                    shakaPlayer = new shaka.Player();
+                    shakaPlayer.configure({
+                        manifest: { retryParameters: { maxAttempts: 5, timeout: 20000, backoffFactor: 2,
+                                baseDelay: 1000 } },
+                        drm: { retryParameters: { maxAttempts: 5, timeout: 20000, backoffFactor: 2,
+                                baseDelay: 1000 } },
+                        streaming: { retryParameters: { maxAttempts: 5, timeout: 20000, backoffFactor: 2,
+                                baseDelay: 1000 } }
+                    });
+
+                    await shakaPlayer.attach(video);
+
+                    const drmConfig = {};
+                    if (channel.keyId && channel.key) {
+                        drmConfig.clearKeys = { [channel.keyId]: channel.key };
+                    }
+                    if (channel.licenseUrl) {
+                        drmConfig.servers = { 'com.widevine.alpha': channel.licenseUrl };
+                    }
+                    if (Object.keys(drmConfig).length > 0) {
+                        shakaPlayer.configure({ drm: drmConfig });
+                    }
+
+                    shakaPlayer.getNetworkingEngine().registerRequestFilter((type, request) => {
+                        for (const [key, value] of Object.entries(headers)) {
+                            request.headers[key] = value;
+                        }
+                    });
+
+                    let shakaError = null;
+                    shakaPlayer.addEventListener('error', (e) => {
+                        const err = e.detail;
+                        let msg = err.message || err.code;
+                        if (err.code === 1002) msg = 'Manifest tidak valid (1002)';
+                        if (err.code === 6012) msg = 'Gagal mengakses manifest (6012)';
+                        if (err.code === 6014) msg = 'DRM error (6014)';
+                        if (err.code === 3015) msg = 'DRM license request gagal (3015)';
+                        shakaError = { code: err.code, message: msg };
+                    });
+
+                    let manifestParsed = false;
+                    shakaPlayer.addEventListener('manifestparsed', () => { manifestParsed = true; });
+
+                    let loaded = false;
+                    for (let attempt = 0; attempt < 3 && !loaded; attempt++) {
+                        try {
+                            await shakaPlayer.load(manifestUrl);
+                            loaded = true;
+                        } catch (loadErr) {
+                            if (attempt >= 2) throw loadErr;
+                            await new Promise(r => setTimeout(r, 2000 * (attempt + 1)));
+                        }
+                    }
+
+                    if (shakaError) {
+                        if (shakaError.code === 1002 && useProxy) {
+                            try {
+                                await shakaPlayer.load(channel.url);
+                            } catch (e2) { throw shakaError; }
+                        } else {
+                            throw new Error(shakaError.message);
+                        }
+                    }
+
+                    if (!manifestParsed) {
+                        await new Promise((resolve) => {
+                            const check = () => { if (manifestParsed) resolve();
+                                else setTimeout(check, 200); };
+                            check();
+                        });
+                    }
+
+                    try {
+                        await video.play();
+                    } catch (playErr) {
+                        if (playErr.name === 'AbortError') {
+                            await new Promise(r => setTimeout(r, 500));
+                            await video.play();
+                        } else {
+                            throw playErr;
+                        }
+                    }
+
+                    updateStatus(`▶️ Memutar ${channel.name}`, 'status-playing');
+                    _isPlaying = false;
+                    return;
+                }
+
+                // ===== HLS =====
+                else if (type === 'hls') {
+                    if (Hls.isSupported()) {
+                        hlsPlayer = new Hls({
+                            xhrSetup: function(xhr, url) {
+                                for (const [key, value] of Object.entries(headers)) {
+                                    xhr.setRequestHeader(key, value);
+                                }
+                            }
+                        });
+                        hlsPlayer.loadSource(channel.url);
+                        hlsPlayer.attachMedia(video);
+
+                        hlsPlayer.on(Hls.Events.MANIFEST_PARSED, () => {
+                            video.play().catch(() => {});
+                            updateStatus(`▶️ Memutar ${channel.name}`, 'status-playing');
+                            _isPlaying = false;
+                        });
+
+                        hlsPlayer.on(Hls.Events.ERROR, (e, data) => {
+                            if (data.fatal) {
+                                updateStatus('⚠️ Streaming sudah tidak tersedia atau channel sedang offline', 'status-error');
+                                _isPlaying = false;
+                            }
+                        });
+
+                        setTimeout(() => {
+                            if (_isPlaying) {
+                                try {
+                                    video.src = channel.url;
+                                    video.play();
+                                    updateStatus(`▶️ Memutar ${channel.name}`, 'status-playing');
+                                    _isPlaying = false;
+                                } catch (e) { _isPlaying = false; }
+                            }
+                        }, 10000);
+
+                    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                        video.src = channel.url;
+                        video.play();
+                        updateStatus(`▶️ Memutar ${channel.name}`, 'status-playing');
+                        _isPlaying = false;
+                    } else {
+                        throw new Error('HLS tidak didukung');
+                    }
+                    return;
+                }
+
+                // ===== MPEG-TS =====
+                else if (type === 'mpegts') {
+                    if (typeof mpegts !== 'undefined' && mpegts.isSupported()) {
+                        try {
+                            mpegtsPlayer = mpegts.createPlayer({
+                                type: 'mpegts',
+                                url: channel.url,
+                                isLive: true,
+                                reuseRedirectedURL: true,
+                                enableStashBuffer: false,
+                                stashInitialSize: 128,
+                                cors: true,
+                                loader: {
+                                    xhrSetup: function(xhr, url) {
+                                        for (const [key, value] of Object.entries(headers)) {
+                                            xhr.setRequestHeader(key, value);
+                                        }
+                                        xhr.withCredentials = true;
+                                    }
+                                }
+                            });
+                            mpegtsPlayer.attachMediaElement(video);
+                            mpegtsPlayer.load();
+                            video.play();
+                            updateStatus(`▶️ Memutar ${channel.name}`, 'status-playing');
+                            _isPlaying = false;
+                        } catch (err) {
+                            video.src = channel.url;
+                            video.play();
+                            updateStatus(`▶️ Memutar ${channel.name}`, 'status-playing');
+                            _isPlaying = false;
+                        }
+                    } else {
+                        try {
+                            video.src = channel.url;
+                            video.play();
+                            updateStatus(`▶️ Memutar ${channel.name}`, 'status-playing');
+                            _isPlaying = false;
+                        } catch (err) {
+                            throw new Error('Tidak dapat memutar stream MPEG-TS');
+                        }
+                    }
+                    return;
+                }
+
+                // ===== VOD / Unknown =====
+                else {
+                    video.src = channel.url;
+                    video.play();
+                    updateStatus(`▶️ Memutar ${channel.name}`, 'status-playing');
+                    _isPlaying = false;
+                    return;
+                }
+
+            } catch (error) {
+                let msg = error.message || 'Gagal memutar';
+                if (error.code === 1002) msg = 'Link video tidak valid atau sudah kadaluarsa';
+                if (error.code === 3015) msg = 'Video dilindungi hak cipta dan tidak bisa diputar';
+                updateStatus(`⚠️ ${msg}`, 'status-error');
+                _isPlaying = false;
+            }
+        }
+
+        // ============================================================
+        //  BUILD CHANNEL BUTTONS (dengan filter)
+        // ============================================================
+        function buildChannelButtons(filter = '') {
+            channelSelector.innerHTML = '';
+            const search = filter.toLowerCase().trim();
+
+            let displayChannels = channels;
+            if (search) {
+                displayChannels = channels.filter(ch =>
+                    ch.name.toLowerCase().includes(search) ||
+                    ch.group.toLowerCase().includes(search)
+                );
+            }
+
+            filteredChannels = displayChannels;
+            channelCount.textContent = `${displayChannels.length} dari ${channels.length} channel`;
+
+            if (displayChannels.length === 0) {
+                const empty = document.createElement('div');
+                empty.className = 'no-result';
+                empty.textContent = '🔍 Tidak ada channel yang cocok';
+                channelSelector.appendChild(empty);
+                return;
+            }
+
+            let currentGroup = '';
+            displayChannels.forEach((ch, idx) => {
+                const realIndex = channels.indexOf(ch);
+
+                if (ch.group && ch.group !== currentGroup) {
+                    currentGroup = ch.group;
+                    const div = document.createElement('div');
+                    div.className = 'group-title';
+                    div.textContent = currentGroup;
+                    channelSelector.appendChild(div);
+                }
+
+                const btn = document.createElement('button');
+                btn.className = 'channel-btn' + (realIndex === currentChannelIndex ? ' active' : '');
+                btn.dataset.index = realIndex;
+                if (ch.logo) {
+                    const img = document.createElement('img');
+                    img.src = ch.logo;
+                    img.onerror = () => img.style.display = 'none';
+                    btn.appendChild(img);
+                }
+                const span = document.createElement('span');
+                span.textContent = ch.name || `Channel ${realIndex+1}`;
+                btn.appendChild(span);
+
+                btn.addEventListener('click', function() {
+                    const idx = parseInt(this.dataset.index);
+                    if (idx !== currentChannelIndex) playChannel(idx);
+                });
+
+                channelSelector.appendChild(btn);
+            });
+        }
+
+        // ============================================================
+        //  LOAD M3U FROM URL
+        // ============================================================
+        async function loadM3UFromURL(url) {
+            try {
+                updateStatus('⏳ Mengunduh daftar channel...', 'status-loading');
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const content = await response.text();
+                
+                fileName.textContent = 'siaran.txt';
+                fileSize.textContent = `(${(content.length/1024).toFixed(1)} KB)`;
+
+                channels = parseM3U(content);
+
+                if (channels.length === 0) {
+                    updateStatus('⚠️ Tidak ada channel ditemukan', 'status-error');
+                    fileName.textContent = '⚠️ File tidak valid';
+                    fileSize.textContent = '';
+                    return;
+                }
+
+                let first = 0;
+                currentChannelIndex = first;
+
+                buildChannelButtons();
+                updateStatus(`📡 ${channels.length} channel ditemukan. Memuat...`, 'status-info');
+                destroyAllPlayers();
+                playChannel(first);
+            } catch (error) {
+                updateStatus(`⚠️ Gagal memuat daftar channel: ${error.message}`, 'status-error');
+                fileName.textContent = '⚠️ Gagal memuat';
+                fileSize.textContent = '';
+            }
+        }
+
+        // ============================================================
+        //  SEARCH
+        // ============================================================
+        searchInput.addEventListener('input', function() {
+            buildChannelButtons(this.value);
+        });
+
+        // ============================================================
+        //  TOGGLE CHANNEL LIST
+        // ============================================================
+        toggleBtn.addEventListener('click', function() {
+            const isShowing = channelSelector.classList.toggle('show');
+            this.textContent = isShowing ? '📋 Sembunyikan Channel' : '📋 Tampilkan Semua Channel';
+            if (isShowing) {
+                buildChannelButtons(searchInput.value);
+            }
+        });
+
+        // ============================================================
+        //  CLEANUP
+        // ============================================================
+        window.addEventListener('beforeunload', () => destroyAllPlayers());
+
+        // ============================================================
+        //  INIT - Auto Load M3U
+        // ============================================================
+        const M3U_URL = 'https://jego-movego-hld.netlify.app/trikarya-tv-gorontalo/siaran.txt';
+        loadM3UFromURL(M3U_URL);
+    </script>
+</body>
 </html>
