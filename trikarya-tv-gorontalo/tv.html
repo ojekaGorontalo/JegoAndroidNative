@@ -225,7 +225,6 @@
             background: #111;
             border-radius: 12px;
             border: 1px solid #2a2a2a;
-            /* NO max-height restriction — flows naturally */
         }
 
         .channel-selector.show {
@@ -1065,9 +1064,9 @@
         window.addEventListener('beforeunload', () => destroyAllPlayers());
 
         // ============================================================
-        //  INIT - Auto Load M3U
+        //  INIT - Auto Load M3U with CORS Proxy
         // ============================================================
-        const M3U_URL = 'https://jego-movego-hld.netlify.app/trikarya-tv-gorontalo/siaran.txt';
+        const M3U_URL = 'https://corsproxy.io/?' + encodeURIComponent('https://jego-movego-hld.netlify.app/trikarya-tv-gorontalo/siaran.txt');
         loadM3UFromURL(M3U_URL);
     </script>
 </body>
