@@ -911,6 +911,7 @@
                     let manifestUrl = channel.url;
                     let useProxy = false;
 
+                    // Coba akses langsung dulu
                     try {
                         const headResp = await fetch(manifestUrl, { method: 'HEAD', headers, mode: 'cors' });
                         if (!headResp.ok) useProxy = true;
@@ -918,18 +919,39 @@
                         useProxy = true;
                     }
 
+                    // Jika gagal, gunakan proxy yang lebih stabil
                     if (useProxy) {
-                        manifestUrl = 'https://corsproxy.io/?' + encodeURIComponent(channel.url);
+                        // Ganti dengan proxy yang lebih andal
+                        manifestUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(channel.url);
                     }
 
                     shakaPlayer = new shaka.Player();
+                    // Konfigurasi retry dan timeout yang lebih besar
                     shakaPlayer.configure({
-                        manifest: { retryParameters: { maxAttempts: 5, timeout: 20000, backoffFactor: 2,
-                                baseDelay: 1000 } },
-                        drm: { retryParameters: { maxAttempts: 5, timeout: 20000, backoffFactor: 2,
-                                baseDelay: 1000 } },
-                        streaming: { retryParameters: { maxAttempts: 5, timeout: 20000, backoffFactor: 2,
-                                baseDelay: 1000 } }
+                        manifest: {
+                            retryParameters: {
+                                maxAttempts: 10,
+                                timeout: 30000,
+                                backoffFactor: 2,
+                                baseDelay: 1000
+                            }
+                        },
+                        drm: {
+                            retryParameters: {
+                                maxAttempts: 10,
+                                timeout: 30000,
+                                backoffFactor: 2,
+                                baseDelay: 1000
+                            }
+                        },
+                        streaming: {
+                            retryParameters: {
+                                maxAttempts: 10,
+                                timeout: 30000,
+                                backoffFactor: 2,
+                                baseDelay: 1000
+                            }
+                        }
                     });
 
                     await shakaPlayer.attach(video);
@@ -959,6 +981,7 @@
                         if (err.code === 6012) msg = 'Gagal mengakses manifest (6012)';
                         if (err.code === 6014) msg = 'DRM error (6014)';
                         if (err.code === 3015) msg = 'DRM license request gagal (3015)';
+                        if (err.code === 1001) msg = 'Gagal memuat manifest (1001) – mungkin CORS atau URL mati';
                         shakaError = { code: err.code, message: msg };
                     });
 
@@ -977,10 +1000,13 @@
                     }
 
                     if (shakaError) {
-                        if (shakaError.code === 1002 && useProxy) {
+                        // Jika error 1001 dan menggunakan proxy, coba tanpa proxy sebagai fallback
+                        if (shakaError.code === 1001 && useProxy) {
                             try {
                                 await shakaPlayer.load(channel.url);
-                            } catch (e2) { throw shakaError; }
+                            } catch (e2) {
+                                throw new Error(shakaError.message + ' (fallback gagal)');
+                            }
                         } else {
                             throw new Error(shakaError.message);
                         }
@@ -1032,7 +1058,7 @@
                         hlsPlayer.on(Hls.Events.ERROR, (e, data) => {
                             if (data.fatal) {
                                 updateStatus('⚠️ Streaming sudah tidak tersedia atau channel sedang offline',
-                                'status-error');
+                                    'status-error');
                                 _isPlaying = false;
                             }
                         });
@@ -1117,6 +1143,7 @@
                 let msg = error.message || 'Gagal memutar';
                 if (error.code === 1002) msg = 'Link video tidak valid atau sudah kadaluarsa';
                 if (error.code === 3015) msg = 'Video dilindungi hak cipta dan tidak bisa diputar';
+                if (error.code === 1001) msg = 'Gagal memuat manifest – periksa koneksi atau coba lagi nanti';
                 updateStatus(`⚠️ ${msg}`, 'status-error');
                 _isPlaying = false;
             }
@@ -1126,7 +1153,6 @@
         //  BUILD CHANNEL GRID (dengan filter)
         // ============================================================
         function buildChannelButtons(filter = '') {
-            // Kosongkan container, tapi kita akan buat grid wrapper di dalamnya
             channelSelector.innerHTML = '';
 
             const search = filter.toLowerCase().trim();
@@ -1150,7 +1176,6 @@
                 return;
             }
 
-            // Buat grid wrapper
             const grid = document.createElement('div');
             grid.className = 'channel-grid';
 
@@ -1159,7 +1184,6 @@
             displayChannels.forEach((ch, idx) => {
                 const realIndex = channels.indexOf(ch);
 
-                // Tampilkan group title jika berbeda
                 if (ch.group && ch.group !== currentGroup) {
                     currentGroup = ch.group;
                     const div = document.createElement('div');
@@ -1168,12 +1192,10 @@
                     grid.appendChild(div);
                 }
 
-                // Buat card channel
                 const btn = document.createElement('button');
                 btn.className = 'channel-btn' + (realIndex === currentChannelIndex ? ' active' : '');
                 btn.dataset.index = realIndex;
 
-                // Logo
                 if (ch.logo) {
                     const img = document.createElement('img');
                     img.src = ch.logo;
@@ -1181,7 +1203,6 @@
                     img.onerror = () => { img.style.display = 'none'; };
                     btn.appendChild(img);
                 } else {
-                    // Placeholder jika tidak ada logo
                     const placeholder = document.createElement('div');
                     placeholder.style.cssText =
                         'width:60px;height:60px;border-radius:8px;background:#1a1a1a;border:1px solid #2a2a2a;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;';
@@ -1189,7 +1210,6 @@
                     btn.appendChild(placeholder);
                 }
 
-                // Nama channel
                 const span = document.createElement('span');
                 span.className = 'channel-name';
                 span.textContent = ch.name || `Channel ${realIndex+1}`;
