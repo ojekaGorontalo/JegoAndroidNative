@@ -36,6 +36,7 @@
             width: 100%;
         }
 
+        /* ===== HEADER COMPACT ===== */
         .header {
             display: flex;
             flex-wrap: wrap;
@@ -79,6 +80,28 @@
             gap: 6px 12px;
         }
 
+        .upload-btn {
+            background: #00d4ff;
+            color: #0a0a0a;
+            border: none;
+            padding: 7px 18px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.25s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            line-height: 1.4;
+        }
+
+        .upload-btn:hover {
+            background: #00b3e6;
+            transform: scale(1.02);
+        }
+
         .file-info {
             color: #aaa;
             font-size: 13px;
@@ -98,6 +121,11 @@
             font-weight: 500;
         }
 
+        #fileInput {
+            display: none;
+        }
+
+        /* ===== VIDEO ===== */
         #videoContainer {
             position: relative;
             width: 100%;
@@ -116,6 +144,7 @@
             background: #000;
         }
 
+        /* ===== STATUS ===== */
         #status {
             text-align: center;
             padding: 8px 14px;
@@ -130,12 +159,23 @@
             border: 1px solid #2a2a2a;
         }
 
-        .status-loading { color: #ffcc00; }
-        .status-error { color: #ff4444; }
-        .status-playing { color: #00ff88; }
-        .status-idle { color: #888; }
-        .status-info { color: #00d4ff; }
+        .status-loading {
+            color: #ffcc00;
+        }
+        .status-error {
+            color: #ff4444;
+        }
+        .status-playing {
+            color: #00ff88;
+        }
+        .status-idle {
+            color: #888;
+        }
+        .status-info {
+            color: #00d4ff;
+        }
 
+        /* ===== SEARCH ===== */
         .search-bar {
             margin-bottom: 12px;
         }
@@ -165,6 +205,7 @@
             color: #555;
         }
 
+        /* ===== CHANNEL SECTION ===== */
         .channel-section {
             margin-top: 2px;
         }
@@ -210,6 +251,7 @@
             background: #111;
             border-radius: 12px;
             border: 1px solid #2a2a2a;
+            /* NO max-height restriction — flows naturally */
         }
 
         .channel-selector.show {
@@ -253,6 +295,10 @@
             border-color: #00d4ff;
         }
 
+        .channel-btn.hidden {
+            display: none;
+        }
+
         .group-title {
             width: 100%;
             padding: 4px 10px;
@@ -273,68 +319,250 @@
             font-size: 14px;
         }
 
+        /* ===== RESPONSIVE ===== */
         @media (max-width: 768px) {
-            body { padding: 10px; }
-            .header { padding: 8px 14px; gap: 6px 12px; min-height: 46px; }
-            .header-title { font-size: 18px; }
-            .header-right { flex: 1 1 auto; justify-content: flex-end; gap: 5px 10px; }
-            .file-info { font-size: 12px; padding: 3px 12px; }
-            .search-bar input { font-size: 13px; padding: 9px 14px 9px 40px; background-size: 16px; background-position: 13px center; }
-            .channel-btn { font-size: 12px; padding: 4px 12px; min-height: 30px; }
-            .channel-btn img { width: 20px; height: 20px; }
-            #status { font-size: 13px; min-height: 34px; padding: 6px 12px; }
-            .toggle-btn { font-size: 12px; padding: 5px 14px; }
-            .channel-selector { padding: 8px 10px 12px; gap: 5px; }
-            .group-title { font-size: 12px; padding: 3px 8px; }
-            .header-title span { display: none; }
+            body {
+                padding: 10px;
+            }
+
+            .header {
+                flex-direction: row;
+                flex-wrap: wrap;
+                padding: 8px 14px;
+                gap: 6px 12px;
+                min-height: 46px;
+            }
+
+            .header-left {
+                flex: 0 1 auto;
+            }
+
+            .header-title {
+                font-size: 18px;
+            }
+
+            .header-right {
+                flex: 1 1 auto;
+                justify-content: flex-end;
+                gap: 5px 10px;
+            }
+
+            .upload-btn {
+                padding: 5px 14px;
+                font-size: 13px;
+            }
+
+            .file-info {
+                font-size: 12px;
+                padding: 3px 12px;
+            }
+
+            .search-bar input {
+                font-size: 13px;
+                padding: 9px 14px 9px 40px;
+                background-size: 16px;
+                background-position: 13px center;
+            }
+
+            .channel-btn {
+                font-size: 12px;
+                padding: 4px 12px;
+                min-height: 30px;
+            }
+            .channel-btn img {
+                width: 20px;
+                height: 20px;
+            }
+
+            #status {
+                font-size: 13px;
+                min-height: 34px;
+                padding: 6px 12px;
+            }
+
+            .toggle-btn {
+                font-size: 12px;
+                padding: 5px 14px;
+            }
+
+            .channel-selector {
+                padding: 8px 10px 12px;
+                gap: 5px;
+            }
+
+            .group-title {
+                font-size: 12px;
+                padding: 3px 8px;
+            }
+
+            .header-title span {
+                display: none;
+            }
         }
 
         @media (max-width: 480px) {
-            body { padding: 8px; }
-            .header { padding: 6px 10px; gap: 4px 8px; min-height: 40px; border-radius: 10px; }
-            .header-title { font-size: 15px; }
-            .file-info { font-size: 10px; padding: 2px 10px; gap: 3px; }
-            .file-info .fname { max-width: 80px; overflow: hidden; text-overflow: ellipsis; }
-            .search-bar input { font-size: 12px; padding: 8px 12px 8px 36px; background-size: 15px; background-position: 11px center; }
-            .channel-btn { font-size: 11px; padding: 3px 10px; min-height: 26px; gap: 4px; border-width: 1.5px; }
-            .channel-btn img { width: 16px; height: 16px; }
-            #status { font-size: 12px; min-height: 30px; padding: 5px 10px; margin-bottom: 8px; }
-            .toggle-btn { font-size: 11px; padding: 4px 12px; }
-            .channel-header .count { font-size: 11px; }
-            .channel-selector { padding: 6px 8px 10px; gap: 4px; border-radius: 10px; }
-            .group-title { font-size: 11px; padding: 2px 6px; margin: 1px 0 3px; }
-            .no-result { font-size: 12px; padding: 14px 0; }
-            #videoContainer { border-radius: 10px; margin-bottom: 8px; }
-            .header-title span { display: none; }
+            body {
+                padding: 8px;
+            }
+
+            .header {
+                padding: 6px 10px;
+                gap: 4px 8px;
+                min-height: 40px;
+                border-radius: 10px;
+            }
+
+            .header-title {
+                font-size: 15px;
+            }
+
+            .upload-btn {
+                font-size: 11px;
+                padding: 4px 10px;
+                gap: 4px;
+            }
+
+            .file-info {
+                font-size: 10px;
+                padding: 2px 10px;
+                gap: 3px;
+            }
+
+            .file-info .fname {
+                max-width: 80px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .search-bar input {
+                font-size: 12px;
+                padding: 8px 12px 8px 36px;
+                background-size: 15px;
+                background-position: 11px center;
+            }
+
+            .channel-btn {
+                font-size: 11px;
+                padding: 3px 10px;
+                min-height: 26px;
+                gap: 4px;
+                border-width: 1.5px;
+            }
+            .channel-btn img {
+                width: 16px;
+                height: 16px;
+            }
+
+            #status {
+                font-size: 12px;
+                min-height: 30px;
+                padding: 5px 10px;
+                margin-bottom: 8px;
+            }
+
+            .toggle-btn {
+                font-size: 11px;
+                padding: 4px 12px;
+            }
+
+            .channel-header .count {
+                font-size: 11px;
+            }
+
+            .channel-selector {
+                padding: 6px 8px 10px;
+                gap: 4px;
+                border-radius: 10px;
+            }
+
+            .group-title {
+                font-size: 11px;
+                padding: 2px 6px;
+                margin: 1px 0 3px;
+            }
+
+            .no-result {
+                font-size: 12px;
+                padding: 14px 0;
+            }
+
+            #videoContainer {
+                border-radius: 10px;
+                margin-bottom: 8px;
+            }
+
+            .header-title span {
+                display: none;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .header-title {
+                font-size: 13px;
+            }
+            .upload-btn {
+                font-size: 10px;
+                padding: 3px 8px;
+            }
+            .file-info {
+                font-size: 9px;
+                padding: 2px 8px;
+            }
+            .file-info .fname {
+                max-width: 60px;
+            }
+            .channel-btn {
+                font-size: 10px;
+                padding: 2px 8px;
+                min-height: 22px;
+                gap: 3px;
+            }
+            .channel-btn img {
+                width: 14px;
+                height: 14px;
+            }
+            .search-bar input {
+                font-size: 11px;
+                padding: 7px 10px 7px 32px;
+                background-size: 13px;
+                background-position: 10px center;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
 
+        <!-- ===== HEADER COMPACT ===== -->
         <div class="header">
             <div class="header-left">
                 <div class="header-title">📺 IPTV <span>TRIKARYA</span></div>
             </div>
             <div class="header-right">
+                <button class="upload-btn" id="uploadBtn">📤 Upload File M3U</button>
+                <input type="file" id="fileInput" accept=".m3u,.m3u8,.txt" />
                 <div class="file-info" id="fileInfo">
                     <span>📄</span>
-                    <span class="fname" id="fileName">Memuat daftar channel...</span>
+                    <span class="fname" id="fileName">Belum ada file</span>
                     <span id="fileSize" style="color:#555;"></span>
                 </div>
             </div>
         </div>
 
+        <!-- ===== VIDEO PLAYER ===== -->
         <div id="videoContainer">
             <video id="videoPlayer" controls playsinline></video>
         </div>
 
-        <div id="status" class="status-idle">⏳ Memuat daftar channel...</div>
+        <!-- ===== STATUS ===== -->
+        <div id="status" class="status-idle">📤 Upload file M3U terlebih dahulu</div>
 
+        <!-- ===== SEARCH (dipindahkan ke sini) ===== -->
         <div class="search-bar">
             <input type="text" id="searchInput" placeholder="🔍 Cari channel..." autocomplete="off" />
         </div>
 
+        <!-- ===== CHANNEL LIST ===== -->
         <div class="channel-section">
             <div class="channel-header">
                 <span class="count" id="channelCount">0 channel</span>
@@ -353,6 +581,8 @@
         const status = document.getElementById('status');
         const channelSelector = document.getElementById('channelSelector');
         const toggleBtn = document.getElementById('toggleChannelBtn');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
         const fileName = document.getElementById('fileName');
         const fileSize = document.getElementById('fileSize');
         const searchInput = document.getElementById('searchInput');
@@ -544,6 +774,7 @@
 
                 const type = detectStreamType(channel.url);
 
+                // ===== DASH =====
                 if (type === 'dash') {
                     let manifestUrl = channel.url;
                     let useProxy = false;
@@ -645,7 +876,10 @@
                     updateStatus(`▶️ Memutar ${channel.name}`, 'status-playing');
                     _isPlaying = false;
                     return;
-                } else if (type === 'hls') {
+                }
+
+                // ===== HLS =====
+                else if (type === 'hls') {
                     if (Hls.isSupported()) {
                         hlsPlayer = new Hls({
                             xhrSetup: function(xhr, url) {
@@ -690,7 +924,10 @@
                         throw new Error('HLS tidak didukung');
                     }
                     return;
-                } else if (type === 'mpegts') {
+                }
+
+                // ===== MPEG-TS =====
+                else if (type === 'mpegts') {
                     if (typeof mpegts !== 'undefined' && mpegts.isSupported()) {
                         try {
                             mpegtsPlayer = mpegts.createPlayer({
@@ -732,7 +969,10 @@
                         }
                     }
                     return;
-                } else {
+                }
+
+                // ===== VOD / Unknown =====
+                else {
                     video.src = channel.url;
                     video.play();
                     updateStatus(`▶️ Memutar ${channel.name}`, 'status-playing');
@@ -750,7 +990,7 @@
         }
 
         // ============================================================
-        //  BUILD CHANNEL BUTTONS
+        //  BUILD CHANNEL BUTTONS (dengan filter)
         // ============================================================
         function buildChannelButtons(filter = '') {
             channelSelector.innerHTML = '';
@@ -810,19 +1050,20 @@
         }
 
         // ============================================================
-        //  LOAD M3U FROM URL (GitHub Raw)
+        //  UPLOAD HANDLER
         // ============================================================
-        async function loadM3UFromURL(url) {
-            try {
-                updateStatus('⏳ Mengunduh daftar channel...', 'status-loading');
-                
-                const response = await fetch(url);
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                const content = await response.text();
-                
-                fileName.textContent = 'siaran.txt';
-                fileSize.textContent = `(${(content.length/1024).toFixed(1)} KB)`;
+        document.getElementById('uploadBtn').addEventListener('click', () => fileInput.click());
 
+        fileInput.addEventListener('change', function(e) {
+            const file = this.files[0];
+            if (!file) return;
+
+            fileName.textContent = file.name;
+            fileSize.textContent = `(${(file.size/1024).toFixed(1)} KB)`;
+
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                const content = ev.target.result;
                 channels = parseM3U(content);
 
                 if (channels.length === 0) {
@@ -832,20 +1073,16 @@
                     return;
                 }
 
-                let first = 0;
-                currentChannelIndex = first;
+                let first = 0; // selalu pilih channel pertama
+currentChannelIndex = first;
 
                 buildChannelButtons();
                 updateStatus(`📡 ${channels.length} channel ditemukan. Memuat...`, 'status-info');
                 destroyAllPlayers();
                 playChannel(first);
-            } catch (error) {
-                console.error('Load error:', error);
-                updateStatus(`⚠️ Gagal memuat daftar channel: ${error.message}`, 'status-error');
-                fileName.textContent = '⚠️ Gagal memuat';
-                fileSize.textContent = '';
-            }
-        }
+            };
+            reader.readAsText(file);
+        });
 
         // ============================================================
         //  SEARCH
@@ -871,10 +1108,10 @@
         window.addEventListener('beforeunload', () => destroyAllPlayers());
 
         // ============================================================
-        //  INIT - Auto Load M3U dari GitHub
+        //  INIT
         // ============================================================
-        const M3U_URL = 'https://raw.githubusercontent.com/ojekaGorontalo/trikarya-tv-gorontalo/main/siaran.txt';
-        loadM3UFromURL(M3U_URL);
+        updateStatus('📤 Upload file M3U terlebih dahulu', 'status-idle');
+        channelCount.textContent = '0 channel';
     </script>
 </body>
 </html>
