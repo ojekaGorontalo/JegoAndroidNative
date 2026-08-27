@@ -31,7 +31,7 @@
             color: #00d4ff;
             margin-bottom: 8px;
         }
-        .card p {
+        .card .subtitle {
             color: #aaa;
             margin: 12px 0 20px;
             line-height: 1.6;
@@ -79,13 +79,13 @@
             background: #00b3e6;
             transform: scale(1.02);
         }
-        .btn-secondary {
+        .btn-gratis {
             background: transparent;
             color: #00d4ff;
             border: 2px solid #00d4ff;
             margin-top: 10px;
         }
-        .btn-secondary:hover {
+        .btn-gratis:hover {
             background: #00d4ff;
             color: #0a0a0a;
         }
@@ -98,61 +98,129 @@
         .success {
             color: #00ff88;
         }
+        .info-text {
+            color: #666;
+            font-size: 13px;
+            margin-top: 12px;
+        }
+        .info-text a {
+            color: #00d4ff;
+            text-decoration: none;
+        }
+        .divider {
+            border-color: #2a2a2a;
+            margin: 20px 0;
+        }
     </style>
 </head>
 <body>
     <div class="card">
         <h1>📺 IPTV PREMIUM</h1>
-        <p>Akses 100+ channel TV • Kualitas HD • Update otomatis</p>
+        <p class="subtitle">Akses 100+ channel TV • Kualitas HD • Update otomatis</p>
         <div class="price">Rp 50.000 / bulan</div>
 
-        <!-- Form login -->
-        <input type="text" id="aksesKode" placeholder="Masukkan Kode Akses" />
-        <button class="btn" id="btnLogin">🚀 Buka TV</button>
+        <!-- ===== FORM LOGIN PREMIUM ===== -->
+        <input type="text" id="aksesKode" placeholder="Masukkan Kode Premium" />
+        <button class="btn" id="btnLogin">🚀 Buka TV Premium</button>
         <div id="pesanError" class="error"></div>
 
-        <hr style="border-color:#2a2a2a; margin: 20px 0;" />
-        <p style="font-size:14px; color:#666;">Belum punya kode? Hubungi admin di WhatsApp <br /> <strong style="color:#00d4ff;">+62 812-3456-7890</strong></p>
+        <hr class="divider" />
+
+        <!-- ===== TOMBOL AKSES GRATIS ===== -->
+        <button class="btn btn-gratis" id="btnGratis">📺 Buka TV Gratis</button>
+        <p class="info-text">Channel gratis terbatas • <a href="#" id="btnInfoPremium">Upgrade ke Premium</a></p>
+
+        <hr class="divider" />
+
+        <p style="font-size:14px; color:#666;">Hubungi admin di WhatsApp <br /> <strong style="color:#00d4ff;">+62 812-3456-7890</strong></p>
     </div>
 
     <script>
-        // ========== KONFIGURASI ==========
-        // Ganti dengan daftar kode akses yang sah (bisa dari API, localStorage, dll)
-        // Untuk demo, kita pakai satu kode statis.
-        const KODE_AKSES_VALID = 'rahasia123'; // nanti ganti dengan kode unik per pelanggan
+        // ============================================================
+        //  KONFIGURASI KODE PREMIUM
+        // ============================================================
+        // Daftar kode akses premium (bisa ditambah sesuai pelanggan)
+        const KODE_PREMIUM = [
+            'rahasia123',    // kode demo
+            'premium2024',
+            'tvsewa2025',
+            // Tambahkan kode pelanggan di sini
+        ];
 
-        // Atau bisa juga pakai array jika banyak pelanggan
-        // const KODE_AKSES_VALID = ['user1', 'user2'];
-
-        document.getElementById('btnLogin').addEventListener('click', function() {
-            const kode = document.getElementById('aksesKode').value.trim();
+        // ============================================================
+        //  FUNGSI LOGIN
+        // ============================================================
+        function loginPremiun(kode) {
             const errorEl = document.getElementById('pesanError');
 
             if (!kode) {
                 errorEl.textContent = '⚠️ Masukkan kode akses terlebih dahulu.';
-                return;
+                return false;
             }
 
-            // Cek apakah kode cocok (bisa juga pakai includes untuk array)
-            if (kode === KODE_AKSES_VALID) {
-                // Simpan status login di localStorage
+            if (KODE_PREMIUM.includes(kode)) {
+                // Simpan status login premium
                 localStorage.setItem('iptv_user', 'true');
-                localStorage.setItem('iptv_kode', kode); // optional
-                errorEl.textContent = '✅ Berhasil! Mengarahkan ke TV...';
+                localStorage.setItem('iptv_kode', kode);
+                localStorage.setItem('iptv_premium', 'true');
+                errorEl.textContent = '✅ Berhasil! Mengarahkan ke TV Premium...';
                 errorEl.className = 'success';
-                // Redirect ke halaman pemutar
                 window.location.href = 'player.html';
+                return true;
             } else {
                 errorEl.textContent = '❌ Kode akses salah. Coba lagi atau hubungi admin.';
                 errorEl.className = 'error';
                 document.getElementById('aksesKode').value = '';
+                return false;
+            }
+        }
+
+        function loginGratis() {
+            // Simpan status login gratis
+            localStorage.setItem('iptv_user', 'true');
+            localStorage.setItem('iptv_kode', 'gratis');
+            localStorage.setItem('iptv_premium', 'false');
+            window.location.href = 'player.html';
+        }
+
+        // ============================================================
+        //  EVENT LISTENER
+        // ============================================================
+        // Tombol Premium
+        document.getElementById('btnLogin').addEventListener('click', function() {
+            const kode = document.getElementById('aksesKode').value.trim();
+            loginPremiun(kode);
+        });
+
+        // Enter key untuk input kode
+        document.getElementById('aksesKode').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const kode = this.value.trim();
+                loginPremiun(kode);
             }
         });
 
+        // Tombol Gratis
+        document.getElementById('btnGratis').addEventListener('click', function() {
+            loginGratis();
+        });
+
+        // Tombol Upgrade ke Premium (scroll ke form)
+        document.getElementById('btnInfoPremium').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('aksesKode').focus();
+        });
+
+        // ============================================================
+        //  CEK SESSION
+        // ============================================================
         // Jika sudah login, langsung redirect ke player
         if (localStorage.getItem('iptv_user') === 'true') {
             window.location.href = 'player.html';
         }
+
+        console.log('[INIT] Halaman login siap.');
+        console.log('[INIT] Kode premium yang valid:', KODE_PREMIUM);
     </script>
 </body>
 </html>
