@@ -729,6 +729,7 @@
         let mpegtsPlayer = null;
 
         let _isPlaying = false;
+        let _isChannelListVisible = false;
 
         // ============================================================
         //  STATUS UPDATE
@@ -736,12 +737,14 @@
         function updateStatus(text, className = 'status-idle') {
             status.textContent = text;
             status.className = className;
+            console.log(`[STATUS] ${className}: ${text}`);
         }
 
         // ============================================================
         //  PARSER M3U
         // ============================================================
         function parseM3U(content) {
+            console.log('[PARSER] Mulai parsing M3U...');
             const lines = content.split(/\r?\n/);
             const result = [];
             let current = {};
@@ -839,6 +842,7 @@
                 }
             }
             if (current.name && current.url) result.push(current);
+            console.log(`[PARSER] Selesai. Ditemukan ${result.length} channel.`);
             return result;
         }
 
@@ -859,40 +863,70 @@
         //  DESTROY ALL PLAYERS
         // ============================================================
         function destroyAllPlayers() {
+            console.log('[CLEANUP] Menghancurkan semua player...');
             if (shakaPlayer) {
-                try { shakaPlayer.destroy(); } catch (e) {}
+                try {
+                    shakaPlayer.destroy();
+                    console.log('[CLEANUP] Shaka Player dihancurkan.');
+                } catch (e) {
+                    console.error('[CLEANUP] Error saat menghancurkan Shaka Player:', e);
+                }
                 shakaPlayer = null;
             }
             if (hlsPlayer) {
-                try { hlsPlayer.destroy(); } catch (e) {}
+                try {
+                    hlsPlayer.destroy();
+                    console.log('[CLEANUP] HLS Player dihancurkan.');
+                } catch (e) {
+                    console.error('[CLEANUP] Error saat menghancurkan HLS Player:', e);
+                }
                 hlsPlayer = null;
             }
             if (mpegtsPlayer) {
-                try { mpegtsPlayer.destroy(); } catch (e) {}
+                try {
+                    mpegtsPlayer.destroy();
+                    console.log('[CLEANUP] MPEG-TS Player dihancurkan.');
+                } catch (e) {
+                    console.error('[CLEANUP] Error saat menghancurkan MPEG-TS Player:', e);
+                }
                 mpegtsPlayer = null;
             }
-            video.pause();
-            video.removeAttribute('src');
-            video.load();
+            try {
+                video.pause();
+                video.removeAttribute('src');
+                video.load();
+                console.log('[CLEANUP] Video element di-reset.');
+            } catch (e) {
+                console.error('[CLEANUP] Error saat reset video:', e);
+            }
         }
 
         // ============================================================
         //  PLAY CHANNEL
         // ============================================================
         async function playChannel(index) {
-            if (_isPlaying) return;
+            console.log(`[PLAY] Meminta play channel index ${index}`);
+
+            if (_isPlaying) {
+                console.log('[PLAY] Masih dalam proses pemutaran, abaikan.');
+                return;
+            }
 
             const channel = channels[index];
             if (!channel || !channel.url) {
-                updateStatus('⚠️ Channel tidak valid', 'status-error');
+                const errMsg = '⚠️ Channel tidak valid';
+                updateStatus(errMsg, 'status-error');
+                console.error('[PLAY] Channel tidak valid:', { index, channel });
                 return;
             }
 
             _isPlaying = true;
             currentChannelIndex = index;
+            console.log(`[PLAY] Memulai pemutaran: ${channel.name} (${channel.url})`);
 
             updateStatus(`⏳ Memuat ${channel.name}...`, 'status-loading');
 
+            // Update active class
             document.querySelectorAll('.channel-btn').forEach((btn, i) => {
                 btn.classList.toggle('active', i === index);
             });
@@ -905,49 +939,58 @@
                 if (channel.referer) headers['Referer'] = channel.referer;
 
                 const type = detectStreamType(channel.url);
+                console.log(`[PLAY] Tipe stream terdeteksi: ${type}`);
 
                 // ===== DASH =====
                 if (type === 'dash') {
                     let manifestUrl = channel.url;
                     let useProxy = false;
 
-                    // Coba akses langsung dulu
+                    // Cek aksesibilitas manifest
                     try {
+                        console.log('[DASH] Mengecek akses manifest...');
                         const headResp = await fetch(manifestUrl, { method: 'HEAD', headers, mode: 'cors' });
-                        if (!headResp.ok) useProxy = true;
+                        if (!headResp.ok) {
+                            console.warn(`[DASH] HEAD request gagal (${headResp.status}), akan gunakan proxy.`);
+                            useProxy = true;
+                        } else {
+                            console.log('[DASH] Manifest dapat diakses langsung.');
+                        }
                     } catch (e) {
+                        console.warn('[DASH] Gagal mengakses manifest langsung, gunakan proxy:', e.message);
                         useProxy = true;
                     }
 
-                    // Jika gagal, gunakan proxy yang lebih stabil
                     if (useProxy) {
-                        // Ganti dengan proxy yang lebih andal
-                        manifestUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(channel.url);
+                        manifestUrl = 'https://corsproxy.io/?' + encodeURIComponent(channel.url);
+                        console.log('[DASH] Menggunakan proxy CORS:', manifestUrl);
                     }
 
+                    // Inisialisasi Shaka Player
                     shakaPlayer = new shaka.Player();
-                    // Konfigurasi retry dan timeout yang lebih besar
+                    console.log('[DASH] Shaka Player diinisialisasi.');
+
                     shakaPlayer.configure({
                         manifest: {
                             retryParameters: {
-                                maxAttempts: 10,
-                                timeout: 30000,
+                                maxAttempts: 5,
+                                timeout: 20000,
                                 backoffFactor: 2,
                                 baseDelay: 1000
                             }
                         },
                         drm: {
                             retryParameters: {
-                                maxAttempts: 10,
-                                timeout: 30000,
+                                maxAttempts: 5,
+                                timeout: 20000,
                                 backoffFactor: 2,
                                 baseDelay: 1000
                             }
                         },
                         streaming: {
                             retryParameters: {
-                                maxAttempts: 10,
-                                timeout: 30000,
+                                maxAttempts: 5,
+                                timeout: 20000,
                                 backoffFactor: 2,
                                 baseDelay: 1000
                             }
@@ -955,24 +998,30 @@
                     });
 
                     await shakaPlayer.attach(video);
+                    console.log('[DASH] Video element terattach.');
 
+                    // Konfigurasi DRM
                     const drmConfig = {};
                     if (channel.keyId && channel.key) {
                         drmConfig.clearKeys = { [channel.keyId]: channel.key };
+                        console.log('[DASH] ClearKey DRM dikonfigurasi.');
                     }
                     if (channel.licenseUrl) {
                         drmConfig.servers = { 'com.widevine.alpha': channel.licenseUrl };
+                        console.log('[DASH] License URL dikonfigurasi:', channel.licenseUrl);
                     }
                     if (Object.keys(drmConfig).length > 0) {
                         shakaPlayer.configure({ drm: drmConfig });
                     }
 
+                    // Request filter untuk headers
                     shakaPlayer.getNetworkingEngine().registerRequestFilter((type, request) => {
                         for (const [key, value] of Object.entries(headers)) {
                             request.headers[key] = value;
                         }
                     });
 
+                    // Event listener error
                     let shakaError = null;
                     shakaPlayer.addEventListener('error', (e) => {
                         const err = e.detail;
@@ -981,57 +1030,82 @@
                         if (err.code === 6012) msg = 'Gagal mengakses manifest (6012)';
                         if (err.code === 6014) msg = 'DRM error (6014)';
                         if (err.code === 3015) msg = 'DRM license request gagal (3015)';
-                        if (err.code === 1001) msg = 'Gagal memuat manifest (1001) – mungkin CORS atau URL mati';
                         shakaError = { code: err.code, message: msg };
+                        console.error('[DASH] Shaka error:', shakaError);
                     });
 
                     let manifestParsed = false;
-                    shakaPlayer.addEventListener('manifestparsed', () => { manifestParsed = true; });
+                    shakaPlayer.addEventListener('manifestparsed', () => {
+                        manifestParsed = true;
+                        console.log('[DASH] Manifest berhasil diparse.');
+                    });
 
+                    // Load manifest dengan retry
                     let loaded = false;
+                    let lastError = null;
                     for (let attempt = 0; attempt < 3 && !loaded; attempt++) {
                         try {
+                            console.log(`[DASH] Percobaan load manifest ke-${attempt+1}...`);
                             await shakaPlayer.load(manifestUrl);
                             loaded = true;
+                            console.log('[DASH] Manifest berhasil diload.');
                         } catch (loadErr) {
-                            if (attempt >= 2) throw loadErr;
-                            await new Promise(r => setTimeout(r, 2000 * (attempt + 1)));
+                            lastError = loadErr;
+                            console.warn(`[DASH] Gagal load manifest percobaan ${attempt+1}:`, loadErr.message);
+                            if (attempt < 2) {
+                                await new Promise(r => setTimeout(r, 2000 * (attempt + 1)));
+                            }
                         }
                     }
 
+                    if (!loaded) {
+                        throw new Error(`Gagal load manifest setelah 3 percobaan: ${lastError?.message || 'Unknown error'}`);
+                    }
+
                     if (shakaError) {
-                        // Jika error 1001 dan menggunakan proxy, coba tanpa proxy sebagai fallback
-                        if (shakaError.code === 1001 && useProxy) {
+                        if (shakaError.code === 1002 && useProxy) {
+                            console.log('[DASH] Error 1002 dengan proxy, coba load langsung...');
                             try {
                                 await shakaPlayer.load(channel.url);
+                                console.log('[DASH] Load langsung berhasil.');
                             } catch (e2) {
-                                throw new Error(shakaError.message + ' (fallback gagal)');
+                                console.error('[DASH] Load langsung gagal:', e2);
+                                throw shakaError;
                             }
                         } else {
                             throw new Error(shakaError.message);
                         }
                     }
 
+                    // Tunggu manifest parsed jika belum
                     if (!manifestParsed) {
+                        console.log('[DASH] Menunggu manifest parsed...');
                         await new Promise((resolve) => {
-                            const check = () => { if (manifestParsed) resolve();
-                                else setTimeout(check, 200); };
+                            const check = () => {
+                                if (manifestParsed) resolve();
+                                else setTimeout(check, 200);
+                            };
                             check();
                         });
                     }
 
+                    // Play video
                     try {
                         await video.play();
+                        console.log('[DASH] Video play() berhasil.');
                     } catch (playErr) {
                         if (playErr.name === 'AbortError') {
+                            console.warn('[DASH] Play aborted, coba ulang...');
                             await new Promise(r => setTimeout(r, 500));
                             await video.play();
+                            console.log('[DASH] Play ulang berhasil.');
                         } else {
                             throw playErr;
                         }
                     }
 
                     updateStatus(`▶️ Memutar ${channel.name}`, 'status-playing');
+                    console.log(`[PLAY] Berhasil memutar ${channel.name} (DASH)`);
                     _isPlaying = false;
                     return;
                 }
@@ -1039,23 +1113,29 @@
                 // ===== HLS =====
                 else if (type === 'hls') {
                     if (Hls.isSupported()) {
+                        console.log('[HLS] Menggunakan HLS.js');
                         hlsPlayer = new Hls({
                             xhrSetup: function(xhr, url) {
                                 for (const [key, value] of Object.entries(headers)) {
                                     xhr.setRequestHeader(key, value);
                                 }
+                                console.log(`[HLS] XHR setup untuk ${url}`);
                             }
                         });
                         hlsPlayer.loadSource(channel.url);
                         hlsPlayer.attachMedia(video);
 
                         hlsPlayer.on(Hls.Events.MANIFEST_PARSED, () => {
-                            video.play().catch(() => {});
+                            console.log('[HLS] Manifest parsed, mulai play...');
+                            video.play().catch((e) => {
+                                console.warn('[HLS] Play catch:', e);
+                            });
                             updateStatus(`▶️ Memutar ${channel.name}`, 'status-playing');
                             _isPlaying = false;
                         });
 
                         hlsPlayer.on(Hls.Events.ERROR, (e, data) => {
+                            console.error('[HLS] Error:', data);
                             if (data.fatal) {
                                 updateStatus('⚠️ Streaming sudah tidak tersedia atau channel sedang offline',
                                     'status-error');
@@ -1063,24 +1143,30 @@
                             }
                         });
 
+                        // Fallback timeout jika HLS.js tidak merespons
                         setTimeout(() => {
                             if (_isPlaying) {
+                                console.warn('[HLS] Timeout 10s, fallback ke direct video.src');
                                 try {
                                     video.src = channel.url;
                                     video.play();
                                     updateStatus(`▶️ Memutar ${channel.name}`, 'status-playing');
                                     _isPlaying = false;
-                                } catch (e) { _isPlaying = false; }
+                                } catch (e) {
+                                    console.error('[HLS] Fallback gagal:', e);
+                                    _isPlaying = false;
+                                }
                             }
                         }, 10000);
 
                     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                        console.log('[HLS] Menggunakan native HLS (Safari)');
                         video.src = channel.url;
                         video.play();
                         updateStatus(`▶️ Memutar ${channel.name}`, 'status-playing');
                         _isPlaying = false;
                     } else {
-                        throw new Error('HLS tidak didukung');
+                        throw new Error('HLS tidak didukung oleh browser ini');
                     }
                     return;
                 }
@@ -1088,6 +1174,7 @@
                 // ===== MPEG-TS =====
                 else if (type === 'mpegts') {
                     if (typeof mpegts !== 'undefined' && mpegts.isSupported()) {
+                        console.log('[MPEG-TS] Menggunakan mpegts.js');
                         try {
                             mpegtsPlayer = mpegts.createPlayer({
                                 type: 'mpegts',
@@ -1103,21 +1190,25 @@
                                             xhr.setRequestHeader(key, value);
                                         }
                                         xhr.withCredentials = true;
+                                        console.log(`[MPEG-TS] XHR setup untuk ${url}`);
                                     }
                                 }
                             });
                             mpegtsPlayer.attachMediaElement(video);
                             mpegtsPlayer.load();
+                            console.log('[MPEG-TS] Player loaded.');
                             video.play();
                             updateStatus(`▶️ Memutar ${channel.name}`, 'status-playing');
                             _isPlaying = false;
                         } catch (err) {
+                            console.warn('[MPEG-TS] Gagal menggunakan mpegts.js, fallback ke direct video.src:', err);
                             video.src = channel.url;
                             video.play();
                             updateStatus(`▶️ Memutar ${channel.name}`, 'status-playing');
                             _isPlaying = false;
                         }
                     } else {
+                        console.warn('[MPEG-TS] mpegts.js tidak didukung, fallback ke direct video.src');
                         try {
                             video.src = channel.url;
                             video.play();
@@ -1132,6 +1223,7 @@
 
                 // ===== VOD / Unknown =====
                 else {
+                    console.log('[VOD/UNKNOWN] Memutar langsung dengan video.src');
                     video.src = channel.url;
                     video.play();
                     updateStatus(`▶️ Memutar ${channel.name}`, 'status-playing');
@@ -1143,7 +1235,7 @@
                 let msg = error.message || 'Gagal memutar';
                 if (error.code === 1002) msg = 'Link video tidak valid atau sudah kadaluarsa';
                 if (error.code === 3015) msg = 'Video dilindungi hak cipta dan tidak bisa diputar';
-                if (error.code === 1001) msg = 'Gagal memuat manifest – periksa koneksi atau coba lagi nanti';
+                console.error('[PLAY] Error:', error);
                 updateStatus(`⚠️ ${msg}`, 'status-error');
                 _isPlaying = false;
             }
@@ -1153,6 +1245,7 @@
         //  BUILD CHANNEL GRID (dengan filter)
         // ============================================================
         function buildChannelButtons(filter = '') {
+            console.log(`[UI] Membangun channel grid dengan filter: "${filter}"`);
             channelSelector.innerHTML = '';
 
             const search = filter.toLowerCase().trim();
@@ -1176,14 +1269,16 @@
                 return;
             }
 
+            // Buat grid wrapper
             const grid = document.createElement('div');
             grid.className = 'channel-grid';
 
             let currentGroup = '';
 
-            displayChannels.forEach((ch, idx) => {
+            displayChannels.forEach((ch) => {
                 const realIndex = channels.indexOf(ch);
 
+                // Tampilkan group title jika berbeda
                 if (ch.group && ch.group !== currentGroup) {
                     currentGroup = ch.group;
                     const div = document.createElement('div');
@@ -1192,17 +1287,23 @@
                     grid.appendChild(div);
                 }
 
+                // Buat card channel
                 const btn = document.createElement('button');
                 btn.className = 'channel-btn' + (realIndex === currentChannelIndex ? ' active' : '');
                 btn.dataset.index = realIndex;
 
+                // Logo
                 if (ch.logo) {
                     const img = document.createElement('img');
                     img.src = ch.logo;
                     img.alt = ch.name || 'Channel';
-                    img.onerror = () => { img.style.display = 'none'; };
+                    img.onerror = () => {
+                        img.style.display = 'none';
+                        console.warn(`[UI] Logo gagal dimuat: ${ch.logo}`);
+                    };
                     btn.appendChild(img);
                 } else {
+                    // Placeholder jika tidak ada logo
                     const placeholder = document.createElement('div');
                     placeholder.style.cssText =
                         'width:60px;height:60px;border-radius:8px;background:#1a1a1a;border:1px solid #2a2a2a;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;';
@@ -1210,6 +1311,7 @@
                     btn.appendChild(placeholder);
                 }
 
+                // Nama channel
                 const span = document.createElement('span');
                 span.className = 'channel-name';
                 span.textContent = ch.name || `Channel ${realIndex+1}`;
@@ -1217,6 +1319,7 @@
 
                 btn.addEventListener('click', function() {
                     const idx = parseInt(this.dataset.index);
+                    console.log(`[UI] Klik channel index ${idx}`);
                     if (idx !== currentChannelIndex) playChannel(idx);
                 });
 
@@ -1224,30 +1327,49 @@
             });
 
             channelSelector.appendChild(grid);
+            console.log('[UI] Channel grid selesai dibangun.');
         }
 
         // ============================================================
         //  UPLOAD HANDLER
         // ============================================================
-        document.getElementById('uploadBtn').addEventListener('click', () => fileInput.click());
+        document.getElementById('uploadBtn').addEventListener('click', () => {
+            console.log('[UI] Tombol Upload diklik.');
+            fileInput.click();
+        });
 
         fileInput.addEventListener('change', function(e) {
             const file = this.files[0];
-            if (!file) return;
+            if (!file) {
+                console.log('[UPLOAD] Tidak ada file dipilih.');
+                return;
+            }
 
+            console.log(`[UPLOAD] File dipilih: ${file.name}, ukuran: ${file.size} bytes`);
             fileName.textContent = file.name;
             fileSize.textContent = `(${(file.size/1024).toFixed(1)} KB)`;
 
             const reader = new FileReader();
             reader.onload = function(ev) {
                 const content = ev.target.result;
+                console.log('[UPLOAD] File selesai dibaca, mulai parsing...');
                 channels = parseM3U(content);
 
                 if (channels.length === 0) {
                     updateStatus('⚠️ Tidak ada channel ditemukan', 'status-error');
                     fileName.textContent = '⚠️ File tidak valid';
                     fileSize.textContent = '';
+                    console.warn('[UPLOAD] Tidak ada channel ditemukan dalam file.');
                     return;
+                }
+
+                console.log(`[UPLOAD] ${channels.length} channel ditemukan.`);
+
+                // Tampilkan channel list otomatis
+                if (!_isChannelListVisible) {
+                    channelSelector.classList.add('show');
+                    toggleBtn.textContent = '📋 Sembunyikan Channel';
+                    _isChannelListVisible = true;
                 }
 
                 let first = 0;
@@ -1258,6 +1380,10 @@
                 destroyAllPlayers();
                 playChannel(first);
             };
+            reader.onerror = function(err) {
+                console.error('[UPLOAD] Gagal membaca file:', err);
+                updateStatus('⚠️ Gagal membaca file', 'status-error');
+            };
             reader.readAsText(file);
         });
 
@@ -1265,6 +1391,7 @@
         //  SEARCH
         // ============================================================
         searchInput.addEventListener('input', function() {
+            console.log(`[UI] Search input: "${this.value}"`);
             buildChannelButtons(this.value);
         });
 
@@ -1273,7 +1400,9 @@
         // ============================================================
         toggleBtn.addEventListener('click', function() {
             const isShowing = channelSelector.classList.toggle('show');
+            _isChannelListVisible = isShowing;
             this.textContent = isShowing ? '📋 Sembunyikan Channel' : '📋 Tampilkan Semua Channel';
+            console.log(`[UI] Toggle channel list: ${isShowing ? 'ditampilkan' : 'disembunyikan'}`);
             if (isShowing) {
                 buildChannelButtons(searchInput.value);
             }
@@ -1282,11 +1411,15 @@
         // ============================================================
         //  CLEANUP
         // ============================================================
-        window.addEventListener('beforeunload', () => destroyAllPlayers());
+        window.addEventListener('beforeunload', () => {
+            console.log('[CLEANUP] Before unload, cleanup semua player.');
+            destroyAllPlayers();
+        });
 
         // ============================================================
         //  INIT
         // ============================================================
+        console.log('[INIT] Aplikasi IPTV dimulai.');
         updateStatus('📤 Upload file M3U terlebih dahulu', 'status-idle');
         channelCount.textContent = '0 channel';
     </script>
