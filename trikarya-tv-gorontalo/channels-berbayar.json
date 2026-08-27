@@ -4,8 +4,8 @@
         "logo": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSmseZQZacVzNm9vj2g8BEXdWyJnvW9RsjMtNjAageS_tIP4tOdY2_zXGU&s=10",
         "group": "PREMIER LEAGUE",
         "url": "https://otte.live.fly.ww.aiv-cdn.net/pdx-nitro/live/clients/dash/enc/3b7qwiqzk3/out/v1/9f14895badca43e6a716db021dcd0c31/cenc.mpd",
-        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) MPF.Players/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36",
-        "referer": "",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36 MPF.Players/537.36",
+        "referer": "https://www.fubo.tv/",
         "keyId": "dc69b6159a0f9f0a4e03b3ff91cbacd5",
         "key": "d0dcbcd7723bc40df0bf34c9c092d51f",
         "licenseUrl": ""
@@ -15,8 +15,8 @@
         "logo": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQifk-dtjzvc3_vwvEFaf8zhuoY5hUkeTj5Ebxx_OXXZg&s=10",
         "group": "PREMIER LEAGUE",
         "url": "https://otte.live.fly.ww.aiv-cdn.net/pdx-nitro/live/clients/dash/enc/uiffe4jhf0/out/v1/3534efafca8c4815adbb4d2e9a1fe003/cenc.mpd",
-        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) MPF.Players/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36",
-        "referer": "",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36 MPF.Players/537.36",
+        "referer": "https://www.fubo.tv/",
         "keyId": "3dcfbec0e7146928baa55210bf2cb62f",
         "key": "bc85f74f815d9be5ae1dd6defaa05135",
         "licenseUrl": ""
