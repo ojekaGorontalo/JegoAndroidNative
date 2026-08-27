@@ -12,18 +12,23 @@
 
     <style>
         /* ===== RESET & BASE ===== */
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         body {
             font-family: 'Segoe UI', system-ui, sans-serif;
             background: #0a0a0a;
             color: #fff;
             display: flex;
             justify-content: center;
-            align-items: flex-start;
-            min-height: 100vh;
-            padding: 16px;
+            padding: 16px 16px 30px;
         }
-        .container { max-width: 1100px; width: 100%; }
+        .container {
+            max-width: 1100px;
+            width: 100%;
+        }
 
         /* ===== HEADER ===== */
         .header {
@@ -54,7 +59,10 @@
             white-space: nowrap;
             line-height: 1.2;
         }
-        .header-title span { color: #fff; font-weight: 300; }
+        .header-title span {
+            color: #fff;
+            font-weight: 300;
+        }
         .header-right {
             display: flex;
             align-items: center;
@@ -74,7 +82,10 @@
             white-space: nowrap;
             line-height: 1.4;
         }
-        .logout-btn:hover { background: #cc0000; transform: scale(1.02); }
+        .logout-btn:hover {
+            background: #cc0000;
+            transform: scale(1.02);
+        }
         .file-info {
             color: #aaa;
             font-size: 13px;
@@ -96,7 +107,15 @@
             text-overflow: ellipsis;
         }
 
-        /* ===== VIDEO ===== */
+        /* ===== VIDEO (fixed di atas) ===== */
+        .video-wrapper {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: #0a0a0a;
+            padding: 0 0 8px 0;
+            margin-bottom: 4px;
+        }
         #videoContainer {
             position: relative;
             width: 100%;
@@ -104,10 +123,14 @@
             border-radius: 12px;
             overflow: hidden;
             box-shadow: 0 8px 30px rgba(0, 212, 255, 0.10);
-            margin-bottom: 10px;
             border: 1px solid #1e1e1e;
         }
-        video { width: 100%; display: block; max-height: 600px; background: #000; }
+        video {
+            width: 100%;
+            display: block;
+            max-height: 600px;
+            background: #000;
+        }
 
         /* ===== STATUS ===== */
         #status {
@@ -120,17 +143,29 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 12px;
+            margin: 6px 0 10px;
             border: 1px solid #2a2a2a;
         }
-        .status-loading { color: #ffcc00; }
-        .status-error { color: #ff4444; }
-        .status-playing { color: #00ff88; }
-        .status-idle { color: #888; }
-        .status-info { color: #00d4ff; }
+        .status-loading {
+            color: #ffcc00;
+        }
+        .status-error {
+            color: #ff4444;
+        }
+        .status-playing {
+            color: #00ff88;
+        }
+        .status-idle {
+            color: #888;
+        }
+        .status-info {
+            color: #00d4ff;
+        }
 
         /* ===== SEARCH ===== */
-        .search-bar { margin-bottom: 12px; }
+        .search-bar {
+            margin-bottom: 12px;
+        }
         .search-bar input {
             width: 100%;
             padding: 10px 16px 10px 44px;
@@ -150,10 +185,14 @@
             border-color: #00d4ff;
             box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.12);
         }
-        .search-bar input::placeholder { color: #555; }
+        .search-bar input::placeholder {
+            color: #555;
+        }
 
         /* ===== CHANNEL SECTION ===== */
-        .channel-section { margin-top: 2px; }
+        .channel-section {
+            margin-top: 2px;
+        }
         .channel-header {
             display: flex;
             justify-content: space-between;
@@ -162,7 +201,11 @@
             flex-wrap: wrap;
             gap: 6px 12px;
         }
-        .channel-header .count { color: #666; font-size: 13px; font-weight: 500; }
+        .channel-header .count {
+            color: #666;
+            font-size: 13px;
+            font-weight: 500;
+        }
         .toggle-btn {
             background: #1e1e1e;
             color: #00d4ff;
@@ -175,7 +218,10 @@
             transition: 0.3s;
             line-height: 1.4;
         }
-        .toggle-btn:hover { background: #00d4ff; color: #0a0a0a; }
+        .toggle-btn:hover {
+            background: #00d4ff;
+            color: #0a0a0a;
+        }
 
         /* ===== CHANNEL GRID ===== */
         .channel-selector {
@@ -184,8 +230,12 @@
             background: #111;
             border-radius: 12px;
             border: 1px solid #2a2a2a;
+            max-height: 500px;
+            overflow-y: auto;
         }
-        .channel-selector.show { display: block; }
+        .channel-selector.show {
+            display: block;
+        }
         .channel-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -227,14 +277,18 @@
             transform: translateY(-3px);
             box-shadow: 0 8px 25px rgba(0, 212, 255, 0.10);
         }
-        .channel-btn:hover::after { opacity: 1; }
+        .channel-btn:hover::after {
+            opacity: 1;
+        }
         .channel-btn.active {
             border-color: #00d4ff;
             background: rgba(0, 212, 255, 0.12);
             box-shadow: 0 0 30px rgba(0, 212, 255, 0.08), inset 0 0 30px rgba(0, 212, 255, 0.03);
             transform: translateY(-2px);
         }
-        .channel-btn.active::after { opacity: 1; }
+        .channel-btn.active::after {
+            opacity: 1;
+        }
         .channel-btn img {
             width: 60px;
             height: 60px;
@@ -245,7 +299,9 @@
             border: 1px solid #2a2a2a;
             transition: border-color 0.2s;
         }
-        .channel-btn.active img { border-color: #00d4ff; }
+        .channel-btn.active img {
+            border-color: #00d4ff;
+        }
         .channel-btn .channel-name {
             font-size: 12px;
             font-weight: 600;
@@ -261,9 +317,12 @@
             margin-top: 2px;
             transition: color 0.2s;
         }
-        .channel-btn.active .channel-name { color: #00d4ff; }
-        .channel-btn:hover .channel-name { color: #fff; }
-        .channel-btn.hidden { display: none; }
+        .channel-btn.active .channel-name {
+            color: #00d4ff;
+        }
+        .channel-btn:hover .channel-name {
+            color: #fff;
+        }
 
         .group-title {
             grid-column: 1 / -1;
@@ -280,7 +339,11 @@
             align-items: center;
             gap: 8px;
         }
-        .group-title::before { content: '▸'; font-size: 16px; color: #00d4ff; }
+        .group-title::before {
+            content: '▸';
+            font-size: 16px;
+            color: #00d4ff;
+        }
         .no-result {
             grid-column: 1 / -1;
             text-align: center;
@@ -294,67 +357,236 @@
 
         /* ===== RESPONSIVE ===== */
         @media (max-width: 900px) {
-            .channel-grid { grid-template-columns: repeat(auto-fill, minmax(120px,1fr)); gap: 10px; }
-            .channel-btn { min-height: 105px; padding: 12px 6px 10px; }
-            .channel-btn img { width: 50px; height: 50px; }
-            .channel-btn .channel-name { font-size: 11px; }
+            .channel-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+                gap: 10px;
+            }
+            .channel-btn {
+                min-height: 105px;
+                padding: 12px 6px 10px;
+            }
+            .channel-btn img {
+                width: 50px;
+                height: 50px;
+            }
+            .channel-btn .channel-name {
+                font-size: 11px;
+            }
         }
         @media (max-width: 768px) {
-            body { padding: 10px; }
-            .header { padding: 8px 14px; gap: 6px 12px; min-height: 46px; }
-            .header-title { font-size: 18px; }
-            .header-title span { display: none; }
-            .header-right { gap: 5px 10px; }
-            .logout-btn { font-size: 12px; padding: 4px 12px; }
-            .file-info { font-size: 12px; padding: 3px 12px; }
-            .file-info .fname { max-width: 80px; }
-            .search-bar input { font-size: 13px; padding: 9px 14px 9px 40px; background-size:16px; background-position:13px center; }
-            #status { font-size: 13px; min-height: 34px; padding: 6px 12px; }
-            .toggle-btn { font-size: 12px; padding: 5px 14px; }
-            .channel-selector { padding: 10px 10px 14px; }
-            .channel-grid { grid-template-columns: repeat(auto-fill, minmax(110px,1fr)); gap: 8px; }
-            .channel-btn { min-height: 95px; padding: 10px 4px 8px; border-radius: 10px; }
-            .channel-btn img { width: 44px; height: 44px; border-radius: 6px; }
-            .channel-btn .channel-name { font-size: 10px; -webkit-line-clamp: 2; }
-            .group-title { font-size: 12px; padding: 4px 8px; margin: 4px 0 2px; }
-            .group-title::before { font-size: 14px; }
-            .channel-header .count { font-size: 12px; }
+            body {
+                padding: 10px;
+            }
+            .header {
+                padding: 8px 14px;
+                gap: 6px 12px;
+                min-height: 46px;
+            }
+            .header-title {
+                font-size: 18px;
+            }
+            .header-title span {
+                display: none;
+            }
+            .header-right {
+                gap: 5px 10px;
+            }
+            .logout-btn {
+                font-size: 12px;
+                padding: 4px 12px;
+            }
+            .file-info {
+                font-size: 12px;
+                padding: 3px 12px;
+            }
+            .file-info .fname {
+                max-width: 80px;
+            }
+            .search-bar input {
+                font-size: 13px;
+                padding: 9px 14px 9px 40px;
+                background-size: 16px;
+                background-position: 13px center;
+            }
+            #status {
+                font-size: 13px;
+                min-height: 34px;
+                padding: 6px 12px;
+            }
+            .toggle-btn {
+                font-size: 12px;
+                padding: 5px 14px;
+            }
+            .channel-selector {
+                padding: 10px 10px 14px;
+                max-height: 400px;
+            }
+            .channel-grid {
+                grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+                gap: 8px;
+            }
+            .channel-btn {
+                min-height: 95px;
+                padding: 10px 4px 8px;
+                border-radius: 10px;
+            }
+            .channel-btn img {
+                width: 44px;
+                height: 44px;
+                border-radius: 6px;
+            }
+            .channel-btn .channel-name {
+                font-size: 10px;
+                -webkit-line-clamp: 2;
+            }
+            .group-title {
+                font-size: 12px;
+                padding: 4px 8px;
+                margin: 4px 0 2px;
+            }
+            .group-title::before {
+                font-size: 14px;
+            }
+            .channel-header .count {
+                font-size: 12px;
+            }
         }
         @media (max-width: 480px) {
-            body { padding: 8px; }
-            .header { padding: 6px 10px; gap: 4px 8px; min-height: 40px; border-radius: 10px; }
-            .header-title { font-size: 15px; }
-            .logout-btn { font-size: 11px; padding: 3px 10px; }
-            .file-info { font-size: 10px; padding: 2px 10px; gap: 3px; }
-            .file-info .fname { max-width: 60px; }
-            .search-bar input { font-size: 12px; padding: 8px 12px 8px 36px; background-size:15px; background-position:11px center; }
-            #status { font-size: 12px; min-height: 30px; padding: 5px 10px; margin-bottom:8px; }
-            .toggle-btn { font-size: 11px; padding: 4px 12px; }
-            .channel-selector { padding: 8px 6px 12px; border-radius:10px; }
-            .channel-grid { grid-template-columns: repeat(auto-fill, minmax(90px,1fr)); gap: 6px; }
-            .channel-btn { min-height: 80px; padding: 8px 3px 6px; border-radius:8px; border-width:1.5px; }
-            .channel-btn img { width: 36px; height: 36px; border-radius:5px; }
-            .channel-btn .channel-name { font-size: 9px; -webkit-line-clamp: 2; }
-            .group-title { font-size: 11px; padding: 3px 6px; margin: 3px 0 2px; }
-            .group-title::before { font-size: 12px; }
-            .channel-header .count { font-size: 11px; }
-            #videoContainer { border-radius: 10px; margin-bottom:8px; }
+            body {
+                padding: 8px;
+            }
+            .header {
+                padding: 6px 10px;
+                gap: 4px 8px;
+                min-height: 40px;
+                border-radius: 10px;
+            }
+            .header-title {
+                font-size: 15px;
+            }
+            .logout-btn {
+                font-size: 11px;
+                padding: 3px 10px;
+            }
+            .file-info {
+                font-size: 10px;
+                padding: 2px 10px;
+                gap: 3px;
+            }
+            .file-info .fname {
+                max-width: 60px;
+            }
+            .search-bar input {
+                font-size: 12px;
+                padding: 8px 12px 8px 36px;
+                background-size: 15px;
+                background-position: 11px center;
+            }
+            #status {
+                font-size: 12px;
+                min-height: 30px;
+                padding: 5px 10px;
+                margin-bottom: 8px;
+            }
+            .toggle-btn {
+                font-size: 11px;
+                padding: 4px 12px;
+            }
+            .channel-selector {
+                padding: 8px 6px 12px;
+                border-radius: 10px;
+                max-height: 300px;
+            }
+            .channel-grid {
+                grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+                gap: 6px;
+            }
+            .channel-btn {
+                min-height: 80px;
+                padding: 8px 3px 6px;
+                border-radius: 8px;
+                border-width: 1.5px;
+            }
+            .channel-btn img {
+                width: 36px;
+                height: 36px;
+                border-radius: 5px;
+            }
+            .channel-btn .channel-name {
+                font-size: 9px;
+                -webkit-line-clamp: 2;
+            }
+            .group-title {
+                font-size: 11px;
+                padding: 3px 6px;
+                margin: 3px 0 2px;
+            }
+            .group-title::before {
+                font-size: 12px;
+            }
+            .channel-header .count {
+                font-size: 11px;
+            }
+            #videoContainer {
+                border-radius: 10px;
+                margin-bottom: 8px;
+            }
         }
         @media (max-width: 380px) {
-            .header-title { font-size: 13px; }
-            .logout-btn { font-size: 10px; padding: 2px 8px; }
-            .file-info { font-size: 9px; padding: 2px 8px; }
-            .file-info .fname { max-width: 50px; }
-            .channel-grid { grid-template-columns: repeat(auto-fill, minmax(78px,1fr)); gap:5px; }
-            .channel-btn { min-height: 70px; padding: 6px 2px 5px; }
-            .channel-btn img { width: 30px; height: 30px; }
-            .channel-btn .channel-name { font-size: 8px; -webkit-line-clamp: 2; }
-            .search-bar input { font-size: 11px; padding: 7px 10px 7px 32px; background-size:13px; background-position:10px center; }
+            .header-title {
+                font-size: 13px;
+            }
+            .logout-btn {
+                font-size: 10px;
+                padding: 2px 8px;
+            }
+            .file-info {
+                font-size: 9px;
+                padding: 2px 8px;
+            }
+            .file-info .fname {
+                max-width: 50px;
+            }
+            .channel-grid {
+                grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
+                gap: 5px;
+            }
+            .channel-btn {
+                min-height: 70px;
+                padding: 6px 2px 5px;
+            }
+            .channel-btn img {
+                width: 30px;
+                height: 30px;
+            }
+            .channel-btn .channel-name {
+                font-size: 8px;
+                -webkit-line-clamp: 2;
+            }
+            .search-bar input {
+                font-size: 11px;
+                padding: 7px 10px 7px 32px;
+                background-size: 13px;
+                background-position: 10px center;
+            }
         }
-        .channel-selector::-webkit-scrollbar { width: 4px; }
-        .channel-selector::-webkit-scrollbar-track { background: #1a1a1a; border-radius: 4px; }
-        .channel-selector::-webkit-scrollbar-thumb { background: #00d4ff; border-radius: 4px; }
-        .channel-selector { scrollbar-width: thin; scrollbar-color: #00d4ff #1a1a1a; }
+
+        /* ===== SCROLLBAR ===== */
+        .channel-selector::-webkit-scrollbar {
+            width: 4px;
+        }
+        .channel-selector::-webkit-scrollbar-track {
+            background: #1a1a1a;
+            border-radius: 4px;
+        }
+        .channel-selector::-webkit-scrollbar-thumb {
+            background: #00d4ff;
+            border-radius: 4px;
+        }
+        .channel-selector {
+            scrollbar-width: thin;
+            scrollbar-color: #00d4ff #1a1a1a;
+        }
     </style>
 </head>
 <body>
@@ -368,15 +600,17 @@
             <div class="header-right">
                 <div class="file-info" id="fileInfo">
                     <span>📄</span>
-                    <span class="fname" id="fileName">Memuat channel...</span>
+                    <span class="fname" id="fileName">Channel siap</span>
                 </div>
                 <button class="logout-btn" id="logoutBtn">🚪 Logout</button>
             </div>
         </div>
 
-        <!-- ===== VIDEO PLAYER ===== -->
-        <div id="videoContainer">
-            <video id="videoPlayer" controls playsinline></video>
+        <!-- ===== VIDEO (sticky) ===== -->
+        <div class="video-wrapper">
+            <div id="videoContainer">
+                <video id="videoPlayer" controls playsinline></video>
+            </div>
         </div>
 
         <!-- ===== STATUS ===== -->
@@ -402,11 +636,10 @@
 
     <script>
         // ============================================================
-        //  CEK LOGIN
+        //  CEK LOGIN (jika ada)
         // ============================================================
         const isLoggedIn = localStorage.getItem('iptv_user') === 'true';
         if (!isLoggedIn) {
-            // Jika belum login, redirect ke beranda
             window.location.href = 'index.html';
         }
 
@@ -432,8 +665,110 @@
         let _isPlaying = false;
         let _isChannelListVisible = false;
 
-        // URL file M3U di GitHub (ganti dengan URL raw milik Anda)
-        const M3U_URL = 'https://jego-movego-hld.netlify.app/trikarya-tv-gorontalo/popular-trikarya.m3u';
+        // ============================================================
+        //  HARDCODE CHANNEL (dari file M3U)
+        // ============================================================
+        channels = [{
+            name: 'BERITA SATU',
+            logo: 'https://picture.dens.tv/wp/img/tvchannels_v1/340x160/1735687939_tvchannels_v1.jpeg&s=10',
+            group: 'Berita',
+            url: 'https://op-flashcon-digdayahd-1.dens.tv/h/h314/S1/mnf.m3u8',
+            userAgent: '',
+            referer: '',
+            keyId: '',
+            key: '',
+            licenseUrl: ''
+        }, {
+            name: 'RTV',
+            logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQPM3XIXLuAvO5vYRF5LqwYarbw_0-RjKD4fniYZumeJQ&s=10',
+            group: 'Berita',
+            url: 'https://op-flashcon-digdayahd-1.dens.tv/h/h10/02.m3u8',
+            userAgent: '',
+            referer: '',
+            keyId: '',
+            key: '',
+            licenseUrl: ''
+        }, {
+            name: 'TVRI',
+            logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTwfJd8KvAJJgGYU3iSGbbSETMXmvyBPb0f29zYW_Rftg&s=10&s=10',
+            group: 'Berita',
+            url: 'https://op-flashcon-digdayahd-1.dens.tv/h/h17/02.m3u8',
+            userAgent: '',
+            referer: '',
+            keyId: '',
+            key: '',
+            licenseUrl: ''
+        }, {
+            name: '3ABN Praise Him Music Network',
+            logo: 'https://i.imgur.com/iBcqT8L.png',
+            group: 'Music',
+            url: 'https://3abn.bozztv.com/3abn1/PraiseHim/smil:PraiseHim.smil/playlist.m3u8',
+            userAgent: '',
+            referer: '',
+            keyId: '',
+            key: '',
+            licenseUrl: ''
+        }, {
+            name: '4 Fun TV',
+            logo: 'https://i.imgur.com/rI1wo2l.png',
+            group: 'Music',
+            url: 'https://stream.4fun.tv:8888/hls/4f_high/index.m3u8',
+            userAgent: '',
+            referer: '',
+            keyId: '',
+            key: '',
+            licenseUrl: ''
+        }, {
+            name: '4 Kurd',
+            logo: 'https://www.aparatchi.com/images/chanells-logo/4kurd.svg',
+            group: 'Music',
+            url: 'https://4kuhls.persiana.live/hls/stream.m3u8',
+            userAgent: '',
+            referer: '',
+            keyId: '',
+            key: '',
+            licenseUrl: ''
+        }, {
+            name: '7 RadioVisione',
+            logo: 'https://radio7note.com/img/favicon/android-icon-192x192.png',
+            group: 'Music',
+            url: 'https://stream10.xdevel.com/video1s976543-1932/stream/playlist.m3u8',
+            userAgent: '',
+            referer: '',
+            keyId: '',
+            key: '',
+            licenseUrl: ''
+        }, {
+            name: '7S Music',
+            logo: 'https://i.imgur.com/zDiIhdN.png',
+            group: 'Music',
+            url: 'http://103.175.73.12:8080/live/771/master.m3u8',
+            userAgent: '',
+            referer: '',
+            keyId: '',
+            key: '',
+            licenseUrl: ''
+        }, {
+            name: '8XM',
+            logo: 'https://i.imgur.com/KLrfKRn.png',
+            group: 'Music',
+            url: 'http://115.42.65.142:9981/stream/channelid/582886861',
+            userAgent: '',
+            referer: '',
+            keyId: '',
+            key: '',
+            licenseUrl: ''
+        }, {
+            name: '9X Jalwa',
+            logo: 'https://xstreamcp-assets-msp.streamready.in/assets/LIVETV/LIVECHANNEL/LIVETV_LIVETVCHANNEL_9X_JALWA/images/LOGO_HD/image.png',
+            group: 'Music',
+            url: 'https://b.jsrdn.com/strm/channels/9xjalwa/master.m3u8',
+            userAgent: '',
+            referer: '',
+            keyId: '',
+            key: '',
+            licenseUrl: ''
+        }];
 
         // ============================================================
         //  STATUS UPDATE
@@ -445,110 +780,14 @@
         }
 
         // ============================================================
-        //  PARSER M3U (sama seperti sebelumnya)
-        // ============================================================
-        function parseM3U(content) {
-            console.log('[PARSER] Mulai parsing M3U...');
-            const lines = content.split(/\r?\n/);
-            const result = [];
-            let current = {};
-            let pendingKeyId = '';
-            let pendingKey = '';
-            let pendingLicenseUrl = '';
-            let pendingUserAgent = '';
-            let pendingReferer = '';
-            let groupTitle = '';
-
-            for (let i = 0; i < lines.length; i++) {
-                let line = lines[i].trim();
-                if (!line) continue;
-                if (line.startsWith('#') && !line.startsWith('#EXT') && !line.startsWith('#KODIPROP') && !line.startsWith('#EXTVLCOPT')) continue;
-
-                if (line.startsWith('#EXTINF:')) {
-                    const nameMatch = line.match(/,([^,]*)$/);
-                    const name = nameMatch ? nameMatch[1].trim() : 'Channel';
-                    const logoMatch = line.match(/tvg-logo="([^"]*)"/);
-                    const logo = logoMatch ? logoMatch[1] : '';
-                    const groupMatch = line.match(/group-title="([^"]*)"/);
-                    if (groupMatch) groupTitle = groupMatch[1];
-                    current = {
-                        name, logo, group: groupTitle || '',
-                        userAgent: pendingUserAgent || '',
-                        referer: pendingReferer || '',
-                        keyId: pendingKeyId || '',
-                        key: pendingKey || '',
-                        licenseUrl: pendingLicenseUrl || '',
-                        url: ''
-                    };
-                    pendingUserAgent = '';
-                    pendingReferer = '';
-                    pendingKeyId = '';
-                    pendingKey = '';
-                    pendingLicenseUrl = '';
-                } else if (line.startsWith('#EXTVLCOPT:')) {
-                    const opt = line.replace('#EXTVLCOPT:', '').trim();
-                    if (opt.startsWith('http-user-agent=')) {
-                        const ua = opt.replace('http-user-agent=', '').trim();
-                        if (current.name) current.userAgent = ua;
-                        else pendingUserAgent = ua;
-                    } else if (opt.startsWith('http-referrer=') || opt.startsWith('http-referer=')) {
-                        const ref = opt.replace(/http-referrer=|http-referer=/, '').trim();
-                        if (current.name) current.referer = ref;
-                        else pendingReferer = ref;
-                    }
-                } else if (line.startsWith('#KODIPROP:')) {
-                    const prop = line.replace('#KODIPROP:', '').trim();
-                    if (prop.includes('license_key=')) {
-                        const keyPart = prop.split('license_key=')[1].trim();
-                        if (keyPart.startsWith('http://') || keyPart.startsWith('https://')) {
-                            if (current.name) current.licenseUrl = keyPart;
-                            else pendingLicenseUrl = keyPart;
-                        } else {
-                            const parts = keyPart.split(':');
-                            if (parts.length === 2) {
-                                const kid = parts[0].trim();
-                                const key = parts[1].trim();
-                                if (current.name) { current.keyId = kid; current.key = key; }
-                                else { pendingKeyId = kid; pendingKey = key; }
-                            }
-                        }
-                    } else if (prop.includes('license_url=')) {
-                        const url = prop.split('license_url=')[1].trim();
-                        if (current.name) current.licenseUrl = url;
-                    }
-                } else if (line.startsWith('http://') || line.startsWith('https://')) {
-                    if (current.name && !current.url) {
-                        current.url = line;
-                        if (pendingUserAgent && !current.userAgent) current.userAgent = pendingUserAgent;
-                        if (pendingReferer && !current.referer) current.referer = pendingReferer;
-                        if (pendingKeyId && !current.keyId) {
-                            current.keyId = pendingKeyId;
-                            current.key = pendingKey;
-                        }
-                        if (pendingLicenseUrl && !current.licenseUrl) current.licenseUrl = pendingLicenseUrl;
-                        result.push({ ...current });
-                        current = {};
-                        pendingUserAgent = '';
-                        pendingReferer = '';
-                        pendingKeyId = '';
-                        pendingKey = '';
-                        pendingLicenseUrl = '';
-                    }
-                }
-            }
-            if (current.name && current.url) result.push(current);
-            console.log(`[PARSER] Selesai. Ditemukan ${result.length} channel.`);
-            return result;
-        }
-
-        // ============================================================
         //  DETECT STREAM TYPE
         // ============================================================
         function detectStreamType(url) {
             const lower = url.toLowerCase();
             if (lower.includes('.mpd') || lower.includes('manifest.mpd') || lower.includes('cenc.mpd')) return 'dash';
             if (lower.includes('.m3u8') || lower.includes('playlist.m3u8')) return 'hls';
-            if (lower.includes('.ts') || lower.includes('extension=ts') || (lower.includes('stream=') && lower.includes('ts'))) return 'mpegts';
+            if (lower.includes('.ts') || lower.includes('extension=ts') || (lower.includes('stream=') && lower.includes(
+                    'ts'))) return 'mpegts';
             if (lower.includes('.mp4') || lower.includes('videoplayback')) return 'vod';
             return 'unknown';
         }
@@ -559,15 +798,30 @@
         function destroyAllPlayers() {
             console.log('[CLEANUP] Menghancurkan semua player...');
             if (shakaPlayer) {
-                try { shakaPlayer.destroy(); console.log('[CLEANUP] Shaka Player dihancurkan.'); } catch(e) { console.error('[CLEANUP] Error Shaka:', e); }
+                try {
+                    shakaPlayer.destroy();
+                    console.log('[CLEANUP] Shaka Player dihancurkan.');
+                } catch (e) {
+                    console.error('[CLEANUP] Error Shaka:', e);
+                }
                 shakaPlayer = null;
             }
             if (hlsPlayer) {
-                try { hlsPlayer.destroy(); console.log('[CLEANUP] HLS Player dihancurkan.'); } catch(e) { console.error('[CLEANUP] Error HLS:', e); }
+                try {
+                    hlsPlayer.destroy();
+                    console.log('[CLEANUP] HLS Player dihancurkan.');
+                } catch (e) {
+                    console.error('[CLEANUP] Error HLS:', e);
+                }
                 hlsPlayer = null;
             }
             if (mpegtsPlayer) {
-                try { mpegtsPlayer.destroy(); console.log('[CLEANUP] MPEG-TS Player dihancurkan.'); } catch(e) { console.error('[CLEANUP] Error MPEG-TS:', e); }
+                try {
+                    mpegtsPlayer.destroy();
+                    console.log('[CLEANUP] MPEG-TS Player dihancurkan.');
+                } catch (e) {
+                    console.error('[CLEANUP] Error MPEG-TS:', e);
+                }
                 mpegtsPlayer = null;
             }
             try {
@@ -575,15 +829,20 @@
                 video.removeAttribute('src');
                 video.load();
                 console.log('[CLEANUP] Video element di-reset.');
-            } catch(e) { console.error('[CLEANUP] Error reset video:', e); }
+            } catch (e) {
+                console.error('[CLEANUP] Error reset video:', e);
+            }
         }
 
         // ============================================================
-        //  PLAY CHANNEL (sama persis seperti sebelumnya)
+        //  PLAY CHANNEL
         // ============================================================
         async function playChannel(index) {
             console.log(`[PLAY] Meminta play channel index ${index}`);
-            if (_isPlaying) { console.log('[PLAY] Masih dalam proses, abaikan.'); return; }
+            if (_isPlaying) {
+                console.log('[PLAY] Masih dalam proses, abaikan.');
+                return;
+            }
 
             const channel = channels[index];
             if (!channel || !channel.url) {
@@ -629,9 +888,12 @@
 
                     shakaPlayer = new shaka.Player();
                     shakaPlayer.configure({
-                        manifest: { retryParameters: { maxAttempts: 5, timeout: 20000, backoffFactor: 2, baseDelay: 1000 } },
-                        drm: { retryParameters: { maxAttempts: 5, timeout: 20000, backoffFactor: 2, baseDelay: 1000 } },
-                        streaming: { retryParameters: { maxAttempts: 5, timeout: 20000, backoffFactor: 2, baseDelay: 1000 } }
+                        manifest: { retryParameters: { maxAttempts: 5, timeout: 20000, backoffFactor: 2,
+                                baseDelay: 1000 } },
+                        drm: { retryParameters: { maxAttempts: 5, timeout: 20000, backoffFactor: 2,
+                                baseDelay: 1000 } },
+                        streaming: { retryParameters: { maxAttempts: 5, timeout: 20000, backoffFactor: 2,
+                                baseDelay: 1000 } }
                     });
                     await shakaPlayer.attach(video);
 
@@ -673,7 +935,8 @@
                             if (attempt < 2) await new Promise(r => setTimeout(r, 2000 * (attempt + 1)));
                         }
                     }
-                    if (!loaded) throw new Error(`Gagal load manifest setelah 3 percobaan: ${lastError?.message || 'Unknown error'}`);
+                    if (!loaded) throw new Error(
+                        `Gagal load manifest setelah 3 percobaan: ${lastError?.message || 'Unknown error'}`);
 
                     if (shakaError) {
                         if (shakaError.code === 1002 && useProxy) {
@@ -683,12 +946,18 @@
                     }
 
                     if (!manifestParsed) {
-                        await new Promise((resolve) => { const check = () => { if (manifestParsed) resolve(); else setTimeout(check, 200); }; check(); });
+                        await new Promise((resolve) => {
+                            const check = () => {
+                                if (manifestParsed) resolve();
+                                else setTimeout(check, 200);
+                            };
+                            check();
+                        });
                     }
 
                     try { await video.play(); } catch (playErr) {
-                        if (playErr.name === 'AbortError') { await new Promise(r => setTimeout(r, 500)); await video.play(); }
-                        else throw playErr;
+                        if (playErr.name === 'AbortError') { await new Promise(r => setTimeout(r, 500));
+                            await video.play(); } else throw playErr;
                     }
                     updateStatus(`▶️ Memutar ${channel.name}`, 'status-playing');
                     _isPlaying = false;
@@ -700,7 +969,9 @@
                     if (Hls.isSupported()) {
                         hlsPlayer = new Hls({
                             xhrSetup: function(xhr, url) {
-                                for (const [key, value] of Object.entries(headers)) xhr.setRequestHeader(key, value);
+                                for (const [key, value] of Object.entries(headers)) {
+                                    xhr.setRequestHeader(key, value);
+                                }
                             }
                         });
                         hlsPlayer.loadSource(channel.url);
@@ -713,17 +984,26 @@
                         hlsPlayer.on(Hls.Events.ERROR, (e, data) => {
                             console.error('[HLS] Error:', data);
                             if (data.fatal) {
-                                updateStatus('⚠️ Streaming sudah tidak tersedia atau channel sedang offline', 'status-error');
+                                updateStatus('⚠️ Streaming sudah tidak tersedia atau channel sedang offline',
+                                    'status-error');
                                 _isPlaying = false;
                             }
                         });
                         setTimeout(() => {
                             if (_isPlaying) {
-                                try { video.src = channel.url; video.play(); updateStatus(`▶️ Memutar ${channel.name}`, 'status-playing'); _isPlaying = false; } catch(e) { _isPlaying = false; }
+                                try {
+                                    video.src = channel.url;
+                                    video.play();
+                                    updateStatus(`▶️ Memutar ${channel.name}`, 'status-playing');
+                                    _isPlaying = false;
+                                } catch (e) { _isPlaying = false; }
                             }
                         }, 10000);
                     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                        video.src = channel.url; video.play(); updateStatus(`▶️ Memutar ${channel.name}`, 'status-playing'); _isPlaying = false;
+                        video.src = channel.url;
+                        video.play();
+                        updateStatus(`▶️ Memutar ${channel.name}`, 'status-playing');
+                        _isPlaying = false;
                     } else throw new Error('HLS tidak didukung oleh browser ini');
                     return;
                 }
@@ -733,9 +1013,21 @@
                     if (typeof mpegts !== 'undefined' && mpegts.isSupported()) {
                         try {
                             mpegtsPlayer = mpegts.createPlayer({
-                                type: 'mpegts', url: channel.url, isLive: true, reuseRedirectedURL: true,
-                                enableStashBuffer: false, stashInitialSize: 128, cors: true,
-                                loader: { xhrSetup: function(xhr, url) { for (const [key,value] of Object.entries(headers)) xhr.setRequestHeader(key,value); xhr.withCredentials = true; } }
+                                type: 'mpegts',
+                                url: channel.url,
+                                isLive: true,
+                                reuseRedirectedURL: true,
+                                enableStashBuffer: false,
+                                stashInitialSize: 128,
+                                cors: true,
+                                loader: {
+                                    xhrSetup: function(xhr, url) {
+                                        for (const [key, value] of Object.entries(headers)) {
+                                            xhr.setRequestHeader(key, value);
+                                        }
+                                        xhr.withCredentials = true;
+                                    }
+                                }
                             });
                             mpegtsPlayer.attachMediaElement(video);
                             mpegtsPlayer.load();
@@ -744,10 +1036,16 @@
                             _isPlaying = false;
                         } catch (err) {
                             console.warn('[MPEG-TS] Gagal, fallback ke direct video.src:', err);
-                            video.src = channel.url; video.play(); updateStatus(`▶️ Memutar ${channel.name}`, 'status-playing'); _isPlaying = false;
+                            video.src = channel.url;
+                            video.play();
+                            updateStatus(`▶️ Memutar ${channel.name}`, 'status-playing');
+                            _isPlaying = false;
                         }
                     } else {
-                        video.src = channel.url; video.play(); updateStatus(`▶️ Memutar ${channel.name}`, 'status-playing'); _isPlaying = false;
+                        video.src = channel.url;
+                        video.play();
+                        updateStatus(`▶️ Memutar ${channel.name}`, 'status-playing');
+                        _isPlaying = false;
                     }
                     return;
                 }
@@ -820,7 +1118,8 @@
                     btn.appendChild(img);
                 } else {
                     const placeholder = document.createElement('div');
-                    placeholder.style.cssText = 'width:60px;height:60px;border-radius:8px;background:#1a1a1a;border:1px solid #2a2a2a;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;';
+                    placeholder.style.cssText =
+                        'width:60px;height:60px;border-radius:8px;background:#1a1a1a;border:1px solid #2a2a2a;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;';
                     placeholder.textContent = '📺';
                     btn.appendChild(placeholder);
                 }
@@ -835,45 +1134,6 @@
                 grid.appendChild(btn);
             });
             channelSelector.appendChild(grid);
-        }
-
-        // ============================================================
-        //  LOAD M3U FROM GITHUB
-        // ============================================================
-        async function loadM3UFromUrl(url) {
-            updateStatus('⏳ Mengambil daftar channel dari server...', 'status-loading');
-            fileName.textContent = 'Memuat...';
-            try {
-                const response = await fetch(url);
-                if (!response.ok) throw new Error(`HTTP ${response.status} - ${response.statusText}`);
-                const content = await response.text();
-                channels = parseM3U(content);
-                if (channels.length === 0) {
-                    updateStatus('⚠️ Tidak ada channel ditemukan dalam file M3U', 'status-error');
-                    fileName.textContent = '⚠️ File kosong';
-                    return;
-                }
-                console.log(`[LOAD] ${channels.length} channel ditemukan.`);
-                fileName.textContent = `✅ ${channels.length} channel loaded`;
-
-                // Tampilkan channel list otomatis
-                if (!_isChannelListVisible) {
-                    channelSelector.classList.add('show');
-                    toggleBtn.textContent = '📋 Sembunyikan Channel';
-                    _isChannelListVisible = true;
-                }
-
-                currentChannelIndex = 0;
-                buildChannelButtons();
-                updateStatus(`📡 ${channels.length} channel ditemukan. Memuat channel pertama...`, 'status-info');
-                destroyAllPlayers();
-                await playChannel(0);
-
-            } catch (error) {
-                console.error('[LOAD] Gagal mengambil M3U:', error);
-                updateStatus(`⚠️ Gagal memuat file M3U: ${error.message}`, 'status-error');
-                fileName.textContent = '❌ Gagal load';
-            }
         }
 
         // ============================================================
@@ -909,9 +1169,21 @@
         // ============================================================
         //  INIT
         // ============================================================
-        console.log('[INIT] Aplikasi IPTV dimulai.');
-        // Mulai load M3U dari GitHub
-        loadM3UFromUrl(M3U_URL);
+        console.log('[INIT] Aplikasi IPTV dimulai (hardcode).');
+        fileName.textContent = `✅ ${channels.length} channel`;
+
+        // Tampilkan channel list otomatis
+        if (!_isChannelListVisible) {
+            channelSelector.classList.add('show');
+            toggleBtn.textContent = '📋 Sembunyikan Channel';
+            _isChannelListVisible = true;
+        }
+
+        currentChannelIndex = 0;
+        buildChannelButtons();
+        updateStatus(`📡 ${channels.length} channel ditemukan. Memuat channel pertama...`, 'status-info');
+        destroyAllPlayers();
+        playChannel(0);
     </script>
 </body>
 </html>
