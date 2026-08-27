@@ -1072,26 +1072,32 @@
             fileName.textContent = 'Memuat...';
 
             try {
-                // Load channel gratis
-                console.log('[LOAD] Mengambil channel gratis...');
+                // 1. Ambil channel gratis
+                console.log('[LOAD] Mengambil channel gratis dari:', CHANNEL_GRATIS_URL);
                 const respGratis = await fetch(CHANNEL_GRATIS_URL);
-                if (!respGratis.ok) throw new Error(`Gagal load channel gratis: ${respGratis.status}`);
+                if (!respGratis.ok) {
+                    throw new Error(`Gagal load channel gratis (HTTP ${respGratis.status})`);
+                }
                 const gratisChannels = await respGratis.json();
                 console.log(`[LOAD] ${gratisChannels.length} channel gratis ditemukan.`);
 
-                // Load channel berbayar (hanya jika premium)
+                // 2. Ambil channel berbayar hanya jika premium
                 let berbayarChannels = [];
                 if (isPremium) {
-                    console.log('[LOAD] Pengguna Premium, mengambil channel berbayar...');
+                    console.log('[LOAD] Pengguna Premium, mengambil channel berbayar dari:', CHANNEL_BERBAYAR_URL);
                     try {
                         const respBerbayar = await fetch(CHANNEL_BERBAYAR_URL);
                         if (respBerbayar.ok) {
-                            berbayarChannels = await respBerbayar.json();
-                            // Tandai sebagai premium
-                            berbayarChannels = berbayarChannels.map(ch => ({ ...ch, isPremium: true }));
-                            console.log(`[LOAD] ${berbayarChannels.length} channel berbayar ditemukan.`);
+                            const rawData = await respBerbayar.json();
+                            // Pastikan data berupa array
+                            if (Array.isArray(rawData)) {
+                                berbayarChannels = rawData.map(ch => ({ ...ch, isPremium: true }));
+                                console.log(`[LOAD] ${berbayarChannels.length} channel berbayar ditemukan.`);
+                            } else {
+                                console.warn('[LOAD] Data berbayar bukan array:', rawData);
+                            }
                         } else {
-                            console.warn('[LOAD] Gagal load channel berbayar:', respBerbayar.status);
+                            console.warn('[LOAD] Gagal load channel berbayar, status:', respBerbayar.status);
                         }
                     } catch (e) {
                         console.warn('[LOAD] Error load channel berbayar:', e);
@@ -1100,8 +1106,19 @@
                     console.log('[LOAD] Pengguna tidak premium, channel berbayar tidak ditampilkan.');
                 }
 
-                // Gabungkan channel
+                // 3. Gabungkan semua channel
                 channels = [...gratisChannels, ...berbayarChannels];
+
+                // 4. Debug: tampilkan detail channel
+                console.log('[DEBUG] Total channels:', channels.length);
+                if (channels.length > 0) {
+                    console.log('[DEBUG] Channel pertama:', channels[0]);
+                    console.log('[DEBUG] Channel terakhir:', channels[channels.length - 1]);
+                    const premiumCount = channels.filter(ch => ch.isPremium).length;
+                    console.log(`[DEBUG] Channel premium: ${premiumCount} dari ${channels.length}`);
+                }
+
+                // 5. Update UI
                 fileName.textContent = `✅ ${channels.length} channel`;
 
                 if (channels.length === 0) {
@@ -1126,6 +1143,9 @@
                 console.error('[LOAD] Error:', error);
                 updateStatus(`⚠️ Gagal memuat channel: ${error.message}`, 'status-error');
                 fileName.textContent = '❌ Gagal load';
+
+                // Fallback: coba hardcode jika fetch gagal (opsional)
+                // Anda bisa tambahkan hardcode di sini jika diperlukan
             }
         }
 
