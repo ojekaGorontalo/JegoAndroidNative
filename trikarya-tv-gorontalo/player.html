@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Player Olahraga + Fix Header & Proxy</title>
+    <title>Player Olahraga + Auto Load M3U</title>
 
     <!-- Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.12/shaka-player.compiled.js">
@@ -87,7 +87,6 @@
         }
 
         /* ===== SEMBUNYIKAN PROGRESS BAR & DURASI ===== */
-        /* Chrome, Safari, Edge */
         video::-webkit-media-controls-timeline {
             display: none !important;
         }
@@ -99,11 +98,9 @@
         video::-webkit-media-controls-seek-forward-button {
             display: none !important;
         }
-        /* Firefox */
         video::-moz-range-track {
             display: none !important;
         }
-        /* Agar kontrol lainnya tetap muncul (play, volume, fullscreen) */
         video::-webkit-media-controls-panel {
             display: flex !important;
         }
@@ -236,32 +233,31 @@
     <div class="container">
 
         <div class="header">
-            <div class="header-title">⚽ Player Sport + Fix Header</div>
+            <div class="header-title">⚽ Player Sport + Auto Load</div>
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
                 <button class="upload-btn" id="uploadBtn">📤 Upload M3U</button>
                 <input type="file" id="fileInput" accept=".m3u,.m3u8,.txt" />
-                <span class="file-info">📄 <span id="fileName">Belum ada file</span></span>
+                <span class="file-info">📄 <span id="fileName">Memuat dari Dropbox...</span></span>
             </div>
         </div>
 
         <div id="videoContainer">
-            <!-- Tambahkan atribut controlsList untuk menyembunyikan fitur tambahan -->
             <video id="videoPlayer" controls playsinline controlsList="nodownload noremoteplayback"></video>
         </div>
 
-        <div id="status" class="status-idle">📤 Upload file M3U untuk mulai</div>
+        <div id="status" class="status-idle">📡 Mengambil daftar channel dari Dropbox...</div>
 
         <div class="search-bar">
             <input type="text" id="searchInput" placeholder="🔍 Cari channel..." />
         </div>
 
         <div id="channelGrid" class="channel-grid">
-            <div class="no-result">Belum ada channel</div>
+            <div class="no-result">⏳ Memuat channel...</div>
         </div>
 
         <!-- LOG -->
         <div id="logContainer">
-            <div class="log-entry"><span class="log-time">[System]</span> <span class="log-info">Menunggu upload file...</span></div>
+            <div class="log-entry"><span class="log-time">[System]</span> <span class="log-info">Memulai auto-load dari Dropbox...</span></div>
         </div>
 
     </div>
@@ -303,12 +299,64 @@
         let mpegtsPlayer = null;
         let isPlaying = false;
 
-        // Daftar proxy fallback (urut dari yang paling cepat)
+        // ============================================================
+        //  KONFIGURASI URL M3U (GANTI SESUAI KEBUTUHAN)
+        // ============================================================
+        const M3U_URL =
+            'https://www.dropbox.com/scl/fi/bmy5q6s7jseaapmakxao2/popular-sports-iptv.m3u?rlkey=2ur64tzoclr6ehltjvov3otba&st=vaqtzoxc&dl=1';
+
+        // Daftar proxy fallback untuk mengatasi CORS
         const PROXY_LIST = [
-            'https://directv-iptv-player.vercel.app/api/stream?url=',
+            'https://api.allorigins.win/raw?url=',
             'https://corsproxy.io/?',
-            'https://api.allorigins.win/raw?url='
+            'https://directv-iptv-player.vercel.app/api/stream?url='
         ];
+
+        // ============================================================
+        //  FUNGSI AMBIL M3U DARI URL (dengan fallback proxy)
+        // ============================================================
+        async function fetchM3UFromUrl(url) {
+            addLog(`📡 Mencoba mengambil: ${url}`, 'info');
+
+            // Coba langsung dulu
+            try {
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                    }
+                });
+                if (response.ok) {
+                    const text = await response.text();
+                    if (text && text.trim().length > 0 && !text.includes('Dropbox') && !text.includes('<!DOCTYPE')) {
+                        addLog('✅ Berhasil mengambil dari URL langsung', 'success');
+                        return text;
+                    }
+                }
+            } catch (e) {
+                addLog(`⚠️ Gagal langsung: ${e.message}`, 'warn');
+            }
+
+            // Coba dengan proxy
+            for (const proxy of PROXY_LIST) {
+                try {
+                    const proxyUrl = proxy + encodeURIComponent(url);
+                    addLog(`📡 Mencoba via proxy: ${proxy}`, 'info');
+                    const response = await fetch(proxyUrl);
+                    if (response.ok) {
+                        const text = await response.text();
+                        if (text && text.trim().length > 0 && !text.includes('Dropbox') && !text.includes('<!DOCTYPE')) {
+                            addLog(`✅ Berhasil melalui proxy: ${proxy.split('/')[2]}`, 'success');
+                            return text;
+                        }
+                    }
+                } catch (e) {
+                    addLog(`⚠️ Proxy ${proxy.split('/')[2]} gagal: ${e.message}`, 'warn');
+                }
+            }
+
+            throw new Error('Gagal mengambil file M3U dari semua metode');
+        }
 
         // ============================================================
         //  PARSER M3U
@@ -447,7 +495,6 @@
                     });
                     await shakaPlayer.attach(video);
 
-                    // Header seperti aplikasi IPTV
                     shakaPlayer.getNetworkingEngine().registerRequestFilter((type, req) => {
                         req.headers['User-Agent'] = 'ExoPlayerDemo/2.15.1 (Linux; Android 13) ExoPlayerLib/2.15.1';
                         req.headers['Referer'] = 'https://www.visionplus.id/';
@@ -470,7 +517,6 @@
                     if (Hls.isSupported()) {
                         let loaded = false;
 
-                        // Fungsi untuk mencoba load dengan header tertentu
                         const tryLoad = (url, useProxy = false) => {
                             return new Promise((resolve, reject) => {
                                 try {
@@ -479,7 +525,6 @@
                                     }
                                     hlsPlayer = new Hls({
                                         xhrSetup: function(xhr, reqUrl) {
-                                            // Kirim header seperti aplikasi IPTV
                                             xhr.setRequestHeader('User-Agent',
                                                 'ExoPlayerDemo/2.15.1 (Linux; Android 13) ExoPlayerLib/2.15.1'
                                                 );
@@ -514,7 +559,6 @@
                                     hlsPlayer.on(Hls.Events.MANIFEST_PARSED, onSuccess);
                                     hlsPlayer.on(Hls.Events.ERROR, onError);
 
-                                    // Timeout 15 detik
                                     setTimeout(() => {
                                         if (!loaded) {
                                             hlsPlayer.off(Hls.Events.MANIFEST_PARSED, onSuccess);
@@ -542,7 +586,12 @@
                         } catch (err) {
                             addLog(`⚠️ Gagal load langsung: ${err.message}`, 'warn');
                             // Coba dengan proxy
-                            for (const proxy of PROXY_LIST) {
+                            const proxyList = [
+                                'https://directv-iptv-player.vercel.app/api/stream?url=',
+                                'https://corsproxy.io/?',
+                                'https://api.allorigins.win/raw?url='
+                            ];
+                            for (const proxy of proxyList) {
                                 try {
                                     const proxyUrl = proxy + encodeURIComponent(ch.url);
                                     addLog(`📥 Mencoba dengan proxy: ${proxy}`, 'info');
@@ -567,7 +616,6 @@
                             return;
                         }
                     } else {
-                        // HLS.js tidak didukung
                         addLog('⚠️ HLS.js tidak didukung, fallback ke native', 'warn');
                         video.src = ch.url;
                         video.play();
@@ -646,14 +694,51 @@
                 fileName.textContent = 'File tidak valid';
                 return;
             }
-            fileName.textContent = name || 'popular-sport.txt';
+            fileName.textContent = name || 'popular-sports-iptv.m3u';
             addLog(`✅ ${channels.length} channel berhasil dimuat`, 'success');
             setStatus(`✅ ${channels.length} channel dimuat`, 'idle');
             render('');
+
+            // Putar channel pertama otomatis
+            if (channels.length > 0) {
+                setTimeout(() => {
+                    playChannel(0);
+                }, 500);
+            }
         }
 
         // ============================================================
-        //  UPLOAD HANDLER
+        //  AUTO-LOAD DARI DROPBOX SAAT HALAMAN DIBUKA
+        // ============================================================
+        async function autoLoadFromDropbox() {
+            try {
+                const content = await fetchM3UFromUrl(M3U_URL);
+                if (content) {
+                    loadFromContent(content, 'popular-sports-iptv.m3u (auto-load)');
+                } else {
+                    throw new Error('Konten kosong');
+                }
+            } catch (err) {
+                addLog(`❌ Auto-load gagal: ${err.message}`, 'error');
+                setStatus('⚠️ Gagal memuat dari Dropbox. Upload manual atau refresh.', 'error');
+                fileName.textContent = 'Gagal auto-load';
+                grid.innerHTML = `
+                    <div class="no-result">
+                        ❌ Gagal memuat dari Dropbox<br>
+                        <small style="color:#666;">${err.message}</small><br><br>
+                        <button class="upload-btn" onclick="document.getElementById('fileInput').click()" style="margin-top:10px;">
+                            📤 Upload Manual
+                        </button>
+                        <button class="upload-btn" onclick="autoLoadFromDropbox()" style="margin-top:10px;margin-left:10px;background:#ffcc00;color:#000;">
+                            🔄 Coba Lagi
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        // ============================================================
+        //  UPLOAD HANDLER (MANUAL)
         // ============================================================
         document.getElementById('uploadBtn').addEventListener('click', () => fileInput.click());
         fileInput.addEventListener('change', function(e) {
@@ -683,11 +768,10 @@
         window.addEventListener('beforeunload', destroyAll);
 
         // ============================================================
-        //  INIT
+        //  INIT - AUTO LOAD
         // ============================================================
-        addLog('🚀 Player siap dengan fix header & proxy fallback. Upload file M3U.', 'info');
-        setStatus('📤 Upload file M3U (popular-sport.txt) untuk mulai', 'idle');
-        grid.innerHTML = `<div class="no-result">📤 Upload file M3U terlebih dahulu</div>`;
+        addLog('🚀 Player siap. Memulai auto-load dari Dropbox...', 'info');
+        autoLoadFromDropbox();
     </script>
 </body>
 </html>
