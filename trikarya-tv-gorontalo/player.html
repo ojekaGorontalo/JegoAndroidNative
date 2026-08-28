@@ -3,15 +3,17 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>IPTV TRIKARYA - Player</title>
+    <title>Player Olahraga Internasional + Console Log</title>
 
     <!-- Library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.12/shaka-player.compiled.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@0.14.17/dist/hls.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mpegts.js/0.16.6/mpegts.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.12/shaka-player.compiled.js">
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@0.14.17/dist/hls.min.js">
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mpegts.js/0.16.6/mpegts.js">
+    </script>
 
     <style>
-        /* ===== RESET & BASE ===== */
         * {
             margin: 0;
             padding: 0;
@@ -23,14 +25,12 @@
             color: #fff;
             display: flex;
             justify-content: center;
-            padding: 16px 16px 30px;
+            padding: 16px;
         }
         .container {
-            max-width: 1100px;
+            max-width: 1200px;
             width: 100%;
         }
-
-        /* ===== HEADER ===== */
         .header {
             display: flex;
             flex-wrap: wrap;
@@ -42,49 +42,20 @@
             border-radius: 12px;
             border: 1px solid #2a2a2a;
             margin-bottom: 14px;
-            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.06);
-            min-height: 52px;
-        }
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            flex-shrink: 0;
         }
         .header-title {
             font-size: 20px;
             font-weight: 700;
             color: #00d4ff;
-            letter-spacing: 0.2px;
-            white-space: nowrap;
-            line-height: 1.2;
         }
-        .header-title span {
-            color: #fff;
-            font-weight: 300;
-        }
-        .header-right {
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 6px 12px;
-        }
-        .logout-btn {
-            background: #ff4444;
-            color: #fff;
+        .upload-btn {
+            background: #00d4ff;
+            color: #0a0a0a;
             border: none;
-            padding: 6px 16px;
+            padding: 7px 18px;
             border-radius: 30px;
-            font-size: 13px;
             font-weight: 700;
             cursor: pointer;
-            transition: 0.25s;
-            white-space: nowrap;
-            line-height: 1.4;
-        }
-        .logout-btn:hover {
-            background: #cc0000;
-            transform: scale(1.02);
         }
         .file-info {
             color: #aaa;
@@ -93,424 +64,251 @@
             padding: 4px 14px;
             border-radius: 20px;
             border: 1px solid #2a2a2a;
-            white-space: nowrap;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            line-height: 1.4;
         }
-        .file-info .fname {
-            color: #fff;
-            font-weight: 500;
-            max-width: 150px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        /* ===== VIDEO (fixed di atas) ===== */
-        .video-wrapper {
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            background: #0a0a0a;
-            padding: 0 0 8px 0;
-            margin-bottom: 4px;
+        #fileInput {
+            display: none;
         }
         #videoContainer {
-            position: relative;
-            width: 100%;
             background: #111;
             border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 8px 30px rgba(0, 212, 255, 0.10);
-            border: 1px solid #1e1e1e;
+            border: 1px solid #2a2a2a;
+            margin-bottom: 10px;
         }
         video {
             width: 100%;
             display: block;
-            max-height: 600px;
+            max-height: 500px;
             background: #000;
         }
-
-        /* ===== STATUS ===== */
         #status {
-            text-align: center;
             padding: 8px 14px;
             border-radius: 8px;
-            font-size: 14px;
             background: #1a1a1a;
             min-height: 38px;
             display: flex;
             align-items: center;
-            justify-content: center;
-            margin: 6px 0 10px;
-            border: 1px solid #2a2a2a;
-        }
-        .status-loading { color: #ffcc00; }
-        .status-error { color: #ff4444; }
-        .status-playing { color: #00ff88; }
-        .status-idle { color: #888; }
-        .status-info { color: #00d4ff; }
-
-        /* ===== SEARCH ===== */
-        .search-bar {
+            gap: 8px;
+            flex-wrap: wrap;
             margin-bottom: 12px;
+            border: 1px solid #2a2a2a;
+            font-size: 14px;
+            font-family: 'Courier New', monospace;
+        }
+        .status-loading {
+            color: #ffcc00;
+        }
+        .status-error {
+            color: #ff4444;
+        }
+        .status-playing {
+            color: #00ff88;
+        }
+        .status-idle {
+            color: #888;
+        }
+        .retry-btn {
+            background: #00d4ff;
+            color: #0a0a0a;
+            border: none;
+            padding: 4px 16px;
+            border-radius: 20px;
+            cursor: pointer;
         }
         .search-bar input {
             width: 100%;
-            padding: 10px 16px 10px 44px;
+            padding: 10px 16px;
             border-radius: 30px;
             border: 1px solid #2a2a2a;
             background: #111;
             color: #fff;
             font-size: 14px;
             outline: none;
-            transition: 0.3s;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='M21 21l-4.35-4.35'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: 14px center;
-            background-size: 18px;
+            margin-bottom: 12px;
         }
         .search-bar input:focus {
             border-color: #00d4ff;
-            box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.12);
-        }
-        .search-bar input::placeholder { color: #555; }
-
-        /* ===== CHANNEL SECTION ===== */
-        .channel-section {
-            margin-top: 2px;
-        }
-        .channel-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-            flex-wrap: wrap;
-            gap: 6px 12px;
-        }
-        .channel-header .count {
-            color: #666;
-            font-size: 13px;
-            font-weight: 500;
-        }
-        .toggle-btn {
-            background: #1e1e1e;
-            color: #00d4ff;
-            border: 2px solid #00d4ff;
-            padding: 6px 18px;
-            border-radius: 30px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 700;
-            transition: 0.3s;
-            line-height: 1.4;
-        }
-        .toggle-btn:hover {
-            background: #00d4ff;
-            color: #0a0a0a;
-        }
-
-        /* ===== CHANNEL GRID ===== */
-        .channel-selector {
-            display: none;
-            padding: 12px 14px 16px;
-            background: #111;
-            border-radius: 12px;
-            border: 1px solid #2a2a2a;
-            max-height: 500px;
-            overflow-y: auto;
-        }
-        .channel-selector.show {
-            display: block;
         }
         .channel-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
             gap: 12px;
+            padding: 4px 0;
         }
-
-        /* ===== CHANNEL CARD ===== */
-        .channel-btn {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+        .channel-card {
             background: #1a1a1a;
             border: 2px solid #2a2a2a;
             border-radius: 12px;
-            padding: 14px 8px 12px;
-            cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            min-height: 120px;
-            gap: 6px;
-            width: 100%;
-            position: relative;
-            overflow: hidden;
+            padding: 12px 8px;
             text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
         }
-        .channel-btn::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border-radius: 10px;
-            background: linear-gradient(135deg, rgba(0, 212, 255, 0.05), transparent);
-            opacity: 0;
-            transition: opacity 0.3s;
-            pointer-events: none;
-        }
-        .channel-btn:hover {
+        .channel-card:hover {
             border-color: #00d4ff;
-            background: #1a1f2a;
             transform: translateY(-3px);
             box-shadow: 0 8px 25px rgba(0, 212, 255, 0.10);
         }
-        .channel-btn:hover::after { opacity: 1; }
-        .channel-btn.active {
+        .channel-card.active {
             border-color: #00d4ff;
             background: rgba(0, 212, 255, 0.12);
-            box-shadow: 0 0 30px rgba(0, 212, 255, 0.08), inset 0 0 30px rgba(0, 212, 255, 0.03);
-            transform: translateY(-2px);
         }
-        .channel-btn.active::after { opacity: 1; }
-        .channel-btn img {
+        .channel-card img {
             width: 60px;
             height: 60px;
             border-radius: 8px;
             object-fit: cover;
-            flex-shrink: 0;
             background: #0a0a0a;
             border: 1px solid #2a2a2a;
-            transition: border-color 0.2s;
         }
-        .channel-btn.active img {
-            border-color: #00d4ff;
-        }
-        .channel-btn .channel-name {
+        .channel-card .name {
             font-size: 12px;
             font-weight: 600;
-            color: #ddd;
-            line-height: 1.3;
-            max-width: 100%;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            margin-top: 6px;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
-            word-break: break-word;
-            margin-top: 2px;
-            transition: color 0.2s;
-        }
-        .channel-btn.active .channel-name { color: #00d4ff; }
-        .channel-btn:hover .channel-name { color: #fff; }
-
-        .group-title {
-            grid-column: 1 / -1;
-            padding: 6px 12px 4px 12px;
-            margin: 6px 0 4px 0;
-            background: transparent;
-            color: #00d4ff;
-            font-weight: 700;
-            font-size: 14px;
-            letter-spacing: 0.5px;
-            border-bottom: 2px solid #1a2a2a;
-            padding-bottom: 6px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .group-title::before {
-            content: '▸';
-            font-size: 16px;
-            color: #00d4ff;
+            overflow: hidden;
         }
         .no-result {
             grid-column: 1 / -1;
             text-align: center;
             color: #555;
             padding: 30px 0;
-            font-size: 14px;
-            background: #0d0d0d;
-            border-radius: 10px;
             border: 1px dashed #2a2a2a;
+            border-radius: 10px;
         }
-
-        /* ===== RESPONSIVE ===== */
-        @media (max-width: 900px) {
-            .channel-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
-            .channel-btn { min-height: 105px; padding: 12px 6px 10px; }
-            .channel-btn img { width: 50px; height: 50px; }
-            .channel-btn .channel-name { font-size: 11px; }
+        #logContainer {
+            margin-top: 16px;
+            background: #0d0d0d;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            padding: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #aaa;
         }
-        @media (max-width: 768px) {
-            body { padding: 10px; }
-            .header { padding: 8px 14px; gap: 6px 12px; min-height: 46px; }
-            .header-title { font-size: 18px; }
-            .header-title span { display: none; }
-            .header-right { gap: 5px 10px; }
-            .logout-btn { font-size: 12px; padding: 4px 12px; }
-            .file-info { font-size: 12px; padding: 3px 12px; }
-            .file-info .fname { max-width: 80px; }
-            .search-bar input { font-size: 13px; padding: 9px 14px 9px 40px; background-size:16px; background-position:13px center; }
-            #status { font-size: 13px; min-height: 34px; padding: 6px 12px; }
-            .toggle-btn { font-size: 12px; padding: 5px 14px; }
-            .channel-selector { padding: 10px 10px 14px; max-height: 400px; }
-            .channel-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; }
-            .channel-btn { min-height: 95px; padding: 10px 4px 8px; border-radius: 10px; }
-            .channel-btn img { width: 44px; height: 44px; border-radius: 6px; }
-            .channel-btn .channel-name { font-size: 10px; -webkit-line-clamp: 2; }
-            .group-title { font-size: 12px; padding: 4px 8px; margin: 4px 0 2px; }
-            .group-title::before { font-size: 14px; }
-            .channel-header .count { font-size: 12px; }
+        #logContainer .log-entry {
+            padding: 2px 0;
+            border-bottom: 1px solid #1a1a1a;
         }
-        @media (max-width: 480px) {
-            body { padding: 8px; }
-            .header { padding: 6px 10px; gap: 4px 8px; min-height: 40px; border-radius: 10px; }
-            .header-title { font-size: 15px; }
-            .logout-btn { font-size: 11px; padding: 3px 10px; }
-            .file-info { font-size: 10px; padding: 2px 10px; gap: 3px; }
-            .file-info .fname { max-width: 60px; }
-            .search-bar input { font-size: 12px; padding: 8px 12px 8px 36px; background-size:15px; background-position:11px center; }
-            #status { font-size: 12px; min-height: 30px; padding: 5px 10px; margin-bottom:8px; }
-            .toggle-btn { font-size: 11px; padding: 4px 12px; }
-            .channel-selector { padding: 8px 6px 12px; border-radius:10px; max-height: 300px; }
-            .channel-grid { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 6px; }
-            .channel-btn { min-height: 80px; padding: 8px 3px 6px; border-radius:8px; border-width:1.5px; }
-            .channel-btn img { width: 36px; height: 36px; border-radius:5px; }
-            .channel-btn .channel-name { font-size: 9px; -webkit-line-clamp: 2; }
-            .group-title { font-size: 11px; padding: 3px 6px; margin: 3px 0 2px; }
-            .group-title::before { font-size: 12px; }
-            .channel-header .count { font-size: 11px; }
-            #videoContainer { border-radius: 10px; margin-bottom:8px; }
+        .log-time {
+            color: #666;
+            margin-right: 8px;
         }
-        @media (max-width: 380px) {
-            .header-title { font-size: 13px; }
-            .logout-btn { font-size: 10px; padding: 2px 8px; }
-            .file-info { font-size: 9px; padding: 2px 8px; }
-            .file-info .fname { max-width: 50px; }
-            .channel-grid { grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap:5px; }
-            .channel-btn { min-height: 70px; padding: 6px 2px 5px; }
-            .channel-btn img { width: 30px; height: 30px; }
-            .channel-btn .channel-name { font-size: 8px; -webkit-line-clamp: 2; }
-            .search-bar input { font-size: 11px; padding: 7px 10px 7px 32px; background-size:13px; background-position:10px center; }
+        .log-info {
+            color: #00d4ff;
         }
-
-        /* ===== SCROLLBAR ===== */
-        .channel-selector::-webkit-scrollbar { width: 4px; }
-        .channel-selector::-webkit-scrollbar-track { background: #1a1a1a; border-radius: 4px; }
-        .channel-selector::-webkit-scrollbar-thumb { background: #00d4ff; border-radius: 4px; }
-        .channel-selector { scrollbar-width: thin; scrollbar-color: #00d4ff #1a1a1a; }
+        .log-success {
+            color: #00ff88;
+        }
+        .log-error {
+            color: #ff4444;
+        }
+        .log-warn {
+            color: #ffcc00;
+        }
+        @media (max-width: 600px) {
+            .channel-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            }
+            .channel-card img {
+                width: 44px;
+                height: 44px;
+            }
+            .channel-card .name {
+                font-size: 10px;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
 
-        <!-- ===== HEADER ===== -->
         <div class="header">
-            <div class="header-left">
-                <div class="header-title">📺 IPTV-TRIKARYA <span>Premium</span></div>
-            </div>
-            <div class="header-right">
-                <div class="file-info" id="fileInfo">
-                    <span>📄</span>
-                    <span class="fname" id="fileName">Memuat channel...</span>
-                </div>
-                <button class="logout-btn" id="logoutBtn">🚪 Logout</button>
+            <div class="header-title">⚽ Player Olahraga + Console Log</div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <button class="upload-btn" id="uploadBtn">📤 Upload M3U</button>
+                <input type="file" id="fileInput" accept=".m3u,.m3u8,.txt" />
+                <span class="file-info">📄 <span id="fileName">Belum ada file</span></span>
             </div>
         </div>
 
-        <!-- ===== VIDEO (sticky) ===== -->
-        <div class="video-wrapper">
-            <div id="videoContainer">
-                <video id="videoPlayer" controls playsinline></video>
-            </div>
+        <div id="videoContainer">
+            <video id="videoPlayer" controls playsinline></video>
         </div>
 
-        <!-- ===== STATUS ===== -->
-        <div id="status" class="status-idle">⏳ Memuat daftar channel...</div>
+        <div id="status" class="status-idle">📤 Upload file M3U untuk mulai</div>
 
-        <!-- ===== SEARCH ===== -->
         <div class="search-bar">
-            <input type="text" id="searchInput" placeholder="🔍 Cari channel..." autocomplete="off" />
+            <input type="text" id="searchInput" placeholder="🔍 Cari channel..." />
         </div>
 
-        <!-- ===== CHANNEL LIST ===== -->
-        <div class="channel-section">
-            <div class="channel-header">
-                <span class="count" id="channelCount">0 channel</span>
-                <button class="toggle-btn" id="toggleChannelBtn">📋 Tampilkan Semua Channel</button>
-            </div>
-            <div class="channel-selector" id="channelSelector">
-                <!-- Channel grid akan di-render oleh JavaScript -->
-            </div>
+        <div id="channelGrid" class="channel-grid">
+            <div class="no-result">Belum ada channel</div>
+        </div>
+
+        <!-- LOG CONTAINER -->
+        <div id="logContainer">
+            <div class="log-entry"><span class="log-time">[System]</span> <span class="log-info">Menunggu upload file...</span></div>
         </div>
 
     </div>
 
     <script>
         // ============================================================
-        //  CEK LOGIN
+        //  LOGGING SYSTEM
         // ============================================================
-        const isLoggedIn = localStorage.getItem('iptv_user') === 'true';
-        if (!isLoggedIn) {
-            window.location.href = 'indextv.html';
+        const logContainer = document.getElementById('logContainer');
+
+        function addLog(message, type = 'info') {
+            const time = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            const cls = type === 'error' ? 'log-error' : type === 'success' ? 'log-success' : type === 'warn' ?
+                'log-warn' : 'log-info';
+            entry.innerHTML = `<span class="log-time">[${time}]</span> <span class="${cls}">${message}</span>`;
+            logContainer.appendChild(entry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+            // Juga kirim ke console browser
+            console.log(`[${time}] ${message}`);
         }
 
         // ============================================================
-        //  GLOBAL VARIABLES
+        //  GLOBAL
         // ============================================================
         const video = document.getElementById('videoPlayer');
-        const status = document.getElementById('status');
-        const channelSelector = document.getElementById('channelSelector');
-        const toggleBtn = document.getElementById('toggleChannelBtn');
+        const statusEl = document.getElementById('status');
+        const grid = document.getElementById('channelGrid');
         const searchInput = document.getElementById('searchInput');
-        const channelCount = document.getElementById('channelCount');
+        const fileInput = document.getElementById('fileInput');
         const fileName = document.getElementById('fileName');
 
         let channels = [];
-        let currentChannelIndex = 0;
         let filteredChannels = [];
+        let currentIndex = -1;
 
         let shakaPlayer = null;
         let hlsPlayer = null;
         let mpegtsPlayer = null;
-
-        let _isPlaying = false;
-        let _isChannelListVisible = false;
-
-        // ============================================================
-        //  URL M3U (Dropbox)
-        // ============================================================
-        const M3U_URL = 'https://dl.dropboxusercontent.com/scl/fi/cr5urg29nqo56hcbfogxf/trikarya.m3u?rlkey=4yhhzd56qzsc9hgay5jgpvnc7&dl=1';
-
-        // ============================================================
-        //  STATUS UPDATE
-        // ============================================================
-        function updateStatus(text, className = 'status-idle') {
-            status.textContent = text;
-            status.className = className;
-            console.log(`[STATUS] ${className}: ${text}`);
-        }
+        let isPlaying = false;
 
         // ============================================================
         //  PARSER M3U
         // ============================================================
         function parseM3U(content) {
-            console.log('[PARSER] Mulai parsing M3U...');
+            addLog('📄 Memulai parsing M3U...', 'info');
             const lines = content.split(/\r?\n/);
             const result = [];
             let current = {};
-            let pendingKeyId = '';
-            let pendingKey = '';
-            let pendingLicenseUrl = '';
-            let pendingUserAgent = '';
-            let pendingReferer = '';
-            let groupTitle = '';
 
             for (let i = 0; i < lines.length; i++) {
                 let line = lines[i].trim();
                 if (!line) continue;
-                if (line.startsWith('#') && !line.startsWith('#EXT') && !line.startsWith('#KODIPROP') && !line.startsWith('#EXTVLCOPT')) continue;
+                if (line.startsWith('#') && !line.startsWith('#EXTINF') && !line.startsWith('#KODIPROP') && !line
+                    .startsWith('#EXTVLCOPT')) continue;
 
                 if (line.startsWith('#EXTINF:')) {
                     const nameMatch = line.match(/,([^,]*)$/);
@@ -518,520 +316,285 @@
                     const logoMatch = line.match(/tvg-logo="([^"]*)"/);
                     const logo = logoMatch ? logoMatch[1] : '';
                     const groupMatch = line.match(/group-title="([^"]*)"/);
-                    if (groupMatch) groupTitle = groupMatch[1];
+                    const group = groupMatch ? groupMatch[1] : 'Sports';
+
                     current = {
-                        name: name,
-                        logo: logo,
-                        group: groupTitle || '',
-                        userAgent: pendingUserAgent || '',
-                        referer: pendingReferer || '',
-                        keyId: pendingKeyId || '',
-                        key: pendingKey || '',
-                        licenseUrl: pendingLicenseUrl || '',
-                        url: ''
+                        name,
+                        logo,
+                        group,
+                        url: '',
+                        keyId: '',
+                        key: '',
+                        licenseUrl: ''
                     };
-                    pendingUserAgent = '';
-                    pendingReferer = '';
-                    pendingKeyId = '';
-                    pendingKey = '';
-                    pendingLicenseUrl = '';
-                } else if (line.startsWith('#EXTVLCOPT:')) {
-                    const opt = line.replace('#EXTVLCOPT:', '').trim();
-                    if (opt.startsWith('http-user-agent=')) {
-                        const ua = opt.replace('http-user-agent=', '').trim();
-                        if (current.name) current.userAgent = ua;
-                        else pendingUserAgent = ua;
-                    } else if (opt.startsWith('http-referrer=') || opt.startsWith('http-referer=')) {
-                        const ref = opt.replace(/http-referrer=|http-referer=/, '').trim();
-                        if (current.name) current.referer = ref;
-                        else pendingReferer = ref;
-                    }
                 } else if (line.startsWith('#KODIPROP:')) {
                     const prop = line.replace('#KODIPROP:', '').trim();
                     if (prop.includes('license_key=')) {
-                        const keyPart = prop.split('license_key=')[1].trim();
-                        if (keyPart.startsWith('http://') || keyPart.startsWith('https://')) {
-                            if (current.name) current.licenseUrl = keyPart;
-                            else pendingLicenseUrl = keyPart;
+                        const val = prop.split('license_key=')[1].trim();
+                        if (val.startsWith('http')) {
+                            current.licenseUrl = val;
                         } else {
-                            const parts = keyPart.split(':');
+                            const parts = val.split(':');
                             if (parts.length === 2) {
-                                const kid = parts[0].trim();
-                                const key = parts[1].trim();
-                                if (current.name) {
-                                    current.keyId = kid;
-                                    current.key = key;
-                                } else {
-                                    pendingKeyId = kid;
-                                    pendingKey = key;
-                                }
+                                current.keyId = parts[0].trim();
+                                current.key = parts[1].trim();
                             }
                         }
                     } else if (prop.includes('license_url=')) {
-                        const url = prop.split('license_url=')[1].trim();
-                        if (current.name) current.licenseUrl = url;
+                        current.licenseUrl = prop.split('license_url=')[1].trim();
                     }
                 } else if (line.startsWith('http://') || line.startsWith('https://')) {
-                    if (current.name && !current.url) {
+                    if (current.name) {
                         current.url = line;
-                        if (pendingUserAgent && !current.userAgent) current.userAgent = pendingUserAgent;
-                        if (pendingReferer && !current.referer) current.referer = pendingReferer;
-                        if (pendingKeyId && !current.keyId) {
-                            current.keyId = pendingKeyId;
-                            current.key = pendingKey;
-                        }
-                        if (pendingLicenseUrl && !current.licenseUrl) current.licenseUrl = pendingLicenseUrl;
-
                         result.push({ ...current });
                         current = {};
-                        pendingUserAgent = '';
-                        pendingReferer = '';
-                        pendingKeyId = '';
-                        pendingKey = '';
-                        pendingLicenseUrl = '';
                     }
                 }
             }
             if (current.name && current.url) result.push(current);
-            console.log(`[PARSER] Selesai. Ditemukan ${result.length} channel.`);
+            addLog(`✅ Parsing selesai: ${result.length} channel ditemukan`, 'success');
             return result;
         }
 
         // ============================================================
         //  DETECT STREAM TYPE
         // ============================================================
-        function detectStreamType(url) {
-            const lower = url.toLowerCase();
-            if (lower.includes('.mpd') || lower.includes('manifest.mpd') || lower.includes('cenc.mpd')) return 'dash';
-            if (lower.includes('.m3u8') || lower.includes('playlist.m3u8')) return 'hls';
-            if (lower.includes('.ts') || lower.includes('extension=ts') || (lower.includes('stream=') && lower.includes('ts'))) return 'mpegts';
-            if (lower.includes('.mp4') || lower.includes('videoplayback')) return 'vod';
-            return 'unknown';
+        function detectType(url) {
+            const u = url.toLowerCase();
+            if (u.includes('.mpd') || u.includes('manifest.mpd') || u.includes('cenc.mpd')) return 'dash';
+            if (u.includes('.m3u8') || u.includes('playlist.m3u8')) return 'hls';
+            if (u.includes('.ts') || u.includes('extension=ts')) return 'mpegts';
+            return 'hls';
         }
 
         // ============================================================
-        //  DESTROY ALL PLAYERS
+        //  DESTROY PLAYERS
         // ============================================================
-        function destroyAllPlayers() {
-            console.log('[CLEANUP] Menghancurkan semua player...');
-            if (shakaPlayer) {
-                try {
-                    shakaPlayer.destroy();
-                    console.log('[CLEANUP] Shaka Player dihancurkan.');
-                } catch (e) {
-                    console.error('[CLEANUP] Error Shaka:', e);
-                }
-                shakaPlayer = null;
-            }
-            if (hlsPlayer) {
-                try {
-                    hlsPlayer.destroy();
-                    console.log('[CLEANUP] HLS Player dihancurkan.');
-                } catch (e) {
-                    console.error('[CLEANUP] Error HLS:', e);
-                }
-                hlsPlayer = null;
-            }
-            if (mpegtsPlayer) {
-                try {
-                    mpegtsPlayer.destroy();
-                    console.log('[CLEANUP] MPEG-TS Player dihancurkan.');
-                } catch (e) {
-                    console.error('[CLEANUP] Error MPEG-TS:', e);
-                }
-                mpegtsPlayer = null;
-            }
-            try {
-                video.pause();
-                video.removeAttribute('src');
-                video.load();
-                console.log('[CLEANUP] Video element di-reset.');
-            } catch (e) {
-                console.error('[CLEANUP] Error reset video:', e);
-            }
+        function destroyAll() {
+            addLog('🧹 Menghancurkan semua player...', 'warn');
+            if (shakaPlayer) { try { shakaPlayer.destroy(); } catch (e) { addLog('⚠️ Error destroy Shaka: ' + e.message,
+                    'error'); } shakaPlayer = null; }
+            if (hlsPlayer) { try { hlsPlayer.destroy(); } catch (e) { addLog('⚠️ Error destroy HLS: ' + e.message,
+                    'error'); } hlsPlayer = null; }
+            if (mpegtsPlayer) { try { mpegtsPlayer.destroy(); } catch (e) { addLog('⚠️ Error destroy MPEGTS: ' + e.message,
+                    'error'); } mpegtsPlayer = null; }
+            video.pause();
+            video.removeAttribute('src');
+            video.load();
+            addLog('✅ Semua player dihancurkan', 'success');
         }
 
         // ============================================================
         //  PLAY CHANNEL
         // ============================================================
         async function playChannel(index) {
-            console.log(`[PLAY] Meminta play channel index ${index}`);
-            if (_isPlaying) {
-                console.log('[PLAY] Masih dalam proses, abaikan.');
+            if (isPlaying) {
+                addLog('⏳ Masih ada pemutaran berjalan, tunggu...', 'warn');
+                return;
+            }
+            const ch = filteredChannels[index] || channels[index];
+            if (!ch || !ch.url) {
+                addLog('❌ Channel tidak valid (index=' + index + ')', 'error');
+                setStatus('⚠️ Channel tidak valid', 'error');
                 return;
             }
 
-            const channel = channels[index];
-            if (!channel || !channel.url) {
-                updateStatus('⚠️ Channel tidak valid', 'status-error');
-                console.error('[PLAY] Channel tidak valid:', { index, channel });
-                return;
-            }
+            isPlaying = true;
+            currentIndex = index;
+            addLog(`▶️ [PLAY] Memutar: ${ch.name} (${ch.url})`, 'info');
+            setStatus(`⏳ Memuat ${ch.name} ...`, 'loading');
 
-            _isPlaying = true;
-            currentChannelIndex = index;
-            console.log(`[PLAY] Memulai pemutaran: ${channel.name} (${channel.url})`);
-
-            updateStatus(`⏳ Memuat ${channel.name}...`, 'status-loading');
-
-            document.querySelectorAll('.channel-btn').forEach((btn, i) => {
-                btn.classList.toggle('active', i === index);
+            // Highlight
+            document.querySelectorAll('.channel-card').forEach((el, i) => {
+                el.classList.toggle('active', i === index);
             });
 
-            destroyAllPlayers();
+            destroyAll();
 
             try {
-                const headers = {};
-                if (channel.userAgent) headers['User-Agent'] = channel.userAgent;
-                if (channel.referer) headers['Referer'] = channel.referer;
+                const type = detectType(ch.url);
+                addLog(`📡 Tipe stream terdeteksi: ${type}`, 'info');
 
-                const type = detectStreamType(channel.url);
-                console.log(`[PLAY] Tipe stream terdeteksi: ${type}`);
-
-                // ===== DASH =====
                 if (type === 'dash') {
-                    // Coba beberapa URL (langsung + proxy)
-                    const urlsToTry = [
-                        channel.url,
-                        'https://api.allorigins.win/raw?url=' + encodeURIComponent(channel.url),
-                        'https://corsproxy.io/?' + encodeURIComponent(channel.url)
-                    ];
-
+                    addLog('🎬 Menggunakan Shaka Player untuk DASH...', 'info');
                     shakaPlayer = new shaka.Player();
+                    const drm = {};
+                    if (ch.keyId && ch.key) {
+                        drm.clearKeys = { [ch.keyId]: ch.key };
+                        addLog(`🔑 ClearKey: ${ch.keyId}:${ch.key}`, 'info');
+                    }
+                    if (ch.licenseUrl) {
+                        drm.servers = { 'com.widevine.alpha': ch.licenseUrl };
+                        addLog(`🔑 License URL: ${ch.licenseUrl}`, 'info');
+                    }
                     shakaPlayer.configure({
-                        manifest: { retryParameters: { maxAttempts: 5, timeout: 20000, backoffFactor: 2, baseDelay: 1000 } },
-                        drm: { retryParameters: { maxAttempts: 5, timeout: 20000, backoffFactor: 2, baseDelay: 1000 } },
-                        streaming: { retryParameters: { maxAttempts: 5, timeout: 20000, backoffFactor: 2, baseDelay: 1000 } }
+                        drm,
+                        manifest: { retryParameters: { maxAttempts: 3, timeout: 20000 } },
+                        streaming: { retryParameters: { maxAttempts: 3, timeout: 20000 } }
                     });
                     await shakaPlayer.attach(video);
-
-                    const drmConfig = {};
-                    if (channel.keyId && channel.key) drmConfig.clearKeys = { [channel.keyId]: channel.key };
-                    if (channel.licenseUrl) drmConfig.servers = { 'com.widevine.alpha': channel.licenseUrl };
-                    if (Object.keys(drmConfig).length > 0) shakaPlayer.configure({ drm: drmConfig });
-
-                    shakaPlayer.getNetworkingEngine().registerRequestFilter((type, request) => {
-                        for (const [key, value] of Object.entries(headers)) {
-                            request.headers[key] = value;
-                        }
+                    shakaPlayer.getNetworkingEngine().registerRequestFilter((type, req) => {
+                        req.headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36';
+                        req.headers['Referer'] = 'https://www.visionplus.id/';
                     });
-
-                    let shakaError = null;
-                    shakaPlayer.addEventListener('error', (e) => {
-                        const err = e.detail;
-                        let msg = err.message || err.code;
-                        if (err.code === 1002) msg = 'Manifest tidak valid (1002)';
-                        if (err.code === 6012) msg = 'Gagal mengakses manifest (6012)';
-                        if (err.code === 6014) msg = 'DRM error (6014)';
-                        if (err.code === 3015) msg = 'DRM license request gagal (3015)';
-                        shakaError = { code: err.code, message: msg };
-                        console.error('[DASH] Shaka error:', shakaError);
-                    });
-
-                    let manifestParsed = false;
-                    shakaPlayer.addEventListener('manifestparsed', () => { manifestParsed = true; });
-
-                    let loaded = false;
-                    let lastError = null;
-                    for (let attempt = 0; attempt < urlsToTry.length && !loaded; attempt++) {
-                        try {
-                            console.log(`[DASH] Mencoba URL ${attempt+1}: ${urlsToTry[attempt]}`);
-                            await shakaPlayer.load(urlsToTry[attempt]);
-                            loaded = true;
-                            console.log('[DASH] ✅ Manifest berhasil diload.');
-                        } catch (loadErr) {
-                            lastError = loadErr;
-                            console.warn(`[DASH] Gagal (${attempt+1}):`, loadErr.message);
-                            await new Promise(r => setTimeout(r, 1500));
-                        }
-                    }
-
-                    if (!loaded) {
-                        throw new Error(`Gagal load manifest: ${lastError?.message || 'Unknown error'}`);
-                    }
-
-                    if (shakaError) {
-                        throw new Error(shakaError.message);
-                    }
-
-                    if (!manifestParsed) {
-                        await new Promise((resolve) => {
-                            const check = () => {
-                                if (manifestParsed) resolve();
-                                else setTimeout(check, 200);
-                            };
-                            check();
-                        });
-                    }
-
-                    try { await video.play(); } catch (playErr) {
-                        if (playErr.name === 'AbortError') {
-                            await new Promise(r => setTimeout(r, 500));
-                            await video.play();
-                        } else {
-                            throw playErr;
-                        }
-                    }
-                    updateStatus(`▶️ Memutar ${channel.name}`, 'status-playing');
-                    _isPlaying = false;
+                    addLog(`📥 Mencoba load manifest: ${ch.url}`, 'info');
+                    await shakaPlayer.load(ch.url);
+                    addLog('✅ Manifest berhasil dimuat', 'success');
+                    await video.play();
+                    addLog(`▶️ [PLAY] Berhasil memutar ${ch.name}`, 'success');
+                    setStatus(`▶️ ${ch.name}`, 'playing');
+                    isPlaying = false;
                     return;
                 }
 
-                // ===== HLS =====
-                else if (type === 'hls') {
+                if (type === 'hls') {
+                    addLog('🎬 Menggunakan HLS.js untuk HLS...', 'info');
                     if (Hls.isSupported()) {
                         hlsPlayer = new Hls({
-                            xhrSetup: function(xhr, url) {
-                                for (const [key, value] of Object.entries(headers)) {
-                                    xhr.setRequestHeader(key, value);
-                                }
+                            xhrSetup: (xhr) => {
+                                xhr.setRequestHeader('User-Agent', 'Mozilla/5.0');
                             }
                         });
-                        hlsPlayer.loadSource(channel.url);
+                        hlsPlayer.loadSource(ch.url);
                         hlsPlayer.attachMedia(video);
                         hlsPlayer.on(Hls.Events.MANIFEST_PARSED, () => {
-                            video.play().catch(() => {});
-                            updateStatus(`▶️ Memutar ${channel.name}`, 'status-playing');
-                            _isPlaying = false;
+                            addLog('✅ Manifest HLS berhasil diparsing', 'success');
+                            video.play();
+                            addLog(`▶️ [PLAY] Berhasil memutar ${ch.name}`, 'success');
+                            setStatus(`▶️ ${ch.name}`, 'playing');
+                            isPlaying = false;
                         });
                         hlsPlayer.on(Hls.Events.ERROR, (e, data) => {
-                            console.error('[HLS] Error:', data);
                             if (data.fatal) {
-                                updateStatus('⚠️ Streaming sudah tidak tersedia atau channel sedang offline', 'status-error');
-                                _isPlaying = false;
+                                addLog(`❌ Fatal HLS error: ${data.type} - ${data.details}`, 'error');
+                                setStatus('⚠️ Gagal memutar (HLS error)', 'error');
+                                isPlaying = false;
+                            } else {
+                                addLog(`⚠️ HLS non-fatal error: ${data.type} - ${data.details}`, 'warn');
                             }
                         });
-                        setTimeout(() => {
-                            if (_isPlaying) {
-                                try {
-                                    video.src = channel.url;
-                                    video.play();
-                                    updateStatus(`▶️ Memutar ${channel.name}`, 'status-playing');
-                                    _isPlaying = false;
-                                } catch (e) { _isPlaying = false; }
-                            }
-                        }, 10000);
-                    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                        video.src = channel.url;
-                        video.play();
-                        updateStatus(`▶️ Memutar ${channel.name}`, 'status-playing');
-                        _isPlaying = false;
-                    } else throw new Error('HLS tidak didukung oleh browser ini');
-                    return;
-                }
-
-                // ===== MPEG-TS =====
-                else if (type === 'mpegts') {
-                    if (typeof mpegts !== 'undefined' && mpegts.isSupported()) {
-                        try {
-                            mpegtsPlayer = mpegts.createPlayer({
-                                type: 'mpegts',
-                                url: channel.url,
-                                isLive: true,
-                                reuseRedirectedURL: true,
-                                enableStashBuffer: false,
-                                stashInitialSize: 128,
-                                cors: true,
-                                loader: {
-                                    xhrSetup: function(xhr, url) {
-                                        for (const [key, value] of Object.entries(headers)) {
-                                            xhr.setRequestHeader(key, value);
-                                        }
-                                        xhr.withCredentials = true;
-                                    }
-                                }
-                            });
-                            mpegtsPlayer.attachMediaElement(video);
-                            mpegtsPlayer.load();
-                            video.play();
-                            updateStatus(`▶️ Memutar ${channel.name}`, 'status-playing');
-                            _isPlaying = false;
-                        } catch (err) {
-                            console.warn('[MPEG-TS] Gagal, fallback ke direct video.src:', err);
-                            video.src = channel.url;
-                            video.play();
-                            updateStatus(`▶️ Memutar ${channel.name}`, 'status-playing');
-                            _isPlaying = false;
-                        }
+                        return;
                     } else {
-                        video.src = channel.url;
+                        addLog('⚠️ HLS.js tidak didukung, fallback ke native', 'warn');
+                        video.src = ch.url;
                         video.play();
-                        updateStatus(`▶️ Memutar ${channel.name}`, 'status-playing');
-                        _isPlaying = false;
+                        addLog(`▶️ [PLAY] Berhasil memutar ${ch.name} (native)`, 'success');
+                        setStatus(`▶️ ${ch.name}`, 'playing');
+                        isPlaying = false;
+                        return;
                     }
-                    return;
                 }
 
-                // ===== VOD / Unknown =====
-                else {
-                    video.src = channel.url;
-                    video.play();
-                    updateStatus(`▶️ Memutar ${channel.name}`, 'status-playing');
-                    _isPlaying = false;
-                    return;
-                }
+                // MPEG-TS fallback
+                addLog('🎬 Menggunakan native video untuk MPEG-TS/unknown', 'info');
+                video.src = ch.url;
+                video.play();
+                addLog(`▶️ [PLAY] Berhasil memutar ${ch.name} (native)`, 'success');
+                setStatus(`▶️ ${ch.name}`, 'playing');
+                isPlaying = false;
 
-            } catch (error) {
-                let msg = error.message || 'Gagal memutar';
-                if (error.code === 1002) msg = 'Link video tidak valid atau sudah kadaluarsa';
-                if (error.code === 3015) msg = 'Video dilindungi hak cipta dan tidak bisa diputar';
-                console.error('[PLAY] Error:', error);
-                updateStatus(`⚠️ ${msg}`, 'status-error');
-                _isPlaying = false;
+            } catch (err) {
+                addLog(`❌ [ERROR] ${err.message || 'Gagal memutar'}`, 'error');
+                console.error('Full error:', err);
+                setStatus(`❌ ${err.message || 'Gagal memutar'}`, 'error');
+                isPlaying = false;
             }
         }
 
         // ============================================================
-        //  BUILD CHANNEL GRID
+        //  SET STATUS
         // ============================================================
-        function buildChannelButtons(filter = '') {
-            console.log(`[UI] Membangun channel grid dengan filter: "${filter}"`);
-            channelSelector.innerHTML = '';
-            const search = filter.toLowerCase().trim();
-            let displayChannels = channels;
-            if (search) {
-                displayChannels = channels.filter(ch =>
-                    ch.name.toLowerCase().includes(search) ||
-                    ch.group.toLowerCase().includes(search)
-                );
-            }
-            filteredChannels = displayChannels;
-            channelCount.textContent = `${displayChannels.length} dari ${channels.length} channel`;
+        function setStatus(text, cls = 'idle') {
+            statusEl.textContent = text;
+            statusEl.className = 'status-' + cls;
+        }
 
-            if (displayChannels.length === 0) {
-                const empty = document.createElement('div');
-                empty.className = 'no-result';
-                empty.textContent = '🔍 Tidak ada channel yang cocok';
-                channelSelector.appendChild(empty);
+        // ============================================================
+        //  RENDER GRID
+        // ============================================================
+        function render(filter = '') {
+            const q = filter.toLowerCase().trim();
+            filteredChannels = q ? channels.filter(c => c.name.toLowerCase().includes(q)) : channels;
+
+            if (filteredChannels.length === 0) {
+                grid.innerHTML = `<div class="no-result">${q ? '🔍 Tidak ada channel cocok' : '📭 Belum ada channel'}</div>`;
                 return;
             }
 
-            const grid = document.createElement('div');
-            grid.className = 'channel-grid';
-            let currentGroup = '';
-
-            displayChannels.forEach((ch) => {
-                const realIndex = channels.indexOf(ch);
-                if (ch.group && ch.group !== currentGroup) {
-                    currentGroup = ch.group;
-                    const div = document.createElement('div');
-                    div.className = 'group-title';
-                    div.textContent = currentGroup;
-                    grid.appendChild(div);
-                }
-                const btn = document.createElement('button');
-                btn.className = 'channel-btn' + (realIndex === currentChannelIndex ? ' active' : '');
-                btn.dataset.index = realIndex;
-                if (ch.logo) {
-                    const img = document.createElement('img');
-                    img.src = ch.logo;
-                    img.alt = ch.name || 'Channel';
-                    img.onerror = () => { img.style.display = 'none'; };
-                    btn.appendChild(img);
-                } else {
-                    const placeholder = document.createElement('div');
-                    placeholder.style.cssText =
-                        'width:60px;height:60px;border-radius:8px;background:#1a1a1a;border:1px solid #2a2a2a;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;';
-                    placeholder.textContent = '📺';
-                    btn.appendChild(placeholder);
-                }
-                const span = document.createElement('span');
-                span.className = 'channel-name';
-                span.textContent = ch.name || `Channel ${realIndex+1}`;
-                btn.appendChild(span);
-                btn.addEventListener('click', function() {
-                    const idx = parseInt(this.dataset.index);
-                    if (idx !== currentChannelIndex) playChannel(idx);
-                });
-                grid.appendChild(btn);
+            let html = '';
+            filteredChannels.forEach((ch, idx) => {
+                const logo = ch.logo ? `<img src="${ch.logo}" alt="" onerror="this.style.display='none'" />` :
+                    `<div style="width:60px;height:60px;border-radius:8px;background:#1a1a1a;border:1px solid #2a2a2a;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto;">📺</div>`;
+                html += `
+                    <div class="channel-card" data-index="${idx}">
+                        ${logo}
+                        <div class="name">${ch.name}</div>
+                    </div>
+                `;
             });
-            channelSelector.appendChild(grid);
+            grid.innerHTML = html;
+
+            document.querySelectorAll('.channel-card').forEach(el => {
+                el.addEventListener('click', function() {
+                    const idx = parseInt(this.dataset.index);
+                    playChannel(idx);
+                });
+            });
         }
 
         // ============================================================
-        //  LOAD M3U FROM URL
+        //  LOAD FROM M3U CONTENT
         // ============================================================
-        async function loadM3U() {
-            updateStatus('⏳ Mengambil daftar channel dari server...', 'status-loading');
-            fileName.textContent = 'Memuat...';
-
-            try {
-                console.log('[LOAD] Mengambil M3U dari:', M3U_URL);
-                const response = await fetch(M3U_URL);
-
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status} - ${response.statusText}`);
-                }
-
-                const content = await response.text();
-                console.log('[LOAD] File M3U berhasil diambil, panjang:', content.length);
-
-                channels = parseM3U(content);
-
-                if (channels.length === 0) {
-                    updateStatus('⚠️ Tidak ada channel ditemukan dalam file M3U', 'status-error');
-                    fileName.textContent = '⚠️ File kosong';
-                    return;
-                }
-
-                console.log(`[LOAD] ${channels.length} channel ditemukan.`);
-                fileName.textContent = `✅ ${channels.length} channel`;
-
-                // Tampilkan channel list otomatis
-                if (!_isChannelListVisible) {
-                    channelSelector.classList.add('show');
-                    toggleBtn.textContent = '📋 Sembunyikan Channel';
-                    _isChannelListVisible = true;
-                }
-
-                currentChannelIndex = 0;
-                buildChannelButtons();
-                updateStatus(`📡 ${channels.length} channel ditemukan. Memuat channel pertama...`, 'status-info');
-                destroyAllPlayers();
-                await playChannel(0);
-
-            } catch (error) {
-                console.error('[LOAD] Gagal mengambil M3U:', error);
-                updateStatus(`⚠️ Gagal memuat file M3U: ${error.message}`, 'status-error');
-                fileName.textContent = '❌ Gagal load';
+        function loadFromContent(content, name = '') {
+            channels = parseM3U(content);
+            if (channels.length === 0) {
+                addLog('❌ Tidak ada channel ditemukan dalam file', 'error');
+                setStatus('⚠️ Tidak ada channel ditemukan', 'error');
+                fileName.textContent = 'File tidak valid';
+                return;
             }
+            fileName.textContent = name || 'popular-sport.txt';
+            addLog(`✅ ${channels.length} channel berhasil dimuat`, 'success');
+            setStatus(`✅ ${channels.length} channel dimuat`, 'idle');
+            render('');
         }
 
         // ============================================================
-        //  LOGOUT
+        //  UPLOAD HANDLER
         // ============================================================
-        document.getElementById('logoutBtn').addEventListener('click', function() {
-            localStorage.removeItem('iptv_user');
-            localStorage.removeItem('iptv_kode');
-            window.location.href = 'indextv.html';
+        document.getElementById('uploadBtn').addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', function(e) {
+            const file = this.files[0];
+            if (!file) return;
+            addLog(`📤 Upload file: ${file.name} (${(file.size/1024).toFixed(1)} KB)`, 'info');
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                loadFromContent(ev.target.result, file.name);
+            };
+            reader.onerror = () => {
+                addLog('❌ Gagal membaca file', 'error');
+            };
+            reader.readAsText(file);
         });
 
         // ============================================================
-        //  SEARCH & TOGGLE
+        //  SEARCH
         // ============================================================
         searchInput.addEventListener('input', function() {
-            buildChannelButtons(this.value);
-        });
-
-        toggleBtn.addEventListener('click', function() {
-            const isShowing = channelSelector.classList.toggle('show');
-            _isChannelListVisible = isShowing;
-            this.textContent = isShowing ? '📋 Sembunyikan Channel' : '📋 Tampilkan Semua Channel';
-            if (isShowing) buildChannelButtons(searchInput.value);
+            render(this.value);
         });
 
         // ============================================================
         //  CLEANUP
         // ============================================================
-        window.addEventListener('beforeunload', () => {
-            destroyAllPlayers();
-        });
+        window.addEventListener('beforeunload', destroyAll);
 
         // ============================================================
         //  INIT
         // ============================================================
-        console.log('[INIT] Aplikasi IPTV dimulai.');
-        loadM3U();
+        addLog('🚀 Player siap. Upload file M3U untuk mulai.', 'info');
+        setStatus('📤 Upload file M3U (popular-sport.txt) untuk mulai', 'idle');
+        grid.innerHTML = `<div class="no-result">📤 Upload file M3U terlebih dahulu</div>`;
     </script>
 </body>
 </html>
