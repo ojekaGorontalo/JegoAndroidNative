@@ -334,19 +334,6 @@
             border-radius: 10px;
             border: 1px dashed #2a2a2a;
         }
-        .channel-badge {
-            font-size: 9px;
-            background: #00d4ff;
-            color: #0a0a0a;
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-weight: 700;
-            margin-top: 2px;
-        }
-        .channel-badge.premium {
-            background: #ff4444;
-            color: #fff;
-        }
 
         /* ===== RESPONSIVE ===== */
         @media (max-width: 900px) {
@@ -426,7 +413,7 @@
             <div class="header-right">
                 <div class="file-info" id="fileInfo">
                     <span>📄</span>
-                    <span class="fname" id="fileName">Channel siap</span>
+                    <span class="fname" id="fileName">Memuat channel...</span>
                 </div>
                 <button class="logout-btn" id="logoutBtn">🚪 Logout</button>
             </div>
@@ -470,11 +457,6 @@
         }
 
         // ============================================================
-        //  CEK STATUS PREMIUM (untuk akses channel berbayar)
-        // ============================================================
-        const isPremium = localStorage.getItem('iptv_premium') === 'true';
-
-        // ============================================================
         //  GLOBAL VARIABLES
         // ============================================================
         const video = document.getElementById('videoPlayer');
@@ -497,216 +479,9 @@
         let _isChannelListVisible = false;
 
         // ============================================================
-        //  HARDCODE SEMUA CHANNEL (GRATIS + PREMIUM)
+        //  URL M3U (Dropbox)
         // ============================================================
-        const allChannels = [
-            // ===== CHANNEL GRATIS =====
-            {
-                name: 'BERITA SATU',
-                logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQa41GMti1kTMXdTv2ywDvMb2QOhsos2dPgH1sFlxZehw&s=10',
-                group: 'Berita',
-                url: 'https://op-flashcon-digdayahd-1.dens.tv/h/h314/S1/mnf.m3u8',
-                userAgent: '',
-                referer: '',
-                keyId: '',
-                key: '',
-                licenseUrl: '',
-                isPremium: false
-            },
-            {
-                name: 'Metro TV',
-                logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTetTjZh88aU1Ids3LSc6NM2jcPsmKH1L9gm_gf2YOdWQ&s',
-                group: 'Berita',
-                url: 'https://op-flashcon-digdayahd-1.dens.tv/h/h12/02.m3u8',
-                userAgent: '',
-                referer: '',
-                keyId: '',
-                key: '',
-                licenseUrl: '',
-                isPremium: false
-            },
-            {
-                name: 'RTV',
-                logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQPM3XIXLuAvO5vYRF5LqwYarbw_0-RjKD4fniYZumeJQ&s=10',
-                group: 'Berita',
-                url: 'https://op-flashcon-digdayahd-1.dens.tv/h/h10/02.m3u8',
-                userAgent: '',
-                referer: '',
-                keyId: '',
-                key: '',
-                licenseUrl: '',
-                isPremium: false
-            },
-            {
-                name: 'TVRI',
-                logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTwfJd8KvAJJgGYU3iSGbbSETMXmvyBPb0f29zYW_Rftg&s=10&s=10',
-                group: 'Berita',
-                url: 'https://op-flashcon-digdayahd-1.dens.tv/h/h17/02.m3u8',
-                userAgent: '',
-                referer: '',
-                keyId: '',
-                key: '',
-                licenseUrl: '',
-                isPremium: false
-            },
-            {
-                name: '3ABN Praise Him Music Network',
-                logo: 'https://i.imgur.com/iBcqT8L.png',
-                group: 'Music',
-                url: 'https://3abn.bozztv.com/3abn1/PraiseHim/smil:PraiseHim.smil/playlist.m3u8',
-                userAgent: '',
-                referer: '',
-                keyId: '',
-                key: '',
-                licenseUrl: '',
-                isPremium: false
-            },
-            {
-                name: '4 Fun TV',
-                logo: 'https://i.imgur.com/rI1wo2l.png',
-                group: 'Music',
-                url: 'https://stream.4fun.tv:8888/hls/4f_high/index.m3u8',
-                userAgent: '',
-                referer: '',
-                keyId: '',
-                key: '',
-                licenseUrl: '',
-                isPremium: false
-            },
-            {
-                name: '4 Kurd',
-                logo: 'https://www.aparatchi.com/images/chanells-logo/4kurd.svg',
-                group: 'Music',
-                url: 'https://4kuhls.persiana.live/hls/stream.m3u8',
-                userAgent: '',
-                referer: '',
-                keyId: '',
-                key: '',
-                licenseUrl: '',
-                isPremium: false
-            },
-            {
-                name: '7 RadioVisione',
-                logo: 'https://radio7note.com/img/favicon/android-icon-192x192.png',
-                group: 'Music',
-                url: 'https://stream10.xdevel.com/video1s976543-1932/stream/playlist.m3u8',
-                userAgent: '',
-                referer: '',
-                keyId: '',
-                key: '',
-                licenseUrl: '',
-                isPremium: false
-            },
-            {
-                name: '7S Music',
-                logo: 'https://i.imgur.com/zDiIhdN.png',
-                group: 'Music',
-                url: 'http://103.175.73.12:8080/live/771/master.m3u8',
-                userAgent: '',
-                referer: '',
-                keyId: '',
-                key: '',
-                licenseUrl: '',
-                isPremium: false
-            },
-            {
-                name: '8XM',
-                logo: 'https://i.imgur.com/KLrfKRn.png',
-                group: 'Music',
-                url: 'http://115.42.65.142:9981/stream/channelid/582886861',
-                userAgent: '',
-                referer: '',
-                keyId: '',
-                key: '',
-                licenseUrl: '',
-                isPremium: false
-            },
-            {
-                name: '9X Jalwa',
-                logo: 'https://xstreamcp-assets-msp.streamready.in/assets/LIVETV/LIVECHANNEL/LIVETV_LIVETVCHANNEL_9X_JALWA/images/LOGO_HD/image.png',
-                group: 'Music',
-                url: 'https://b.jsrdn.com/strm/channels/9xjalwa/master.m3u8',
-                userAgent: '',
-                referer: '',
-                keyId: '',
-                key: '',
-                licenseUrl: '',
-                isPremium: false
-            },
-            {
-                name: 'Alegria TV',
-                logo: 'https://i.imgur.com/MIBZ2pZ.png',
-                group: 'Movie',
-                url: 'https://lbgo.bozztv.com/ssh101/ssh101/confirmatv/playlist.m3u8',
-                userAgent: '',
-                referer: '',
-                keyId: '',
-                key: '',
-                licenseUrl: '',
-                isPremium: false
-            },
-            {
-                name: 'CEACOM TV',
-                logo: 'https://i.imgur.com/hutdRfk.png',
-                group: 'Movie',
-                url: 'https://eu1.servers10.com:8081/ceacom/index.m3u8',
-                userAgent: '',
-                referer: '',
-                keyId: '',
-                key: '',
-                licenseUrl: '',
-                isPremium: false
-            },
-            {
-                name: 'MCE',
-                logo: '',
-                group: 'Movie',
-                url: 'https://op-flashcon-digdayahd-1.dens.tv/h/h18/02.m3u8',
-                userAgent: '',
-                referer: '',
-                keyId: '',
-                key: '',
-                licenseUrl: '',
-                isPremium: false
-            },
-            {
-                name: 'WeDo Movies Asia',
-                logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTyJrNe2zfSQWCj-8xjS3jz-c2qqVcA2dlBS50IcwS4vQ&s=10',
-                group: 'Movie',
-                url: 'https://amg00735-amg00735c46-denstv-apac-7617.playouts.now.amagi.tv/ts-eu-w1-n2/playlist/amg00735-videosolutionsagfast-wedomoviesasia-denstvapac/cb573e1e796c648b92d43c61cef64882847b3dcb0e6c886470af4a9765d97800dbe8ae84ae5b910c4c9e1fc061017d360439cd1dd56c49c1da63b820743c4b21fdcde00080dd0d0cb1df11292ca36265299a7369cc350f7bd2ec5a2f803ebe764c53cb017c593f88f258a9764cc59e0a957f39e8fc8b307b24455a9c5a43e6a64cb7fee15f42df39a0b90140c07d40fa83439fd401e987dc5e8347d373a3459f9bf1dfd546848cb9599106f224365623709cf215f9a366b7ca8a56379d7c2d7b44298cc986ed712c944e555dfbe6b9d10f9328db9a1a91723ead019b56b96af601c008b7f171a2b8b5db4e444bcaae375a26b0f59f88ee3b37b163c6f885b711758c84721223f264cd1f7156fa9ec71990b172fcd31889b97d2062aefb269f94b6f188dae871982ccefaaef657214a6d1070e137c7a169d53de022dfa47b285a4c7bb98345c1f4b23459594680814acd031e8481f9e9ba0d34da701a28810abe600663dc246d41bf4193f8356ffb4060e10e34f8656fee289fad3ef9d5bc8f6300a0cccb7fa52d85d80bc2e63dba79334b078ce73e53373d17bfd5671d2046d051ebc1cfde621b0cd1ad8194b25037092d125c18b4eeee669e9dd43b1817cc21500a002b14990ac26cd114760c27df1bc0b81b71840b1c7794cd5a5a5f6284cdc3e8edb1f143b071c1cac06341513a64ad23774104b68d8a49ed05110e1039870b7451cf6f3024d192cdf58bbd348ef608ad3c72065cc6ff19520c5c67117af1fe53d05af28122ba94c44fc9e1992f1ff356c406008eefcf65fc9feaad263497ba4726749ed71a9f0747a11ed03f91c275aada3f6e2735445cdb9e51c26db7b5e9af875e28d72d2a5aa8119292e7bcd86345ee90385c596b74240f99f2b16ec2bef477097a96d14f199ee2993283435f322d53dfc071367d2b736efe1f551ac28aca80acd81711800ea637a10172f3d8550bc61e404afa6ca303cd17813af9fcc76da8a889cee6d7c1276c1f6d0a56a0355a5ad73cf9800be0e24832bfc9c3d2d360937af526fbaa826eb56cee9be74e999993a8af2c57460c03b581d6ea04d7b93d40b950d259624dcfddaaa733bb92972f4cc771acc50b67a53b3e7acca8f00b816b9bee2b25ea82260881247c91aeaf684c8817a626336ff882d43d6c819059e138f1ffc00642880709f7070f31de1bd4b3ff383fafec69433b8b2c08837088cda32c7a7abc9d6b206a404c2200df44533bf77c0d811fa1eff6be782aed50df57dfde922e2af1c1c419357f56aaaa12b529e2fde11a9db4/158/1280x720_3329040/index.m3u8',
-                userAgent: '',
-                referer: '',
-                keyId: '',
-                key: '',
-                licenseUrl: '',
-                isPremium: false
-            },
-            // ===== CHANNEL PREMIUM (hanya muncul jika isPremium = true) =====
-            {
-                name: 'FUBO SPORTS 1',
-                logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSmseZQZacVzNm9vj2g8BEXdWyJnvW9RsjMtNjAageS_tIP4tOdY2_zXGU&s=10',
-                group: 'PREMIER LEAGUE',
-                url: 'https://otte.live.fly.ww.aiv-cdn.net/pdx-nitro/live/clients/dash/enc/3b7qwiqzk3/out/v1/9f14895badca43e6a716db021dcd0c31/cenc.mpd',
-                userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36 MPF.Players/537.36',
-                referer: 'https://www.fubo.tv/',
-                keyId: 'dc69b6159a0f9f0a4e03b3ff91cbacd5',
-                key: 'd0dcbcd7723bc40df0bf34c9c092d51f',
-                licenseUrl: '',
-                isPremium: true
-            },
-            {
-                name: 'FUBO SPORTS 2',
-                logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQifk-dtjzvc3_vwvEFaf8zhuoY5hUkeTj5Ebxx_OXXZg&s=10',
-                group: 'PREMIER LEAGUE',
-                url: 'https://otte.live.fly.ww.aiv-cdn.net/pdx-nitro/live/clients/dash/enc/uiffe4jhf0/out/v1/3534efafca8c4815adbb4d2e9a1fe003/cenc.mpd',
-                userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36 MPF.Players/537.36',
-                referer: 'https://www.fubo.tv/',
-                keyId: '3dcfbec0e7146928baa55210bf2cb62f',
-                key: 'bc85f74f815d9be5ae1dd6defaa05135',
-                licenseUrl: '',
-                isPremium: true
-            }
-        ];
+        const M3U_URL = 'https://www.dropbox.com/scl/fi/cr5urg29nqo56hcbfogxf/trikarya.m3u?rlkey=4yhhzd56qzsc9hgay5jgpvnc7&st=t9puow4a&dl=1';
 
         // ============================================================
         //  STATUS UPDATE
@@ -715,6 +490,111 @@
             status.textContent = text;
             status.className = className;
             console.log(`[STATUS] ${className}: ${text}`);
+        }
+
+        // ============================================================
+        //  PARSER M3U
+        // ============================================================
+        function parseM3U(content) {
+            console.log('[PARSER] Mulai parsing M3U...');
+            const lines = content.split(/\r?\n/);
+            const result = [];
+            let current = {};
+            let pendingKeyId = '';
+            let pendingKey = '';
+            let pendingLicenseUrl = '';
+            let pendingUserAgent = '';
+            let pendingReferer = '';
+            let groupTitle = '';
+
+            for (let i = 0; i < lines.length; i++) {
+                let line = lines[i].trim();
+                if (!line) continue;
+                if (line.startsWith('#') && !line.startsWith('#EXT') && !line.startsWith('#KODIPROP') && !line.startsWith('#EXTVLCOPT')) continue;
+
+                if (line.startsWith('#EXTINF:')) {
+                    const nameMatch = line.match(/,([^,]*)$/);
+                    const name = nameMatch ? nameMatch[1].trim() : 'Channel';
+                    const logoMatch = line.match(/tvg-logo="([^"]*)"/);
+                    const logo = logoMatch ? logoMatch[1] : '';
+                    const groupMatch = line.match(/group-title="([^"]*)"/);
+                    if (groupMatch) groupTitle = groupMatch[1];
+                    current = {
+                        name: name,
+                        logo: logo,
+                        group: groupTitle || '',
+                        userAgent: pendingUserAgent || '',
+                        referer: pendingReferer || '',
+                        keyId: pendingKeyId || '',
+                        key: pendingKey || '',
+                        licenseUrl: pendingLicenseUrl || '',
+                        url: ''
+                    };
+                    pendingUserAgent = '';
+                    pendingReferer = '';
+                    pendingKeyId = '';
+                    pendingKey = '';
+                    pendingLicenseUrl = '';
+                } else if (line.startsWith('#EXTVLCOPT:')) {
+                    const opt = line.replace('#EXTVLCOPT:', '').trim();
+                    if (opt.startsWith('http-user-agent=')) {
+                        const ua = opt.replace('http-user-agent=', '').trim();
+                        if (current.name) current.userAgent = ua;
+                        else pendingUserAgent = ua;
+                    } else if (opt.startsWith('http-referrer=') || opt.startsWith('http-referer=')) {
+                        const ref = opt.replace(/http-referrer=|http-referer=/, '').trim();
+                        if (current.name) current.referer = ref;
+                        else pendingReferer = ref;
+                    }
+                } else if (line.startsWith('#KODIPROP:')) {
+                    const prop = line.replace('#KODIPROP:', '').trim();
+                    if (prop.includes('license_key=')) {
+                        const keyPart = prop.split('license_key=')[1].trim();
+                        if (keyPart.startsWith('http://') || keyPart.startsWith('https://')) {
+                            if (current.name) current.licenseUrl = keyPart;
+                            else pendingLicenseUrl = keyPart;
+                        } else {
+                            const parts = keyPart.split(':');
+                            if (parts.length === 2) {
+                                const kid = parts[0].trim();
+                                const key = parts[1].trim();
+                                if (current.name) {
+                                    current.keyId = kid;
+                                    current.key = key;
+                                } else {
+                                    pendingKeyId = kid;
+                                    pendingKey = key;
+                                }
+                            }
+                        }
+                    } else if (prop.includes('license_url=')) {
+                        const url = prop.split('license_url=')[1].trim();
+                        if (current.name) current.licenseUrl = url;
+                    }
+                } else if (line.startsWith('http://') || line.startsWith('https://')) {
+                    if (current.name && !current.url) {
+                        current.url = line;
+                        if (pendingUserAgent && !current.userAgent) current.userAgent = pendingUserAgent;
+                        if (pendingReferer && !current.referer) current.referer = pendingReferer;
+                        if (pendingKeyId && !current.keyId) {
+                            current.keyId = pendingKeyId;
+                            current.key = pendingKey;
+                        }
+                        if (pendingLicenseUrl && !current.licenseUrl) current.licenseUrl = pendingLicenseUrl;
+
+                        result.push({ ...current });
+                        current = {};
+                        pendingUserAgent = '';
+                        pendingReferer = '';
+                        pendingKeyId = '';
+                        pendingKey = '';
+                        pendingLicenseUrl = '';
+                    }
+                }
+            }
+            if (current.name && current.url) result.push(current);
+            console.log(`[PARSER] Selesai. Ditemukan ${result.length} channel.`);
+            return result;
         }
 
         // ============================================================
@@ -1059,15 +939,6 @@
                 span.className = 'channel-name';
                 span.textContent = ch.name || `Channel ${realIndex+1}`;
                 btn.appendChild(span);
-
-                // Badge premium jika channel berbayar
-                if (ch.isPremium) {
-                    const badge = document.createElement('span');
-                    badge.className = 'channel-badge premium';
-                    badge.textContent = '⭐ PREMIUM';
-                    btn.appendChild(badge);
-                }
-
                 btn.addEventListener('click', function() {
                     const idx = parseInt(this.dataset.index);
                     if (idx !== currentChannelIndex) playChannel(idx);
@@ -1078,12 +949,60 @@
         }
 
         // ============================================================
+        //  LOAD M3U FROM URL
+        // ============================================================
+        async function loadM3U() {
+            updateStatus('⏳ Mengambil daftar channel dari server...', 'status-loading');
+            fileName.textContent = 'Memuat...';
+
+            try {
+                console.log('[LOAD] Mengambil M3U dari:', M3U_URL);
+                const response = await fetch(M3U_URL);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status} - ${response.statusText}`);
+                }
+
+                const content = await response.text();
+                console.log('[LOAD] File M3U berhasil diambil, panjang:', content.length);
+
+                channels = parseM3U(content);
+
+                if (channels.length === 0) {
+                    updateStatus('⚠️ Tidak ada channel ditemukan dalam file M3U', 'status-error');
+                    fileName.textContent = '⚠️ File kosong';
+                    return;
+                }
+
+                console.log(`[LOAD] ${channels.length} channel ditemukan.`);
+                fileName.textContent = `✅ ${channels.length} channel`;
+
+                // Tampilkan channel list otomatis
+                if (!_isChannelListVisible) {
+                    channelSelector.classList.add('show');
+                    toggleBtn.textContent = '📋 Sembunyikan Channel';
+                    _isChannelListVisible = true;
+                }
+
+                currentChannelIndex = 0;
+                buildChannelButtons();
+                updateStatus(`📡 ${channels.length} channel ditemukan. Memuat channel pertama...`, 'status-info');
+                destroyAllPlayers();
+                await playChannel(0);
+
+            } catch (error) {
+                console.error('[LOAD] Gagal mengambil M3U:', error);
+                updateStatus(`⚠️ Gagal memuat file M3U: ${error.message}`, 'status-error');
+                fileName.textContent = '❌ Gagal load';
+            }
+        }
+
+        // ============================================================
         //  LOGOUT
         // ============================================================
         document.getElementById('logoutBtn').addEventListener('click', function() {
             localStorage.removeItem('iptv_user');
             localStorage.removeItem('iptv_kode');
-            localStorage.removeItem('iptv_premium');
             window.location.href = 'indextv.html';
         });
 
@@ -1111,34 +1030,8 @@
         // ============================================================
         //  INIT
         // ============================================================
-        console.log('[INIT] Aplikasi IPTV dimulai (hardcode semua channel).');
-        console.log(`[INIT] Status Premium: ${isPremium ? '✅ AKTIF' : '❌ TIDAK AKTIF'}`);
-
-        // Filter channel berdasarkan status premium
-        if (isPremium) {
-            channels = allChannels; // tampilkan semua
-        } else {
-            channels = allChannels.filter(ch => !ch.isPremium); // hanya gratis
-        }
-
-        fileName.textContent = `✅ ${channels.length} channel`;
-
-        // Tampilkan channel list otomatis
-        if (!_isChannelListVisible) {
-            channelSelector.classList.add('show');
-            toggleBtn.textContent = '📋 Sembunyikan Channel';
-            _isChannelListVisible = true;
-        }
-
-        if (channels.length === 0) {
-            updateStatus('⚠️ Tidak ada channel tersedia', 'status-error');
-        } else {
-            currentChannelIndex = 0;
-            buildChannelButtons();
-            updateStatus(`📡 ${channels.length} channel ditemukan. Memuat channel pertama...`, 'status-info');
-            destroyAllPlayers();
-            playChannel(0);
-        }
+        console.log('[INIT] Aplikasi IPTV dimulai.');
+        loadM3U();
     </script>
 </body>
 </html>
