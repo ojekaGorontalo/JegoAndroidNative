@@ -146,21 +146,11 @@
             margin: 6px 0 10px;
             border: 1px solid #2a2a2a;
         }
-        .status-loading {
-            color: #ffcc00;
-        }
-        .status-error {
-            color: #ff4444;
-        }
-        .status-playing {
-            color: #00ff88;
-        }
-        .status-idle {
-            color: #888;
-        }
-        .status-info {
-            color: #00d4ff;
-        }
+        .status-loading { color: #ffcc00; }
+        .status-error { color: #ff4444; }
+        .status-playing { color: #00ff88; }
+        .status-idle { color: #888; }
+        .status-info { color: #00d4ff; }
 
         /* ===== SEARCH ===== */
         .search-bar {
@@ -185,9 +175,7 @@
             border-color: #00d4ff;
             box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.12);
         }
-        .search-bar input::placeholder {
-            color: #555;
-        }
+        .search-bar input::placeholder { color: #555; }
 
         /* ===== CHANNEL SECTION ===== */
         .channel-section {
@@ -277,18 +265,14 @@
             transform: translateY(-3px);
             box-shadow: 0 8px 25px rgba(0, 212, 255, 0.10);
         }
-        .channel-btn:hover::after {
-            opacity: 1;
-        }
+        .channel-btn:hover::after { opacity: 1; }
         .channel-btn.active {
             border-color: #00d4ff;
             background: rgba(0, 212, 255, 0.12);
             box-shadow: 0 0 30px rgba(0, 212, 255, 0.08), inset 0 0 30px rgba(0, 212, 255, 0.03);
             transform: translateY(-2px);
         }
-        .channel-btn.active::after {
-            opacity: 1;
-        }
+        .channel-btn.active::after { opacity: 1; }
         .channel-btn img {
             width: 60px;
             height: 60px;
@@ -317,12 +301,8 @@
             margin-top: 2px;
             transition: color 0.2s;
         }
-        .channel-btn.active .channel-name {
-            color: #00d4ff;
-        }
-        .channel-btn:hover .channel-name {
-            color: #fff;
-        }
+        .channel-btn.active .channel-name { color: #00d4ff; }
+        .channel-btn:hover .channel-name { color: #fff; }
 
         .group-title {
             grid-column: 1 / -1;
@@ -370,236 +350,69 @@
 
         /* ===== RESPONSIVE ===== */
         @media (max-width: 900px) {
-            .channel-grid {
-                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-                gap: 10px;
-            }
-            .channel-btn {
-                min-height: 105px;
-                padding: 12px 6px 10px;
-            }
-            .channel-btn img {
-                width: 50px;
-                height: 50px;
-            }
-            .channel-btn .channel-name {
-                font-size: 11px;
-            }
+            .channel-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
+            .channel-btn { min-height: 105px; padding: 12px 6px 10px; }
+            .channel-btn img { width: 50px; height: 50px; }
+            .channel-btn .channel-name { font-size: 11px; }
         }
         @media (max-width: 768px) {
-            body {
-                padding: 10px;
-            }
-            .header {
-                padding: 8px 14px;
-                gap: 6px 12px;
-                min-height: 46px;
-            }
-            .header-title {
-                font-size: 18px;
-            }
-            .header-title span {
-                display: none;
-            }
-            .header-right {
-                gap: 5px 10px;
-            }
-            .logout-btn {
-                font-size: 12px;
-                padding: 4px 12px;
-            }
-            .file-info {
-                font-size: 12px;
-                padding: 3px 12px;
-            }
-            .file-info .fname {
-                max-width: 80px;
-            }
-            .search-bar input {
-                font-size: 13px;
-                padding: 9px 14px 9px 40px;
-                background-size: 16px;
-                background-position: 13px center;
-            }
-            #status {
-                font-size: 13px;
-                min-height: 34px;
-                padding: 6px 12px;
-            }
-            .toggle-btn {
-                font-size: 12px;
-                padding: 5px 14px;
-            }
-            .channel-selector {
-                padding: 10px 10px 14px;
-                max-height: 400px;
-            }
-            .channel-grid {
-                grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-                gap: 8px;
-            }
-            .channel-btn {
-                min-height: 95px;
-                padding: 10px 4px 8px;
-                border-radius: 10px;
-            }
-            .channel-btn img {
-                width: 44px;
-                height: 44px;
-                border-radius: 6px;
-            }
-            .channel-btn .channel-name {
-                font-size: 10px;
-                -webkit-line-clamp: 2;
-            }
-            .group-title {
-                font-size: 12px;
-                padding: 4px 8px;
-                margin: 4px 0 2px;
-            }
-            .group-title::before {
-                font-size: 14px;
-            }
-            .channel-header .count {
-                font-size: 12px;
-            }
+            body { padding: 10px; }
+            .header { padding: 8px 14px; gap: 6px 12px; min-height: 46px; }
+            .header-title { font-size: 18px; }
+            .header-title span { display: none; }
+            .header-right { gap: 5px 10px; }
+            .logout-btn { font-size: 12px; padding: 4px 12px; }
+            .file-info { font-size: 12px; padding: 3px 12px; }
+            .file-info .fname { max-width: 80px; }
+            .search-bar input { font-size: 13px; padding: 9px 14px 9px 40px; background-size:16px; background-position:13px center; }
+            #status { font-size: 13px; min-height: 34px; padding: 6px 12px; }
+            .toggle-btn { font-size: 12px; padding: 5px 14px; }
+            .channel-selector { padding: 10px 10px 14px; max-height: 400px; }
+            .channel-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; }
+            .channel-btn { min-height: 95px; padding: 10px 4px 8px; border-radius: 10px; }
+            .channel-btn img { width: 44px; height: 44px; border-radius: 6px; }
+            .channel-btn .channel-name { font-size: 10px; -webkit-line-clamp: 2; }
+            .group-title { font-size: 12px; padding: 4px 8px; margin: 4px 0 2px; }
+            .group-title::before { font-size: 14px; }
+            .channel-header .count { font-size: 12px; }
         }
         @media (max-width: 480px) {
-            body {
-                padding: 8px;
-            }
-            .header {
-                padding: 6px 10px;
-                gap: 4px 8px;
-                min-height: 40px;
-                border-radius: 10px;
-            }
-            .header-title {
-                font-size: 15px;
-            }
-            .logout-btn {
-                font-size: 11px;
-                padding: 3px 10px;
-            }
-            .file-info {
-                font-size: 10px;
-                padding: 2px 10px;
-                gap: 3px;
-            }
-            .file-info .fname {
-                max-width: 60px;
-            }
-            .search-bar input {
-                font-size: 12px;
-                padding: 8px 12px 8px 36px;
-                background-size: 15px;
-                background-position: 11px center;
-            }
-            #status {
-                font-size: 12px;
-                min-height: 30px;
-                padding: 5px 10px;
-                margin-bottom: 8px;
-            }
-            .toggle-btn {
-                font-size: 11px;
-                padding: 4px 12px;
-            }
-            .channel-selector {
-                padding: 8px 6px 12px;
-                border-radius: 10px;
-                max-height: 300px;
-            }
-            .channel-grid {
-                grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-                gap: 6px;
-            }
-            .channel-btn {
-                min-height: 80px;
-                padding: 8px 3px 6px;
-                border-radius: 8px;
-                border-width: 1.5px;
-            }
-            .channel-btn img {
-                width: 36px;
-                height: 36px;
-                border-radius: 5px;
-            }
-            .channel-btn .channel-name {
-                font-size: 9px;
-                -webkit-line-clamp: 2;
-            }
-            .group-title {
-                font-size: 11px;
-                padding: 3px 6px;
-                margin: 3px 0 2px;
-            }
-            .group-title::before {
-                font-size: 12px;
-            }
-            .channel-header .count {
-                font-size: 11px;
-            }
-            #videoContainer {
-                border-radius: 10px;
-                margin-bottom: 8px;
-            }
+            body { padding: 8px; }
+            .header { padding: 6px 10px; gap: 4px 8px; min-height: 40px; border-radius: 10px; }
+            .header-title { font-size: 15px; }
+            .logout-btn { font-size: 11px; padding: 3px 10px; }
+            .file-info { font-size: 10px; padding: 2px 10px; gap: 3px; }
+            .file-info .fname { max-width: 60px; }
+            .search-bar input { font-size: 12px; padding: 8px 12px 8px 36px; background-size:15px; background-position:11px center; }
+            #status { font-size: 12px; min-height: 30px; padding: 5px 10px; margin-bottom:8px; }
+            .toggle-btn { font-size: 11px; padding: 4px 12px; }
+            .channel-selector { padding: 8px 6px 12px; border-radius:10px; max-height: 300px; }
+            .channel-grid { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 6px; }
+            .channel-btn { min-height: 80px; padding: 8px 3px 6px; border-radius:8px; border-width:1.5px; }
+            .channel-btn img { width: 36px; height: 36px; border-radius:5px; }
+            .channel-btn .channel-name { font-size: 9px; -webkit-line-clamp: 2; }
+            .group-title { font-size: 11px; padding: 3px 6px; margin: 3px 0 2px; }
+            .group-title::before { font-size: 12px; }
+            .channel-header .count { font-size: 11px; }
+            #videoContainer { border-radius: 10px; margin-bottom:8px; }
         }
         @media (max-width: 380px) {
-            .header-title {
-                font-size: 13px;
-            }
-            .logout-btn {
-                font-size: 10px;
-                padding: 2px 8px;
-            }
-            .file-info {
-                font-size: 9px;
-                padding: 2px 8px;
-            }
-            .file-info .fname {
-                max-width: 50px;
-            }
-            .channel-grid {
-                grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
-                gap: 5px;
-            }
-            .channel-btn {
-                min-height: 70px;
-                padding: 6px 2px 5px;
-            }
-            .channel-btn img {
-                width: 30px;
-                height: 30px;
-            }
-            .channel-btn .channel-name {
-                font-size: 8px;
-                -webkit-line-clamp: 2;
-            }
-            .search-bar input {
-                font-size: 11px;
-                padding: 7px 10px 7px 32px;
-                background-size: 13px;
-                background-position: 10px center;
-            }
+            .header-title { font-size: 13px; }
+            .logout-btn { font-size: 10px; padding: 2px 8px; }
+            .file-info { font-size: 9px; padding: 2px 8px; }
+            .file-info .fname { max-width: 50px; }
+            .channel-grid { grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap:5px; }
+            .channel-btn { min-height: 70px; padding: 6px 2px 5px; }
+            .channel-btn img { width: 30px; height: 30px; }
+            .channel-btn .channel-name { font-size: 8px; -webkit-line-clamp: 2; }
+            .search-bar input { font-size: 11px; padding: 7px 10px 7px 32px; background-size:13px; background-position:10px center; }
         }
 
         /* ===== SCROLLBAR ===== */
-        .channel-selector::-webkit-scrollbar {
-            width: 4px;
-        }
-        .channel-selector::-webkit-scrollbar-track {
-            background: #1a1a1a;
-            border-radius: 4px;
-        }
-        .channel-selector::-webkit-scrollbar-thumb {
-            background: #00d4ff;
-            border-radius: 4px;
-        }
-        .channel-selector {
-            scrollbar-width: thin;
-            scrollbar-color: #00d4ff #1a1a1a;
-        }
+        .channel-selector::-webkit-scrollbar { width: 4px; }
+        .channel-selector::-webkit-scrollbar-track { background: #1a1a1a; border-radius: 4px; }
+        .channel-selector::-webkit-scrollbar-thumb { background: #00d4ff; border-radius: 4px; }
+        .channel-selector { scrollbar-width: thin; scrollbar-color: #00d4ff #1a1a1a; }
     </style>
 </head>
 <body>
@@ -613,7 +426,7 @@
             <div class="header-right">
                 <div class="file-info" id="fileInfo">
                     <span>📄</span>
-                    <span class="fname" id="fileName">Memuat channel...</span>
+                    <span class="fname" id="fileName">Channel siap</span>
                 </div>
                 <button class="logout-btn" id="logoutBtn">🚪 Logout</button>
             </div>
@@ -684,36 +497,216 @@
         let _isChannelListVisible = false;
 
         // ============================================================
-        //  URL SUMBER CHANNEL GRATIS (JSON)
+        //  HARDCODE SEMUA CHANNEL (GRATIS + PREMIUM)
         // ============================================================
-        const CHANNEL_GRATIS_URL = 'https://jego-movego-hld.netlify.app/trikarya-tv-gorontalo/channels-gratis.json';
-
-        // ============================================================
-        //  HARDCODE CHANNEL BERBAYAR (PREMIUM)
-        // ============================================================
-        const premiumChannels = [{
-            name: 'FUBO SPORTS 1',
-            logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSmseZQZacVzNm9vj2g8BEXdWyJnvW9RsjMtNjAageS_tIP4tOdY2_zXGU&s=10',
-            group: 'PREMIER LEAGUE',
-            url: 'https://otte.live.fly.ww.aiv-cdn.net/pdx-nitro/live/clients/dash/enc/3b7qwiqzk3/out/v1/9f14895badca43e6a716db021dcd0c31/cenc.mpd',
-            userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36 MPF.Players/537.36',
-            referer: 'https://www.fubo.tv/',
-            keyId: 'dc69b6159a0f9f0a4e03b3ff91cbacd5',
-            key: 'd0dcbcd7723bc40df0bf34c9c092d51f',
-            licenseUrl: '',
-            isPremium: true
-        }, {
-            name: 'FUBO SPORTS 2',
-            logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQifk-dtjzvc3_vwvEFaf8zhuoY5hUkeTj5Ebxx_OXXZg&s=10',
-            group: 'PREMIER LEAGUE',
-            url: 'https://otte.live.fly.ww.aiv-cdn.net/pdx-nitro/live/clients/dash/enc/uiffe4jhf0/out/v1/3534efafca8c4815adbb4d2e9a1fe003/cenc.mpd',
-            userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36 MPF.Players/537.36',
-            referer: 'https://www.fubo.tv/',
-            keyId: '3dcfbec0e7146928baa55210bf2cb62f',
-            key: 'bc85f74f815d9be5ae1dd6defaa05135',
-            licenseUrl: '',
-            isPremium: true
-        }];
+        const allChannels = [
+            // ===== CHANNEL GRATIS =====
+            {
+                name: 'BERITA SATU',
+                logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQa41GMti1kTMXdTv2ywDvMb2QOhsos2dPgH1sFlxZehw&s=10',
+                group: 'Berita',
+                url: 'https://op-flashcon-digdayahd-1.dens.tv/h/h314/S1/mnf.m3u8',
+                userAgent: '',
+                referer: '',
+                keyId: '',
+                key: '',
+                licenseUrl: '',
+                isPremium: false
+            },
+            {
+                name: 'Metro TV',
+                logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTetTjZh88aU1Ids3LSc6NM2jcPsmKH1L9gm_gf2YOdWQ&s',
+                group: 'Berita',
+                url: 'https://op-flashcon-digdayahd-1.dens.tv/h/h12/02.m3u8',
+                userAgent: '',
+                referer: '',
+                keyId: '',
+                key: '',
+                licenseUrl: '',
+                isPremium: false
+            },
+            {
+                name: 'RTV',
+                logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQPM3XIXLuAvO5vYRF5LqwYarbw_0-RjKD4fniYZumeJQ&s=10',
+                group: 'Berita',
+                url: 'https://op-flashcon-digdayahd-1.dens.tv/h/h10/02.m3u8',
+                userAgent: '',
+                referer: '',
+                keyId: '',
+                key: '',
+                licenseUrl: '',
+                isPremium: false
+            },
+            {
+                name: 'TVRI',
+                logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTwfJd8KvAJJgGYU3iSGbbSETMXmvyBPb0f29zYW_Rftg&s=10&s=10',
+                group: 'Berita',
+                url: 'https://op-flashcon-digdayahd-1.dens.tv/h/h17/02.m3u8',
+                userAgent: '',
+                referer: '',
+                keyId: '',
+                key: '',
+                licenseUrl: '',
+                isPremium: false
+            },
+            {
+                name: '3ABN Praise Him Music Network',
+                logo: 'https://i.imgur.com/iBcqT8L.png',
+                group: 'Music',
+                url: 'https://3abn.bozztv.com/3abn1/PraiseHim/smil:PraiseHim.smil/playlist.m3u8',
+                userAgent: '',
+                referer: '',
+                keyId: '',
+                key: '',
+                licenseUrl: '',
+                isPremium: false
+            },
+            {
+                name: '4 Fun TV',
+                logo: 'https://i.imgur.com/rI1wo2l.png',
+                group: 'Music',
+                url: 'https://stream.4fun.tv:8888/hls/4f_high/index.m3u8',
+                userAgent: '',
+                referer: '',
+                keyId: '',
+                key: '',
+                licenseUrl: '',
+                isPremium: false
+            },
+            {
+                name: '4 Kurd',
+                logo: 'https://www.aparatchi.com/images/chanells-logo/4kurd.svg',
+                group: 'Music',
+                url: 'https://4kuhls.persiana.live/hls/stream.m3u8',
+                userAgent: '',
+                referer: '',
+                keyId: '',
+                key: '',
+                licenseUrl: '',
+                isPremium: false
+            },
+            {
+                name: '7 RadioVisione',
+                logo: 'https://radio7note.com/img/favicon/android-icon-192x192.png',
+                group: 'Music',
+                url: 'https://stream10.xdevel.com/video1s976543-1932/stream/playlist.m3u8',
+                userAgent: '',
+                referer: '',
+                keyId: '',
+                key: '',
+                licenseUrl: '',
+                isPremium: false
+            },
+            {
+                name: '7S Music',
+                logo: 'https://i.imgur.com/zDiIhdN.png',
+                group: 'Music',
+                url: 'http://103.175.73.12:8080/live/771/master.m3u8',
+                userAgent: '',
+                referer: '',
+                keyId: '',
+                key: '',
+                licenseUrl: '',
+                isPremium: false
+            },
+            {
+                name: '8XM',
+                logo: 'https://i.imgur.com/KLrfKRn.png',
+                group: 'Music',
+                url: 'http://115.42.65.142:9981/stream/channelid/582886861',
+                userAgent: '',
+                referer: '',
+                keyId: '',
+                key: '',
+                licenseUrl: '',
+                isPremium: false
+            },
+            {
+                name: '9X Jalwa',
+                logo: 'https://xstreamcp-assets-msp.streamready.in/assets/LIVETV/LIVECHANNEL/LIVETV_LIVETVCHANNEL_9X_JALWA/images/LOGO_HD/image.png',
+                group: 'Music',
+                url: 'https://b.jsrdn.com/strm/channels/9xjalwa/master.m3u8',
+                userAgent: '',
+                referer: '',
+                keyId: '',
+                key: '',
+                licenseUrl: '',
+                isPremium: false
+            },
+            {
+                name: 'Alegria TV',
+                logo: 'https://i.imgur.com/MIBZ2pZ.png',
+                group: 'Movie',
+                url: 'https://lbgo.bozztv.com/ssh101/ssh101/confirmatv/playlist.m3u8',
+                userAgent: '',
+                referer: '',
+                keyId: '',
+                key: '',
+                licenseUrl: '',
+                isPremium: false
+            },
+            {
+                name: 'CEACOM TV',
+                logo: 'https://i.imgur.com/hutdRfk.png',
+                group: 'Movie',
+                url: 'https://eu1.servers10.com:8081/ceacom/index.m3u8',
+                userAgent: '',
+                referer: '',
+                keyId: '',
+                key: '',
+                licenseUrl: '',
+                isPremium: false
+            },
+            {
+                name: 'MCE',
+                logo: '',
+                group: 'Movie',
+                url: 'https://op-flashcon-digdayahd-1.dens.tv/h/h18/02.m3u8',
+                userAgent: '',
+                referer: '',
+                keyId: '',
+                key: '',
+                licenseUrl: '',
+                isPremium: false
+            },
+            {
+                name: 'WeDo Movies Asia',
+                logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTyJrNe2zfSQWCj-8xjS3jz-c2qqVcA2dlBS50IcwS4vQ&s=10',
+                group: 'Movie',
+                url: 'https://amg00735-amg00735c46-denstv-apac-7617.playouts.now.amagi.tv/ts-eu-w1-n2/playlist/amg00735-videosolutionsagfast-wedomoviesasia-denstvapac/cb573e1e796c648b92d43c61cef64882847b3dcb0e6c886470af4a9765d97800dbe8ae84ae5b910c4c9e1fc061017d360439cd1dd56c49c1da63b820743c4b21fdcde00080dd0d0cb1df11292ca36265299a7369cc350f7bd2ec5a2f803ebe764c53cb017c593f88f258a9764cc59e0a957f39e8fc8b307b24455a9c5a43e6a64cb7fee15f42df39a0b90140c07d40fa83439fd401e987dc5e8347d373a3459f9bf1dfd546848cb9599106f224365623709cf215f9a366b7ca8a56379d7c2d7b44298cc986ed712c944e555dfbe6b9d10f9328db9a1a91723ead019b56b96af601c008b7f171a2b8b5db4e444bcaae375a26b0f59f88ee3b37b163c6f885b711758c84721223f264cd1f7156fa9ec71990b172fcd31889b97d2062aefb269f94b6f188dae871982ccefaaef657214a6d1070e137c7a169d53de022dfa47b285a4c7bb98345c1f4b23459594680814acd031e8481f9e9ba0d34da701a28810abe600663dc246d41bf4193f8356ffb4060e10e34f8656fee289fad3ef9d5bc8f6300a0cccb7fa52d85d80bc2e63dba79334b078ce73e53373d17bfd5671d2046d051ebc1cfde621b0cd1ad8194b25037092d125c18b4eeee669e9dd43b1817cc21500a002b14990ac26cd114760c27df1bc0b81b71840b1c7794cd5a5a5f6284cdc3e8edb1f143b071c1cac06341513a64ad23774104b68d8a49ed05110e1039870b7451cf6f3024d192cdf58bbd348ef608ad3c72065cc6ff19520c5c67117af1fe53d05af28122ba94c44fc9e1992f1ff356c406008eefcf65fc9feaad263497ba4726749ed71a9f0747a11ed03f91c275aada3f6e2735445cdb9e51c26db7b5e9af875e28d72d2a5aa8119292e7bcd86345ee90385c596b74240f99f2b16ec2bef477097a96d14f199ee2993283435f322d53dfc071367d2b736efe1f551ac28aca80acd81711800ea637a10172f3d8550bc61e404afa6ca303cd17813af9fcc76da8a889cee6d7c1276c1f6d0a56a0355a5ad73cf9800be0e24832bfc9c3d2d360937af526fbaa826eb56cee9be74e999993a8af2c57460c03b581d6ea04d7b93d40b950d259624dcfddaaa733bb92972f4cc771acc50b67a53b3e7acca8f00b816b9bee2b25ea82260881247c91aeaf684c8817a626336ff882d43d6c819059e138f1ffc00642880709f7070f31de1bd4b3ff383fafec69433b8b2c08837088cda32c7a7abc9d6b206a404c2200df44533bf77c0d811fa1eff6be782aed50df57dfde922e2af1c1c419357f56aaaa12b529e2fde11a9db4/158/1280x720_3329040/index.m3u8',
+                userAgent: '',
+                referer: '',
+                keyId: '',
+                key: '',
+                licenseUrl: '',
+                isPremium: false
+            },
+            // ===== CHANNEL PREMIUM (hanya muncul jika isPremium = true) =====
+            {
+                name: 'FUBO SPORTS 1',
+                logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSmseZQZacVzNm9vj2g8BEXdWyJnvW9RsjMtNjAageS_tIP4tOdY2_zXGU&s=10',
+                group: 'PREMIER LEAGUE',
+                url: 'https://otte.live.fly.ww.aiv-cdn.net/pdx-nitro/live/clients/dash/enc/3b7qwiqzk3/out/v1/9f14895badca43e6a716db021dcd0c31/cenc.mpd',
+                userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36 MPF.Players/537.36',
+                referer: 'https://www.fubo.tv/',
+                keyId: 'dc69b6159a0f9f0a4e03b3ff91cbacd5',
+                key: 'd0dcbcd7723bc40df0bf34c9c092d51f',
+                licenseUrl: '',
+                isPremium: true
+            },
+            {
+                name: 'FUBO SPORTS 2',
+                logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQifk-dtjzvc3_vwvEFaf8zhuoY5hUkeTj5Ebxx_OXXZg&s=10',
+                group: 'PREMIER LEAGUE',
+                url: 'https://otte.live.fly.ww.aiv-cdn.net/pdx-nitro/live/clients/dash/enc/uiffe4jhf0/out/v1/3534efafca8c4815adbb4d2e9a1fe003/cenc.mpd',
+                userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36 MPF.Players/537.36',
+                referer: 'https://www.fubo.tv/',
+                keyId: '3dcfbec0e7146928baa55210bf2cb62f',
+                key: 'bc85f74f815d9be5ae1dd6defaa05135',
+                licenseUrl: '',
+                isPremium: true
+            }
+        ];
 
         // ============================================================
         //  STATUS UPDATE
@@ -731,8 +724,7 @@
             const lower = url.toLowerCase();
             if (lower.includes('.mpd') || lower.includes('manifest.mpd') || lower.includes('cenc.mpd')) return 'dash';
             if (lower.includes('.m3u8') || lower.includes('playlist.m3u8')) return 'hls';
-            if (lower.includes('.ts') || lower.includes('extension=ts') || (lower.includes('stream=') && lower.includes(
-                    'ts'))) return 'mpegts';
+            if (lower.includes('.ts') || lower.includes('extension=ts') || (lower.includes('stream=') && lower.includes('ts'))) return 'mpegts';
             if (lower.includes('.mp4') || lower.includes('videoplayback')) return 'vod';
             return 'unknown';
         }
@@ -827,12 +819,9 @@
 
                     shakaPlayer = new shaka.Player();
                     shakaPlayer.configure({
-                        manifest: { retryParameters: { maxAttempts: 5, timeout: 20000, backoffFactor: 2,
-                                baseDelay: 1000 } },
-                        drm: { retryParameters: { maxAttempts: 5, timeout: 20000, backoffFactor: 2,
-                                baseDelay: 1000 } },
-                        streaming: { retryParameters: { maxAttempts: 5, timeout: 20000, backoffFactor: 2,
-                                baseDelay: 1000 } }
+                        manifest: { retryParameters: { maxAttempts: 5, timeout: 20000, backoffFactor: 2, baseDelay: 1000 } },
+                        drm: { retryParameters: { maxAttempts: 5, timeout: 20000, backoffFactor: 2, baseDelay: 1000 } },
+                        streaming: { retryParameters: { maxAttempts: 5, timeout: 20000, backoffFactor: 2, baseDelay: 1000 } }
                     });
                     await shakaPlayer.attach(video);
 
@@ -896,8 +885,12 @@
                     }
 
                     try { await video.play(); } catch (playErr) {
-                        if (playErr.name === 'AbortError') { await new Promise(r => setTimeout(r, 500));
-                            await video.play(); } else throw playErr;
+                        if (playErr.name === 'AbortError') {
+                            await new Promise(r => setTimeout(r, 500));
+                            await video.play();
+                        } else {
+                            throw playErr;
+                        }
                     }
                     updateStatus(`▶️ Memutar ${channel.name}`, 'status-playing');
                     _isPlaying = false;
@@ -924,8 +917,7 @@
                         hlsPlayer.on(Hls.Events.ERROR, (e, data) => {
                             console.error('[HLS] Error:', data);
                             if (data.fatal) {
-                                updateStatus('⚠️ Streaming sudah tidak tersedia atau channel sedang offline',
-                                    'status-error');
+                                updateStatus('⚠️ Streaming sudah tidak tersedia atau channel sedang offline', 'status-error');
                                 _isPlaying = false;
                             }
                         });
@@ -1086,73 +1078,6 @@
         }
 
         // ============================================================
-        //  LOAD CHANNELS (GRATIS dari JSON + PREMIUM hardcode)
-        // ============================================================
-        async function loadChannels() {
-            updateStatus('⏳ Memuat daftar channel...', 'status-loading');
-            fileName.textContent = 'Memuat...';
-
-            try {
-                // 1. Ambil channel gratis dari JSON
-                console.log('[LOAD] Mengambil channel gratis dari:', CHANNEL_GRATIS_URL);
-                const respGratis = await fetch(CHANNEL_GRATIS_URL);
-                if (!respGratis.ok) {
-                    throw new Error(`Gagal load channel gratis (HTTP ${respGratis.status})`);
-                }
-                const gratisChannels = await respGratis.json();
-                console.log(`[LOAD] ${gratisChannels.length} channel gratis ditemukan.`);
-
-                // 2. Channel berbayar (hardcode) hanya jika user premium
-                let berbayarChannels = [];
-                if (isPremium) {
-                    console.log('[LOAD] Pengguna Premium, menambahkan channel berbayar dari hardcode.');
-                    berbayarChannels = premiumChannels.map(ch => ({ ...ch, isPremium: true }));
-                    console.log(`[LOAD] ${berbayarChannels.length} channel berbayar ditambahkan.`);
-                } else {
-                    console.log('[LOAD] Pengguna tidak premium, channel berbayar tidak ditampilkan.');
-                }
-
-                // 3. Gabungkan semua channel
-                channels = [...gratisChannels, ...berbayarChannels];
-
-                // 4. Debug
-                console.log('[DEBUG] Total channels:', channels.length);
-                if (channels.length > 0) {
-                    console.log('[DEBUG] Channel pertama:', channels[0]);
-                    console.log('[DEBUG] Channel terakhir:', channels[channels.length - 1]);
-                    const premiumCount = channels.filter(ch => ch.isPremium).length;
-                    console.log(`[DEBUG] Channel premium: ${premiumCount} dari ${channels.length}`);
-                }
-
-                // 5. Update UI
-                fileName.textContent = `✅ ${channels.length} channel`;
-
-                if (channels.length === 0) {
-                    updateStatus('⚠️ Tidak ada channel ditemukan', 'status-error');
-                    return;
-                }
-
-                // Tampilkan channel list
-                if (!_isChannelListVisible) {
-                    channelSelector.classList.add('show');
-                    toggleBtn.textContent = '📋 Sembunyikan Channel';
-                    _isChannelListVisible = true;
-                }
-
-                currentChannelIndex = 0;
-                buildChannelButtons();
-                updateStatus(`📡 ${channels.length} channel ditemukan. Memuat channel pertama...`, 'status-info');
-                destroyAllPlayers();
-                await playChannel(0);
-
-            } catch (error) {
-                console.error('[LOAD] Error:', error);
-                updateStatus(`⚠️ Gagal memuat channel: ${error.message}`, 'status-error');
-                fileName.textContent = '❌ Gagal load';
-            }
-        }
-
-        // ============================================================
         //  LOGOUT
         // ============================================================
         document.getElementById('logoutBtn').addEventListener('click', function() {
@@ -1186,11 +1111,34 @@
         // ============================================================
         //  INIT
         // ============================================================
-        console.log('[INIT] Aplikasi IPTV dimulai.');
+        console.log('[INIT] Aplikasi IPTV dimulai (hardcode semua channel).');
         console.log(`[INIT] Status Premium: ${isPremium ? '✅ AKTIF' : '❌ TIDAK AKTIF'}`);
 
-        // Mulai load channel
-        loadChannels();
+        // Filter channel berdasarkan status premium
+        if (isPremium) {
+            channels = allChannels; // tampilkan semua
+        } else {
+            channels = allChannels.filter(ch => !ch.isPremium); // hanya gratis
+        }
+
+        fileName.textContent = `✅ ${channels.length} channel`;
+
+        // Tampilkan channel list otomatis
+        if (!_isChannelListVisible) {
+            channelSelector.classList.add('show');
+            toggleBtn.textContent = '📋 Sembunyikan Channel';
+            _isChannelListVisible = true;
+        }
+
+        if (channels.length === 0) {
+            updateStatus('⚠️ Tidak ada channel tersedia', 'status-error');
+        } else {
+            currentChannelIndex = 0;
+            buildChannelButtons();
+            updateStatus(`📡 ${channels.length} channel ditemukan. Memuat channel pertama...`, 'status-info');
+            destroyAllPlayers();
+            playChannel(0);
+        }
     </script>
 </body>
 </html>
