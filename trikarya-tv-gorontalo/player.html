@@ -684,10 +684,36 @@
         let _isChannelListVisible = false;
 
         // ============================================================
-        //  URL SUMBER CHANNEL (JSON)
+        //  URL SUMBER CHANNEL GRATIS (JSON)
         // ============================================================
         const CHANNEL_GRATIS_URL = 'https://jego-movego-hld.netlify.app/trikarya-tv-gorontalo/channels-gratis.json';
-        const CHANNEL_BERBAYAR_URL = 'https://jego-movego-hld.netlify.app/trikarya-tv-gorontalo/channels-berbayar.json';
+
+        // ============================================================
+        //  HARDCODE CHANNEL BERBAYAR (PREMIUM)
+        // ============================================================
+        const premiumChannels = [{
+            name: 'FUBO SPORTS 1',
+            logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSmseZQZacVzNm9vj2g8BEXdWyJnvW9RsjMtNjAageS_tIP4tOdY2_zXGU&s=10',
+            group: 'PREMIER LEAGUE',
+            url: 'https://otte.live.fly.ww.aiv-cdn.net/pdx-nitro/live/clients/dash/enc/3b7qwiqzk3/out/v1/9f14895badca43e6a716db021dcd0c31/cenc.mpd',
+            userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36 MPF.Players/537.36',
+            referer: 'https://www.fubo.tv/',
+            keyId: 'dc69b6159a0f9f0a4e03b3ff91cbacd5',
+            key: 'd0dcbcd7723bc40df0bf34c9c092d51f',
+            licenseUrl: '',
+            isPremium: true
+        }, {
+            name: 'FUBO SPORTS 2',
+            logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQifk-dtjzvc3_vwvEFaf8zhuoY5hUkeTj5Ebxx_OXXZg&s=10',
+            group: 'PREMIER LEAGUE',
+            url: 'https://otte.live.fly.ww.aiv-cdn.net/pdx-nitro/live/clients/dash/enc/uiffe4jhf0/out/v1/3534efafca8c4815adbb4d2e9a1fe003/cenc.mpd',
+            userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36 MPF.Players/537.36',
+            referer: 'https://www.fubo.tv/',
+            keyId: '3dcfbec0e7146928baa55210bf2cb62f',
+            key: 'bc85f74f815d9be5ae1dd6defaa05135',
+            licenseUrl: '',
+            isPremium: true
+        }];
 
         // ============================================================
         //  STATUS UPDATE
@@ -792,18 +818,12 @@
 
                 // ===== DASH =====
                 if (type === 'dash') {
-                    let manifestUrl = channel.url;
-                    let useProxy = false;
-                    try {
-                        console.log('[DASH] Mengecek akses manifest...');
-                        const headResp = await fetch(manifestUrl, { method: 'HEAD', headers, mode: 'cors' });
-                        if (!headResp.ok) { useProxy = true; }
-                    } catch (e) { useProxy = true; }
-
-                    if (useProxy) {
-                        manifestUrl = 'https://corsproxy.io/?' + encodeURIComponent(channel.url);
-                        console.log('[DASH] Menggunakan proxy CORS:', manifestUrl);
-                    }
+                    // Coba beberapa URL (langsung + proxy)
+                    const urlsToTry = [
+                        channel.url,
+                        'https://api.allorigins.win/raw?url=' + encodeURIComponent(channel.url),
+                        'https://corsproxy.io/?' + encodeURIComponent(channel.url)
+                    ];
 
                     shakaPlayer = new shaka.Player();
                     shakaPlayer.configure({
@@ -844,24 +864,25 @@
 
                     let loaded = false;
                     let lastError = null;
-                    for (let attempt = 0; attempt < 3 && !loaded; attempt++) {
+                    for (let attempt = 0; attempt < urlsToTry.length && !loaded; attempt++) {
                         try {
-                            await shakaPlayer.load(manifestUrl);
+                            console.log(`[DASH] Mencoba URL ${attempt+1}: ${urlsToTry[attempt]}`);
+                            await shakaPlayer.load(urlsToTry[attempt]);
                             loaded = true;
+                            console.log('[DASH] ✅ Manifest berhasil diload.');
                         } catch (loadErr) {
                             lastError = loadErr;
-                            console.warn(`[DASH] Gagal load manifest percobaan ${attempt+1}:`, loadErr.message);
-                            if (attempt < 2) await new Promise(r => setTimeout(r, 2000 * (attempt + 1)));
+                            console.warn(`[DASH] Gagal (${attempt+1}):`, loadErr.message);
+                            await new Promise(r => setTimeout(r, 1500));
                         }
                     }
-                    if (!loaded) throw new Error(
-                        `Gagal load manifest setelah 3 percobaan: ${lastError?.message || 'Unknown error'}`);
+
+                    if (!loaded) {
+                        throw new Error(`Gagal load manifest: ${lastError?.message || 'Unknown error'}`);
+                    }
 
                     if (shakaError) {
-                        if (shakaError.code === 1002 && useProxy) {
-                            console.log('[DASH] Error 1002 dengan proxy, coba load langsung...');
-                            try { await shakaPlayer.load(channel.url); } catch (e2) { throw shakaError; }
-                        } else throw new Error(shakaError.message);
+                        throw new Error(shakaError.message);
                     }
 
                     if (!manifestParsed) {
@@ -1065,14 +1086,14 @@
         }
 
         // ============================================================
-        //  LOAD CHANNELS FROM JSON
+        //  LOAD CHANNELS (GRATIS dari JSON + PREMIUM hardcode)
         // ============================================================
         async function loadChannels() {
             updateStatus('⏳ Memuat daftar channel...', 'status-loading');
             fileName.textContent = 'Memuat...';
 
             try {
-                // 1. Ambil channel gratis
+                // 1. Ambil channel gratis dari JSON
                 console.log('[LOAD] Mengambil channel gratis dari:', CHANNEL_GRATIS_URL);
                 const respGratis = await fetch(CHANNEL_GRATIS_URL);
                 if (!respGratis.ok) {
@@ -1081,27 +1102,12 @@
                 const gratisChannels = await respGratis.json();
                 console.log(`[LOAD] ${gratisChannels.length} channel gratis ditemukan.`);
 
-                // 2. Ambil channel berbayar hanya jika premium
+                // 2. Channel berbayar (hardcode) hanya jika user premium
                 let berbayarChannels = [];
                 if (isPremium) {
-                    console.log('[LOAD] Pengguna Premium, mengambil channel berbayar dari:', CHANNEL_BERBAYAR_URL);
-                    try {
-                        const respBerbayar = await fetch(CHANNEL_BERBAYAR_URL);
-                        if (respBerbayar.ok) {
-                            const rawData = await respBerbayar.json();
-                            // Pastikan data berupa array
-                            if (Array.isArray(rawData)) {
-                                berbayarChannels = rawData.map(ch => ({ ...ch, isPremium: true }));
-                                console.log(`[LOAD] ${berbayarChannels.length} channel berbayar ditemukan.`);
-                            } else {
-                                console.warn('[LOAD] Data berbayar bukan array:', rawData);
-                            }
-                        } else {
-                            console.warn('[LOAD] Gagal load channel berbayar, status:', respBerbayar.status);
-                        }
-                    } catch (e) {
-                        console.warn('[LOAD] Error load channel berbayar:', e);
-                    }
+                    console.log('[LOAD] Pengguna Premium, menambahkan channel berbayar dari hardcode.');
+                    berbayarChannels = premiumChannels.map(ch => ({ ...ch, isPremium: true }));
+                    console.log(`[LOAD] ${berbayarChannels.length} channel berbayar ditambahkan.`);
                 } else {
                     console.log('[LOAD] Pengguna tidak premium, channel berbayar tidak ditampilkan.');
                 }
@@ -1109,7 +1115,7 @@
                 // 3. Gabungkan semua channel
                 channels = [...gratisChannels, ...berbayarChannels];
 
-                // 4. Debug: tampilkan detail channel
+                // 4. Debug
                 console.log('[DEBUG] Total channels:', channels.length);
                 if (channels.length > 0) {
                     console.log('[DEBUG] Channel pertama:', channels[0]);
@@ -1143,9 +1149,6 @@
                 console.error('[LOAD] Error:', error);
                 updateStatus(`⚠️ Gagal memuat channel: ${error.message}`, 'status-error');
                 fileName.textContent = '❌ Gagal load';
-
-                // Fallback: coba hardcode jika fetch gagal (opsional)
-                // Anda bisa tambahkan hardcode di sini jika diperlukan
             }
         }
 
