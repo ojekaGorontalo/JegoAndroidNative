@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Player Olahraga + Auto Load M3U</title>
+    <title>Player Olahraga + Auto Load M3U (Stabil)</title>
 
     <!-- Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.12/shaka-player.compiled.js">
@@ -298,14 +298,14 @@
         let hlsPlayer = null;
         let mpegtsPlayer = null;
         let isPlaying = false;
+        let playTimeout = null;
 
         // ============================================================
-        //  KONFIGURASI URL M3U (GANTI SESUAI KEBUTUHAN)
+        //  KONFIGURASI URL M3U
         // ============================================================
         const M3U_URL =
             'https://www.dropbox.com/scl/fi/bmy5q6s7jseaapmakxao2/popular-sports-iptv.m3u?rlkey=2ur64tzoclr6ehltjvov3otba&st=vaqtzoxc&dl=1';
 
-        // Daftar proxy fallback untuk mengatasi CORS
         const PROXY_LIST = [
             'https://api.allorigins.win/raw?url=',
             'https://corsproxy.io/?',
@@ -313,18 +313,16 @@
         ];
 
         // ============================================================
-        //  FUNGSI AMBIL M3U DARI URL (dengan fallback proxy)
+        //  FUNGSI AMBIL M3U DARI URL
         // ============================================================
         async function fetchM3UFromUrl(url) {
             addLog(`📡 Mencoba mengambil: ${url}`, 'info');
 
-            // Coba langsung dulu
+            // Coba langsung
             try {
                 const response = await fetch(url, {
                     method: 'GET',
-                    headers: {
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-                    }
+                    headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
                 });
                 if (response.ok) {
                     const text = await response.text();
@@ -337,7 +335,7 @@
                 addLog(`⚠️ Gagal langsung: ${e.message}`, 'warn');
             }
 
-            // Coba dengan proxy
+            // Coba proxy
             for (const proxy of PROXY_LIST) {
                 try {
                     const proxyUrl = proxy + encodeURIComponent(url);
@@ -381,15 +379,7 @@
                     const groupMatch = line.match(/group-title="([^"]*)"/);
                     const group = groupMatch ? groupMatch[1] : 'Sports';
 
-                    current = {
-                        name,
-                        logo,
-                        group,
-                        url: '',
-                        keyId: '',
-                        key: '',
-                        licenseUrl: ''
-                    };
+                    current = { name, logo, group, url: '', keyId: '', key: '', licenseUrl: '' };
                 } else if (line.startsWith('#KODIPROP:')) {
                     const prop = line.replace('#KODIPROP:', '').trim();
                     if (prop.includes('license_key=')) {
@@ -445,7 +435,7 @@
         }
 
         // ============================================================
-        //  PLAY CHANNEL (dengan header & proxy fallback)
+        //  PLAY CHANNEL (dengan timeout 30 detik)
         // ============================================================
         async function playChannel(index) {
             if (isPlaying) {
@@ -464,12 +454,25 @@
             addLog(`▶️ [PLAY] Memutar: ${ch.name} (${ch.url})`, 'info');
             setStatus(`⏳ Memuat ${ch.name} ...`, 'loading');
 
-            // Highlight
             document.querySelectorAll('.channel-card').forEach((el, i) => {
                 el.classList.toggle('active', i === index);
             });
 
             destroyAll();
+
+            // Timeout 20 detik untuk reset isPlaying
+            if (playTimeout) clearTimeout(playTimeout);
+            playTimeout = setTimeout(() => {
+                if (isPlaying) {
+                    addLog(`⏰ Timeout 20 detik, skip channel ${ch.name}`, 'warn');
+                    isPlaying = false;
+                    setStatus(`⏱️ Timeout, coba channel lain`, 'error');
+                    const nextIdx = (currentIndex + 1) % filteredChannels.length;
+                    if (nextIdx !== currentIndex) {
+                        setTimeout(() => playChannel(nextIdx), 500);
+                    }
+                }
+            }, 30000);
 
             try {
                 const type = detectType(ch.url);
@@ -490,8 +493,8 @@
                     }
                     shakaPlayer.configure({
                         drm,
-                        manifest: { retryParameters: { maxAttempts: 3, timeout: 20000 } },
-                        streaming: { retryParameters: { maxAttempts: 3, timeout: 20000 } }
+                        manifest: { retryParameters: { maxAttempts: 3, timeout: 15000 } },
+                        streaming: { retryParameters: { maxAttempts: 3, timeout: 15000 } }
                     });
                     await shakaPlayer.attach(video);
 
@@ -508,6 +511,7 @@
                     addLog(`▶️ [PLAY] Berhasil memutar ${ch.name}`, 'success');
                     setStatus(`▶️ ${ch.name}`, 'playing');
                     isPlaying = false;
+                    if (playTimeout) clearTimeout(playTimeout);
                     return;
                 }
 
@@ -582,10 +586,10 @@
                             addLog(`▶️ [PLAY] Berhasil memutar ${ch.name}`, 'success');
                             setStatus(`▶️ ${ch.name}`, 'playing');
                             isPlaying = false;
+                            if (playTimeout) clearTimeout(playTimeout);
                             return;
                         } catch (err) {
                             addLog(`⚠️ Gagal load langsung: ${err.message}`, 'warn');
-                            // Coba dengan proxy
                             const proxyList = [
                                 'https://directv-iptv-player.vercel.app/api/stream?url=',
                                 'https://corsproxy.io/?',
@@ -601,6 +605,7 @@
                                     addLog(`▶️ [PLAY] Berhasil memutar ${ch.name} (via proxy)`, 'success');
                                     setStatus(`▶️ ${ch.name} (proxy)`, 'playing');
                                     isPlaying = false;
+                                    if (playTimeout) clearTimeout(playTimeout);
                                     return;
                                 } catch (proxyErr) {
                                     addLog(`⚠️ Proxy ${proxy.split('/')[2]} gagal: ${proxyErr.message}`, 'warn');
@@ -613,6 +618,7 @@
                             addLog(`▶️ [PLAY] Berhasil memutar ${ch.name} (native fallback)`, 'success');
                             setStatus(`▶️ ${ch.name} (native)`, 'playing');
                             isPlaying = false;
+                            if (playTimeout) clearTimeout(playTimeout);
                             return;
                         }
                     } else {
@@ -622,6 +628,7 @@
                         addLog(`▶️ [PLAY] Berhasil memutar ${ch.name} (native)`, 'success');
                         setStatus(`▶️ ${ch.name}`, 'playing');
                         isPlaying = false;
+                        if (playTimeout) clearTimeout(playTimeout);
                         return;
                     }
                 }
@@ -633,12 +640,18 @@
                 addLog(`▶️ [PLAY] Berhasil memutar ${ch.name} (native)`, 'success');
                 setStatus(`▶️ ${ch.name}`, 'playing');
                 isPlaying = false;
+                if (playTimeout) clearTimeout(playTimeout);
 
             } catch (err) {
                 addLog(`❌ [ERROR] ${err.message || 'Gagal memutar'}`, 'error');
                 console.error('Full error:', err);
                 setStatus(`❌ ${err.message || 'Gagal memutar'}`, 'error');
                 isPlaying = false;
+                if (playTimeout) clearTimeout(playTimeout);
+                const nextIdx = (currentIndex + 1) % filteredChannels.length;
+                if (nextIdx !== currentIndex) {
+                    setTimeout(() => playChannel(nextIdx), 1000);
+                }
             }
         }
 
@@ -678,7 +691,9 @@
             document.querySelectorAll('.channel-card').forEach(el => {
                 el.addEventListener('click', function() {
                     const idx = parseInt(this.dataset.index);
-                    playChannel(idx);
+                    if (idx !== currentIndex || !isPlaying) {
+                        playChannel(idx);
+                    }
                 });
             });
         }
@@ -699,16 +714,22 @@
             setStatus(`✅ ${channels.length} channel dimuat`, 'idle');
             render('');
 
-            // Putar channel pertama otomatis
-            if (channels.length > 0) {
-                setTimeout(() => {
-                    playChannel(0);
-                }, 500);
+            // Cari channel yang bukan 5Sport / Šport
+            let startIdx = 0;
+            for (let i = 0; i < Math.min(20, channels.length); i++) {
+                const chName = channels[i].name || '';
+                if (!chName.includes('5Sport') && !chName.includes('Šport')) {
+                    startIdx = i;
+                    break;
+                }
             }
+            setTimeout(() => {
+                playChannel(startIdx);
+            }, 500);
         }
 
         // ============================================================
-        //  AUTO-LOAD DARI DROPBOX SAAT HALAMAN DIBUKA
+        //  AUTO-LOAD DARI DROPBOX
         // ============================================================
         async function autoLoadFromDropbox() {
             try {
@@ -765,12 +786,15 @@
         // ============================================================
         //  CLEANUP
         // ============================================================
-        window.addEventListener('beforeunload', destroyAll);
+        window.addEventListener('beforeunload', function() {
+            if (playTimeout) clearTimeout(playTimeout);
+            destroyAll();
+        });
 
         // ============================================================
-        //  INIT - AUTO LOAD
+        //  INIT
         // ============================================================
-        addLog('🚀 Player siap. Memulai auto-load dari Dropbox...', 'info');
+        addLog('🚀 Player siap (stabil, timeout 20s). Memulai auto-load dari Dropbox...', 'info');
         autoLoadFromDropbox();
     </script>
 </body>
