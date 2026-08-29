@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Player Olahraga + Auto Load M3U</title>
+    <title>Player Olahraga + Instant Switch</title>
 
     <!-- Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.12/shaka-player.compiled.js">
@@ -14,7 +14,6 @@
     </script>
 
     <style>
-        /* ---------- RESET & BASE ---------- */
         * {
             margin: 0;
             padding: 0;
@@ -70,7 +69,6 @@
             display: none;
         }
 
-        /* ===== VIDEO ===== */
         #videoContainer {
             background: #111;
             border-radius: 12px;
@@ -78,6 +76,7 @@
             border: 1px solid #2a2a2a;
             margin-bottom: 10px;
             position: relative;
+            min-height: 280px;
         }
         video {
             width: 100%;
@@ -86,7 +85,6 @@
             background: #000;
         }
 
-        /* ===== SEMBUNYIKAN PROGRESS BAR & DURASI ===== */
         video::-webkit-media-controls-timeline {
             display: none !important;
         }
@@ -105,25 +103,47 @@
             display: flex !important;
         }
 
-        /* ===== STATUS ===== */
         #status {
-            padding: 8px 14px;
+            padding: 6px 14px;
             border-radius: 8px;
             background: #1a1a1a;
-            min-height: 38px;
+            min-height: 32px;
             display: flex;
             align-items: center;
             gap: 8px;
             flex-wrap: wrap;
             margin-bottom: 12px;
             border: 1px solid #2a2a2a;
-            font-size: 14px;
+            font-size: 13px;
             font-family: 'Courier New', monospace;
         }
-        .status-loading { color: #ffcc00; }
-        .status-error   { color: #ff4444; }
-        .status-playing { color: #00ff88; }
-        .status-idle    { color: #888; }
+        .status-loading {
+            color: #ffcc00;
+        }
+        .status-error {
+            color: #ff4444;
+        }
+        .status-playing {
+            color: #00ff88;
+        }
+        .status-idle {
+            color: #888;
+        }
+
+        #loadingIndicator {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-size: 14px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 8px 16px;
+            border-radius: 8px;
+            z-index: 10;
+            pointer-events: none;
+        }
 
         .search-bar input {
             width: 100%;
@@ -153,11 +173,11 @@
             padding: 12px 8px;
             text-align: center;
             cursor: pointer;
-            transition: 0.2s;
+            transition: 0.15s;
         }
         .channel-card:hover {
             border-color: #00d4ff;
-            transform: translateY(-3px);
+            transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(0, 212, 255, 0.10);
         }
         .channel-card.active {
@@ -196,24 +216,32 @@
             border: 1px solid #2a2a2a;
             border-radius: 8px;
             padding: 10px;
-            max-height: 200px;
+            max-height: 150px;
             overflow-y: auto;
             font-family: 'Courier New', monospace;
-            font-size: 12px;
-            color: #aaa;
+            font-size: 11px;
+            color: #888;
         }
         #logContainer .log-entry {
-            padding: 2px 0;
+            padding: 1px 0;
             border-bottom: 1px solid #1a1a1a;
         }
         .log-time {
-            color: #666;
+            color: #555;
             margin-right: 8px;
         }
-        .log-info    { color: #00d4ff; }
-        .log-success { color: #00ff88; }
-        .log-error   { color: #ff4444; }
-        .log-warn    { color: #ffcc00; }
+        .log-info {
+            color: #00d4ff;
+        }
+        .log-success {
+            color: #00ff88;
+        }
+        .log-error {
+            color: #ff4444;
+        }
+        .log-warn {
+            color: #ffcc00;
+        }
 
         @media (max-width: 600px) {
             .channel-grid {
@@ -233,7 +261,7 @@
     <div class="container">
 
         <div class="header">
-            <div class="header-title">⚽ Player Sport + Auto Load</div>
+            <div class="header-title">⚽ Player Sport + Instant Switch</div>
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
                 <button class="upload-btn" id="uploadBtn">📤 Upload M3U</button>
                 <input type="file" id="fileInput" accept=".m3u,.m3u8,.txt" />
@@ -242,6 +270,7 @@
         </div>
 
         <div id="videoContainer">
+            <div id="loadingIndicator">⏳ Memuat...</div>
             <video id="videoPlayer" controls playsinline controlsList="nodownload noremoteplayback"></video>
         </div>
 
@@ -255,7 +284,6 @@
             <div class="no-result">⏳ Memuat channel...</div>
         </div>
 
-        <!-- LOG -->
         <div id="logContainer">
             <div class="log-entry"><span class="log-time">[System]</span> <span class="log-info">Memulai auto-load dari Dropbox...</span></div>
         </div>
@@ -264,7 +292,7 @@
 
     <script>
         // ============================================================
-        //  LOGGING SYSTEM
+        //  LOGGING
         // ============================================================
         const logContainer = document.getElementById('logContainer');
 
@@ -289,23 +317,21 @@
         const searchInput = document.getElementById('searchInput');
         const fileInput = document.getElementById('fileInput');
         const fileName = document.getElementById('fileName');
+        const loadingIndicator = document.getElementById('loadingIndicator');
 
         let channels = [];
         let filteredChannels = [];
         let currentIndex = -1;
+        let isSwitching = false;
+        let switchTimeout = null;
 
         let shakaPlayer = null;
         let hlsPlayer = null;
         let mpegtsPlayer = null;
-        let isPlaying = false;
 
-        // ============================================================
-        //  KONFIGURASI URL M3U (GANTI SESUAI KEBUTUHAN)
-        // ============================================================
         const M3U_URL =
             'https://www.dropbox.com/scl/fi/bmy5q6s7jseaapmakxao2/popular-sports-iptv.m3u?rlkey=2ur64tzoclr6ehltjvov3otba&st=vaqtzoxc&dl=1';
 
-        // Daftar proxy fallback untuk mengatasi CORS
         const PROXY_LIST = [
             'https://api.allorigins.win/raw?url=',
             'https://corsproxy.io/?',
@@ -313,66 +339,42 @@
         ];
 
         // ============================================================
-        //  FUNGSI AMBIL M3U DARI URL (dengan fallback proxy)
+        //  AMBIL M3U
         // ============================================================
         async function fetchM3UFromUrl(url) {
             addLog(`📡 Mencoba mengambil: ${url}`, 'info');
-
-            // Coba langsung dulu
-            try {
-                const response = await fetch(url, {
-                    method: 'GET',
-                    headers: {
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-                    }
-                });
-                if (response.ok) {
-                    const text = await response.text();
-                    if (text && text.trim().length > 0 && !text.includes('Dropbox') && !text.includes('<!DOCTYPE')) {
-                        addLog('✅ Berhasil mengambil dari URL langsung', 'success');
-                        return text;
-                    }
-                }
-            } catch (e) {
-                addLog(`⚠️ Gagal langsung: ${e.message}`, 'warn');
-            }
-
-            // Coba dengan proxy
-            for (const proxy of PROXY_LIST) {
+            for (const proxy of ['', ...PROXY_LIST]) {
                 try {
-                    const proxyUrl = proxy + encodeURIComponent(url);
-                    addLog(`📡 Mencoba via proxy: ${proxy}`, 'info');
-                    const response = await fetch(proxyUrl);
+                    const finalUrl = proxy ? proxy + encodeURIComponent(url) : url;
+                    const response = await fetch(finalUrl, {
+                        headers: { 'User-Agent': 'Mozilla/5.0' }
+                    });
                     if (response.ok) {
                         const text = await response.text();
                         if (text && text.trim().length > 0 && !text.includes('Dropbox') && !text.includes('<!DOCTYPE')) {
-                            addLog(`✅ Berhasil melalui proxy: ${proxy.split('/')[2]}`, 'success');
+                            addLog(`✅ Berhasil ${proxy ? 'via ' + proxy.split('/')[2] : 'langsung'}`, 'success');
                             return text;
                         }
                     }
                 } catch (e) {
-                    addLog(`⚠️ Proxy ${proxy.split('/')[2]} gagal: ${e.message}`, 'warn');
+                    addLog(`⚠️ ${proxy ? proxy.split('/')[2] : 'langsung'} gagal: ${e.message}`, 'warn');
                 }
             }
-
-            throw new Error('Gagal mengambil file M3U dari semua metode');
+            throw new Error('Gagal mengambil file M3U');
         }
 
         // ============================================================
         //  PARSER M3U
         // ============================================================
         function parseM3U(content) {
-            addLog('📄 Memulai parsing M3U...', 'info');
             const lines = content.split(/\r?\n/);
             const result = [];
             let current = {};
-
             for (let i = 0; i < lines.length; i++) {
                 let line = lines[i].trim();
                 if (!line) continue;
                 if (line.startsWith('#') && !line.startsWith('#EXTINF') && !line.startsWith('#KODIPROP') && !line
                     .startsWith('#EXTVLCOPT')) continue;
-
                 if (line.startsWith('#EXTINF:')) {
                     const nameMatch = line.match(/,([^,]*)$/);
                     const name = nameMatch ? nameMatch[1].trim() : 'Channel';
@@ -380,47 +382,32 @@
                     const logo = logoMatch ? logoMatch[1] : '';
                     const groupMatch = line.match(/group-title="([^"]*)"/);
                     const group = groupMatch ? groupMatch[1] : 'Sports';
-
-                    current = {
-                        name,
-                        logo,
-                        group,
-                        url: '',
-                        keyId: '',
-                        key: '',
-                        licenseUrl: ''
-                    };
+                    current = { name, logo, group, url: '', keyId: '', key: '', licenseUrl: '' };
                 } else if (line.startsWith('#KODIPROP:')) {
                     const prop = line.replace('#KODIPROP:', '').trim();
                     if (prop.includes('license_key=')) {
                         const val = prop.split('license_key=')[1].trim();
-                        if (val.startsWith('http')) {
-                            current.licenseUrl = val;
-                        } else {
+                        if (val.startsWith('http')) current.licenseUrl = val;
+                        else {
                             const parts = val.split(':');
-                            if (parts.length === 2) {
-                                current.keyId = parts[0].trim();
-                                current.key = parts[1].trim();
-                            }
+                            if (parts.length === 2) { current.keyId = parts[0].trim();
+                                current.key = parts[1].trim(); }
                         }
                     } else if (prop.includes('license_url=')) {
                         current.licenseUrl = prop.split('license_url=')[1].trim();
                     }
                 } else if (line.startsWith('http://') || line.startsWith('https://')) {
-                    if (current.name) {
-                        current.url = line;
+                    if (current.name) { current.url = line;
                         result.push({ ...current });
-                        current = {};
-                    }
+                        current = {}; }
                 }
             }
             if (current.name && current.url) result.push(current);
-            addLog(`✅ Parsing selesai: ${result.length} channel ditemukan`, 'success');
             return result;
         }
 
         // ============================================================
-        //  DETECT STREAM TYPE
+        //  DETECT TYPE
         // ============================================================
         function detectType(url) {
             const u = url.toLowerCase();
@@ -431,27 +418,26 @@
         }
 
         // ============================================================
-        //  DESTROY PLAYERS
+        //  DESTROY ALL
         // ============================================================
         function destroyAll() {
-            addLog('🧹 Menghancurkan semua player...', 'warn');
             if (shakaPlayer) { try { shakaPlayer.destroy(); } catch (e) {} shakaPlayer = null; }
             if (hlsPlayer) { try { hlsPlayer.destroy(); } catch (e) {} hlsPlayer = null; }
             if (mpegtsPlayer) { try { mpegtsPlayer.destroy(); } catch (e) {} mpegtsPlayer = null; }
             video.pause();
             video.removeAttribute('src');
             video.load();
-            addLog('✅ Semua player dihancurkan', 'success');
         }
 
         // ============================================================
-        //  PLAY CHANNEL (dengan header & proxy fallback)
+        //  PLAY CHANNEL - DENGAN TIMEOUT 5 DETIK
         // ============================================================
         async function playChannel(index) {
-            if (isPlaying) {
-                addLog('⏳ Masih ada pemutaran berjalan, tunggu...', 'warn');
+            if (isSwitching) {
+                addLog('⏳ Sedang beralih, skip', 'warn');
                 return;
             }
+
             const ch = filteredChannels[index] || channels[index];
             if (!ch || !ch.url) {
                 addLog('❌ Channel tidak valid', 'error');
@@ -459,186 +445,174 @@
                 return;
             }
 
-            isPlaying = true;
+            isSwitching = true;
             currentIndex = index;
-            addLog(`▶️ [PLAY] Memutar: ${ch.name} (${ch.url})`, 'info');
-            setStatus(`⏳ Memuat ${ch.name} ...`, 'loading');
 
-            // Highlight
+            // Clear timeout sebelumnya
+            if (switchTimeout) {
+                clearTimeout(switchTimeout);
+                switchTimeout = null;
+            }
+
+            // Timeout 5 detik - jika belum selesai, reset state
+            switchTimeout = setTimeout(() => {
+                if (isSwitching) {
+                    addLog('⏰ Timeout 5 detik, reset state', 'warn');
+                    isSwitching = false;
+                    loadingIndicator.style.display = 'none';
+                    setStatus('⏱️ Timeout, coba channel lain', 'error');
+                    // Coba channel berikutnya
+                    const nextIdx = (currentIndex + 1) % filteredChannels.length;
+                    if (nextIdx !== currentIndex) {
+                        setTimeout(() => playChannel(nextIdx), 500);
+                    }
+                }
+            }, 30000);
+
+            addLog(`▶️ [PLAY] ${ch.name}`, 'info');
+
             document.querySelectorAll('.channel-card').forEach((el, i) => {
                 el.classList.toggle('active', i === index);
             });
+
+            loadingIndicator.style.display = 'block';
+            loadingIndicator.textContent = `⏳ ${ch.name}`;
+            setStatus(`⏳ ${ch.name}`, 'loading');
 
             destroyAll();
 
             try {
                 const type = detectType(ch.url);
-                addLog(`📡 Tipe stream terdeteksi: ${type}`, 'info');
-
-                // ---------- DASH ----------
-                if (type === 'dash') {
-                    addLog('🎬 Menggunakan Shaka Player untuk DASH...', 'info');
-                    shakaPlayer = new shaka.Player();
-                    const drm = {};
-                    if (ch.keyId && ch.key) {
-                        drm.clearKeys = { [ch.keyId]: ch.key };
-                        addLog(`🔑 ClearKey: ${ch.keyId}:${ch.key}`, 'info');
-                    }
-                    if (ch.licenseUrl) {
-                        drm.servers = { 'com.widevine.alpha': ch.licenseUrl };
-                        addLog(`🔑 License URL: ${ch.licenseUrl}`, 'info');
-                    }
-                    shakaPlayer.configure({
-                        drm,
-                        manifest: { retryParameters: { maxAttempts: 3, timeout: 20000 } },
-                        streaming: { retryParameters: { maxAttempts: 3, timeout: 20000 } }
-                    });
-                    await shakaPlayer.attach(video);
-
-                    shakaPlayer.getNetworkingEngine().registerRequestFilter((type, req) => {
-                        req.headers['User-Agent'] = 'ExoPlayerDemo/2.15.1 (Linux; Android 13) ExoPlayerLib/2.15.1';
-                        req.headers['Referer'] = 'https://www.visionplus.id/';
-                        req.headers['Origin'] = 'https://www.visionplus.id';
-                    });
-
-                    addLog(`📥 Mencoba load manifest: ${ch.url}`, 'info');
-                    await shakaPlayer.load(ch.url);
-                    addLog('✅ Manifest DASH berhasil dimuat', 'success');
-                    await video.play();
-                    addLog(`▶️ [PLAY] Berhasil memutar ${ch.name}`, 'success');
-                    setStatus(`▶️ ${ch.name}`, 'playing');
-                    isPlaying = false;
-                    return;
-                }
 
                 // ---------- HLS ----------
-                if (type === 'hls') {
-                    addLog('🎬 Menggunakan HLS.js untuk HLS...', 'info');
-                    if (Hls.isSupported()) {
-                        let loaded = false;
-
-                        const tryLoad = (url, useProxy = false) => {
-                            return new Promise((resolve, reject) => {
-                                try {
-                                    if (hlsPlayer) {
-                                        try { hlsPlayer.destroy(); } catch (e) {}
+                if (type === 'hls' && Hls.isSupported()) {
+                    let loaded = false;
+                    const tryLoad = (url) => {
+                        return new Promise((resolve, reject) => {
+                            try {
+                                if (hlsPlayer) { try { hlsPlayer.destroy(); } catch (e) {} }
+                                hlsPlayer = new Hls({
+                                    xhrSetup: function(xhr) {
+                                        xhr.setRequestHeader('User-Agent',
+                                            'ExoPlayerDemo/2.15.1 (Linux; Android 13) ExoPlayerLib/2.15.1'
+                                            );
+                                        xhr.setRequestHeader('Referer', 'https://www.visionplus.id/');
                                     }
-                                    hlsPlayer = new Hls({
-                                        xhrSetup: function(xhr, reqUrl) {
-                                            xhr.setRequestHeader('User-Agent',
-                                                'ExoPlayerDemo/2.15.1 (Linux; Android 13) ExoPlayerLib/2.15.1'
-                                                );
-                                            xhr.setRequestHeader('Referer', 'https://www.visionplus.id/');
-                                            xhr.setRequestHeader('Origin', 'https://www.visionplus.id');
-                                            xhr.setRequestHeader('Accept', '*/*');
-                                            xhr.setRequestHeader('Accept-Encoding', 'gzip, deflate, br');
-                                            xhr.setRequestHeader('Connection', 'keep-alive');
-                                        }
-                                    });
+                                });
+                                hlsPlayer.loadSource(url);
+                                hlsPlayer.attachMedia(video);
 
-                                    hlsPlayer.loadSource(url);
-                                    hlsPlayer.attachMedia(video);
-
-                                    const onSuccess = () => {
+                                const onSuccess = () => {
+                                    hlsPlayer.off(Hls.Events.MANIFEST_PARSED, onSuccess);
+                                    hlsPlayer.off(Hls.Events.ERROR, onError);
+                                    loaded = true;
+                                    resolve();
+                                };
+                                const onError = (e, data) => {
+                                    if (data.fatal) {
                                         hlsPlayer.off(Hls.Events.MANIFEST_PARSED, onSuccess);
                                         hlsPlayer.off(Hls.Events.ERROR, onError);
-                                        loaded = true;
-                                        resolve();
-                                    };
+                                        reject(new Error(data.details));
+                                    }
+                                };
+                                hlsPlayer.on(Hls.Events.MANIFEST_PARSED, onSuccess);
+                                hlsPlayer.on(Hls.Events.ERROR, onError);
 
-                                    const onError = (e, data) => {
-                                        if (data.fatal) {
-                                            hlsPlayer.off(Hls.Events.MANIFEST_PARSED, onSuccess);
-                                            hlsPlayer.off(Hls.Events.ERROR, onError);
-                                            reject(new Error(`HLS fatal: ${data.type} - ${data.details}`));
-                                        } else {
-                                            addLog(`⚠️ HLS non-fatal: ${data.type} - ${data.details}`, 'warn');
-                                        }
-                                    };
+                                setTimeout(() => {
+                                    if (!loaded) {
+                                        hlsPlayer.off(Hls.Events.MANIFEST_PARSED, onSuccess);
+                                        hlsPlayer.off(Hls.Events.ERROR, onError);
+                                        reject(new Error('Timeout'));
+                                    }
+                                }, 4000);
+                            } catch (err) { reject(err); }
+                        });
+                    };
 
-                                    hlsPlayer.on(Hls.Events.MANIFEST_PARSED, onSuccess);
-                                    hlsPlayer.on(Hls.Events.ERROR, onError);
-
-                                    setTimeout(() => {
-                                        if (!loaded) {
-                                            hlsPlayer.off(Hls.Events.MANIFEST_PARSED, onSuccess);
-                                            hlsPlayer.off(Hls.Events.ERROR, onError);
-                                            reject(new Error('Timeout load manifest'));
-                                        }
-                                    }, 15000);
-
-                                } catch (err) {
-                                    reject(err);
-                                }
-                            });
-                        };
-
-                        // Coba langsung
-                        try {
-                            addLog(`📥 Mencoba load langsung: ${ch.url}`, 'info');
-                            await tryLoad(ch.url);
-                            addLog('✅ Manifest HLS berhasil diparsing (langsung)', 'success');
-                            await video.play();
-                            addLog(`▶️ [PLAY] Berhasil memutar ${ch.name}`, 'success');
-                            setStatus(`▶️ ${ch.name}`, 'playing');
-                            isPlaying = false;
-                            return;
-                        } catch (err) {
-                            addLog(`⚠️ Gagal load langsung: ${err.message}`, 'warn');
-                            // Coba dengan proxy
-                            const proxyList = [
-                                'https://directv-iptv-player.vercel.app/api/stream?url=',
-                                'https://corsproxy.io/?',
-                                'https://api.allorigins.win/raw?url='
-                            ];
-                            for (const proxy of proxyList) {
-                                try {
-                                    const proxyUrl = proxy + encodeURIComponent(ch.url);
-                                    addLog(`📥 Mencoba dengan proxy: ${proxy}`, 'info');
-                                    await tryLoad(proxyUrl, true);
-                                    addLog(`✅ Manifest HLS berhasil diparsing (via ${proxy.split('/')[2]})`, 'success');
-                                    await video.play();
-                                    addLog(`▶️ [PLAY] Berhasil memutar ${ch.name} (via proxy)`, 'success');
-                                    setStatus(`▶️ ${ch.name} (proxy)`, 'playing');
-                                    isPlaying = false;
-                                    return;
-                                } catch (proxyErr) {
-                                    addLog(`⚠️ Proxy ${proxy.split('/')[2]} gagal: ${proxyErr.message}`, 'warn');
-                                }
-                            }
-                            // Semua proxy gagal, fallback native
-                            addLog('⚠️ Semua proxy gagal, fallback ke native video', 'warn');
-                            video.src = ch.url;
-                            await video.play();
-                            addLog(`▶️ [PLAY] Berhasil memutar ${ch.name} (native fallback)`, 'success');
-                            setStatus(`▶️ ${ch.name} (native)`, 'playing');
-                            isPlaying = false;
-                            return;
-                        }
-                    } else {
-                        addLog('⚠️ HLS.js tidak didukung, fallback ke native', 'warn');
-                        video.src = ch.url;
-                        video.play();
-                        addLog(`▶️ [PLAY] Berhasil memutar ${ch.name} (native)`, 'success');
+                    try {
+                        await tryLoad(ch.url);
+                        await video.play();
+                        loadingIndicator.style.display = 'none';
                         setStatus(`▶️ ${ch.name}`, 'playing');
-                        isPlaying = false;
+                        isSwitching = false;
+                        if (switchTimeout) { clearTimeout(switchTimeout);
+                            switchTimeout = null; }
+                        return;
+                    } catch (err) {
+                        addLog(`⚠️ Gagal: ${err.message}`, 'warn');
+                        // Coba proxy
+                        for (const proxy of ['https://directv-iptv-player.vercel.app/api/stream?url=']) {
+                            try {
+                                const proxyUrl = proxy + encodeURIComponent(ch.url);
+                                await tryLoad(proxyUrl);
+                                await video.play();
+                                loadingIndicator.style.display = 'none';
+                                setStatus(`▶️ ${ch.name}`, 'playing');
+                                isSwitching = false;
+                                if (switchTimeout) { clearTimeout(switchTimeout);
+                                    switchTimeout = null; }
+                                return;
+                            } catch (e) { addLog(`⚠️ Proxy gagal`, 'warn'); }
+                        }
+                        // Fallback native
+                        video.src = ch.url;
+                        await video.play();
+                        loadingIndicator.style.display = 'none';
+                        setStatus(`▶️ ${ch.name}`, 'playing');
+                        isSwitching = false;
+                        if (switchTimeout) { clearTimeout(switchTimeout);
+                            switchTimeout = null; }
                         return;
                     }
                 }
 
+                // ---------- DASH ----------
+                if (type === 'dash') {
+                    shakaPlayer = new shaka.Player();
+                    const drm = {};
+                    if (ch.keyId && ch.key) drm.clearKeys = { [ch.keyId]: ch.key };
+                    if (ch.licenseUrl) drm.servers = { 'com.widevine.alpha': ch.licenseUrl };
+                    shakaPlayer.configure({
+                        drm,
+                        manifest: { retryParameters: { maxAttempts: 2, timeout: 4000 } },
+                        streaming: { retryParameters: { maxAttempts: 2, timeout: 4000 } }
+                    });
+                    await shakaPlayer.attach(video);
+                    shakaPlayer.getNetworkingEngine().registerRequestFilter((type, req) => {
+                        req.headers['User-Agent'] = 'ExoPlayerDemo/2.15.1';
+                    });
+                    await shakaPlayer.load(ch.url);
+                    await video.play();
+                    loadingIndicator.style.display = 'none';
+                    setStatus(`▶️ ${ch.name}`, 'playing');
+                    isSwitching = false;
+                    if (switchTimeout) { clearTimeout(switchTimeout);
+                        switchTimeout = null; }
+                    return;
+                }
+
                 // ---------- MPEG-TS / Unknown ----------
-                addLog('🎬 Menggunakan native video untuk MPEG-TS/unknown', 'info');
                 video.src = ch.url;
-                video.play();
-                addLog(`▶️ [PLAY] Berhasil memutar ${ch.name} (native)`, 'success');
+                await video.play();
+                loadingIndicator.style.display = 'none';
                 setStatus(`▶️ ${ch.name}`, 'playing');
-                isPlaying = false;
+                isSwitching = false;
+                if (switchTimeout) { clearTimeout(switchTimeout);
+                    switchTimeout = null; }
 
             } catch (err) {
-                addLog(`❌ [ERROR] ${err.message || 'Gagal memutar'}`, 'error');
-                console.error('Full error:', err);
-                setStatus(`❌ ${err.message || 'Gagal memutar'}`, 'error');
-                isPlaying = false;
+                addLog(`❌ Error: ${err.message}`, 'error');
+                loadingIndicator.style.display = 'none';
+                setStatus(`❌ ${err.message}`, 'error');
+                isSwitching = false;
+                if (switchTimeout) { clearTimeout(switchTimeout);
+                    switchTimeout = null; }
+
+                // Coba channel berikutnya
+                const nextIdx = (index + 1) % filteredChannels.length;
+                if (nextIdx !== index) {
+                    setTimeout(() => playChannel(nextIdx), 500);
+                }
             }
         }
 
@@ -656,12 +630,10 @@
         function render(filter = '') {
             const q = filter.toLowerCase().trim();
             filteredChannels = q ? channels.filter(c => c.name.toLowerCase().includes(q)) : channels;
-
             if (filteredChannels.length === 0) {
                 grid.innerHTML = `<div class="no-result">${q ? '🔍 Tidak ada channel cocok' : '📭 Belum ada channel'}</div>`;
                 return;
             }
-
             let html = '';
             filteredChannels.forEach((ch, idx) => {
                 const logo = ch.logo ? `<img src="${ch.logo}" alt="" onerror="this.style.display='none'" />` :
@@ -674,53 +646,55 @@
                 `;
             });
             grid.innerHTML = html;
-
             document.querySelectorAll('.channel-card').forEach(el => {
                 el.addEventListener('click', function() {
                     const idx = parseInt(this.dataset.index);
-                    playChannel(idx);
+                    if (idx !== currentIndex) playChannel(idx);
                 });
             });
         }
 
         // ============================================================
-        //  LOAD FROM M3U CONTENT
+        //  LOAD FROM M3U
         // ============================================================
         function loadFromContent(content, name = '') {
             channels = parseM3U(content);
             if (channels.length === 0) {
-                addLog('❌ Tidak ada channel ditemukan dalam file', 'error');
-                setStatus('⚠️ Tidak ada channel ditemukan', 'error');
+                addLog('❌ Tidak ada channel', 'error');
+                setStatus('⚠️ Tidak ada channel', 'error');
                 fileName.textContent = 'File tidak valid';
                 return;
             }
             fileName.textContent = name || 'popular-sports-iptv.m3u';
-            addLog(`✅ ${channels.length} channel berhasil dimuat`, 'success');
-            setStatus(`✅ ${channels.length} channel dimuat`, 'idle');
+            addLog(`✅ ${channels.length} channel dimuat`, 'success');
+            setStatus(`✅ ${channels.length} channel`, 'idle');
             render('');
 
-            // Putar channel pertama otomatis
+            // Coba channel yang kemungkinan hidup (skip 5Sport, coba yang lain)
             if (channels.length > 0) {
-                setTimeout(() => {
-                    playChannel(0);
-                }, 500);
+                // Cari channel yang bukan 5Sport
+                let startIdx = 0;
+                for (let i = 0; i < Math.min(10, channels.length); i++) {
+                    if (!channels[i].name.includes('5Sport') && !channels[i].name.includes('Šport')) {
+                        startIdx = i;
+                        break;
+                    }
+                }
+                setTimeout(() => playChannel(startIdx), 500);
             }
         }
 
         // ============================================================
-        //  AUTO-LOAD DARI DROPBOX SAAT HALAMAN DIBUKA
+        //  AUTO-LOAD
         // ============================================================
         async function autoLoadFromDropbox() {
             try {
                 const content = await fetchM3UFromUrl(M3U_URL);
-                if (content) {
-                    loadFromContent(content, 'popular-sports-iptv.m3u (auto-load)');
-                } else {
-                    throw new Error('Konten kosong');
-                }
+                if (content) loadFromContent(content, 'popular-sports-iptv.m3u (auto-load)');
+                else throw new Error('Konten kosong');
             } catch (err) {
                 addLog(`❌ Auto-load gagal: ${err.message}`, 'error');
-                setStatus('⚠️ Gagal memuat dari Dropbox. Upload manual atau refresh.', 'error');
+                setStatus('⚠️ Gagal memuat. Upload manual.', 'error');
                 fileName.textContent = 'Gagal auto-load';
                 grid.innerHTML = `
                     <div class="no-result">
@@ -738,39 +712,25 @@
         }
 
         // ============================================================
-        //  UPLOAD HANDLER (MANUAL)
+        //  EVENTS
         // ============================================================
         document.getElementById('uploadBtn').addEventListener('click', () => fileInput.click());
         fileInput.addEventListener('change', function(e) {
             const file = this.files[0];
             if (!file) return;
-            addLog(`📤 Upload file: ${file.name} (${(file.size/1024).toFixed(1)} KB)`, 'info');
             const reader = new FileReader();
-            reader.onload = (ev) => {
-                loadFromContent(ev.target.result, file.name);
-            };
-            reader.onerror = () => {
-                addLog('❌ Gagal membaca file', 'error');
-            };
+            reader.onload = (ev) => loadFromContent(ev.target.result, file.name);
+            reader.onerror = () => addLog('❌ Gagal membaca file', 'error');
             reader.readAsText(file);
         });
 
-        // ============================================================
-        //  SEARCH
-        // ============================================================
-        searchInput.addEventListener('input', function() {
-            render(this.value);
-        });
-
-        // ============================================================
-        //  CLEANUP
-        // ============================================================
+        searchInput.addEventListener('input', function() { render(this.value); });
         window.addEventListener('beforeunload', destroyAll);
 
         // ============================================================
-        //  INIT - AUTO LOAD
+        //  INIT
         // ============================================================
-        addLog('🚀 Player siap. Memulai auto-load dari Dropbox...', 'info');
+        addLog('🚀 Player siap (instant switch, timeout 5s). Auto-load...', 'info');
         autoLoadFromDropbox();
     </script>
 </body>
