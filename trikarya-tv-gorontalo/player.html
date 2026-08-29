@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>IPTV TRIKARYA - Player (Native)</title>
+    <title>IPTV TRIKARYA - Player</title>
 
-    <!-- HLS.js & mpegts.js sebagai fallback untuk browser -->
+    <!-- Library Pemutar -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.12/shaka-player.compiled.js">
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@0.14.17/dist/hls.min.js">
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mpegts.js/0.16.6/mpegts.js">
@@ -437,7 +439,7 @@
         <!-- ===== HEADER ===== -->
         <div class="header">
             <div class="header-left">
-                <div class="header-title">📺 IPTV-TRIKARYA <span>Native</span></div>
+                <div class="header-title">📺 IPTV-TRIKARYA <span>Premium</span></div>
             </div>
             <div class="header-right">
                 <div class="file-info" id="fileInfo">
@@ -519,12 +521,20 @@
 
         let channels = [];
         let currentChannelIndex = 0;
+        let shakaPlayer = null;
+        let hlsPlayer = null;
+        let mpegtsPlayer = null;
         let _isPlaying = false;
         let _isChannelListVisible = false;
         let playTimeout = null;
 
-        // HLS.js fallback (jika native gagal)
-        let hlsPlayer = null;
+        // ============================================================
+        //  DAFTAR PROXY (Vercel + corsproxy.io)
+        // ============================================================
+        const PROXY_LIST = [
+            'https://directv-iptv-player.vercel.app/api/stream?url=',
+            'https://corsproxy.io/?'
+        ];
 
         // ============================================================
         //  LOADING OVERLAY
@@ -545,13 +555,33 @@
         }
 
         // ============================================================
-        //  DESTROY PLAYERS (hanya HLS.js yang mungkin aktif)
+        //  DETECT STREAM TYPE
+        // ============================================================
+        function detectStreamType(url) {
+            const lower = url.toLowerCase();
+            if (lower.includes('.mpd') || lower.includes('cenc.mpd')) return 'dash';
+            if (lower.includes('.m3u8')) return 'hls';
+            if (lower.includes('.ts') || lower.includes('extension=ts')) return 'mpegts';
+            if (lower.includes('.mp4') || lower.includes('videoplayback')) return 'vod';
+            return 'unknown';
+        }
+
+        // ============================================================
+        //  DESTROY ALL PLAYERS
         // ============================================================
         function destroyAllPlayers() {
-            console.log('[CLEANUP] Menghancurkan HLS player...');
+            console.log('[CLEANUP] Menghancurkan semua player...');
+            if (shakaPlayer) {
+                try { shakaPlayer.destroy(); } catch (e) {}
+                shakaPlayer = null;
+            }
             if (hlsPlayer) {
                 try { hlsPlayer.destroy(); } catch (e) {}
                 hlsPlayer = null;
+            }
+            if (mpegtsPlayer) {
+                try { mpegtsPlayer.destroy(); } catch (e) {}
+                mpegtsPlayer = null;
             }
             try {
                 video.pause();
@@ -562,7 +592,7 @@
         }
 
         // ============================================================
-        //  PLAY CHANNEL (UTAMA: NATIVE video.src)
+        //  PLAY CHANNEL (dengan proxy fallback & timeout)
         // ============================================================
         async function playChannel(index) {
             if (_isPlaying) {
@@ -589,101 +619,269 @@
 
             destroyAllPlayers();
 
-            // Timeout 20 detik untuk reset isPlaying jika gagal
+            // Timeout 30 detik untuk reset isPlaying
             if (playTimeout) clearTimeout(playTimeout);
             playTimeout = setTimeout(() => {
                 if (_isPlaying) {
-                    console.log(`[PLAY] Timeout 20 detik, skip ${channel.name}`);
+                    console.log(`[PLAY] Timeout 30 detik, skip ${channel.name}`);
                     updateStatus('⏱️ Timeout, coba channel lain', 'status-error');
                     hideLoading();
                     _isPlaying = false;
+                    // Coba channel berikutnya
                     const nextIdx = (currentChannelIndex + 1) % channels.length;
                     if (nextIdx !== currentChannelIndex) {
                         setTimeout(() => playChannel(nextIdx), 1000);
                     }
                 }
-            }, 20000);
+            }, 30000);
 
             try {
-                // ============================================================
-                //  💥 UTAMA: NATIVE VIDEO.SRC UNTUK SEMUA JENIS
-                // ============================================================
-                console.log(`[PLAY] Menggunakan video.src native untuk: ${channel.url}`);
-                video.src = channel.url;
+                const headers = {};
+                if (channel.userAgent) headers['User-Agent'] = channel.userAgent;
+                if (channel.referer) headers['Referer'] = channel.referer;
 
-                // Tambahkan header User-Agent jika diperlukan (hanya untuk fetch, native video tidak support header custom)
-                // Tapi kita bisa coba tambahkan atribut crossorigin
-                video.crossOrigin = 'anonymous';
+                let type = channel.streamType || detectStreamType(channel.url);
+                console.log(`[PLAY] Tipe: ${type}`);
 
-                // Coba play
-                await video.play();
-
-                hideLoading();
-                updateStatus(`▶️ Memutar ${channel.name} (native)`, 'status-playing');
-                _isPlaying = false;
-                if (playTimeout) clearTimeout(playTimeout);
-
-                // ============================================================
-                //  FALLBACK: Jika native gagal, coba HLS.js (khusus .m3u8)
-                // ============================================================
-                video.addEventListener('error', async function onError(e) {
-                    // Hanya jalankan sekali
-                    video.removeEventListener('error', onError);
-
-                    const errorCode = video.error ? video.error.code : -1;
-                    const errorMsg = video.error ? video.error.message : 'Unknown error';
-                    console.warn(`[PLAY] Native gagal (code: ${errorCode}, msg: ${errorMsg}), coba fallback...`);
-
-                    // Jika URL adalah .m3u8 dan HLS.js tersedia
-                    if (channel.url.includes('.m3u8') && typeof Hls !== 'undefined' && Hls.isSupported()) {
-                        console.log('[PLAY] Mencoba HLS.js fallback...');
-                        try {
-                            if (hlsPlayer) {
-                                try { hlsPlayer.destroy(); } catch (ex) {}
+                // ===== DASH =====
+                if (type === 'dash') {
+                    shakaPlayer = new shaka.Player();
+                    shakaPlayer.configure({
+                        manifest: {
+                            retryParameters: {
+                                maxAttempts: 3,
+                                timeout: 15000,
+                                backoffFactor: 2,
+                                baseDelay: 1000
                             }
-                            hlsPlayer = new Hls({
-                                xhrSetup: function(xhr, reqUrl) {
-                                    xhr.setRequestHeader('User-Agent',
-                                        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-                                        );
-                                    xhr.setRequestHeader('Referer', 'https://www.visionplus.id/');
-                                }
-                            });
-                            hlsPlayer.loadSource(channel.url);
-                            hlsPlayer.attachMedia(video);
-                            hlsPlayer.on(Hls.Events.MANIFEST_PARSED, () => {
-                                video.play().catch(() => {});
-                                hideLoading();
-                                updateStatus(`▶️ Memutar ${channel.name} (HLS fallback)`,
-                                'status-playing');
-                                _isPlaying = false;
-                                if (playTimeout) clearTimeout(playTimeout);
-                            });
-                            hlsPlayer.on(Hls.Events.ERROR, (e, data) => {
-                                if (data.fatal) {
-                                    console.error('[HLS] Fatal error:', data);
-                                    updateStatus('⚠️ Gagal memutar (HLS fallback juga gagal)',
-                                        'status-error');
-                                    hideLoading();
-                                    _isPlaying = false;
-                                }
-                            });
-                            return;
-                        } catch (hlsErr) {
-                            console.error('[HLS] Error fallback:', hlsErr);
+                        },
+                        drm: {
+                            retryParameters: {
+                                maxAttempts: 3,
+                                timeout: 15000,
+                                backoffFactor: 2,
+                                baseDelay: 1000
+                            }
+                        },
+                        streaming: {
+                            retryParameters: {
+                                maxAttempts: 3,
+                                timeout: 15000,
+                                backoffFactor: 2,
+                                baseDelay: 1000
+                            },
+                            bufferingGoal: 30,
+                            rebufferingGoal: 15,
+                            bufferBehind: 30,
+                            stallEnabled: true,
+                            stallThreshold: 2
+                        }
+                    });
+                    await shakaPlayer.attach(video);
+
+                    const drmConfig = {};
+                    if (channel.keyId && channel.key) {
+                        drmConfig.clearKeys = { [channel.keyId]: channel.key };
+                    }
+                    if (channel.licenseUrl) {
+                        drmConfig.servers = { 'com.widevine.alpha': channel.licenseUrl };
+                    }
+                    if (Object.keys(drmConfig).length > 0) {
+                        shakaPlayer.configure({ drm: drmConfig });
+                    }
+
+                    // Set headers
+                    shakaPlayer.getNetworkingEngine().registerRequestFilter((type, request) => {
+                        if (headers['User-Agent']) request.headers['User-Agent'] = headers['User-Agent'];
+                        if (headers['Referer']) request.headers['Referer'] = headers['Referer'];
+                    });
+
+                    let loadSuccess = false;
+
+                    // Coba langsung
+                    try {
+                        console.log(`[DASH] Mencoba langsung: ${channel.url}`);
+                        await shakaPlayer.load(channel.url);
+                        loadSuccess = true;
+                        console.log('[DASH] ✅ Load langsung berhasil');
+                    } catch (directErr) {
+                        console.warn('[DASH] Gagal langsung:', directErr.message);
+                        // Coba proxy
+                        for (const proxy of PROXY_LIST) {
+                            try {
+                                const proxyUrl = proxy + encodeURIComponent(channel.url);
+                                console.log(`[DASH] Mencoba proxy: ${proxy}`);
+                                await shakaPlayer.load(proxyUrl);
+                                loadSuccess = true;
+                                console.log(`[DASH] ✅ Load via ${proxy.split('/')[2]} berhasil`);
+                                break;
+                            } catch (proxyErr) {
+                                console.warn(`[DASH] Proxy ${proxy.split('/')[2]} gagal:`, proxyErr.message);
+                            }
                         }
                     }
 
-                    // Jika semua gagal
-                    updateStatus(`⚠️ Gagal memutar: ${errorMsg || 'Unknown error'}`, 'status-error');
+                    if (!loadSuccess) {
+                        throw new Error('Gagal memuat manifest DASH dari semua metode');
+                    }
+
+                    // Tunggu buffer
+                    showLoading(`⏳ Menyiapkan buffer...`);
+                    await new Promise(resolve => {
+                        let attempts = 0;
+                        const maxAttempts = 20;
+                        const checkBuffer = () => {
+                            attempts++;
+                            const stats = shakaPlayer.getStats();
+                            if (stats.bufferTime >= 3 || attempts >= maxAttempts) {
+                                resolve();
+                            } else {
+                                setTimeout(checkBuffer, 500);
+                            }
+                        };
+                        checkBuffer();
+                    });
+
+                    await video.play();
                     hideLoading();
+                    updateStatus(`▶️ Memutar ${channel.name}`, 'status-playing');
                     _isPlaying = false;
-                }, { once: true });
+                    if (playTimeout) clearTimeout(playTimeout);
+                    return;
+                }
+
+                // ===== HLS =====
+                else if (type === 'hls') {
+                    if (Hls.isSupported()) {
+                        let loaded = false;
+
+                        const tryHlsLoad = (url) => {
+                            return new Promise((resolve, reject) => {
+                                if (hlsPlayer) {
+                                    try { hlsPlayer.destroy(); } catch (e) {}
+                                }
+                                hlsPlayer = new Hls({
+                                    xhrSetup: function(xhr, reqUrl) {
+                                        if (headers['User-Agent']) xhr.setRequestHeader('User-Agent', headers[
+                                        'User-Agent']);
+                                        if (headers['Referer']) xhr.setRequestHeader('Referer', headers[
+                                        'Referer']);
+                                    }
+                                });
+
+                                hlsPlayer.loadSource(url);
+                                hlsPlayer.attachMedia(video);
+
+                                const onSuccess = () => {
+                                    hlsPlayer.off(Hls.Events.MANIFEST_PARSED, onSuccess);
+                                    hlsPlayer.off(Hls.Events.ERROR, onError);
+                                    loaded = true;
+                                    resolve();
+                                };
+
+                                const onError = (e, data) => {
+                                    if (data.fatal) {
+                                        hlsPlayer.off(Hls.Events.MANIFEST_PARSED, onSuccess);
+                                        hlsPlayer.off(Hls.Events.ERROR, onError);
+                                        reject(new Error(`HLS fatal: ${data.type}`));
+                                    }
+                                };
+
+                                hlsPlayer.on(Hls.Events.MANIFEST_PARSED, onSuccess);
+                                hlsPlayer.on(Hls.Events.ERROR, onError);
+
+                                setTimeout(() => {
+                                    if (!loaded) {
+                                        hlsPlayer.off(Hls.Events.MANIFEST_PARSED, onSuccess);
+                                        hlsPlayer.off(Hls.Events.ERROR, onError);
+                                        reject(new Error('Timeout load manifest'));
+                                    }
+                                }, 15000);
+                            });
+                        };
+
+                        let loadSuccess = false;
+
+                        // Coba langsung
+                        try {
+                            console.log(`[HLS] Mencoba langsung: ${channel.url}`);
+                            await tryHlsLoad(channel.url);
+                            loadSuccess = true;
+                            console.log('[HLS] ✅ Load langsung berhasil');
+                        } catch (err) {
+                            console.warn('[HLS] Gagal langsung:', err.message);
+                            // Coba proxy
+                            for (const proxy of PROXY_LIST) {
+                                try {
+                                    const proxyUrl = proxy + encodeURIComponent(channel.url);
+                                    console.log(`[HLS] Mencoba proxy: ${proxy}`);
+                                    await tryHlsLoad(proxyUrl);
+                                    loadSuccess = true;
+                                    console.log(`[HLS] ✅ Load via ${proxy.split('/')[2]} berhasil`);
+                                    break;
+                                } catch (proxyErr) {
+                                    console.warn(`[HLS] Proxy ${proxy.split('/')[2]} gagal:`, proxyErr.message);
+                                }
+                            }
+                        }
+
+                        if (!loadSuccess) {
+                            throw new Error('Gagal memuat manifest HLS dari semua metode');
+                        }
+
+                        // Tunggu buffer
+                        showLoading(`⏳ Menyiapkan buffer...`);
+                        await new Promise(resolve => {
+                            const checkBuffer = () => {
+                                if (video.buffered.length > 0) {
+                                    const bufferedEnd = video.buffered.end(video.buffered.length - 1);
+                                    const currentTime = video.currentTime || 0;
+                                    if (bufferedEnd - currentTime > 3) {
+                                        resolve();
+                                    } else {
+                                        setTimeout(checkBuffer, 500);
+                                    }
+                                } else {
+                                    setTimeout(checkBuffer, 500);
+                                }
+                            };
+                            checkBuffer();
+                        });
+
+                        await video.play();
+                        hideLoading();
+                        updateStatus(`▶️ Memutar ${channel.name}`, 'status-playing');
+                        _isPlaying = false;
+                        if (playTimeout) clearTimeout(playTimeout);
+                        return;
+                    } else {
+                        // Fallback native
+                        video.src = channel.url;
+                        await video.play();
+                        hideLoading();
+                        updateStatus(`▶️ Memutar ${channel.name}`, 'status-playing');
+                        _isPlaying = false;
+                        if (playTimeout) clearTimeout(playTimeout);
+                        return;
+                    }
+                }
+
+                // ===== MPEG-TS / Unknown =====
+                else {
+                    video.src = channel.url;
+                    await video.play();
+                    hideLoading();
+                    updateStatus(`▶️ Memutar ${channel.name}`, 'status-playing');
+                    _isPlaying = false;
+                    if (playTimeout) clearTimeout(playTimeout);
+                    return;
+                }
 
             } catch (error) {
                 console.error('[PLAY] Error:', error);
                 let msg = error.message || 'Gagal memutar';
                 if (error.code === 1002) msg = 'Link video tidak valid';
+                if (error.code === 3015) msg = 'DRM error - tidak bisa diputar';
                 updateStatus(`⚠️ ${msg}`, 'status-error');
                 hideLoading();
                 _isPlaying = false;
@@ -862,7 +1060,7 @@
         // ============================================================
         //  INIT
         // ============================================================
-        console.log('[INIT] Memulai IPTV Player (Native video.src)...');
+        console.log('[INIT] Memulai IPTV Player (Firebase + Vercel Proxy)...');
         loadChannelsFromFirebase();
     </script>
 </body>
