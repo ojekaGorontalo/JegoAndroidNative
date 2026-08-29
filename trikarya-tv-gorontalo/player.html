@@ -301,15 +301,15 @@
         let playTimeout = null;
 
         // ============================================================
-        //  KONFIGURASI URL M3U
+        //  KONFIGURASI URL M3U & PROXY (Vercel utama + corsproxy.io cadangan)
         // ============================================================
         const M3U_URL =
             'https://www.dropbox.com/scl/fi/bmy5q6s7jseaapmakxao2/popular-sports-iptv.m3u?rlkey=2ur64tzoclr6ehltjvov3otba&st=vaqtzoxc&dl=1';
 
+        // Daftar proxy: Vercel utama, corsproxy.io sebagai cadangan
         const PROXY_LIST = [
-            'https://api.allorigins.win/raw?url=',
-            'https://corsproxy.io/?',
-            'https://directv-iptv-player.vercel.app/api/stream?url='
+            'https://directv-iptv-player.vercel.app/api/stream?url=',
+            'https://corsproxy.io/?'
         ];
 
         // ============================================================
@@ -335,7 +335,7 @@
                 addLog(`⚠️ Gagal langsung: ${e.message}`, 'warn');
             }
 
-            // Coba proxy
+            // Coba proxy (Vercel dulu, lalu corsproxy.io)
             for (const proxy of PROXY_LIST) {
                 try {
                     const proxyUrl = proxy + encodeURIComponent(url);
@@ -435,7 +435,7 @@
         }
 
         // ============================================================
-        //  PLAY CHANNEL (dengan timeout 30 detik)
+        //  PLAY CHANNEL (dengan timeout 30 detik & proxy fallback)
         // ============================================================
         async function playChannel(index) {
             if (isPlaying) {
@@ -460,11 +460,11 @@
 
             destroyAll();
 
-            // Timeout 20 detik untuk reset isPlaying
+            // Timeout 30 detik untuk reset isPlaying
             if (playTimeout) clearTimeout(playTimeout);
             playTimeout = setTimeout(() => {
                 if (isPlaying) {
-                    addLog(`⏰ Timeout 20 detik, skip channel ${ch.name}`, 'warn');
+                    addLog(`⏰ Timeout 30 detik, skip channel ${ch.name}`, 'warn');
                     isPlaying = false;
                     setStatus(`⏱️ Timeout, coba channel lain`, 'error');
                     const nextIdx = (currentIndex + 1) % filteredChannels.length;
@@ -590,10 +590,10 @@
                             return;
                         } catch (err) {
                             addLog(`⚠️ Gagal load langsung: ${err.message}`, 'warn');
+                            // Coba proxy (Vercel lalu corsproxy.io)
                             const proxyList = [
                                 'https://directv-iptv-player.vercel.app/api/stream?url=',
-                                'https://corsproxy.io/?',
-                                'https://api.allorigins.win/raw?url='
+                                'https://corsproxy.io/?'
                             ];
                             for (const proxy of proxyList) {
                                 try {
@@ -794,7 +794,7 @@
         // ============================================================
         //  INIT
         // ============================================================
-        addLog('🚀 Player siap (stabil, timeout 20s). Memulai auto-load dari Dropbox...', 'info');
+        addLog('🚀 Player siap (stabil, timeout 30s, proxy Vercel + corsproxy.io). Memulai auto-load dari Dropbox...', 'info');
         autoLoadFromDropbox();
     </script>
 </body>
