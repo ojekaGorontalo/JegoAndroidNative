@@ -6,19 +6,38 @@
     <title>IPTV TRIKARYA - Player</title>
 
     <!-- Library Pemutar -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.12/shaka-player.compiled.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@0.14.17/dist/hls.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mpegts.js/0.16.6/mpegts.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.12/shaka-player.compiled.js">
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@0.14.17/dist/hls.min.js">
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mpegts.js/0.16.6/mpegts.js">
+    </script>
 
     <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js">
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js">
+    </script>
 
     <style>
         /* ===== RESET & BASE ===== */
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0a0a0a; color: #fff; display: flex; justify-content: center; padding: 16px 16px 30px; }
-        .container { max-width: 1100px; width: 100%; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            padding: 16px 16px 30px;
+        }
+        .container {
+            max-width: 1100px;
+            width: 100%;
+        }
 
         /* ===== HEADER ===== */
         .header {
@@ -35,18 +54,86 @@
             box-shadow: 0 4px 20px rgba(0, 212, 255, 0.06);
             min-height: 52px;
         }
-        .header-left { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-        .header-title { font-size: 20px; font-weight: 700; color: #00d4ff; letter-spacing: 0.2px; white-space: nowrap; line-height: 1.2; }
-        .header-title span { color: #fff; font-weight: 300; }
-        .header-right { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; }
-        .logout-btn { background: #ff4444; color: #fff; border: none; padding: 6px 16px; border-radius: 30px; font-size: 13px; font-weight: 700; cursor: pointer; transition: 0.25s; white-space: nowrap; line-height: 1.4; }
-        .logout-btn:hover { background: #cc0000; transform: scale(1.02); }
-        .file-info { color: #aaa; font-size: 13px; background: #1a1a1a; padding: 4px 14px; border-radius: 20px; border: 1px solid #2a2a2a; white-space: nowrap; display: flex; align-items: center; gap: 5px; line-height: 1.4; }
-        .file-info .fname { color: #fff; font-weight: 500; max-width: 150px; overflow: hidden; text-overflow: ellipsis; }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+        .header-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #00d4ff;
+            letter-spacing: 0.2px;
+            white-space: nowrap;
+            line-height: 1.2;
+        }
+        .header-title span {
+            color: #fff;
+            font-weight: 300;
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px 12px;
+        }
+        .logout-btn {
+            background: #ff4444;
+            color: #fff;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.25s;
+            white-space: nowrap;
+            line-height: 1.4;
+        }
+        .logout-btn:hover {
+            background: #cc0000;
+            transform: scale(1.02);
+        }
+        .file-info {
+            color: #aaa;
+            font-size: 13px;
+            background: #1a1a1a;
+            padding: 4px 14px;
+            border-radius: 20px;
+            border: 1px solid #2a2a2a;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            line-height: 1.4;
+        }
+        .file-info .fname {
+            color: #fff;
+            font-weight: 500;
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
 
         /* ===== VIDEO ===== */
-        .video-wrapper { position: sticky; top: 0; z-index: 10; background: #0a0a0a; padding: 0 0 8px 0; margin-bottom: 4px; }
-        #videoContainer { position: relative; width: 100%; background: #111; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 30px rgba(0, 212, 255, 0.10); border: 1px solid #1e1e1e; }
+        .video-wrapper {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: #0a0a0a;
+            padding: 0 0 8px 0;
+            margin-bottom: 4px;
+        }
+        #videoContainer {
+            position: relative;
+            width: 100%;
+            background: #111;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 30px rgba(0, 212, 255, 0.10);
+            border: 1px solid #1e1e1e;
+        }
         video {
             width: 100%;
             display: block;
@@ -55,11 +142,22 @@
         }
 
         /* ===== SEMBUNYIKAN PROGRESS BAR & DURASI UNTUK LIVE ===== */
-        video::-webkit-media-controls-timeline { display: none !important; }
-        video::-webkit-media-controls-current-time-display { display: none !important; }
-        video::-webkit-media-controls-time-remaining-display { display: none !important; }
-        video::-moz-range-thumb { display: none !important; }
-        video::-ms-timeline { display: none !important; }
+        video::-webkit-media-controls-timeline {
+            display: none !important;
+        }
+        video::-webkit-media-controls-current-time-display {
+            display: none !important;
+        }
+        video::-webkit-media-controls-time-remaining-display {
+            display: none !important;
+        }
+        video::-webkit-media-controls-seek-backward-button,
+        video::-webkit-media-controls-seek-forward-button {
+            display: none !important;
+        }
+        video::-moz-range-track {
+            display: none !important;
+        }
 
         /* ===== LOADING OVERLAY ===== */
         #loadingOverlay {
@@ -74,7 +172,9 @@
             transition: opacity 0.5s;
             pointer-events: none;
         }
-        #loadingOverlay.hidden { opacity: 0; }
+        #loadingOverlay.hidden {
+            opacity: 0;
+        }
         .spinner {
             width: 50px;
             height: 50px;
@@ -87,7 +187,12 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        #loadingText { color: #00d4ff; margin-top: 12px; font-size: 14px; font-weight: 500; }
+        #loadingText {
+            color: #00d4ff;
+            margin-top: 12px;
+            font-size: 14px;
+            font-weight: 500;
+        }
 
         /* ===== STATUS ===== */
         #status {
@@ -102,6 +207,7 @@
             justify-content: center;
             margin: 6px 0 10px;
             border: 1px solid #2a2a2a;
+            font-family: 'Courier New', monospace;
         }
         .status-loading { color: #ffcc00; }
         .status-error { color: #ff4444; }
@@ -110,7 +216,9 @@
         .status-info { color: #00d4ff; }
 
         /* ===== SEARCH ===== */
-        .search-bar { margin-bottom: 12px; }
+        .search-bar {
+            margin-bottom: 12px;
+        }
         .search-bar input {
             width: 100%;
             padding: 10px 16px 10px 44px;
@@ -126,11 +234,16 @@
             background-position: 14px center;
             background-size: 18px;
         }
-        .search-bar input:focus { border-color: #00d4ff; box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.12); }
+        .search-bar input:focus {
+            border-color: #00d4ff;
+            box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.12);
+        }
         .search-bar input::placeholder { color: #555; }
 
         /* ===== CHANNEL SECTION ===== */
-        .channel-section { margin-top: 2px; }
+        .channel-section {
+            margin-top: 2px;
+        }
         .channel-header {
             display: flex;
             justify-content: space-between;
@@ -139,7 +252,11 @@
             flex-wrap: wrap;
             gap: 6px 12px;
         }
-        .channel-header .count { color: #666; font-size: 13px; font-weight: 500; }
+        .channel-header .count {
+            color: #666;
+            font-size: 13px;
+            font-weight: 500;
+        }
         .toggle-btn {
             background: #1e1e1e;
             color: #00d4ff;
@@ -152,7 +269,10 @@
             transition: 0.3s;
             line-height: 1.4;
         }
-        .toggle-btn:hover { background: #00d4ff; color: #0a0a0a; }
+        .toggle-btn:hover {
+            background: #00d4ff;
+            color: #0a0a0a;
+        }
 
         .channel-selector {
             display: none;
@@ -163,7 +283,9 @@
             max-height: 500px;
             overflow-y: auto;
         }
-        .channel-selector.show { display: block; }
+        .channel-selector.show {
+            display: block;
+        }
         .channel-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -188,8 +310,18 @@
             overflow: hidden;
             text-align: center;
         }
-        .channel-btn:hover { border-color: #00d4ff; background: #1a1f2a; transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0, 212, 255, 0.10); }
-        .channel-btn.active { border-color: #00d4ff; background: rgba(0, 212, 255, 0.12); box-shadow: 0 0 30px rgba(0, 212, 255, 0.08), inset 0 0 30px rgba(0, 212, 255, 0.03); transform: translateY(-2px); }
+        .channel-btn:hover {
+            border-color: #00d4ff;
+            background: #1a1f2a;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 212, 255, 0.10);
+        }
+        .channel-btn.active {
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.12);
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.08), inset 0 0 30px rgba(0, 212, 255, 0.03);
+            transform: translateY(-2px);
+        }
         .channel-btn img {
             width: 60px;
             height: 60px;
@@ -200,7 +332,9 @@
             border: 1px solid #2a2a2a;
             transition: border-color 0.2s;
         }
-        .channel-btn.active img { border-color: #00d4ff; }
+        .channel-btn.active img {
+            border-color: #00d4ff;
+        }
         .channel-btn .channel-name {
             font-size: 12px;
             font-weight: 600;
@@ -234,7 +368,11 @@
             align-items: center;
             gap: 8px;
         }
-        .group-title::before { content: '▸'; font-size: 16px; color: #00d4ff; }
+        .group-title::before {
+            content: '▸';
+            font-size: 16px;
+            color: #00d4ff;
+        }
         .no-result {
             grid-column: 1 / -1;
             text-align: center;
@@ -388,6 +526,15 @@
         let mpegtsPlayer = null;
         let _isPlaying = false;
         let _isChannelListVisible = false;
+        let playTimeout = null;
+
+        // ============================================================
+        //  DAFTAR PROXY (Vercel + corsproxy.io)
+        // ============================================================
+        const PROXY_LIST = [
+            'https://directv-iptv-player.vercel.app/api/stream?url=',
+            'https://corsproxy.io/?'
+        ];
 
         // ============================================================
         //  LOADING OVERLAY
@@ -445,10 +592,13 @@
         }
 
         // ============================================================
-        //  PLAY CHANNEL (OPTIMASI BUFFER UNTUK LIVE)
+        //  PLAY CHANNEL (dengan proxy fallback & timeout)
         // ============================================================
         async function playChannel(index) {
-            if (_isPlaying) return;
+            if (_isPlaying) {
+                console.log('[PLAY] Masih ada pemutaran berjalan');
+                return;
+            }
 
             const channel = channels[index];
             if (!channel || !channel.url) {
@@ -469,6 +619,22 @@
 
             destroyAllPlayers();
 
+            // Timeout 30 detik untuk reset isPlaying
+            if (playTimeout) clearTimeout(playTimeout);
+            playTimeout = setTimeout(() => {
+                if (_isPlaying) {
+                    console.log(`[PLAY] Timeout 30 detik, skip ${channel.name}`);
+                    updateStatus('⏱️ Timeout, coba channel lain', 'status-error');
+                    hideLoading();
+                    _isPlaying = false;
+                    // Coba channel berikutnya
+                    const nextIdx = (currentChannelIndex + 1) % channels.length;
+                    if (nextIdx !== currentChannelIndex) {
+                        setTimeout(() => playChannel(nextIdx), 1000);
+                    }
+                }
+            }, 30000);
+
             try {
                 const headers = {};
                 if (channel.userAgent) headers['User-Agent'] = channel.userAgent;
@@ -477,11 +643,9 @@
                 let type = channel.streamType || detectStreamType(channel.url);
                 console.log(`[PLAY] Tipe: ${type}`);
 
-                // ===== DASH (OPTIMASI UNTUK LIVE) =====
+                // ===== DASH =====
                 if (type === 'dash') {
                     shakaPlayer = new shaka.Player();
-
-                    // Konfigurasi khusus untuk live stream
                     shakaPlayer.configure({
                         manifest: {
                             retryParameters: {
@@ -489,16 +653,6 @@
                                 timeout: 15000,
                                 backoffFactor: 2,
                                 baseDelay: 1000
-                            },
-                            dash: {
-                                clockSyncUri: '',
-                                ignoreMinBufferTime: false,
-                                manifestUpdateRetryParameters: {
-                                    maxAttempts: 3,
-                                    timeout: 15000,
-                                    backoffFactor: 2,
-                                    baseDelay: 1000
-                                }
                             }
                         },
                         drm: {
@@ -516,20 +670,15 @@
                                 backoffFactor: 2,
                                 baseDelay: 1000
                             },
-                            // ** Buffer besar untuk live **
-                            bufferingGoal: 30,        // target buffer 30 detik
-                            rebufferingGoal: 15,      // mulai rebuffer jika tersisa 15 detik
-                            bufferBehind: 30,         // maksimal buffer 30 detik di belakang live
+                            bufferingGoal: 30,
+                            rebufferingGoal: 15,
+                            bufferBehind: 30,
                             stallEnabled: true,
-                            stallThreshold: 2,        // detik tanpa progress dianggap stall
-                            liveDelay: 20,            // target delay 20 detik dari live
-                            durationBackoff: 1
+                            stallThreshold: 2
                         }
                     });
-
                     await shakaPlayer.attach(video);
 
-                    // DRM Config
                     const drmConfig = {};
                     if (channel.keyId && channel.key) {
                         drmConfig.clearKeys = { [channel.keyId]: channel.key };
@@ -542,43 +691,49 @@
                     }
 
                     // Set headers
-                    if (Object.keys(headers).length > 0) {
-                        shakaPlayer.getNetworkingEngine().registerRequestFilter((type, request) => {
-                            for (const [key, value] of Object.entries(headers)) {
-                                request.headers[key] = value;
-                            }
-                        });
-                    }
-
-                    // Error handler
-                    let errorOccurred = false;
-                    shakaPlayer.addEventListener('error', (e) => {
-                        const err = e.detail;
-                        console.error('[DASH] Error:', err);
-                        if (!errorOccurred) {
-                            errorOccurred = true;
-                            const msg = err.code === 1002 ? 'Manifest tidak valid' :
-                                       err.code === 3015 ? 'DRM error' :
-                                       err.code === 6012 ? 'Gagal akses manifest' : err.message;
-                            updateStatus(`⚠️ ${msg}`, 'status-error');
-                            hideLoading();
-                            _isPlaying = false;
-                        }
+                    shakaPlayer.getNetworkingEngine().registerRequestFilter((type, request) => {
+                        if (headers['User-Agent']) request.headers['User-Agent'] = headers['User-Agent'];
+                        if (headers['Referer']) request.headers['Referer'] = headers['Referer'];
                     });
 
-                    // Load manifest
-                    showLoading(`📡 Mengambil stream ${channel.name}...`);
-                    await shakaPlayer.load(channel.url);
+                    let loadSuccess = false;
 
-                    // ** TUNGGU BUFFER TERISI SEBELUM PLAY **
+                    // Coba langsung
+                    try {
+                        console.log(`[DASH] Mencoba langsung: ${channel.url}`);
+                        await shakaPlayer.load(channel.url);
+                        loadSuccess = true;
+                        console.log('[DASH] ✅ Load langsung berhasil');
+                    } catch (directErr) {
+                        console.warn('[DASH] Gagal langsung:', directErr.message);
+                        // Coba proxy
+                        for (const proxy of PROXY_LIST) {
+                            try {
+                                const proxyUrl = proxy + encodeURIComponent(channel.url);
+                                console.log(`[DASH] Mencoba proxy: ${proxy}`);
+                                await shakaPlayer.load(proxyUrl);
+                                loadSuccess = true;
+                                console.log(`[DASH] ✅ Load via ${proxy.split('/')[2]} berhasil`);
+                                break;
+                            } catch (proxyErr) {
+                                console.warn(`[DASH] Proxy ${proxy.split('/')[2]} gagal:`, proxyErr.message);
+                            }
+                        }
+                    }
+
+                    if (!loadSuccess) {
+                        throw new Error('Gagal memuat manifest DASH dari semua metode');
+                    }
+
+                    // Tunggu buffer
                     showLoading(`⏳ Menyiapkan buffer...`);
                     await new Promise(resolve => {
                         let attempts = 0;
-                        const maxAttempts = 10; // 20 * 500ms = 10 detik
+                        const maxAttempts = 20;
                         const checkBuffer = () => {
                             attempts++;
                             const stats = shakaPlayer.getStats();
-                            if (stats.bufferTime >= 5 || attempts >= maxAttempts) {
+                            if (stats.bufferTime >= 3 || attempts >= maxAttempts) {
                                 resolve();
                             } else {
                                 setTimeout(checkBuffer, 500);
@@ -587,48 +742,102 @@
                         checkBuffer();
                     });
 
-                    // Play
-                    showLoading(`▶️ Memutar ${channel.name}...`);
                     await video.play();
-
                     hideLoading();
                     updateStatus(`▶️ Memutar ${channel.name}`, 'status-playing');
                     _isPlaying = false;
+                    if (playTimeout) clearTimeout(playTimeout);
                     return;
                 }
 
                 // ===== HLS =====
                 else if (type === 'hls') {
                     if (Hls.isSupported()) {
-                        hlsPlayer = new Hls({
-                            xhrSetup: function(xhr, url) {
-                                for (const [key, value] of Object.entries(headers)) {
-                                    xhr.setRequestHeader(key, value);
+                        let loaded = false;
+
+                        const tryHlsLoad = (url) => {
+                            return new Promise((resolve, reject) => {
+                                if (hlsPlayer) {
+                                    try { hlsPlayer.destroy(); } catch (e) {}
                                 }
-                            },
-                            // Konfigurasi buffer untuk HLS live
-                            enableWorker: true,
-                            lowLatencyMode: false,
-                            backbufferLength: 30,
-                            maxBufferLength: 30,
-                            maxMaxBufferLength: 60,
-                            liveDurationInfinity: true,
-                            liveSyncDuration: 20,
-                            liveSyncDurationCount: 3
-                        });
-                        hlsPlayer.loadSource(channel.url);
-                        hlsPlayer.attachMedia(video);
-                        hlsPlayer.on(Hls.Events.MANIFEST_PARSED, () => {
-                            // Tunggu buffer sebelum play
+                                hlsPlayer = new Hls({
+                                    xhrSetup: function(xhr, reqUrl) {
+                                        if (headers['User-Agent']) xhr.setRequestHeader('User-Agent', headers[
+                                        'User-Agent']);
+                                        if (headers['Referer']) xhr.setRequestHeader('Referer', headers[
+                                        'Referer']);
+                                    }
+                                });
+
+                                hlsPlayer.loadSource(url);
+                                hlsPlayer.attachMedia(video);
+
+                                const onSuccess = () => {
+                                    hlsPlayer.off(Hls.Events.MANIFEST_PARSED, onSuccess);
+                                    hlsPlayer.off(Hls.Events.ERROR, onError);
+                                    loaded = true;
+                                    resolve();
+                                };
+
+                                const onError = (e, data) => {
+                                    if (data.fatal) {
+                                        hlsPlayer.off(Hls.Events.MANIFEST_PARSED, onSuccess);
+                                        hlsPlayer.off(Hls.Events.ERROR, onError);
+                                        reject(new Error(`HLS fatal: ${data.type}`));
+                                    }
+                                };
+
+                                hlsPlayer.on(Hls.Events.MANIFEST_PARSED, onSuccess);
+                                hlsPlayer.on(Hls.Events.ERROR, onError);
+
+                                setTimeout(() => {
+                                    if (!loaded) {
+                                        hlsPlayer.off(Hls.Events.MANIFEST_PARSED, onSuccess);
+                                        hlsPlayer.off(Hls.Events.ERROR, onError);
+                                        reject(new Error('Timeout load manifest'));
+                                    }
+                                }, 15000);
+                            });
+                        };
+
+                        let loadSuccess = false;
+
+                        // Coba langsung
+                        try {
+                            console.log(`[HLS] Mencoba langsung: ${channel.url}`);
+                            await tryHlsLoad(channel.url);
+                            loadSuccess = true;
+                            console.log('[HLS] ✅ Load langsung berhasil');
+                        } catch (err) {
+                            console.warn('[HLS] Gagal langsung:', err.message);
+                            // Coba proxy
+                            for (const proxy of PROXY_LIST) {
+                                try {
+                                    const proxyUrl = proxy + encodeURIComponent(channel.url);
+                                    console.log(`[HLS] Mencoba proxy: ${proxy}`);
+                                    await tryHlsLoad(proxyUrl);
+                                    loadSuccess = true;
+                                    console.log(`[HLS] ✅ Load via ${proxy.split('/')[2]} berhasil`);
+                                    break;
+                                } catch (proxyErr) {
+                                    console.warn(`[HLS] Proxy ${proxy.split('/')[2]} gagal:`, proxyErr.message);
+                                }
+                            }
+                        }
+
+                        if (!loadSuccess) {
+                            throw new Error('Gagal memuat manifest HLS dari semua metode');
+                        }
+
+                        // Tunggu buffer
+                        showLoading(`⏳ Menyiapkan buffer...`);
+                        await new Promise(resolve => {
                             const checkBuffer = () => {
                                 if (video.buffered.length > 0) {
                                     const bufferedEnd = video.buffered.end(video.buffered.length - 1);
-                                    const currentTime = video.currentTime;
-                                    if (bufferedEnd - currentTime > 5) {
-                                        video.play().catch(() => {});
-                                        hideLoading();
-                                        updateStatus(`▶️ Memutar ${channel.name}`, 'status-playing');
-                                        _isPlaying = false;
+                                    const currentTime = video.currentTime || 0;
+                                    if (bufferedEnd - currentTime > 3) {
+                                        resolve();
                                     } else {
                                         setTimeout(checkBuffer, 500);
                                     }
@@ -638,59 +847,33 @@
                             };
                             checkBuffer();
                         });
-                        hlsPlayer.on(Hls.Events.ERROR, (e, data) => {
-                            console.error('[HLS] Error:', data);
-                            if (data.fatal) {
-                                updateStatus('⚠️ Streaming gagal', 'status-error');
-                                hideLoading();
-                                _isPlaying = false;
-                            }
-                        });
-                    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                        video.src = channel.url;
-                        video.play();
+
+                        await video.play();
                         hideLoading();
                         updateStatus(`▶️ Memutar ${channel.name}`, 'status-playing');
                         _isPlaying = false;
+                        if (playTimeout) clearTimeout(playTimeout);
+                        return;
                     } else {
-                        throw new Error('HLS tidak didukung');
+                        // Fallback native
+                        video.src = channel.url;
+                        await video.play();
+                        hideLoading();
+                        updateStatus(`▶️ Memutar ${channel.name}`, 'status-playing');
+                        _isPlaying = false;
+                        if (playTimeout) clearTimeout(playTimeout);
+                        return;
                     }
-                    return;
                 }
 
-                // ===== MPEG-TS =====
-                else if (type === 'mpegts') {
-                    if (typeof mpegts !== 'undefined' && mpegts.isSupported()) {
-                        mpegtsPlayer = mpegts.createPlayer({
-                            type: 'mpegts',
-                            url: channel.url,
-                            isLive: true,
-                            enableStashBuffer: false,
-                            cors: true
-                        });
-                        mpegtsPlayer.attachMediaElement(video);
-                        mpegtsPlayer.load();
-                        video.play();
-                        hideLoading();
-                        updateStatus(`▶️ Memutar ${channel.name}`, 'status-playing');
-                        _isPlaying = false;
-                    } else {
-                        video.src = channel.url;
-                        video.play();
-                        hideLoading();
-                        updateStatus(`▶️ Memutar ${channel.name}`, 'status-playing');
-                        _isPlaying = false;
-                    }
-                    return;
-                }
-
-                // ===== VOD / Unknown =====
+                // ===== MPEG-TS / Unknown =====
                 else {
                     video.src = channel.url;
-                    video.play();
+                    await video.play();
                     hideLoading();
                     updateStatus(`▶️ Memutar ${channel.name}`, 'status-playing');
                     _isPlaying = false;
+                    if (playTimeout) clearTimeout(playTimeout);
                     return;
                 }
 
@@ -702,6 +885,13 @@
                 updateStatus(`⚠️ ${msg}`, 'status-error');
                 hideLoading();
                 _isPlaying = false;
+                if (playTimeout) clearTimeout(playTimeout);
+
+                // Coba channel berikutnya setelah 3 detik
+                const nextIdx = (currentChannelIndex + 1) % channels.length;
+                if (nextIdx !== currentChannelIndex) {
+                    setTimeout(() => playChannel(nextIdx), 3000);
+                }
             }
         }
 
@@ -763,7 +953,9 @@
                 btn.appendChild(span);
                 btn.addEventListener('click', function() {
                     const idx = parseInt(this.dataset.index);
-                    if (idx !== currentChannelIndex) playChannel(idx);
+                    if (idx !== currentChannelIndex || !_isPlaying) {
+                        playChannel(idx);
+                    }
                 });
                 grid.appendChild(btn);
             });
@@ -805,12 +997,13 @@
                     channels.sort((a, b) => (a.index || 0) - (b.index || 0));
                 }
 
-                console.log(`[LOAD] ${channels.length} channel dimuat.`);
+                console.log(`[LOAD] ${channels.length} channel dimuat dari Firebase.`);
                 fileName.textContent = `✅ ${channels.length} channel`;
 
                 if (channels.length === 0) {
                     updateStatus('⚠️ Tidak ada channel di database.', 'status-error');
-                    channelSelector.innerHTML = `<div class="no-result">📺 Belum ada channel.</div>`;
+                    channelSelector.innerHTML =
+                    `<div class="no-result">📺 Belum ada channel. Tambahkan melalui Admin Console.</div>`;
                     channelCount.textContent = '0 channel';
                     return;
                 }
@@ -827,8 +1020,8 @@
                 playChannel(0);
 
             }, (error) => {
-                console.error('[LOAD] Error:', error);
-                updateStatus(`⚠️ Gagal memuat: ${error.message}`, 'status-error');
+                console.error('[LOAD] Error Firebase:', error);
+                updateStatus(`⚠️ Gagal memuat dari Firebase: ${error.message}`, 'status-error');
                 fileName.textContent = '❌ Gagal load';
             });
         }
@@ -860,13 +1053,14 @@
         //  CLEANUP
         // ============================================================
         window.addEventListener('beforeunload', () => {
+            if (playTimeout) clearTimeout(playTimeout);
             destroyAllPlayers();
         });
 
         // ============================================================
         //  INIT
         // ============================================================
-        console.log('[INIT] Memulai IPTV Player...');
+        console.log('[INIT] Memulai IPTV Player (Firebase + Vercel Proxy)...');
         loadChannelsFromFirebase();
     </script>
 </body>
