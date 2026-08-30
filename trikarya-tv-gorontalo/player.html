@@ -435,7 +435,7 @@
         }
 
         // ============================================================
-        //  PLAY CHANNEL (dengan timeout 30 detik & proxy fallback)
+        //  PLAY CHANNEL (tanpa auto-next, hanya timeout untuk reset isPlaying)
         // ============================================================
         async function playChannel(index) {
             if (isPlaying) {
@@ -460,17 +460,13 @@
 
             destroyAll();
 
-            // Timeout 30 detik untuk reset isPlaying
+            // Timeout 30 detik hanya untuk reset isPlaying (tanpa auto-next)
             if (playTimeout) clearTimeout(playTimeout);
             playTimeout = setTimeout(() => {
                 if (isPlaying) {
-                    addLog(`⏰ Timeout 30 detik, skip channel ${ch.name}`, 'warn');
+                    addLog(`⏰ Timeout 30 detik, gagal memutar ${ch.name}`, 'warn');
                     isPlaying = false;
-                    setStatus(`⏱️ Timeout, coba channel lain`, 'error');
-                    const nextIdx = (currentIndex + 1) % filteredChannels.length;
-                    if (nextIdx !== currentIndex) {
-                        setTimeout(() => playChannel(nextIdx), 500);
-                    }
+                    setStatus(`⏱️ Timeout - ${ch.name} tidak merespon`, 'error');
                 }
             }, 30000);
 
@@ -648,10 +644,7 @@
                 setStatus(`❌ ${err.message || 'Gagal memutar'}`, 'error');
                 isPlaying = false;
                 if (playTimeout) clearTimeout(playTimeout);
-                const nextIdx = (currentIndex + 1) % filteredChannels.length;
-                if (nextIdx !== currentIndex) {
-                    setTimeout(() => playChannel(nextIdx), 1000);
-                }
+                // TIDAK ADA auto-next di sini
             }
         }
 
@@ -714,17 +707,9 @@
             setStatus(`✅ ${channels.length} channel dimuat`, 'idle');
             render('');
 
-            // Cari channel yang bukan 5Sport / Šport
-            let startIdx = 0;
-            for (let i = 0; i < Math.min(20, channels.length); i++) {
-                const chName = channels[i].name || '';
-                if (!chName.includes('5Sport') && !chName.includes('Šport')) {
-                    startIdx = i;
-                    break;
-                }
-            }
+            // Mulai dari channel pertama (indeks 0) tanpa filter apapun
             setTimeout(() => {
-                playChannel(startIdx);
+                playChannel(0);
             }, 500);
         }
 
