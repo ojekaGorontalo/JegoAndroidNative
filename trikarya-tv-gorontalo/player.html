@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>IPTV TRIKARYA - Player (Shaka)</title>
+    <title>IPTV TRIKARYA - Player Pro</title>
 
     <!-- Shaka Player (wajib untuk DASH) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.12/shaka-player.compiled.js">
@@ -463,7 +463,7 @@
         <!-- ===== HEADER ===== -->
         <div class="header">
             <div class="header-left">
-                <div class="header-title">📺 IPTV-TRIKARYA <span>Shaka</span></div>
+                <div class="header-title">📺 IPTV-TRIKARYA <span>Pro</span></div>
             </div>
             <div class="header-right">
                 <div class="file-info" id="fileInfo">
@@ -553,11 +553,10 @@
         let _isChannelListVisible = false;
         let playTimeout = null;
 
-        // Daftar proxy untuk fallback
-        const PROXY_LIST = [
-            'https://directv-iptv-player.vercel.app/api/stream?url=',
-            'https://corsproxy.io/?'
-        ];
+        // ============================================================
+        //  🔗 PROXY CLOUDFLARE WORKER ANDA
+        // ============================================================
+        const PROXY_URL = 'https://workers-playground-green-dew-c1ae.ironajalah.workers.dev/?url=';
 
         // ============================================================
         //  UNMUTE BUTTON
@@ -590,6 +589,18 @@
         }
 
         // ============================================================
+        //  DETECT STREAM TYPE
+        // ============================================================
+        function detectStreamType(url) {
+            const lower = url.toLowerCase();
+            if (lower.includes('.mpd') || lower.includes('cenc.mpd')) return 'dash';
+            if (lower.includes('.m3u8')) return 'hls';
+            if (lower.includes('.ts') || lower.includes('extension=ts')) return 'mpegts';
+            if (lower.includes('.mp4') || lower.includes('videoplayback')) return 'vod';
+            return 'unknown';
+        }
+
+        // ============================================================
         //  DESTROY PLAYERS
         // ============================================================
         function destroyAllPlayers() {
@@ -611,7 +622,7 @@
         }
 
         // ============================================================
-        //  PLAY CHANNEL (DENGAN SHAKA PLAYER)
+        //  PLAY CHANNEL (DENGAN PROXY OTOMATIS)
         // ============================================================
         async function playChannel(index) {
             if (_isPlaying) {
@@ -662,7 +673,7 @@
                 console.log(`[PLAY] Tipe: ${type}`);
 
                 // ============================================================
-                //  🎬 DASH - Menggunakan Shaka Player
+                //  🎬 DASH - Menggunakan Shaka Player + PROXY
                 // ============================================================
                 if (type === 'dash') {
                     shakaPlayer = new shaka.Player();
@@ -715,7 +726,6 @@
                     shakaPlayer.getNetworkingEngine().registerRequestFilter((type, request) => {
                         if (headers['User-Agent']) request.headers['User-Agent'] = headers['User-Agent'];
                         if (headers['Referer']) request.headers['Referer'] = headers['Referer'];
-                        // Tambahkan header umum
                         request.headers['Accept'] = '*/*';
                         request.headers['Accept-Encoding'] = 'gzip, deflate, br';
                         request.headers['Connection'] = 'keep-alive';
@@ -725,34 +735,19 @@
                         }
                     });
 
-                    let loadSuccess = false;
-
-                    // Coba langsung
-                    try {
-                        console.log(`[DASH] Mencoba langsung: ${channel.url}`);
-                        await shakaPlayer.load(channel.url);
-                        loadSuccess = true;
-                        console.log('[DASH] ✅ Load langsung berhasil');
-                    } catch (directErr) {
-                        console.warn('[DASH] Gagal langsung:', directErr.message);
-                        // Coba proxy
-                        for (const proxy of PROXY_LIST) {
-                            try {
-                                const proxyUrl = proxy + encodeURIComponent(channel.url);
-                                console.log(`[DASH] Mencoba proxy: ${proxy}`);
-                                await shakaPlayer.load(proxyUrl);
-                                loadSuccess = true;
-                                console.log(`[DASH] ✅ Load via ${proxy.split('/')[2]} berhasil`);
-                                break;
-                            } catch (proxyErr) {
-                                console.warn(`[DASH] Proxy ${proxy.split('/')[2]} gagal:`, proxyErr.message);
-                            }
-                        }
+                    // ============================================================
+                    //  🔗 GUNAKAN PROXY UNTUK SEMUA URL (KECUALI LOCALHOST)
+                    // ============================================================
+                    let finalUrl = channel.url;
+                    if (!channel.url.includes('localhost') && !channel.url.includes('127.0.0.1')) {
+                        finalUrl = PROXY_URL + encodeURIComponent(channel.url);
+                        console.log(`[DASH] Menggunakan proxy: ${finalUrl}`);
+                    } else {
+                        console.log(`[DASH] Menggunakan langsung: ${finalUrl}`);
                     }
 
-                    if (!loadSuccess) {
-                        throw new Error('Gagal memuat manifest DASH dari semua metode');
-                    }
+                    // Load manifest
+                    await shakaPlayer.load(finalUrl);
 
                     // Tunggu buffer
                     showLoading(`⏳ Menyiapkan buffer...`);
@@ -769,7 +764,6 @@
                                     setTimeout(checkBuffer, 500);
                                 }
                             } catch (e) {
-                                // Jika player sudah mati, resolve
                                 resolve();
                             }
                         };
@@ -791,10 +785,18 @@
                 }
 
                 // ============================================================
-                //  🎬 HLS - Menggunakan HLS.js
+                //  🎬 HLS - Menggunakan HLS.js + PROXY
                 // ============================================================
                 else if (type === 'hls') {
                     if (Hls.isSupported()) {
+                        let finalUrl = channel.url;
+                        if (!channel.url.includes('localhost') && !channel.url.includes('127.0.0.1')) {
+                            finalUrl = PROXY_URL + encodeURIComponent(channel.url);
+                            console.log(`[HLS] Menggunakan proxy: ${finalUrl}`);
+                        } else {
+                            console.log(`[HLS] Menggunakan langsung: ${finalUrl}`);
+                        }
+
                         let loaded = false;
 
                         const tryHlsLoad = (url) => {
@@ -842,34 +844,7 @@
                             });
                         };
 
-                        let loadSuccess = false;
-
-                        // Coba langsung
-                        try {
-                            console.log(`[HLS] Mencoba langsung: ${channel.url}`);
-                            await tryHlsLoad(channel.url);
-                            loadSuccess = true;
-                            console.log('[HLS] ✅ Load langsung berhasil');
-                        } catch (err) {
-                            console.warn('[HLS] Gagal langsung:', err.message);
-                            // Coba proxy
-                            for (const proxy of PROXY_LIST) {
-                                try {
-                                    const proxyUrl = proxy + encodeURIComponent(channel.url);
-                                    console.log(`[HLS] Mencoba proxy: ${proxy}`);
-                                    await tryHlsLoad(proxyUrl);
-                                    loadSuccess = true;
-                                    console.log(`[HLS] ✅ Load via ${proxy.split('/')[2]} berhasil`);
-                                    break;
-                                } catch (proxyErr) {
-                                    console.warn(`[HLS] Proxy ${proxy.split('/')[2]} gagal:`, proxyErr.message);
-                                }
-                            }
-                        }
-
-                        if (!loadSuccess) {
-                            throw new Error('Gagal memuat manifest HLS dari semua metode');
-                        }
+                        await tryHlsLoad(finalUrl);
 
                         // MUTED AUTOPLAY
                         video.muted = true;
@@ -904,7 +879,11 @@
                         return;
                     } else {
                         // Fallback native
-                        video.src = channel.url;
+                        let finalUrl = channel.url;
+                        if (!channel.url.includes('localhost') && !channel.url.includes('127.0.0.1')) {
+                            finalUrl = PROXY_URL + encodeURIComponent(channel.url);
+                        }
+                        video.src = finalUrl;
                         video.muted = true;
                         unmuteBtn.style.display = 'block';
                         unmuteBtn.classList.add('show');
@@ -918,10 +897,14 @@
                 }
 
                 // ============================================================
-                //  🎬 Unknown / MPEG-TS / VOD - Native video.src
+                //  🎬 Unknown / MPEG-TS / VOD - Native video.src + PROXY
                 // ============================================================
                 else {
-                    video.src = channel.url;
+                    let finalUrl = channel.url;
+                    if (!channel.url.includes('localhost') && !channel.url.includes('127.0.0.1')) {
+                        finalUrl = PROXY_URL + encodeURIComponent(channel.url);
+                    }
+                    video.src = finalUrl;
                     video.muted = true;
                     unmuteBtn.style.display = 'block';
                     unmuteBtn.classList.add('show');
@@ -949,18 +932,6 @@
                     setTimeout(() => playChannel(nextIdx), 3000);
                 }
             }
-        }
-
-        // ============================================================
-        //  DETECT STREAM TYPE
-        // ============================================================
-        function detectStreamType(url) {
-            const lower = url.toLowerCase();
-            if (lower.includes('.mpd') || lower.includes('cenc.mpd')) return 'dash';
-            if (lower.includes('.m3u8')) return 'hls';
-            if (lower.includes('.ts') || lower.includes('extension=ts')) return 'mpegts';
-            if (lower.includes('.mp4') || lower.includes('videoplayback')) return 'vod';
-            return 'unknown';
         }
 
         // ============================================================
@@ -1128,7 +1099,7 @@
         // ============================================================
         //  INIT
         // ============================================================
-        console.log('[INIT] Memulai IPTV Player (Shaka + Muted Autoplay)...');
+        console.log('[INIT] Memulai IPTV Player Pro (dengan Cloudflare Proxy)...');
         loadChannelsFromFirebase();
     </script>
 </body>
