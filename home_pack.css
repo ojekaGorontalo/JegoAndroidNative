@@ -1099,3 +1099,18 @@
     body.dark .web-app-badge {
       color: rgba(255,255,255,0.3);
     }
+    .payment-badge {
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: 600;
+    margin-left: 6px;
+}
+.payment-badge.jepay {
+    background: #e3f2fd;
+    color: #0d47a1;
+}
+.payment-badge.cash {
+    background: #e8f5e9;
+    color: #1b5e20;
+}
