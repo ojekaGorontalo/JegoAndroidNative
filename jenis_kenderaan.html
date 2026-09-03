@@ -225,26 +225,77 @@
             width: 100%;
         }
 
-        .welcome-card {
-            background: var(--surface);
+        /* ---- SALDO CARD (pengganti welcome-card) ---- */
+        .balance-card {
+            background: linear-gradient(145deg, #ffffff, #f5f7fa);
             border-radius: 28px;
-            padding: 20px 20px;
+            padding: 20px 20px 18px;
             margin-bottom: 24px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
             border: 1px solid var(--gray-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: background 0.3s;
+            cursor: pointer;
         }
-
-        .welcome-title {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: var(--primary-dark);
-            margin-bottom: 4px;
+        body.dark-mode .balance-card {
+            background: var(--surface);
         }
-
-        .welcome-text {
-            font-size: 0.9rem;
+        .balance-card .left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .balance-card .left .icon-wrap {
+            width: 48px;
+            height: 48px;
+            background: rgba(255,109,0,0.12);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: var(--primary);
+        }
+        .balance-card .left .label {
+            font-size: 0.8rem;
             color: var(--text-secondary);
-            line-height: 1.4;
+            font-weight: 500;
+        }
+        .balance-card .left .amount {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            letter-spacing: 0.5px;
+        }
+        .balance-card .left .amount .currency {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin-right: 2px;
+        }
+        .balance-card .right {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            box-shadow: 0 2px 8px rgba(255,109,0,0.25);
+        }
+        .balance-card .right:active {
+            transform: scale(0.96);
+        }
+        .balance-card .right i {
+            font-size: 0.9rem;
         }
 
         .alert-warning-custom {
@@ -841,6 +892,9 @@
             .transport-grid-bottom .transport-name {
                 font-size: 0.85rem;
             }
+            .balance-card .left .amount {
+                font-size: 1.2rem;
+            }
         }
 
         /* ===== LOG UI (tetap ada di DOM tapi tersembunyi) ===== */
@@ -1048,21 +1102,19 @@
         <div class="sidebar-item" data-link="logout"><span class="icon">🚪</span> Logout</div>
     </div>
     <div class="sidebar-bottom">
-        <div class="menu-section">
-            <div class="mode-penumpang-card" id="modeDriverBtn">
-                <div class="mode-penumpang-icon"><i class="fas fa-exchange-alt"></i></div>
-                <div class="mode-penumpang-text">
-                    <div class="mode-penumpang-title">Mode Pengemudi</div>
-                    <div class="mode-penumpang-desc">Beralih ke aplikasi pengemudi</div>
-                </div>
-                <div class="mode-penumpang-arrow">›</div>
+        <div class="mode-penumpang-card" id="modeDriverBtn">
+            <div class="mode-penumpang-icon"><i class="fas fa-exchange-alt"></i></div>
+            <div class="mode-penumpang-text">
+                <div class="mode-penumpang-title">Mode Pengemudi</div>
+                <div class="mode-penumpang-desc">Beralih ke aplikasi pengemudi</div>
             </div>
+            <div class="mode-penumpang-arrow">›</div>
         </div>
-        <div class="social-icons">
-            <a href="https://whatsapp.com/channel/0029VbCtkcaEQIaidcHMTy0G" target="_blank"><i class="fab fa-whatsapp"></i></a>
-            <a href="https://www.facebook.com/share/18gp8qJRdM/" target="_blank"><i class="fab fa-facebook"></i></a>
-            <a href="https://www.tiktok.com/@jego.gorontalo" target="_blank"><i class="fab fa-tiktok"></i></a>
-        </div>
+    </div>
+    <div class="social-icons">
+        <a href="https://whatsapp.com/channel/0029VbCtkcaEQIaidcHMTy0G" target="_blank"><i class="fab fa-whatsapp"></i></a>
+        <a href="https://www.facebook.com/share/18gp8qJRdM/" target="_blank"><i class="fab fa-facebook"></i></a>
+        <a href="https://www.tiktok.com/@jego.gorontalo" target="_blank"><i class="fab fa-tiktok"></i></a>
     </div>
 </div>
 
@@ -1071,9 +1123,23 @@
     <div id="errorAlert" class="alert alert-danger"></div>
 
     <div id="mainContent" style="display: none;">
-        <div class="welcome-card" id="welcomeCard">
-            <div class="welcome-title">Halo, <span id="userNameSpan">Pengguna</span> 👋</div>
-            <div class="welcome-text" id="welcomeMessageText">Pilih kendaraan favoritmu untuk memulai perjalanan</div>
+        <!-- SALDO CARD (pengganti welcome-card) -->
+        <div class="balance-card" id="balanceCard">
+            <div class="left">
+                <div class="icon-wrap">
+                    <i class="fas fa-wallet"></i>
+                </div>
+                <div>
+                    <div class="label">Saldo JePay</div>
+                    <div class="amount">
+                        <span class="currency">Rp</span>
+                        <span id="balanceAmount">0</span>
+                    </div>
+                </div>
+            </div>
+            <div class="right" id="topupNowBtn">
+                <i class="fas fa-plus-circle"></i> Top Up
+            </div>
         </div>
 
         <div id="photoProfileAlert" class="alert-warning-custom" style="display: none;">
@@ -1159,6 +1225,9 @@
         messagingSenderId: "600037007040",
         appId: "1:600037007040:web:ac3243ad9b472647ffd725"
     };
+
+    // ==================== KONFIGURASI REDIS (untuk saldo) ====================
+    const REDIS_API_URL = 'https://movego.my.id';
 
     let firebaseDatabase = null;
     let firebaseAuth = null;
@@ -1547,6 +1616,45 @@
         });
     }
 
+    // ========== AMBIL SALDO JEPAY DARI REDIS (FALLBACK FIREBASE) ==========
+    async function loadWalletBalance(uid) {
+        try {
+            // 1. Coba dari Redis
+            const response = await fetch(`${REDIS_API_URL}/api/wallet/${uid}`, {
+                method: 'GET',
+                headers: { 'Accept': 'application/json' }
+            });
+            if (response.ok) {
+                const result = await response.json();
+                if (result.success && result.data) {
+                    const balance = result.data.balance || 0;
+                    document.getElementById('balanceAmount').textContent = balance.toLocaleString('id-ID');
+                    console.log('✅ Saldo JePay dari Redis:', balance);
+                    return;
+                }
+            }
+            // 2. Fallback ke Firebase
+            if (firebaseDatabase) {
+                const snap = await firebaseDatabase.ref(`users/${uid}/wallet/balance`).once('value');
+                const balance = snap.val() || 0;
+                document.getElementById('balanceAmount').textContent = balance.toLocaleString('id-ID');
+                console.log('📦 Saldo JePay dari Firebase (fallback):', balance);
+            } else {
+                document.getElementById('balanceAmount').textContent = '0';
+            }
+        } catch (error) {
+            console.warn('Gagal ambil saldo JePay:', error);
+            // Tampilkan 0 jika error
+            document.getElementById('balanceAmount').textContent = '0';
+        }
+    }
+
+    // ========== FUNGSI TOPUP ==========
+    function goToTopUp() {
+        window.location.href = 'JePay.html';
+    }
+
+    // ========== CHECK LOGIN ==========
     async function checkLogin() {
         const loggedInUser = localStorage.getItem('jego_logged_in_user');
         if (loggedInUser) {
@@ -1554,9 +1662,11 @@
                 currentUser = JSON.parse(loggedInUser);
                 document.getElementById('mainContent').style.display = 'block';
                 document.getElementById('loginRequiredContent').style.display = 'none';
-                document.getElementById('userNameSpan').innerText = escapeHtml(currentUser.name.split(' ')[0]);
-                document.getElementById('welcomeMessageText').innerHTML = `Selamat datang kembali, ${escapeHtml(currentUser.name)}! Pilih kendaraan untuk melanjutkan perjalanan.`;
 
+                // Tampilkan saldo JePay
+                await loadWalletBalance(currentUser.uid);
+
+                // Sembunyikan foto profile alert
                 if (!currentUser.photoURL || currentUser.photoURL === '') {
                     const photoAlert = document.getElementById('photoProfileAlert');
                     if (photoAlert) {
@@ -1609,7 +1719,7 @@
                 const orderAktif = await cekOrderAktifDanRedirect();
                 if (orderAktif) return true;
                 await fetchTransportData();
-                await loadBanner(); // <-- ambil banner setelah login
+                await loadBanner();
 
                 const requiredFields = ['name', 'phone', 'address'];
                 const missingFields = requiredFields.filter(field => !currentUser[field] || currentUser[field].trim() === '');
@@ -1621,7 +1731,7 @@
                     return;
                 }
 
-                uiLog('✅ User berhasil login, menunggu FCM token dari Android...', 'info');
+                uiLog('✅ User berhasil login', 'info');
                 return true;
             } catch (error) {
                 console.error(error);
@@ -1658,7 +1768,7 @@
         return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
     }
 
-    // ========== LOAD BANNER DARI FIREBASE ==========
+    // ========== LOAD BANNER ==========
     async function loadBanner() {
         try {
             if (!firebaseDatabase) return;
@@ -1879,7 +1989,6 @@
 
     // ========== EDIT PROFIL (placeholder) ==========
     function openEditProfileModal() {
-        // Fungsi ini hanya placeholder, tidak digunakan secara langsung
         showCustomPopup('Lengkapi Data', 'Silakan perbarui profil Anda di menu Akun.', 'warning', '⚠️');
     }
 
@@ -1902,6 +2011,16 @@
 
     // ==================== INIT ====================
     window.onload = () => {
+        // Tambahkan event listener untuk tombol Top Up
+        document.getElementById('topupNowBtn').addEventListener('click', goToTopUp);
+        // Tombol saldo card juga bisa diklik
+        document.getElementById('balanceCard').addEventListener('click', function(e) {
+            // Jika klik bukan di tombol topup, tetap arahkan ke JePay
+            if (!e.target.closest('#topupNowBtn')) {
+                goToTopUp();
+            }
+        });
+
         checkLogin();
         setupBottomNav();
         setupSidebarActions();
