@@ -204,6 +204,19 @@
         </div>
     </div>
 
+    <!-- ===== TAMBAHAN: METODE PEMBAYARAN ===== -->
+    <div class="payment-method-section" style="margin-top:12px; padding-top:8px; border-top:1px solid #eee;">
+        <label style="font-weight:600; font-size:0.9rem;">Metode Pembayaran</label>
+        <div style="display:flex; gap:12px; margin-top:6px;">
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                <input type="radio" name="paymentMethod" value="tunai" checked> Tunai
+            </label>
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                <input type="radio" name="paymentMethod" value="jepay"> JePay
+            </label>
+        </div>
+    </div>
+
     <!-- TOMBOL CANCEL (DI DALAM BOTTOM SHEET) -->
     <button class="cancel-btn-inline" id="cancelBtn">❌ Batalkan Perjalanan</button>
 </div>
@@ -228,7 +241,7 @@
 <!-- ==================== SCRIPT TAMBAHAN UI ==================== -->
 <script>
     (function() {
-        console.log('🔧 UI tambahan: menu, swap, clear, via');
+        console.log('🔧 UI tambahan: menu, swap, clear, via, payment');
 
         const menuBtn = document.getElementById('menuBtn');
         const menuDropdown = document.getElementById('menuDropdown');
@@ -401,6 +414,22 @@
         routeObserver.observe(routeDetails, { attributes: true, attributeFilter: ['style'] });
 
         console.log('✅ UI menu dan fungsi tambahan siap');
+
+        // ===== EVENT UNTUK RADIO BUTTON =====
+        const paymentRadios = document.querySelectorAll('input[name="paymentMethod"]');
+        paymentRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                if (this.checked) {
+                    window.selectedPaymentMethod = this.value;
+                    console.log('💳 Metode pembayaran berubah:', window.selectedPaymentMethod);
+                }
+            });
+        });
+
+        // Set default jika belum ada
+        if (!window.selectedPaymentMethod) {
+            window.selectedPaymentMethod = 'tunai';
+        }
     })();
 </script>
 

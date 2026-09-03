@@ -39,7 +39,8 @@ let orderStatusCallback = null, offersCallback = null;
 let isSearching = false;
 let offerTimerInterval = null;
 let cleanupInterval = null;
-let driversRef = null, driversListener = null;
+// let driversRef = null, driversListener = null; // sudah tidak digunakan
+
 let mapPickActive = false;
 let mapPickCoords = null;
 let mapPickAddress = '';
@@ -49,6 +50,9 @@ let pickFromMapActive = false;
 let searchTimeout = null;
 let minAllowedNego = 0;
 let mapIdleTimer = null;
+
+// ===== Metode Pembayaran =====
+let selectedPaymentMethod = 'tunai';
 
 // Data kendaraan dari Firebase
 let transportData = {};
@@ -458,6 +462,16 @@ async function loadWaitingOrderData() {
         transportType = order.transport_type;
         transportIconUrl = getDriverIconUrl(transportType);
         initNegosiasi(currentPrice);
+
+        if (order.payment_method) {
+            selectedPaymentMethod = order.payment_method;
+            const paymentRadios = document.querySelectorAll('input[name="paymentMethod"]');
+            paymentRadios.forEach(radio => {
+                if (radio.value === order.payment_method) {
+                    radio.checked = true;
+                }
+            });
+        }
 
         document.getElementById('routeFrom').innerText = pickupAddress;
         document.getElementById('routeTo').innerText = destAddress;
@@ -941,7 +955,7 @@ function searchAddressFallback(keyword) {
     });
 }
 
-// ==================== SELECT ADDRESS (DIPERBAIKI) ====================
+// ==================== SELECT ADDRESS ====================
 function selectAddress(feature) {
     const coords = feature.geometry.coordinates;
     const address = getFullAddress(feature);
@@ -963,7 +977,6 @@ function selectAddress(feature) {
         document.getElementById('viaInput').value = viaAddress;
         document.getElementById('clearViaBtn').style.display = 'block';
         updateMarkers();
-        // PERBAIKAN: panggil updateRoute jika pickup dan dest sudah ada
         if (pickupCoord && destCoord) {
             console.log('🔄 Via ditambahkan, perbarui rute');
             updateRoute();
@@ -974,9 +987,7 @@ function selectAddress(feature) {
         document.getElementById('destInput').value = destAddress;
     }
 
-    // Jika pickup dan dest sudah ada, perbarui rute (untuk kasus pickup/dest)
     if (pickupCoord && destCoord) {
-        // Hanya panggil jika bukan mode via (karena via sudah memanggil di atas)
         if (searchOverlayMode !== 'via') {
             updateRoute();
         }
@@ -1083,12 +1094,9 @@ function updateMarkers() {
     }
 }
 
-// ==================== UPDATE ROUTE (DIPERBAIKI) ====================
+// ==================== UPDATE ROUTE ====================
 async function updateRoute() {
     console.log('🛣️ updateRoute() dipanggil');
-    console.log('📍 pickupCoord:', pickupCoord);
-    console.log('📍 destCoord:', destCoord);
-    console.log('📍 viaCoord:', viaCoord);
     if (!pickupCoord || !destCoord) {
         console.warn('⚠️ updateRoute: pickup atau dest belum ada');
         return;
@@ -1107,8 +1115,6 @@ async function updateRoute() {
                 location: { lat: viaCoord[1], lng: viaCoord[0] },
                 stopover: true
             });
-        } else {
-            console.log('📍 Tidak ada via, rute langsung');
         }
 
         if (!directionsService) {
@@ -1123,8 +1129,6 @@ async function updateRoute() {
             language: 'id'
         };
 
-        console.log('📤 Request Directions:', request);
-
         const result = await new Promise((resolve, reject) => {
             directionsService.route(request, (response, status) => {
                 if (status === google.maps.DirectionsStatus.OK) {
@@ -1136,14 +1140,12 @@ async function updateRoute() {
         });
 
         const route = result.routes[0];
-        // ===== PERBAIKAN: jumlahkan seluruh legs =====
         let distanceMeters = 0;
         let durationSeconds = 0;
         route.legs.forEach(leg => {
             distanceMeters += leg.distance.value;
             durationSeconds += leg.duration.value;
         });
-        // ============================================
 
         const price = calculatePrice(distanceMeters);
         currentPrice = price;
@@ -1191,7 +1193,7 @@ async function updateRoute() {
     }
 }
 
-// ==================== CLEAR VIA (SUDAH BENAR) ====================
+// ==================== CLEAR VIA ====================
 function clearViaPoint() {
     if (viaCoord) {
         viaCoord = null;
@@ -1257,7 +1259,6 @@ function useCurrentLocation() {
 function pickFromMap() {
     closeSearchOverlay();
     closeVehicleOverlay();
-    // Sembunyikan bottom sheet detail rute
     document.getElementById('routeDetails').style.display = 'none';
 
     if (!map) return;
@@ -1606,7 +1607,7 @@ async function rejectOffer(driverId) {
     await database.ref(`orders/${currentOrderId}/driver_offers/${driverId}/status`).set('rejected');
 }
 
-// ==================== FUNGSI UNTUK MENCARI DRIVER TERDEKAT ====================
+// ==================== FUNGSI UNTUK MENCARI DRIVER TERDEKAT (REDIS) ====================
 function isValidCoordinate(lat, lng) {
     if (typeof lat !== 'number' || typeof lng !== 'number') return false;
     if (lat === 0 && lng === 0) return false;
@@ -1636,35 +1637,60 @@ function getDriverIconUrl(vehicleType) {
     return 'https://cdn-icons-png.flaticon.com/128/5811/5811823.png';
 }
 
-function startSearchDriversForOrder(centerLatLng, radiusKm = 3) {
-    if (!database || !centerLatLng) return;
-    if (driversListener && driversRef) driversRef.off('value', driversListener);
-    driversRef = database.ref('driver_locations');
-    driversListener = driversRef.on('value', async (snapshot) => {
-        const locations = snapshot.val();
-        if (!locations) return;
-        const [pickupLng, pickupLat] = centerLatLng;
+// ===== FUNGSI BARU: AMBIL DATA DRIVER DARI REDIS =====
+async function getDriversFromRedis() {
+    try {
+        const response = await fetch('https://movego.my.id/api/drivers/all');
+        if (!response.ok) throw new Error('Gagal ambil data driver dari Redis');
+        const result = await response.json();
+        if (result.success && result.drivers) {
+            return result.drivers; // array of driver location objects
+        }
+        return [];
+    } catch (error) {
+        console.error('❌ Gagal fetch driver dari Redis:', error);
+        return [];
+    }
+}
+
+// ===== FUNGSI BARU: START SEARCH DRIVERS (REDIS) =====
+async function startSearchDriversForOrder(centerLatLng, radiusKm = 3) {
+    if (!centerLatLng) return;
+    const [pickupLng, pickupLat] = centerLatLng;
+    try {
+        const drivers = await getDriversFromRedis();
         const driversInRadius = [];
-        Object.keys(locations).forEach(driverId => {
-            const driverData = locations[driverId];
-            if (driverData && driverData.tracking_enabled === true && driverData.latitude && driverData.longitude) {
-                if (!isValidCoordinate(driverData.latitude, driverData.longitude)) return;
-                const distance = getDistanceKm(pickupLat, pickupLng, driverData.latitude, driverData.longitude);
-                if (distance <= radiusKm) driversInRadius.push(driverId);
+        drivers.forEach(driver => {
+            // driver memiliki field: driverId, latitude, longitude, tracking_enabled, dll.
+            if (driver.tracking_enabled === true && driver.latitude && driver.longitude) {
+                if (!isValidCoordinate(driver.latitude, driver.longitude)) return;
+                const distance = getDistanceKm(pickupLat, pickupLng, driver.latitude, driver.longitude);
+                if (distance <= radiusKm) {
+                    driversInRadius.push(driver.driverId);
+                }
             }
         });
         console.log(`📡 Driver dalam radius ${radiusKm}km:`, driversInRadius);
-    });
+        // (Opsional) simpan daftar driver untuk keperluan lain
+        window._driversInRadius = driversInRadius;
+    } catch (error) {
+        console.error('Gagal mencari driver dari Redis:', error);
+    }
 }
 
 // ==================== VALIDASI & CREATE ORDER ====================
 async function confirmRoute() {
     console.log('🚀 confirmRoute() dipanggil');
+
+    // Ambil metode pembayaran
+    const paymentMethod = getPaymentMethod();
+    console.log('💳 Metode pembayaran dipilih:', paymentMethod);
+
     if (currentOrderId) {
         const snap = await database.ref(`orders/${currentOrderId}`).once('value');
         if (snap.val()?.status === 'waiting') {
             isSearching = true;
-            if (pickupCoord) startSearchDriversForOrder(pickupCoord, 3);
+            if (pickupCoord) await startSearchDriversForOrder(pickupCoord, 3);
             document.getElementById('driverOffers').classList.add('active');
             if (offerTimerInterval) clearInterval(offerTimerInterval);
             if (cleanupInterval) clearInterval(cleanupInterval);
@@ -1748,7 +1774,8 @@ async function confirmRoute() {
         passenger_rating: currentUser.rating,
         perjalanan: currentUser.perjalanan,
         customer_phone: currentUser.phone || '',
-        photoURL: currentUser.photoURL || ''
+        photoURL: currentUser.photoURL || '',
+        payment_method: paymentMethod // <-- TAMBAHAN
     };
     if (viaCoord && viaAddress) {
         orderData.via_lat = viaCoord[1];
@@ -1767,7 +1794,7 @@ async function confirmRoute() {
     await database.ref(`userOrders/${currentUser.id}/${currentOrderId}`).set(true);
     localStorage.setItem('current_order_id', currentOrderId);
     isSearching = true;
-    if (pickupCoord) startSearchDriversForOrder(pickupCoord, 3);
+    if (pickupCoord) await startSearchDriversForOrder(pickupCoord, 3);
     document.getElementById('driverOffers').classList.add('active');
     if (offerTimerInterval) clearInterval(offerTimerInterval);
     if (cleanupInterval) clearInterval(cleanupInterval);
@@ -1783,6 +1810,18 @@ async function confirmRoute() {
     offersRef = database.ref(`orders/${currentOrderId}/driver_offers`);
     offersCallback = (snap) => renderOffers(snap.val());
     offersRef.on('value', offersCallback);
+}
+
+// ==================== GET PAYMENT METHOD ====================
+function getPaymentMethod() {
+    const radios = document.querySelectorAll('input[name="paymentMethod"]');
+    for (let radio of radios) {
+        if (radio.checked) {
+            selectedPaymentMethod = radio.value;
+            return selectedPaymentMethod;
+        }
+    }
+    return 'tunai';
 }
 
 async function cancelSearch() {
@@ -1806,7 +1845,7 @@ function cleanupSearch() {
     document.getElementById('driverOffers').classList.remove('active');
     if (offerTimerInterval) { clearInterval(offerTimerInterval); offerTimerInterval = null; }
     if (cleanupInterval) { clearInterval(cleanupInterval); cleanupInterval = null; }
-    if (driversListener && driversRef) { driversRef.off('value', driversListener); driversListener = null; driversRef = null; }
+    // Tidak perlu membersihkan driversListener karena sudah tidak digunakan
     const btn = document.getElementById('confirmBtn');
     btn.removeEventListener('click', cancelSearchHandler);
     btn.addEventListener('click', confirmRoute);
@@ -1939,6 +1978,17 @@ window.onload = async () => {
     });
     document.getElementById('vehicleOverlay').addEventListener('click', function(e) {
         if (e.target === this) closeVehicleOverlay();
+    });
+
+    // ===== Event listener untuk perubahan metode pembayaran =====
+    const paymentRadios = document.querySelectorAll('input[name="paymentMethod"]');
+    paymentRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.checked) {
+                selectedPaymentMethod = this.value;
+                console.log('💳 Metode pembayaran berubah:', selectedPaymentMethod);
+            }
+        });
     });
 
     console.log('✅ Semua event listeners terpasang, siap digunakan');
