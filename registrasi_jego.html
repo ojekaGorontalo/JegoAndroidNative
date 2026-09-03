@@ -211,14 +211,12 @@
       }
     }
 
-    // ===== FUNGSI SIMPAN KE REDIS (DENGAN ERROR HANDLING) =====
+    // ===== FUNGSI SIMPAN CUSTOMER KE REDIS =====
     async function saveCustomerToRedis(userData) {
       try {
         const response = await fetch(`${REDIS_API_URL}/customer`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(userData)
         });
         if (!response.ok) {
@@ -231,6 +229,33 @@
         return true;
       } catch (err) {
         console.warn(' Gagal simpan customer ke Redis (network/error):', err.message);
+        return false;
+      }
+    }
+
+    // ===== FUNGSI INISIALISASI WALLET DI REDIS =====
+    async function initWalletInRedis(uid) {
+      try {
+        const walletData = {
+          userId: uid,
+          balance: 0,
+          transactions: [],
+          last_update: new Date().toISOString()
+        };
+        const response = await fetch(`${REDIS_API_URL}/wallet`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(walletData)
+        });
+        if (!response.ok) {
+          console.warn(' Gagal inisialisasi wallet di Redis, status:', response.status);
+          return false;
+        }
+        const result = await response.json();
+        console.log(' Wallet berhasil diinisialisasi di Redis:', result);
+        return true;
+      } catch (err) {
+        console.warn(' Gagal inisialisasi wallet di Redis:', err.message);
         return false;
       }
     }
@@ -312,18 +337,29 @@
 
         // 4. Simpan ke Firebase (WAJIB)
         await saveUserToDatabase(uid, userData);
-        showProgress(85);
+        showProgress(80);
 
-        // 5. Simpan ke Redis (tidak wajib, tidak mempengaruhi keberhasilan registrasi)
+        // 5. Simpan customer ke Redis
         let redisSuccess = false;
         try {
           redisSuccess = await saveCustomerToRedis(userData);
         } catch (redisErr) {
-          console.warn('Redis save failed:', redisErr);
+          console.warn('Redis save customer failed:', redisErr);
         }
-        showProgress(90);
+        showProgress(88);
 
-        // 6. Session ke localStorage
+        // 6. Inisialisasi wallet di Redis (otomatis saldo 0)
+        let walletSuccess = false;
+        if (redisSuccess) {
+          try {
+            walletSuccess = await initWalletInRedis(uid);
+          } catch (walletErr) {
+            console.warn('Inisialisasi wallet gagal:', walletErr);
+          }
+        }
+        showProgress(94);
+
+        // 7. Session ke localStorage
         const session = {
           userId: uid,
           uid: uid,
@@ -342,10 +378,12 @@
         showProgress(100);
 
         // Tampilkan pesan sukses
-        if (redisSuccess) {
-          showStatus('Registrasi berhasil! Data tersimpan di Firebase & Redis.', 'success');
+        if (redisSuccess && walletSuccess) {
+          showStatus('Registrasi berhasil! Data tersimpan di Firebase & Redis (wallet siap).', 'success');
+        } else if (redisSuccess) {
+          showStatus('Registrasi berhasil di Firebase & Redis customer, tetapi gagal inisialisasi wallet.', 'warning');
         } else {
-          showStatus('Registrasi berhasil di Firebase, tetapi gagal sinkron ke Redis. Silakan hubungi admin jika diperlukan.', 'warning');
+          showStatus('Registrasi berhasil di Firebase, tetapi gagal sinkron ke Redis. Silakan hubungi admin.', 'warning');
         }
 
         setTimeout(() => {
