@@ -906,6 +906,240 @@
         }
 
         /* ============================================================
+           UPDATES / STATUS VIEW
+           ============================================================ */
+        #view-updates {
+            background: #ffffff;
+            padding: 12px 16px;
+            overflow-y: auto;
+            flex: 1;
+        }
+        .status-section {
+            margin-bottom: 20px;
+        }
+        .status-section .section-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .status-item:active {
+            background: #f0f2f5;
+        }
+        .status-item .avatar {
+            width: 52px;
+            height: 52px;
+            border-radius: var(--radius-full);
+            flex-shrink: 0;
+            background: var(--primary-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 20px;
+            color: var(--primary);
+            overflow: hidden;
+            position: relative;
+            border: 2px solid var(--primary);
+        }
+        .status-item .avatar.seen {
+            border-color: #ccc;
+        }
+        .status-item .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .status-item .info {
+            flex: 1;
+            min-width: 0;
+        }
+        .status-item .info .name {
+            font-weight: 500;
+            font-size: 16px;
+        }
+        .status-item .info .time {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        .status-item .status-badge {
+            font-size: 12px;
+            color: var(--primary);
+            font-weight: 500;
+        }
+        /* My status */
+        .my-status-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .my-status-item .avatar {
+            width: 52px;
+            height: 52px;
+            border-radius: var(--radius-full);
+            flex-shrink: 0;
+            background: var(--primary-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 20px;
+            color: var(--primary);
+            overflow: hidden;
+            border: 2px solid var(--primary);
+        }
+        .my-status-item .info {
+            flex: 1;
+        }
+        .my-status-item .info .name {
+            font-weight: 500;
+            font-size: 16px;
+        }
+        .my-status-item .info .sub {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        .add-status-btn {
+            background: var(--primary);
+            border: none;
+            border-radius: 30px;
+            color: #fff;
+            font-weight: 500;
+            padding: 6px 16px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+        .add-status-btn:hover {
+            background: var(--primary-dark);
+        }
+        .add-status-btn:active {
+            transform: scale(0.95);
+        }
+        /* Modal untuk melihat status */
+        #status-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            padding: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+        #status-modal.active {
+            display: flex;
+        }
+        #status-modal .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 28px;
+            cursor: pointer;
+            z-index: 1001;
+        }
+        #status-modal .status-content {
+            background: #fff;
+            border-radius: var(--radius-lg);
+            padding: 30px 24px;
+            max-width: 400px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+        }
+        #status-modal .status-content .status-user {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 12px;
+        }
+        #status-modal .status-content .status-user .avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius-full);
+            background: var(--primary-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 18px;
+            color: var(--primary);
+            overflow: hidden;
+        }
+        #status-modal .status-content .status-user .name {
+            font-weight: 600;
+            font-size: 16px;
+        }
+        #status-modal .status-content .status-text {
+            font-size: 18px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            padding: 12px 0;
+        }
+        #status-modal .status-content .status-time {
+            font-size: 13px;
+            color: var(--text-muted);
+            text-align: right;
+        }
+        .status-input-area {
+            display: flex;
+            gap: 8px;
+            margin: 12px 0 8px;
+        }
+        .status-input-area input {
+            flex: 1;
+            border: 1px solid var(--border-color);
+            border-radius: 30px;
+            padding: 10px 16px;
+            font-size: 15px;
+            outline: none;
+            transition: border 0.2s;
+        }
+        .status-input-area input:focus {
+            border-color: var(--primary);
+        }
+        .status-input-area button {
+            background: var(--primary);
+            border: none;
+            border-radius: 30px;
+            color: #fff;
+            padding: 0 20px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .status-input-area button:active {
+            transform: scale(0.95);
+        }
+        .status-input-area button:hover {
+            background: var(--primary-dark);
+        }
+
+        /* ============================================================
            CONTACTS VIEW
            ============================================================ */
         .contact-list {
@@ -1236,6 +1470,9 @@
             #chat-header .chat-info .name {
                 font-size: 15px;
             }
+            #status-modal .status-content {
+                padding: 20px 16px;
+            }
         }
 
         /* ============================================================
@@ -1373,14 +1610,32 @@
                 <div class="chat-list" id="chatList"></div>
             </section>
 
+            <!-- ============================================
+            UPDATES / STATUS VIEW (diperbarui)
+            ============================================ -->
             <section class="view" id="view-updates">
-                <div class="placeholder-view">
-                    <div class="big-icon">📝</div>
-                    <h3>Updates</h3>
-                    <p>Status dan pembaruan dari kontak Anda akan muncul di sini.</p>
+                <div style="padding:12px 0;">
+                    <!-- My Status -->
+                    <div class="my-status-item">
+                        <div class="avatar" id="myStatusAvatar">Me</div>
+                        <div class="info">
+                            <div class="name" id="myStatusName">Status Saya</div>
+                            <div class="sub" id="myStatusSub">Ketuk untuk tambah status</div>
+                        </div>
+                        <button class="add-status-btn" id="addStatusBtn">➕ Tambah</button>
+                    </div>
+                </div>
+
+                <!-- Status dari kontak -->
+                <div class="status-section">
+                    <div class="section-title">Pembaruan terbaru</div>
+                    <div id="contactStatusList"></div>
                 </div>
             </section>
 
+            <!-- ============================================
+            VIEW: COMMUNITIES (placeholder)
+            ============================================ -->
             <section class="view" id="view-communities">
                 <div class="placeholder-view">
                     <div class="big-icon">👥</div>
@@ -1389,6 +1644,9 @@
                 </div>
             </section>
 
+            <!-- ============================================
+            VIEW: CALLS (placeholder)
+            ============================================ -->
             <section class="view" id="view-calls">
                 <div class="placeholder-view">
                     <div class="big-icon">📞</div>
@@ -1397,6 +1655,9 @@
                 </div>
             </section>
 
+            <!-- ============================================
+            VIEW: CHAT
+            ============================================ -->
             <section class="view" id="view-chat">
                 <div id="chat-header">
                     <button class="back" id="chatBack" aria-label="Kembali">
@@ -1440,6 +1701,9 @@
                 <div class="contact-list" id="contactList"></div>
             </section>
 
+            <!-- ============================================
+            VIEW: PROFILE
+            ============================================ -->
             <section class="view" id="view-profile">
                 <div class="profile-view">
                     <div class="profile-header">
@@ -1462,6 +1726,9 @@
                 </div>
             </section>
 
+            <!-- ============================================
+            VIEW: SETTINGS
+            ============================================ -->
             <section class="view" id="view-settings">
                 <div class="settings-view">
                     <h2 style="margin-bottom:16px;font-weight:500;">Pengaturan</h2>
@@ -1485,6 +1752,9 @@
                 </div>
             </section>
 
+            <!-- ============================================
+            VIEW: CONTACT DETAIL
+            ============================================ -->
             <section class="view" id="view-contact-detail">
                 <div class="contact-detail-view">
                     <div class="cd-header">
@@ -1504,7 +1774,7 @@
         </main>
 
         <!-- ============================================================
-        BOTTOM NAV (chat) — SUDAH DIPERBAIKI: KOMUNITAS DIGANTI KONTAK
+        BOTTOM NAV
         ============================================================ -->
         <nav id="bottom-nav" style="display:none;">
             <button class="nav-item active" data-view="chats" aria-label="Chats">
@@ -1524,6 +1794,16 @@
                 <span>Panggilan</span>
             </button>
         </nav>
+    </div>
+
+    <!-- ============================================================
+    STATUS MODAL (overlay untuk melihat status)
+    ============================================================ -->
+    <div id="status-modal">
+        <button class="modal-close" id="statusModalClose">&times;</button>
+        <div class="status-content" id="statusModalContent">
+            <!-- Diisi dynamically -->
+        </div>
     </div>
 
     <!-- TOAST -->
@@ -1549,7 +1829,7 @@
         };
 
         // ============================================================
-        // 2. IMPOR FIREBASE (Realtime Database only)
+        // 2. IMPOR FIREBASE
         // ============================================================
         import { initializeApp } from 'firebase/app';
         import {
@@ -1577,7 +1857,6 @@
         // ============================================================
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-
         console.log('🔥 Firebase initialized');
 
         // ============================================================
@@ -1689,6 +1968,7 @@
                 presence: [],
                 newMessage: [],
                 chatList: null,
+                statuses: null,
             },
             unread: {},
             contacts: {},
@@ -1768,6 +2048,16 @@
         const profileLogout = $('#profileLogout');
         const settingsLogout = $('#settingsLogout');
 
+        // Status elements
+        const myStatusAvatar = $('#myStatusAvatar');
+        const myStatusName = $('#myStatusName');
+        const myStatusSub = $('#myStatusSub');
+        const addStatusBtn = $('#addStatusBtn');
+        const contactStatusList = $('#contactStatusList');
+        const statusModal = $('#status-modal');
+        const statusModalClose = $('#statusModalClose');
+        const statusModalContent = $('#statusModalContent');
+
         // ============================================================
         // 7. AUTH NAVIGATION
         // ============================================================
@@ -1810,7 +2100,6 @@
                 item.classList.toggle('active', item.dataset.view === view);
             });
 
-            // ========== PERBAIKAN: Sembunyikan header & bottom nav saat view chat ==========
             if (view === 'chat') {
                 header.style.display = 'none';
                 bottomNav.style.display = 'none';
@@ -1818,7 +2107,6 @@
                 header.style.display = 'flex';
                 bottomNav.style.display = 'flex';
             }
-            // ==============================================================================
 
             headerBack.classList.toggle('show', view === 'chat' || view === 'contactDetail' || view === 'settings' || view === 'contactDetail');
 
@@ -1846,6 +2134,7 @@
             if (view === 'chats') loadChats();
             if (view === 'contacts') loadContacts();
             if (view === 'profile') loadProfile();
+            if (view === 'updates') loadStatuses();
             if (view === 'chat' && data && data.chatId) {
                 openChat(data.chatId, data.contactId, data.name);
             }
@@ -1857,23 +2146,20 @@
         }
 
         // ============================================================
-        // 9. PRESENCE & TYPING
+        // 9. PRESENCE & TYPING (tidak diubah)
         // ============================================================
         function setupPresence() {
             if (!currentUser) return;
             const presenceRef = ref(db, `presence/${currentUser.userId}`);
-
             set(presenceRef, {
                 online: true,
                 lastSeen: serverTimestamp()
             });
-
             const disconnectRef = ref(db, `presence/${currentUser.userId}`);
             onDisconnect(disconnectRef).set({
                 online: false,
                 lastSeen: serverTimestamp()
             });
-
             const userRef = ref(db, `users/${currentUser.userId}`);
             update(userRef, {
                 online: true,
@@ -1908,7 +2194,6 @@
                 state.unsubscribe.typing = null;
             }
             if (!chatId || !currentUser) return;
-
             const typingRef = ref(db, `typing/${chatId}`);
             const unsub = onValue(typingRef, (snapshot) => {
                 const data = snapshot.val();
@@ -1933,18 +2218,15 @@
         function updateChatHeaderStatus(contactId) {
             const contact = state.contacts[contactId];
             if (!contact) return;
-
             const chatId = state.currentChatId;
             const typingUsers = state.typingUsers[chatId] || {};
             const isTyping = typingUsers[contactId] === true;
-
             if (isTyping) {
                 chatStatusText.textContent = 'sedang mengetik...';
                 typingDots.style.display = 'flex';
                 return;
             }
             typingDots.style.display = 'none';
-
             if (contact.online) {
                 chatStatusText.textContent = 'online';
             } else if (contact.lastSeen) {
@@ -1955,17 +2237,15 @@
         }
 
         // ============================================================
-        // 10. CONTACTS
+        // 10. CONTACTS (tidak diubah)
         // ============================================================
         function loadContacts() {
             if (!currentUser) return;
             const contactsRef = ref(db, 'contacts');
             const usersRef = ref(db, 'users');
-
             get(child(contactsRef, currentUser.userId)).then((snapshot) => {
                 const contactIds = snapshot.val() || {};
                 const ids = Object.keys(contactIds);
-
                 if (ids.length === 0) {
                     contactList.innerHTML = `
                             <div class="empty-state">
@@ -1976,7 +2256,6 @@
                         `;
                     return;
                 }
-
                 get(usersRef).then((userSnap) => {
                     const allUsers = userSnap.val() || {};
                     let html = '';
@@ -2003,14 +2282,12 @@
                             `;
                     });
                     contactList.innerHTML = html;
-
                     contactList.querySelectorAll('.contact-item').forEach(el => {
                         el.addEventListener('click', () => {
                             const id = el.dataset.id;
                             startChatWithContact(id);
                         });
                     });
-
                     ids.forEach(id => {
                         const u = allUsers[id];
                         if (u) {
@@ -2024,7 +2301,6 @@
                             };
                         }
                     });
-
                     initLucide();
                 });
             }).catch(err => {
@@ -2040,7 +2316,7 @@
         }
 
         // ============================================================
-        // 11. CHATS LIST
+        // 11. CHATS LIST (tidak diubah)
         // ============================================================
         function loadChats() {
             if (!currentUser) return;
@@ -2048,22 +2324,18 @@
                 state.unsubscribe.chats();
                 state.unsubscribe.chats = null;
             }
-
             const chatsRef = ref(db, 'chats');
             const unsub = onValue(chatsRef, (snapshot) => {
                 const data = snapshot.val() || {};
                 const chatIds = Object.keys(data);
                 const userChats = [];
-
                 chatIds.forEach(id => {
                     const chat = data[id];
                     if (chat.participants && chat.participants[currentUser.userId]) {
                         userChats.push({ id, ...chat });
                     }
                 });
-
                 userChats.sort((a, b) => (b.lastMessageTime || 0) - (a.lastMessageTime || 0));
-
                 if (userChats.length === 0) {
                     chatList.innerHTML = `
                             <div class="empty-state">
@@ -2074,10 +2346,8 @@
                         `;
                     return;
                 }
-
                 get(ref(db, 'users')).then((userSnap) => {
                     const users = userSnap.val() || {};
-
                     let html = '';
                     userChats.forEach(chat => {
                         const participantIds = Object.keys(chat.participants || {});
@@ -2087,13 +2357,10 @@
                         const photo = contact.photo || '';
                         const online = contact.online || false;
                         const initials = getInitials(name);
-
                         const lastMsg = chat.lastMessage || 'Pesan baru';
                         const lastTime = chat.lastMessageTime || null;
                         const lastSender = chat.lastMessageSenderId || '';
-
                         const unreadCount = state.unread[chat.id] || 0;
-
                         let preview = lastMsg;
                         if (lastSender === currentUser.userId) {
                             preview = `Anda: ${lastMsg}`;
@@ -2101,9 +2368,7 @@
                             const senderName = users[lastSender]?.name || 'Unknown';
                             preview = `${senderName}: ${lastMsg}`;
                         }
-
                         const isFromMe = lastSender === currentUser.userId;
-
                         html += `
                                 <div class="chat-item" data-chatid="${chat.id}" data-contactid="${contactId}">
                                     <div class="avatar">
@@ -2124,9 +2389,7 @@
                                 </div>
                             `;
                     });
-
                     chatList.innerHTML = html;
-
                     chatList.querySelectorAll('.chat-item').forEach(el => {
                         el.addEventListener('click', () => {
                             const chatId = el.dataset.chatid;
@@ -2136,11 +2399,9 @@
                             navigateTo('chat', { chatId, contactId, name });
                         });
                     });
-
                     userChats.forEach(chat => {
                         state.chats[chat.id] = chat;
                     });
-
                     initLucide();
                 });
             });
@@ -2148,19 +2409,17 @@
         }
 
         // ============================================================
-        // 12. CHAT SCREEN
+        // 12. CHAT SCREEN (tidak diubah)
         // ============================================================
         let currentChatId = null;
         let currentContactId = null;
 
         function openChat(chatId, contactId, name) {
             cleanupChatListeners();
-
             currentChatId = chatId;
             currentContactId = contactId;
             state.currentChatId = chatId;
             state.currentContactId = contactId;
-
             state.unread[chatId] = 0;
 
             const contact = state.contacts[contactId] || { name: name || 'Kontak', photo: '', online: false, lastSeen: null };
@@ -2168,23 +2427,16 @@
             const initials = getInitials(contact.name || name || 'K');
             chatAvatar.innerHTML = contact.photo ? `<img src="${contact.photo}" alt="${contact.name}" />` : initials;
             updateChatHeaderStatus(contactId);
-
             messagesContainer.innerHTML = '';
-
             setupTyping(chatId);
-
             loadMessages(chatId);
-
             messageInput.value = '';
-            // Paksa update tombol kirim
             messageInput.dispatchEvent(new Event('input'));
             messageInput.focus();
-            // Panggil updateSendButton setelah beberapa saat untuk memastikan
             setTimeout(() => {
                 updateSendButton();
             }, 50);
             updateSendButton();
-
             if (emojiPicker) emojiPicker.classList.remove('show');
 
             const messagesRef = ref(db, `messages/${chatId}`);
@@ -2283,6 +2535,10 @@
                 state.unsubscribe.chats();
                 state.unsubscribe.chats = null;
             }
+            if (state.unsubscribe.statuses) {
+                state.unsubscribe.statuses();
+                state.unsubscribe.statuses = null;
+            }
             state.unsubscribe.presence.forEach(u => u());
             state.unsubscribe.presence = [];
             state.unsubscribe.newMessage.forEach(u => u());
@@ -2290,16 +2546,14 @@
         }
 
         // ============================================================
-        // 13. LOAD MESSAGES
+        // 13. LOAD MESSAGES (tidak diubah)
         // ============================================================
         function loadMessages(chatId) {
             const messagesRef = ref(db, `messages/${chatId}`);
             const queryRef = query(messagesRef, orderByChild('timestamp'), limitToLast(100));
-
             get(queryRef).then((snapshot) => {
                 const data = snapshot.val() || {};
                 const keys = Object.keys(data).sort((a, b) => (data[a].timestamp || 0) - (data[b].timestamp || 0));
-
                 if (keys.length === 0) {
                     messagesContainer.innerHTML = `
                             <div style="text-align:center;padding:30px 0;color:var(--text-muted);font-size:14px;">
@@ -2308,7 +2562,6 @@
                         `;
                     return;
                 }
-
                 let lastDate = '';
                 keys.forEach(key => {
                     const msg = data[key];
@@ -2322,7 +2575,6 @@
                     }
                     renderMessage(msg, key);
                 });
-
                 const contactId = state.currentContactId;
                 if (contactId) {
                     keys.forEach(key => {
@@ -2332,7 +2584,6 @@
                         }
                     });
                 }
-
                 scrollToBottom();
             }).catch(err => {
                 console.warn('Load messages error:', err);
@@ -2340,12 +2591,11 @@
         }
 
         // ============================================================
-        // 14. RENDER MESSAGE
+        // 14. RENDER MESSAGE (tidak diubah)
         // ============================================================
         function renderMessage(msg, msgId) {
             const isOut = msg.senderId === currentUser.userId;
             const container = messagesContainer;
-
             const existing = container.querySelector(`[data-msgid="${msgId}"]`);
             if (existing) {
                 const statusIcon = existing.querySelector('.status-icon');
@@ -2355,18 +2605,14 @@
                 }
                 return;
             }
-
             const div = document.createElement('div');
             div.className = `message ${isOut ? 'out' : 'in'}`;
             div.dataset.msgid = msgId;
             div.dataset.sender = msg.senderId;
-
             let html = '';
-
             if (msg.replyTo) {
                 html += `<div class="reply-preview"><span class="reply-name">${isOut ? 'Anda' : 'Balasan'}</span> ...</div>`;
             }
-
             html += `<div class="text">${escapeHtml(msg.text || '')}</div>`;
             html += `<div class="time">`;
             html += `${formatTime(msg.timestamp || Date.now())}`;
@@ -2376,14 +2622,11 @@
                 html += `<span class="status-icon ${status === 'read' ? 'read' : ''}">${icon}</span>`;
             }
             html += `</div>`;
-
             div.innerHTML = html;
-
             div.addEventListener('contextmenu', (e) => {
                 e.preventDefault();
                 showContextMenu(e.clientX, e.clientY, msgId, isOut, msg.senderId);
             });
-
             let pressTimer = null;
             div.addEventListener('touchstart', (e) => {
                 pressTimer = setTimeout(() => {
@@ -2393,7 +2636,6 @@
             });
             div.addEventListener('touchend', () => clearTimeout(pressTimer));
             div.addEventListener('touchmove', () => clearTimeout(pressTimer));
-
             container.appendChild(div);
         }
 
@@ -2416,13 +2658,12 @@
         }
 
         // ============================================================
-        // 15. SEND MESSAGE
+        // 15. SEND MESSAGE (tidak diubah)
         // ============================================================
         function sendMessage() {
             const text = messageInput.value.trim();
             if (!text) return;
             if (!currentChatId || !currentContactId || !currentUser) return;
-
             const msgId = push(ref(db, `messages/${currentChatId}`)).key;
             const msgData = {
                 senderId: currentUser.userId,
@@ -2432,7 +2673,6 @@
                 timestamp: serverTimestamp(),
                 status: 'sent',
             };
-
             set(ref(db, `messages/${currentChatId}/${msgId}`), msgData)
                 .then(() => {
                     const chatRef = ref(db, `chats/${currentChatId}`);
@@ -2441,7 +2681,6 @@
                         lastMessageTime: serverTimestamp(),
                         lastMessageSenderId: currentUser.userId,
                     }).catch(err => console.warn('Update last message error:', err));
-
                     sendTyping(currentChatId, false);
                     messageInput.value = '';
                     updateSendButton();
@@ -2473,16 +2712,14 @@
         }
 
         // ============================================================
-        // 16. START CHAT WITH CONTACT
+        // 16. START CHAT WITH CONTACT (tidak diubah)
         // ============================================================
         function startChatWithContact(contactId) {
             if (contactId === currentUser.userId) {
                 showToast('Anda tidak bisa chat dengan diri sendiri');
                 return;
             }
-
             const chatId = getChatId(currentUser.userId, contactId);
-
             get(ref(db, `chats/${chatId}`)).then((snapshot) => {
                 if (!snapshot.exists()) {
                     const chatData = {
@@ -2537,21 +2774,16 @@
         }
 
         // ============================================================
-        // 17. CONTEXT MENU (Long Press)
+        // 17. CONTEXT MENU (tidak diubah)
         // ============================================================
         let contextTargetMsgId = null;
-
         function showContextMenu(x, y, msgId, isOut, senderId) {
             contextTargetMsgId = msgId;
             const menu = contextMenu;
             menu.style.display = 'block';
             menu.style.left = Math.min(x, window.innerWidth - 180) + 'px';
             menu.style.top = Math.min(y, window.innerHeight - 180) + 'px';
-
-            let items = `
-                    <button class="ctx-item" data-action="copy">📋 Salin</button>
-                `;
-
+            let items = `<button class="ctx-item" data-action="copy">📋 Salin</button>`;
             if (isOut) {
                 items += `
                         <button class="ctx-item danger" data-action="delete">🗑️ Hapus untuk saya</button>
@@ -2563,9 +2795,7 @@
                         <button class="ctx-item danger" data-action="delete">🗑️ Hapus</button>
                     `;
             }
-
             menu.innerHTML = items;
-
             menu.querySelectorAll('.ctx-item').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const action = btn.dataset.action;
@@ -2573,7 +2803,6 @@
                     hideContextMenu();
                 });
             });
-
             setTimeout(() => {
                 document.addEventListener('click', hideContextMenu, { once: true });
             }, 10);
@@ -2588,9 +2817,7 @@
             const msgId = contextTargetMsgId;
             const chatId = state.currentChatId;
             if (!msgId || !chatId) return;
-
             const msgRef = ref(db, `messages/${chatId}/${msgId}`);
-
             switch (action) {
                 case 'copy':
                     get(msgRef).then(snap => {
@@ -2610,13 +2837,11 @@
                         }
                     });
                     break;
-
                 case 'delete':
                     remove(msgRef).then(() => {
                         showToast('Pesan dihapus');
                     }).catch(() => showToast('Gagal menghapus'));
                     break;
-
                 case 'delete-all':
                     update(msgRef, {
                         text: 'Pesan ini telah dihapus',
@@ -2625,7 +2850,6 @@
                         showToast('Pesan dihapus untuk semua');
                     }).catch(() => showToast('Gagal menghapus'));
                     break;
-
                 case 'reply':
                     get(msgRef).then(snap => {
                         const msg = snap.val();
@@ -2638,14 +2862,13 @@
                         }
                     });
                     break;
-
                 default:
                     break;
             }
         }
 
         // ============================================================
-        // 18. EMOJI PICKER
+        // 18. EMOJI PICKER (tidak diubah)
         // ============================================================
         const emojis = ['😀', '😁', '😂', '🤣', '😊', '😍', '🥰', '😘', '😗', '😙', '😚', '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', '🤭',
             '🤫', '🤔', '🤐', '🤨', '😐', '😑', '😶', '😏', '😒', '🙄', '😬', '🤥', '😌', '😔', '😪', '🤤', '😴', '😷', '🤒', '🤕', '🤢',
@@ -2683,7 +2906,7 @@
         }
 
         // ============================================================
-        // 19. PROFILE (Chat Profile)
+        // 19. PROFILE (tidak diubah)
         // ============================================================
         function loadProfile() {
             if (!currentUser) return;
@@ -2693,7 +2916,6 @@
                 const phone = data.phone || '';
                 const status = data.about || '';
                 const photo = data.photo || '';
-
                 profileName.textContent = name;
                 profilePhone.textContent = phone;
                 profileStatus.textContent = status;
@@ -2712,7 +2934,7 @@
         }
 
         // ============================================================
-        // 20. CONTACT DETAIL
+        // 20. CONTACT DETAIL (tidak diubah)
         // ============================================================
         function loadContactDetail(contactId) {
             get(ref(db, `users/${contactId}`)).then((snapshot) => {
@@ -2723,14 +2945,12 @@
                 const phone = data.phone || '';
                 const online = data.online || false;
                 const lastSeen = data.lastSeen || null;
-
                 cdName.textContent = name;
                 cdStatus.textContent = online ? 'online' : (lastSeen ? `terakhir ${formatTime(lastSeen)}` : 'offline');
                 cdDetailName.textContent = name;
                 cdDetailPhone.textContent = phone || '-';
                 cdDetailStatus.textContent = status || '-';
                 cdDetailLastSeen.textContent = lastSeen ? formatTimeFull(lastSeen) : '-';
-
                 if (photo) {
                     cdAvatar.innerHTML = `<img src="${photo}" alt="${name}" />`;
                 } else {
@@ -2749,10 +2969,8 @@
         }
 
         // ============================================================
-        // 13. TAMBAH KONTAK
+        // 21. TAMBAH KONTAK (tidak diubah)
         // ============================================================
-
-        // View untuk tambah kontak
         const viewAddContact = document.createElement('section');
         viewAddContact.className = 'view';
         viewAddContact.id = 'view-add-contact';
@@ -2770,107 +2988,98 @@
           </div>
         `;
         document.getElementById('app-main').appendChild(viewAddContact);
-
-        // Tambahkan ke views
         views['add-contact'] = viewAddContact;
 
-        // Fungsi untuk mencari user berdasarkan nomor HP
         async function searchUserByPhone(phone) {
-          const normalized = normalizePhone(phone);
-          const usersRef = ref(db, 'users');
-          const snapshot = await get(usersRef);
-          const users = snapshot.val() || {};
-          for (const [uid, data] of Object.entries(users)) {
-            if (data.phone === normalized) {
-              return { uid, ...data };
+            const normalized = normalizePhone(phone);
+            const usersRef = ref(db, 'users');
+            const snapshot = await get(usersRef);
+            const users = snapshot.val() || {};
+            for (const [uid, data] of Object.entries(users)) {
+                if (data.phone === normalized) {
+                    return { uid, ...data };
+                }
             }
-          }
-          return null;
+            return null;
         }
 
-        // Event listener untuk tombol cari
         document.getElementById('searchUserBtn').addEventListener('click', async () => {
-          const phone = document.getElementById('searchPhoneInput').value.trim();
-          if (!phone) {
-            document.getElementById('searchResult').innerHTML = '<p style="color:#d32f2f;">Masukkan nomor HP</p>';
-            return;
-          }
-          document.getElementById('searchResult').innerHTML = 'Mencari...';
-          try {
-            const user = await searchUserByPhone(phone);
-            const resultDiv = document.getElementById('searchResult');
-            if (!user) {
-              resultDiv.innerHTML = '<p style="color:var(--text-muted);">Pengguna tidak ditemukan.</p>';
-              return;
+            const phone = document.getElementById('searchPhoneInput').value.trim();
+            if (!phone) {
+                document.getElementById('searchResult').innerHTML = '<p style="color:#d32f2f;">Masukkan nomor HP</p>';
+                return;
             }
-            if (user.uid === currentUser.userId) {
-              resultDiv.innerHTML = '<p style="color:var(--text-muted);">Itu Anda sendiri.</p>';
-              return;
-            }
-            // Cek apakah sudah menjadi kontak
-            const contactRef = ref(db, `contacts/${currentUser.userId}/${user.uid}`);
-            const snap = await get(contactRef);
-            const isContact = snap.exists();
-
-            resultDiv.innerHTML = `
-              <div style="display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--border-color);border-radius:12px;margin-top:8px;">
-                <div style="width:48px;height:48px;border-radius:50%;background:var(--primary-light);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:18px;color:var(--primary);">
-                  ${user.photo ? `<img src="${user.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />` : getInitials(user.name)}
-                </div>
-                <div style="flex:1;">
-                  <div style="font-weight:500;">${escapeHtml(user.name)}</div>
-                  <div style="font-size:13px;color:var(--text-muted);">${escapeHtml(user.phone)}</div>
-                </div>
-                ${isContact ? '<span style="color:var(--text-muted);">Sudah menjadi kontak</span>' :
-                  `<button class="auth-btn" id="addContactBtn" style="max-width:120px;padding:8px 16px;font-size:14px;">Tambah</button>`
+            document.getElementById('searchResult').innerHTML = 'Mencari...';
+            try {
+                const user = await searchUserByPhone(phone);
+                const resultDiv = document.getElementById('searchResult');
+                if (!user) {
+                    resultDiv.innerHTML = '<p style="color:var(--text-muted);">Pengguna tidak ditemukan.</p>';
+                    return;
                 }
-              </div>
-            `;
-            if (!isContact) {
-              document.getElementById('addContactBtn').addEventListener('click', async () => {
-                try {
-                  await set(ref(db, `contacts/${currentUser.userId}/${user.uid}`), true);
-                  showToast('Kontak berhasil ditambahkan!');
-                  // Refresh kontak
-                  loadContacts();
-                  navigateTo('contacts');
-                } catch (e) {
-                  showToast('Gagal menambahkan kontak.');
+                if (user.uid === currentUser.userId) {
+                    resultDiv.innerHTML = '<p style="color:var(--text-muted);">Itu Anda sendiri.</p>';
+                    return;
                 }
-              });
+                const contactRef = ref(db, `contacts/${currentUser.userId}/${user.uid}`);
+                const snap = await get(contactRef);
+                const isContact = snap.exists();
+                resultDiv.innerHTML = `
+                  <div style="display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--border-color);border-radius:12px;margin-top:8px;">
+                    <div style="width:48px;height:48px;border-radius:50%;background:var(--primary-light);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:18px;color:var(--primary);">
+                      ${user.photo ? `<img src="${user.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />` : getInitials(user.name)}
+                    </div>
+                    <div style="flex:1;">
+                      <div style="font-weight:500;">${escapeHtml(user.name)}</div>
+                      <div style="font-size:13px;color:var(--text-muted);">${escapeHtml(user.phone)}</div>
+                    </div>
+                    ${isContact ? '<span style="color:var(--text-muted);">Sudah menjadi kontak</span>' :
+                      `<button class="auth-btn" id="addContactBtn" style="max-width:120px;padding:8px 16px;font-size:14px;">Tambah</button>`
+                    }
+                  </div>
+                `;
+                if (!isContact) {
+                    document.getElementById('addContactBtn').addEventListener('click', async () => {
+                        try {
+                            await set(ref(db, `contacts/${currentUser.userId}/${user.uid}`), true);
+                            showToast('Kontak berhasil ditambahkan!');
+                            loadContacts();
+                            navigateTo('contacts');
+                        } catch (e) {
+                            showToast('Gagal menambahkan kontak.');
+                        }
+                    });
+                }
+            } catch (e) {
+                document.getElementById('searchResult').innerHTML = '<p style="color:#d32f2f;">Terjadi kesalahan.</p>';
             }
-          } catch (e) {
-            document.getElementById('searchResult').innerHTML = '<p style="color:#d32f2f;">Terjadi kesalahan.</p>';
-          }
         });
 
-        // Tambah tombol "+" di header saat view contacts
         const origNavigate = navigateTo;
         navigateTo = function(view, data) {
-          origNavigate(view, data);
-          if (view === 'contacts') {
-            // Tampilkan tombol tambah kontak di header
-            const addBtn = document.createElement('button');
-            addBtn.id = 'headerAddContact';
-            addBtn.innerHTML = '<i data-lucide="plus" style="width:22px;height:22px;"></i>';
-            addBtn.style.cssText = 'background:none;border:none;color:var(--text-light);width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;';
-            addBtn.addEventListener('click', () => {
-              navigateTo('add-contact');
-              setTimeout(initLucide, 100);
-            });
-            const actions = document.getElementById('headerActions');
-            const old = document.getElementById('headerAddContact');
-            if (old) old.remove();
-            actions.prepend(addBtn);
-            setTimeout(initLucide, 100);
-          } else {
-            const old = document.getElementById('headerAddContact');
-            if (old) old.remove();
-          }
+            origNavigate(view, data);
+            if (view === 'contacts') {
+                const addBtn = document.createElement('button');
+                addBtn.id = 'headerAddContact';
+                addBtn.innerHTML = '<i data-lucide="plus" style="width:22px;height:22px;"></i>';
+                addBtn.style.cssText = 'background:none;border:none;color:var(--text-light);width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;';
+                addBtn.addEventListener('click', () => {
+                    navigateTo('add-contact');
+                    setTimeout(initLucide, 100);
+                });
+                const actions = document.getElementById('headerActions');
+                const old = document.getElementById('headerAddContact');
+                if (old) old.remove();
+                actions.prepend(addBtn);
+                setTimeout(initLucide, 100);
+            } else {
+                const old = document.getElementById('headerAddContact');
+                if (old) old.remove();
+            }
         };
 
         // ============================================================
-        // 21. HEADER NAVIGATION
+        // 22. HEADER NAVIGATION (tidak diubah)
         // ============================================================
         function setupHeaderNavigation() {
             headerBack.addEventListener('click', () => {
@@ -2886,9 +3095,7 @@
                     navigateTo('chats');
                 }
             });
-
             headerSearchBtn.addEventListener('click', enterSearchMode);
-
             headerSearchInput.addEventListener('input', (e) => {
                 const query = e.target.value.trim().toLowerCase();
                 state.searchQuery = query;
@@ -2898,11 +3105,9 @@
                     filterContactList(query);
                 }
             });
-
             headerMoreBtn.addEventListener('click', () => {
                 navigateTo('profile');
             });
-
             headerCameraBtn.addEventListener('click', () => {
                 showToast('Fitur kamera belum tersedia');
             });
@@ -2950,7 +3155,7 @@
         }
 
         // ============================================================
-        // 22. BOTTOM NAV
+        // 23. BOTTOM NAV (tidak diubah)
         // ============================================================
         function setupBottomNav() {
             navItems.forEach(item => {
@@ -2970,7 +3175,7 @@
         }
 
         // ============================================================
-        // 23. NOTIFICATION
+        // 24. NOTIFICATION (tidak diubah)
         // ============================================================
         function setupNotifications() {
             if ('Notification' in window && Notification.permission === 'default') {
@@ -2990,7 +3195,7 @@
         }
 
         // ============================================================
-        // 24. NEW MESSAGE LISTENER
+        // 25. NEW MESSAGE LISTENER (tidak diubah)
         // ============================================================
         function setupNewMessageListener() {
             if (!currentUser) return;
@@ -3000,7 +3205,6 @@
                 const chatIds = Object.keys(data);
                 state.unsubscribe.newMessage.forEach(u => u());
                 state.unsubscribe.newMessage = [];
-
                 chatIds.forEach(chatId => {
                     const chat = data[chatId];
                     if (chat.participants && chat.participants[currentUser.userId]) {
@@ -3028,12 +3232,209 @@
         }
 
         // ============================================================
-        // 25. LOGIN LOGIC
+        // 26. STATUS / STORY FEATURE (BARU)
+        // ============================================================
+
+        // Post status (text only)
+        function postStatus(text) {
+            if (!currentUser) return;
+            const statusRef = ref(db, `statuses/${currentUser.userId}`);
+            const newStatusRef = push(statusRef);
+            set(newStatusRef, {
+                type: 'text',
+                content: text,
+                timestamp: serverTimestamp(),
+                viewers: {} // akan diisi oleh orang yang melihat
+            }).then(() => {
+                showToast('Status berhasil dibagikan');
+                loadStatuses(); // refresh
+            }).catch(err => {
+                console.warn('Post status error:', err);
+                showToast('Gagal membagikan status');
+            });
+        }
+
+        // Mark status as viewed
+        function markStatusViewed(ownerId, statusId) {
+            if (!currentUser) return;
+            const viewerRef = ref(db, `statuses/${ownerId}/${statusId}/viewers/${currentUser.userId}`);
+            set(viewerRef, true).catch(err => console.warn('Mark viewed error:', err));
+        }
+
+        // Load statuses dari kontak yang saling terhubung (mutual contacts)
+        function loadStatuses() {
+            if (!currentUser) return;
+            if (state.unsubscribe.statuses) {
+                state.unsubscribe.statuses();
+                state.unsubscribe.statuses = null;
+            }
+
+            // Ambil daftar kontak user
+            get(child(ref(db, 'contacts'), currentUser.userId)).then((snapshot) => {
+                const contactIds = Object.keys(snapshot.val() || {});
+                if (contactIds.length === 0) {
+                    contactStatusList.innerHTML = `<div class="empty-state"><p>Tidak ada status dari kontak.</p></div>`;
+                    return;
+                }
+
+                // Subscribe ke semua status dari kontak
+                const statusRef = ref(db, 'statuses');
+                const unsub = onValue(statusRef, (snapshot) => {
+                    const allStatuses = snapshot.val() || {};
+                    const now = Date.now();
+                    const oneDay = 24 * 60 * 60 * 1000;
+                    const activeStatuses = [];
+
+                    // Loop setiap user yang punya status
+                    Object.keys(allStatuses).forEach(uid => {
+                        // Hanya tampilkan jika uid adalah kontak (mutual)
+                        if (!contactIds.includes(uid) && uid !== currentUser.userId) return;
+
+                        const userStatuses = allStatuses[uid];
+                        Object.keys(userStatuses).forEach(statusId => {
+                            const status = userStatuses[statusId];
+                            const ts = status.timestamp || 0;
+                            // Status kadaluarsa jika lebih dari 24 jam
+                            if (now - ts > oneDay) return;
+                            // Jika sudah dilihat oleh user, tandai
+                            const viewed = status.viewers && status.viewers[currentUser.userId] || false;
+                            activeStatuses.push({
+                                uid,
+                                statusId,
+                                content: status.content || '',
+                                timestamp: ts,
+                                viewed,
+                                type: status.type || 'text'
+                            });
+                        });
+                    });
+
+                    // Urutkan berdasarkan timestamp (terbaru dulu)
+                    activeStatuses.sort((a, b) => b.timestamp - a.timestamp);
+
+                    // Render ke UI
+                    renderStatusList(activeStatuses);
+                });
+                state.unsubscribe.statuses = unsub;
+            }).catch(err => {
+                console.warn('Load statuses error:', err);
+            });
+        }
+
+        // Render daftar status di view-updates
+        function renderStatusList(statuses) {
+            if (!contactStatusList) return;
+            if (statuses.length === 0) {
+                contactStatusList.innerHTML = `<div class="empty-state" style="padding:20px 0;"><p style="font-size:14px;">Tidak ada status terbaru dari kontak.</p></div>`;
+                return;
+            }
+
+            // Ambil data user untuk nama dan foto
+            get(ref(db, 'users')).then((userSnap) => {
+                const users = userSnap.val() || {};
+                let html = '';
+                statuses.forEach(item => {
+                    const user = users[item.uid] || { name: item.uid, photo: '' };
+                    const name = user.name || item.uid;
+                    const photo = user.photo || '';
+                    const initials = getInitials(name);
+                    const isViewed = item.viewed;
+                    const timeStr = formatTime(item.timestamp);
+                    html += `
+                        <div class="status-item" data-uid="${item.uid}" data-statusid="${item.statusId}">
+                            <div class="avatar ${isViewed ? 'seen' : ''}">
+                                ${photo ? `<img src="${photo}" alt="${name}" />` : initials}
+                            </div>
+                            <div class="info">
+                                <div class="name">${escapeHtml(name)}</div>
+                                <div class="time">${timeStr}</div>
+                            </div>
+                            <div class="status-badge">${isViewed ? 'Dilihat' : 'Baru'}</div>
+                        </div>
+                    `;
+                });
+                contactStatusList.innerHTML = html;
+
+                // Event klik untuk melihat status
+                contactStatusList.querySelectorAll('.status-item').forEach(el => {
+                    el.addEventListener('click', () => {
+                        const uid = el.dataset.uid;
+                        const statusId = el.dataset.statusid;
+                        const status = statuses.find(s => s.uid === uid && s.statusId === statusId);
+                        if (status) {
+                            // Tandai sebagai viewed
+                            if (!status.viewed) {
+                                markStatusViewed(uid, statusId);
+                            }
+                            // Tampilkan modal
+                            showStatusModal(uid, statusId, status.content, status.timestamp);
+                        }
+                    });
+                });
+
+                // Update my status info
+                if (currentUser) {
+                    const myData = users[currentUser.userId] || {};
+                    myStatusAvatar.textContent = getInitials(myData.name || currentUser.userId);
+                    myStatusName.textContent = myData.name || 'Status Saya';
+                    myStatusSub.textContent = 'Ketuk untuk tambah status';
+                }
+
+                initLucide();
+            }).catch(err => console.warn('Render status error:', err));
+        }
+
+        // Tampilkan modal status
+        function showStatusModal(uid, statusId, content, timestamp) {
+            if (!statusModal || !statusModalContent) return;
+            // Ambil nama pengguna
+            get(ref(db, `users/${uid}`)).then((snap) => {
+                const user = snap.val() || { name: uid };
+                const name = user.name || uid;
+                const photo = user.photo || '';
+                const initials = getInitials(name);
+                const timeStr = formatTime(timestamp);
+                statusModalContent.innerHTML = `
+                    <div class="status-user">
+                        <div class="avatar">${photo ? `<img src="${photo}" alt="${name}" />` : initials}</div>
+                        <div class="name">${escapeHtml(name)}</div>
+                    </div>
+                    <div class="status-text">${escapeHtml(content)}</div>
+                    <div class="status-time">${timeStr}</div>
+                `;
+                statusModal.classList.add('active');
+                initLucide();
+            }).catch(() => {
+                statusModalContent.innerHTML = `<div class="status-text">${escapeHtml(content)}</div>`;
+                statusModal.classList.add('active');
+            });
+        }
+
+        // Event untuk modal close
+        statusModalClose.addEventListener('click', () => {
+            statusModal.classList.remove('active');
+        });
+        statusModal.addEventListener('click', (e) => {
+            if (e.target === statusModal) statusModal.classList.remove('active');
+        });
+
+        // Tombol tambah status
+        addStatusBtn.addEventListener('click', () => {
+            // Tampilkan input popup sederhana (gunakan prompt untuk kemudahan)
+            const text = prompt('Tulis status Anda:', '');
+            if (text && text.trim().length > 0) {
+                postStatus(text.trim());
+            } else if (text !== null) {
+                showToast('Status tidak boleh kosong');
+            }
+        });
+
+        // ============================================================
+        // 27. LOGIN LOGIC (tidak diubah)
         // ============================================================
         loginBtn.addEventListener('click', async () => {
             const rawPhone = phoneInput.value.trim();
             const rawName = nameInput.value.trim();
-
             if (!rawPhone) {
                 loginError.textContent = 'Nomor HP wajib diisi.';
                 return;
@@ -3046,24 +3447,20 @@
                 loginError.textContent = 'Nama minimal 2 karakter.';
                 return;
             }
-
             const phone = normalizePhone(rawPhone);
             if (phone.length < 8) {
                 loginError.textContent = 'Nomor HP tidak valid.';
                 return;
             }
-
             loginError.textContent = '';
             loginBtn.disabled = true;
             loginBtn.textContent = 'Memproses...';
-
             try {
                 const usersRef = ref(db, 'users');
                 const snapshot = await get(usersRef);
                 const users = snapshot.val() || {};
                 let foundUserId = null;
                 let foundUser = null;
-
                 for (const [uid, userData] of Object.entries(users)) {
                     if (userData.phone === phone) {
                         foundUserId = uid;
@@ -3071,10 +3468,8 @@
                         break;
                     }
                 }
-
                 let userId;
                 let userData;
-
                 if (foundUserId) {
                     userId = foundUserId;
                     userData = foundUser;
@@ -3106,7 +3501,6 @@
                     };
                     await set(ref(db, `users/${userId}`), userData);
                 }
-
                 const session = {
                     userId: userId,
                     phone: phone,
@@ -3114,20 +3508,16 @@
                     loginAt: Date.now(),
                 };
                 localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-
                 currentUser = {
                     userId: userId,
                     phone: phone,
                     name: rawName,
                 };
-
                 setupPresence();
                 setupNewMessageListener();
                 showChatApp();
                 loadChats();
-
                 showToast('Selamat datang, ' + rawName + '!');
-
             } catch (error) {
                 console.error('Login error:', error);
                 loginError.textContent = 'Terjadi kesalahan. Coba lagi.';
@@ -3138,7 +3528,7 @@
         });
 
         // ============================================================
-        // 26. LOGOUT
+        // 28. LOGOUT (tidak diubah)
         // ============================================================
         async function logout() {
             if (!currentUser) return;
@@ -3154,7 +3544,6 @@
             } catch (e) {
                 console.warn('Logout update error:', e);
             }
-
             localStorage.removeItem(SESSION_KEY);
             currentUser = null;
             cleanupAllListeners();
@@ -3166,16 +3555,14 @@
         settingsLogout.addEventListener('click', logout);
 
         // ============================================================
-        // 27. AUTO-LOGIN (Session)
+        // 29. AUTO-LOGIN (tidak diubah)
         // ============================================================
         function tryAutoLogin() {
             const sessionStr = localStorage.getItem(SESSION_KEY);
             if (!sessionStr) return false;
-
             try {
                 const session = JSON.parse(sessionStr);
                 if (!session.userId || !session.phone || !session.name) return false;
-
                 get(ref(db, `users/${session.userId}`)).then((snapshot) => {
                     if (snapshot.exists()) {
                         const userData = snapshot.val();
@@ -3201,7 +3588,6 @@
                     localStorage.removeItem(SESSION_KEY);
                     showAuthView();
                 });
-
                 return true;
             } catch (e) {
                 return false;
@@ -3209,21 +3595,18 @@
         }
 
         // ============================================================
-        // 28. INITIALIZATION
+        // 30. INITIALIZATION (tidak diubah)
         // ============================================================
         function init() {
             console.log('🚀 Starting GoChat...');
-
             initEmojiPicker();
             setupBottomNav();
             setupHeaderNavigation();
             setupNotifications();
-
             const loggedIn = tryAutoLogin();
             if (!loggedIn) {
                 showAuthView();
             }
-
             phoneInput.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
@@ -3236,13 +3619,12 @@
                     loginBtn.click();
                 }
             });
-
             setTimeout(initLucide, 500);
             console.log('✅ GoChat ready');
         }
 
         // ============================================================
-        // 29. START
+        // 31. START
         // ============================================================
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', init);
@@ -3251,7 +3633,7 @@
         }
 
         // ============================================================
-        // 30. EXPOSE DEBUG
+        // 32. EXPOSE DEBUG
         // ============================================================
         window.__gochat = {
             db,
@@ -3263,6 +3645,8 @@
             loadContacts,
             startChatWithContact,
             logout,
+            postStatus,
+            loadStatuses,
         };
 
         console.log('📱 GoChat loaded.');
