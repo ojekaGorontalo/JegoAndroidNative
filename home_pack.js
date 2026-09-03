@@ -815,6 +815,13 @@ function createOrderElement(order) {
     const harga = order.price || 0;
     const isKurir = order.transport_type && order.transport_type.includes('kurir');
 
+    // ===== BARU: Badge metode pembayaran =====
+    const isJePay = order.payment_method === 'jepay';
+    const paymentBadge = isJePay 
+        ? '<span class="payment-badge jepay">💳 JePay</span>' 
+        : '<span class="payment-badge cash">💵 Tunai</span>';
+    // =====================================
+
     let deskripsiBarang = '';
     if (isKurir && order.item_description) {
         deskripsiBarang = `<div class="delivery-desc-card">${escapeHtml(order.item_description)}</div>`;
@@ -853,7 +860,10 @@ function createOrderElement(order) {
 
     orderItem.innerHTML = `
         <div class="order-header">
-            <div class="order-badges">${isKurir ? '<span class="kurir-badge">📦 KURIR</span>' : ''}</div>
+            <div class="order-badges">
+                ${isKurir ? '<span class="kurir-badge">📦 KURIR</span>' : ''}
+                ${paymentBadge}
+            </div>
         </div>
         <div class="route-info-with-photo">
             <div class="customer-info-left">
