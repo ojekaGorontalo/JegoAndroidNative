@@ -84,14 +84,14 @@
           <label class="form-label" for="passwordInput">Password *</label>
           <div class="input-group">
             <input type="password" class="form-input password-input" id="passwordInput" required minlength="6">
-            <button type="button" class="toggle-password" id="togglePassword">👁</button>
+            <button type="button" class="toggle-password" id="togglePassword"></button>
           </div>
         </div>
         <div class="form-group">
           <label class="form-label" for="confirmPasswordInput">Konfirmasi Password *</label>
           <div class="input-group">
             <input type="password" class="form-input password-input" id="confirmPasswordInput" required minlength="6">
-            <button type="button" class="toggle-password" id="toggleConfirmPassword">👁</button>
+            <button type="button" class="toggle-password" id="toggleConfirmPassword"></button>
           </div>
         </div>
         <div class="form-group">
@@ -141,6 +141,9 @@
       appId: "1:600037007040:web:ac3243ad9b472647ffd725",
       measurementId: "G-H5F9TSK50K"
     };
+
+    // ==================== KONFIGURASI REDIS ====================
+    const REDIS_API_URL = 'https://movego.my.id/api';
 
     let firebaseAuth;
     let firebaseDatabase;
@@ -211,7 +214,7 @@
     // ===== FUNGSI SIMPAN KE REDIS (DENGAN ERROR HANDLING) =====
     async function saveCustomerToRedis(userData) {
       try {
-        const response = await fetch('/api/customer', {
+        const response = await fetch(`${REDIS_API_URL}/customer`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -220,14 +223,14 @@
         });
         if (!response.ok) {
           const errorText = await response.text();
-          console.warn('⚠️ Gagal simpan customer ke Redis, status:', response.status, errorText);
+          console.warn(' Gagal simpan customer ke Redis, status:', response.status, errorText);
           return false;
         }
         const result = await response.json();
-        console.log('✅ Customer data saved to Redis:', result);
+        console.log(' Customer data saved to Redis:', result);
         return true;
       } catch (err) {
-        console.warn('⚠️ Gagal simpan customer ke Redis (network/error):', err.message);
+        console.warn(' Gagal simpan customer ke Redis (network/error):', err.message);
         return false;
       }
     }
@@ -379,7 +382,7 @@
     togglePwd.addEventListener('click', function() {
       const type = pwdInput.getAttribute('type') === 'password' ? 'text' : 'password';
       pwdInput.setAttribute('type', type);
-      this.textContent = type === 'password' ? '👁' : '🙈';
+      this.textContent = type === 'password' ? '' : '';
     });
 
     const toggleConfirm = document.getElementById('toggleConfirmPassword');
@@ -387,7 +390,7 @@
     toggleConfirm.addEventListener('click', function() {
       const type = confirmInput.getAttribute('type') === 'password' ? 'text' : 'password';
       confirmInput.setAttribute('type', type);
-      this.textContent = type === 'password' ? '👁' : '🙈';
+      this.textContent = type === 'password' ? '' : '';
     });
 
     // Inisialisasi
