@@ -1,0 +1,3248 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>GoChat</title>
+
+    <!-- ============================================================
+    FIREBASE SDK (Realtime Database only)
+    ============================================================ -->
+    <script type="importmap">
+        {
+            "imports": {
+                "firebase/app": "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js",
+                "firebase/database": "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js"
+            }
+        }
+    </script>
+
+    <!-- ============================================================
+    LUCIDE ICONS
+    ============================================================ -->
+    <script src="https://unpkg.com/lucide@latest">
+    </script>
+
+    <style>
+        /* ============================================================
+           CSS VARIABLES (WhatsApp-inspired)
+           ============================================================ */
+        :root {
+            --primary: #00a884;
+            --primary-dark: #008f72;
+            --primary-light: #e8f5e9;
+            --secondary: #25d366;
+            --bg-primary: #f0f2f5;
+            --bg-header: #00a884;
+            --bg-chat: #efeae2;
+            --bg-input: #f0f0f0;
+            --bg-bubble-out: #d9fdd3;
+            --bg-bubble-in: #ffffff;
+            --text-primary: #111b21;
+            --text-secondary: #667781;
+            --text-light: #ffffff;
+            --text-muted: #8696a0;
+            --border-color: #e9edef;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+            --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.12);
+            --shadow-lg: 0 4px 20px rgba(0, 0, 0, 0.15);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 18px;
+            --radius-full: 50%;
+            --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            --nav-height: 60px;
+            --header-height: 56px;
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+            --font: 'Segoe UI', system-ui, -apple-system, Roboto, 'Helvetica Neue', sans-serif;
+        }
+
+        /* ============================================================
+           RESET & BASE
+           ============================================================ */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            height: 100%;
+            height: 100dvh;
+            font-family: var(--font);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow: hidden;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #c0c5ca;
+            border-radius: 4px;
+        }
+
+        /* ============================================================
+           APP SHELL
+           ============================================================ */
+        #app {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            height: 100dvh;
+            max-width: 100%;
+            background: var(--bg-primary);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* ============================================================
+           HEADER (chat)
+           ============================================================ */
+        #app-header {
+            flex-shrink: 0;
+            height: var(--header-height);
+            padding-top: var(--safe-top);
+            background: var(--bg-header);
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            padding-top: calc(4px + var(--safe-top));
+            gap: 12px;
+            z-index: 50;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+            transition: background var(--transition);
+            position: relative;
+        }
+        #app-header .header-back {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-light);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 4px;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+        #app-header .header-back.show {
+            display: flex;
+        }
+        #app-header .header-title {
+            font-size: 18px;
+            font-weight: 600;
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            letter-spacing: 0.3px;
+        }
+        #app-header .header-title .sub {
+            font-size: 12px;
+            font-weight: 400;
+            opacity: 0.85;
+            display: block;
+            margin-top: -2px;
+        }
+        #app-header .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+        #app-header .header-actions button {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-full);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 22px;
+            transition: background var(--transition);
+        }
+        #app-header .header-actions button:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+        #app-header .header-actions button:active {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        #app-header.search-mode .header-title {
+            display: none;
+        }
+        #app-header.search-mode .header-search-input {
+            display: block;
+        }
+        #app-header .header-search-input {
+            display: none;
+            flex: 1;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 20px;
+            padding: 8px 16px;
+            color: var(--text-light);
+            font-size: 15px;
+            outline: none;
+            min-width: 0;
+        }
+        #app-header .header-search-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        #app-header .header-search-input:focus {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* ============================================================
+           AUTH VIEW (Login)
+           ============================================================ */
+        .auth-view {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            padding: 24px;
+            background: #ffffff;
+            overflow-y: auto;
+            animation: fadeIn 0.3s ease;
+        }
+        .auth-view.active {
+            display: flex;
+        }
+        .auth-view .auth-logo {
+            font-size: 56px;
+            margin-bottom: 16px;
+            color: var(--primary);
+        }
+        .auth-view .auth-title {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--text-primary);
+        }
+        .auth-view .auth-subtitle {
+            font-size: 14px;
+            color: var(--text-muted);
+            text-align: center;
+            margin-bottom: 24px;
+            max-width: 300px;
+        }
+        .auth-view .auth-input-group {
+            width: 100%;
+            max-width: 340px;
+            margin-bottom: 16px;
+        }
+        .auth-view .auth-input-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+        .auth-view .auth-input-group .input-wrap {
+            display: flex;
+            align-items: center;
+            background: #f5f6fa;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            padding: 0 12px;
+            transition: border var(--transition);
+        }
+        .auth-view .auth-input-group .input-wrap:focus-within {
+            border-color: var(--primary);
+        }
+        .auth-view .auth-input-group .input-wrap input {
+            flex: 1;
+            border: none;
+            outline: none;
+            background: transparent;
+            padding: 12px 0;
+            font-size: 16px;
+            font-family: var(--font);
+            color: var(--text-primary);
+            min-width: 0;
+        }
+        .auth-view .auth-input-group .input-wrap input::placeholder {
+            color: var(--text-muted);
+        }
+        .auth-view .auth-btn {
+            width: 100%;
+            max-width: 340px;
+            padding: 14px;
+            border: none;
+            border-radius: 30px;
+            background: var(--primary);
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background var(--transition);
+            margin-top: 8px;
+            font-family: var(--font);
+        }
+        .auth-view .auth-btn:hover {
+            background: var(--primary-dark);
+        }
+        .auth-view .auth-btn:active {
+            transform: scale(0.97);
+        }
+        .auth-view .auth-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .auth-view .auth-error {
+            color: #d32f2f;
+            font-size: 13px;
+            margin-top: 4px;
+            min-height: 20px;
+            text-align: center;
+        }
+        .auth-view .auth-error .detail {
+            font-size: 12px;
+            color: var(--text-muted);
+            display: block;
+            margin-top: 4px;
+        }
+
+        /* ============================================================
+           MAIN VIEW (Chat, Contacts, etc.)
+           ============================================================ */
+        #app-main {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+            background: var(--bg-primary);
+        }
+
+        .view {
+            display: none;
+            height: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
+            background: var(--bg-primary);
+            animation: fadeIn 0.2s ease;
+            position: relative;
+        }
+        .view.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Chat view khusus — fullscreen */
+        #view-chat.active {
+            position: absolute;
+            inset: 0;
+            z-index: 40;
+            background: var(--bg-chat);
+            animation: slideUp 0.25s ease;
+        }
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* ============================================================
+           BOTTOM NAVIGATION
+           ============================================================ */
+        #bottom-nav {
+            flex-shrink: 0;
+            height: calc(var(--nav-height) + var(--safe-bottom));
+            padding-bottom: var(--safe-bottom);
+            background: #ffffff;
+            display: flex;
+            align-items: stretch;
+            border-top: 1px solid var(--border-color);
+            z-index: 50;
+            box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.04);
+        }
+        #bottom-nav .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 10px;
+            font-weight: 500;
+            gap: 2px;
+            cursor: pointer;
+            padding: 4px 0;
+            transition: color var(--transition);
+            position: relative;
+            letter-spacing: 0.2px;
+        }
+        #bottom-nav .nav-item svg {
+            width: 26px;
+            height: 26px;
+            transition: transform var(--transition);
+        }
+        #bottom-nav .nav-item span {
+            font-size: 10px;
+            line-height: 1.2;
+        }
+        #bottom-nav .nav-item.active {
+            color: var(--primary);
+        }
+        #bottom-nav .nav-item.active svg {
+            transform: scale(1.05);
+        }
+        #bottom-nav .nav-item:active {
+            transform: scale(0.94);
+        }
+        #bottom-nav .nav-item .badge-dot {
+            position: absolute;
+            top: 4px;
+            right: 50%;
+            transform: translateX(calc(50% + 18px));
+            width: 8px;
+            height: 8px;
+            background: var(--secondary);
+            border-radius: 50%;
+            border: 2px solid #fff;
+        }
+
+        /* ============================================================
+           CHATS LIST
+           ============================================================ */
+        .chat-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0;
+            background: #ffffff;
+        }
+        .chat-list .chat-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            gap: 14px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background var(--transition);
+            position: relative;
+        }
+        .chat-list .chat-item:active {
+            background: #f0f2f5;
+        }
+        .chat-list .chat-item .avatar {
+            width: 52px;
+            height: 52px;
+            border-radius: var(--radius-full);
+            flex-shrink: 0;
+            background: var(--primary-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 20px;
+            color: var(--primary);
+            overflow: hidden;
+            position: relative;
+        }
+        .chat-list .chat-item .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .chat-list .chat-item .avatar .online-dot {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 14px;
+            height: 14px;
+            background: var(--secondary);
+            border-radius: 50%;
+            border: 2px solid #fff;
+        }
+        .chat-list .chat-item .info {
+            flex: 1;
+            min-width: 0;
+        }
+        .chat-list .chat-item .info .name {
+            font-weight: 500;
+            font-size: 16px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .chat-list .chat-item .info .name .verified {
+            color: var(--primary);
+            font-size: 14px;
+        }
+        .chat-list .chat-item .info .preview {
+            font-size: 14px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 2px;
+        }
+        .chat-list .chat-item .info .preview .sender {
+            color: var(--primary);
+            font-weight: 500;
+        }
+        .chat-list .chat-item .meta {
+            flex-shrink: 0;
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+            min-width: 48px;
+        }
+        .chat-list .chat-item .meta .time {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+        .chat-list .chat-item .meta .unread {
+            background: var(--primary);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 600;
+            min-width: 20px;
+            height: 20px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 6px;
+            line-height: 1;
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            padding: 40px;
+            text-align: center;
+            color: var(--text-muted);
+        }
+        .empty-state .icon {
+            font-size: 56px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+        .empty-state h3 {
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+        .empty-state p {
+            font-size: 14px;
+            max-width: 280px;
+        }
+
+        /* ============================================================
+           CHAT SCREEN
+           ============================================================ */
+        #chat-header {
+            flex-shrink: 0;
+            background: var(--bg-header);
+            color: var(--text-light);
+            padding: 6px 12px;
+            padding-top: calc(4px + var(--safe-top));
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-height: 56px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+            z-index: 10;
+        }
+        #chat-header .back {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 4px;
+            line-height: 1;
+        }
+        #chat-header .chat-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-full);
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 16px;
+            color: #fff;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+        #chat-header .chat-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        #chat-header .chat-info {
+            flex: 1;
+            min-width: 0;
+        }
+        #chat-header .chat-info .name {
+            font-weight: 500;
+            font-size: 16px;
+            line-height: 1.2;
+        }
+        #chat-header .chat-info .status {
+            font-size: 12px;
+            opacity: 0.85;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        #chat-header .chat-info .status .typing-dots {
+            display: flex;
+            gap: 3px;
+            align-items: center;
+        }
+        #chat-header .chat-info .status .typing-dots span {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.7);
+            animation: typingBounce 1.4s infinite;
+        }
+        #chat-header .chat-info .status .typing-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        #chat-header .chat-info .status .typing-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        @keyframes typingBounce {
+            0%,
+            60%,
+            100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-4px);
+            }
+        }
+        #chat-header .actions {
+            display: flex;
+            gap: 2px;
+        }
+        #chat-header .actions button {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            width: 38px;
+            height: 38px;
+            border-radius: var(--radius-full);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+            transition: background var(--transition);
+        }
+        #chat-header .actions button:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+        #chat-header .actions button:active {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Messages */
+        #messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 16px 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            background: var(--bg-chat);
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d1d7db' fill-opacity='0.25'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        #messages-container .message {
+            max-width: 78%;
+            padding: 8px 12px;
+            border-radius: var(--radius-lg);
+            font-size: 14.5px;
+            line-height: 1.5;
+            word-wrap: break-word;
+            position: relative;
+            animation: msgIn 0.2s ease;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+        }
+        @keyframes msgIn {
+            from {
+                opacity: 0;
+                transform: scale(0.96);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        #messages-container .message.out {
+            align-self: flex-end;
+            background: var(--bg-bubble-out);
+            border-bottom-right-radius: 4px;
+        }
+        #messages-container .message.in {
+            align-self: flex-start;
+            background: var(--bg-bubble-in);
+            border-bottom-left-radius: 4px;
+        }
+        #messages-container .message .time {
+            font-size: 10.5px;
+            color: var(--text-muted);
+            float: right;
+            margin-left: 12px;
+            margin-top: 2px;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            line-height: 1.2;
+        }
+        #messages-container .message .time .status-icon {
+            font-size: 14px;
+        }
+        #messages-container .message .time .status-icon.read {
+            color: #53bdeb;
+        }
+        #messages-container .message .text {
+            margin-right: 4px;
+        }
+        #messages-container .message .reply-preview {
+            font-size: 13px;
+            color: var(--text-muted);
+            padding: 4px 8px;
+            background: rgba(0, 0, 0, 0.04);
+            border-radius: 6px;
+            margin-bottom: 4px;
+            border-left: 3px solid var(--primary);
+        }
+        #messages-container .message .reply-preview .reply-name {
+            font-weight: 500;
+            color: var(--primary);
+        }
+        .date-divider {
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-muted);
+            padding: 8px 0;
+            margin: 4px 0;
+        }
+        .date-divider span {
+            background: rgba(0, 0, 0, 0.04);
+            padding: 4px 16px;
+            border-radius: 12px;
+            font-weight: 500;
+            font-size: 11px;
+        }
+
+        /* ============================================================
+           CHAT INPUT
+           ============================================================ */
+        #chat-input-area {
+            flex-shrink: 0;
+            padding: 6px 12px;
+            padding-bottom: calc(8px + var(--safe-bottom));
+            background: var(--bg-input);
+            display: flex;
+            align-items: flex-end;
+            gap: 6px;
+            border-top: 1px solid var(--border-color);
+            position: relative;
+        }
+        #chat-input-area .btn-icon {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-full);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 24px;
+            flex-shrink: 0;
+            transition: background var(--transition);
+        }
+        #chat-input-area .btn-icon:hover {
+            background: rgba(0, 0, 0, 0.04);
+        }
+        #chat-input-area .btn-icon:active {
+            background: rgba(0, 0, 0, 0.08);
+        }
+        #chat-input-area .input-wrap {
+            flex: 1;
+            display: flex;
+            align-items: flex-end;
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 4px 16px;
+            border: 1px solid var(--border-color);
+            transition: border var(--transition);
+            min-height: 42px;
+        }
+        #chat-input-area .input-wrap:focus-within {
+            border-color: var(--primary);
+        }
+        #chat-input-area .input-wrap textarea {
+            flex: 1;
+            border: none;
+            outline: none;
+            resize: none;
+            font-size: 15px;
+            font-family: var(--font);
+            padding: 8px 0;
+            min-height: 24px;
+            max-height: 100px;
+            line-height: 1.4;
+            background: transparent;
+            color: var(--text-primary);
+        }
+        #chat-input-area .input-wrap textarea::placeholder {
+            color: var(--text-muted);
+        }
+        #chat-input-area .send-btn {
+            background: var(--primary);
+            border: none;
+            border-radius: var(--radius-full);
+            color: #fff;
+            width: 42px;
+            height: 42px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+            flex-shrink: 0;
+            transition: background var(--transition);
+        }
+        #chat-input-area .send-btn.show {
+            display: flex;
+        }
+        #chat-input-area .send-btn:hover {
+            background: var(--primary-dark);
+        }
+        #chat-input-area .send-btn:active {
+            transform: scale(0.92);
+        }
+        #emoji-picker {
+            display: none;
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border-top: 1px solid var(--border-color);
+            padding: 12px 8px 16px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 20;
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.06);
+            border-radius: 16px 16px 0 0;
+        }
+        #emoji-picker.show {
+            display: block;
+        }
+        #emoji-picker .emoji-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 4px;
+        }
+        #emoji-picker .emoji-grid button {
+            background: none;
+            border: none;
+            font-size: 28px;
+            padding: 4px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background var(--transition);
+            line-height: 1.4;
+        }
+        #emoji-picker .emoji-grid button:hover {
+            background: #f0f2f5;
+        }
+        #emoji-picker .emoji-grid button:active {
+            transform: scale(0.9);
+        }
+
+        /* ============================================================
+           CONTACTS VIEW
+           ============================================================ */
+        .contact-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0;
+            background: #ffffff;
+        }
+        .contact-list .contact-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            gap: 14px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background var(--transition);
+        }
+        .contact-list .contact-item:active {
+            background: #f0f2f5;
+        }
+        .contact-list .contact-item .avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-full);
+            flex-shrink: 0;
+            background: var(--primary-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 18px;
+            color: var(--primary);
+            overflow: hidden;
+        }
+        .contact-list .contact-item .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .contact-list .contact-item .info {
+            flex: 1;
+            min-width: 0;
+        }
+        .contact-list .contact-item .info .name {
+            font-weight: 500;
+            font-size: 16px;
+        }
+        .contact-list .contact-item .info .phone {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        .contact-list .contact-item .info .status-text {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        /* ============================================================
+           PROFILE VIEW (Chat Profile)
+           ============================================================ */
+        .profile-view {
+            flex: 1;
+            overflow-y: auto;
+            background: #ffffff;
+        }
+        .profile-view .profile-header {
+            background: var(--bg-header);
+            padding: 24px 20px 20px;
+            padding-top: calc(12px + var(--safe-top));
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #fff;
+        }
+        .profile-view .profile-header .big-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: var(--radius-full);
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 12px;
+            overflow: hidden;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+        }
+        .profile-view .profile-header .big-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .profile-view .profile-header .p-name {
+            font-size: 22px;
+            font-weight: 600;
+        }
+        .profile-view .profile-header .p-phone {
+            font-size: 14px;
+            opacity: 0.85;
+        }
+        .profile-view .profile-header .p-status {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-top: 4px;
+        }
+        .profile-view .profile-menu {
+            padding: 16px 0;
+        }
+        .profile-view .profile-menu .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 20px;
+            gap: 16px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background var(--transition);
+        }
+        .profile-view .profile-menu .menu-item:active {
+            background: #f0f2f5;
+        }
+        .profile-view .profile-menu .menu-item .icon {
+            font-size: 22px;
+            width: 28px;
+            text-align: center;
+            color: var(--text-muted);
+        }
+        .profile-view .profile-menu .menu-item .label {
+            flex: 1;
+            font-size: 15px;
+        }
+        .profile-view .profile-menu .menu-item .arrow {
+            color: var(--text-muted);
+            font-size: 18px;
+        }
+
+        /* ============================================================
+           SETTINGS VIEW
+           ============================================================ */
+        .settings-view {
+            flex: 1;
+            overflow-y: auto;
+            background: #ffffff;
+            padding: 20px;
+        }
+        .settings-view .setting-group {
+            margin-bottom: 24px;
+        }
+        .settings-view .setting-group .group-title {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 500;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .settings-view .setting-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+            gap: 14px;
+        }
+        .settings-view .setting-item .icon {
+            font-size: 20px;
+            width: 28px;
+            text-align: center;
+            color: var(--text-muted);
+        }
+        .settings-view .setting-item .label {
+            flex: 1;
+            font-size: 15px;
+        }
+        .settings-view .setting-item .value {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+        .settings-view .setting-item.logout {
+            color: #d32f2f;
+            cursor: pointer;
+        }
+        .settings-view .setting-item.logout:active {
+            background: #f5f5f5;
+        }
+
+        /* ============================================================
+           CONTACT DETAIL VIEW
+           ============================================================ */
+        .contact-detail-view {
+            flex: 1;
+            overflow-y: auto;
+            background: #ffffff;
+        }
+        .contact-detail-view .cd-header {
+            background: var(--bg-header);
+            padding: 20px;
+            padding-top: calc(12px + var(--safe-top));
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #fff;
+        }
+        .contact-detail-view .cd-header .cd-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: var(--radius-full);
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: 600;
+            color: #fff;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+        .contact-detail-view .cd-header .cd-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .contact-detail-view .cd-header .cd-name {
+            font-size: 20px;
+            font-weight: 600;
+        }
+        .contact-detail-view .cd-header .cd-status {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        .contact-detail-view .cd-body {
+            padding: 16px 20px;
+        }
+        .contact-detail-view .cd-body .cd-row {
+            display: flex;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+            gap: 12px;
+        }
+        .contact-detail-view .cd-body .cd-row .cd-label {
+            color: var(--text-muted);
+            width: 80px;
+            flex-shrink: 0;
+            font-size: 14px;
+        }
+        .contact-detail-view .cd-body .cd-row .cd-value {
+            font-size: 14px;
+            flex: 1;
+        }
+
+        /* ============================================================
+           PLACEHOLDER VIEWS
+           ============================================================ */
+        .placeholder-view {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            text-align: center;
+            background: #ffffff;
+            color: var(--text-muted);
+        }
+        .placeholder-view .big-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.4;
+        }
+        .placeholder-view h3 {
+            color: var(--text-primary);
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+        .placeholder-view p {
+            font-size: 14px;
+            max-width: 300px;
+        }
+
+        /* ============================================================
+           RESPONSIVE
+           ============================================================ */
+        @media (min-width: 768px) {
+            #app {
+                max-width: 480px;
+                margin: 0 auto;
+                border-left: 1px solid var(--border-color);
+                border-right: 1px solid var(--border-color);
+                box-shadow: var(--shadow-lg);
+            }
+            #view-chat.active {
+                max-width: 480px;
+                left: 50%;
+                transform: translateX(-50%);
+            }
+            @keyframes slideUp {
+                from {
+                    transform: translateY(20px) translateX(-50%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateY(0) translateX(-50%);
+                    opacity: 1;
+                }
+            }
+        }
+
+        @media (max-width: 480px) {
+            :root {
+                --header-height: 52px;
+                --nav-height: 54px;
+            }
+            .chat-list .chat-item .avatar {
+                width: 44px;
+                height: 44px;
+                font-size: 16px;
+            }
+            .chat-list .chat-item .info .name {
+                font-size: 15px;
+            }
+            .chat-list .chat-item .info .preview {
+                font-size: 13px;
+            }
+            #messages-container .message {
+                max-width: 88%;
+                font-size: 14px;
+                padding: 6px 10px;
+            }
+            #chat-header .chat-info .name {
+                font-size: 15px;
+            }
+        }
+
+        /* ============================================================
+           MISC
+           ============================================================ */
+        .hidden {
+            display: none !important;
+        }
+        #toast {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #323232;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 999;
+            opacity: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            pointer-events: none;
+            max-width: 90%;
+            box-shadow: var(--shadow-lg);
+        }
+        #toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        #context-menu {
+            position: fixed;
+            background: #fff;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            padding: 6px 0;
+            min-width: 160px;
+            z-index: 999;
+            display: none;
+            overflow: hidden;
+            animation: fadeIn 0.15s ease;
+        }
+        #context-menu .ctx-item {
+            padding: 10px 18px;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: background var(--transition);
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            font-family: var(--font);
+            color: var(--text-primary);
+        }
+        #context-menu .ctx-item:hover {
+            background: #f0f2f5;
+        }
+        #context-menu .ctx-item:active {
+            background: #e0e4e8;
+        }
+        #context-menu .ctx-item.danger {
+            color: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ============================================================
+    APP
+    ============================================================ -->
+    <div id="app">
+
+        <!-- HEADER (chat) -->
+        <header id="app-header" style="display:none;">
+            <button class="header-back" id="headerBack" aria-label="Kembali">
+                <i data-lucide="arrow-left" style="width:24px;height:24px;"></i>
+            </button>
+            <span class="header-title" id="headerTitle">GoChat</span>
+            <input class="header-search-input" id="headerSearchInput" type="text" placeholder="Cari..." />
+            <div class="header-actions" id="headerActions">
+                <button id="headerCamera" aria-label="Kamera"><i data-lucide="camera" style="width:22px;height:22px;"></i></button>
+                <button id="headerSearch" aria-label="Cari"><i data-lucide="search" style="width:22px;height:22px;"></i></button>
+                <button id="headerMore" aria-label="Lainnya"><i data-lucide="more-vertical" style="width:22px;height:22px;"></i></button>
+            </div>
+        </header>
+
+        <!-- MAIN -->
+        <main id="app-main">
+
+            <!-- ============================================
+            AUTH VIEW: LOGIN
+            ============================================ -->
+            <section class="auth-view active" id="view-login">
+                <div class="auth-logo">💬</div>
+                <div class="auth-title">Selamat datang di GoChat</div>
+                <div class="auth-subtitle">Masukkan nomor HP dan nama Anda untuk mulai chatting</div>
+                <div class="auth-input-group">
+                    <label>Nomor HP</label>
+                    <div class="input-wrap">
+                        <input type="tel" id="phoneInput" placeholder="081234567890" inputmode="numeric" autocomplete="tel" />
+                    </div>
+                </div>
+                <div class="auth-input-group">
+                    <label>Nama Anda</label>
+                    <div class="input-wrap">
+                        <input type="text" id="nameInput" placeholder="Andi" autocomplete="off" />
+                    </div>
+                </div>
+                <div class="auth-error" id="loginError"></div>
+                <button class="auth-btn" id="loginBtn">Masuk</button>
+                <div class="auth-subtitle" style="margin-top:20px;font-size:12px;color:var(--text-muted);">
+                    Sistem ini tidak memverifikasi kepemilikan nomor HP.
+                </div>
+            </section>
+
+            <!-- ============================================
+            CHAT VIEWS (existing)
+            ============================================ -->
+            <section class="view" id="view-chats">
+                <div class="chat-list" id="chatList"></div>
+            </section>
+
+            <section class="view" id="view-updates">
+                <div class="placeholder-view">
+                    <div class="big-icon">📝</div>
+                    <h3>Updates</h3>
+                    <p>Status dan pembaruan dari kontak Anda akan muncul di sini.</p>
+                </div>
+            </section>
+
+            <section class="view" id="view-communities">
+                <div class="placeholder-view">
+                    <div class="big-icon">👥</div>
+                    <h3>Komunitas</h3>
+                    <p>Grup dan komunitas Anda akan muncul di sini.</p>
+                </div>
+            </section>
+
+            <section class="view" id="view-calls">
+                <div class="placeholder-view">
+                    <div class="big-icon">📞</div>
+                    <h3>Panggilan</h3>
+                    <p>Riwayat panggilan Anda akan muncul di sini.</p>
+                </div>
+            </section>
+
+            <section class="view" id="view-chat">
+                <div id="chat-header">
+                    <button class="back" id="chatBack" aria-label="Kembali">
+                        <i data-lucide="arrow-left" style="width:24px;height:24px;"></i>
+                    </button>
+                    <div class="chat-avatar" id="chatAvatar">A</div>
+                    <div class="chat-info">
+                        <div class="name" id="chatName">Kontak</div>
+                        <div class="status" id="chatStatus">
+                            <span id="chatStatusText">online</span>
+                            <span class="typing-dots" id="typingDots" style="display:none;">
+                                <span></span><span></span><span></span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="actions">
+                        <button id="chatVideoCall" aria-label="Panggilan video"><i data-lucide="video" style="width:20px;height:20px;"></i></button>
+                        <button id="chatVoiceCall" aria-label="Panggilan suara"><i data-lucide="phone" style="width:20px;height:20px;"></i></button>
+                        <button id="chatMore" aria-label="Lainnya"><i data-lucide="more-vertical" style="width:20px;height:20px;"></i></button>
+                    </div>
+                </div>
+                <div id="messages-container"></div>
+                <div id="chat-input-area">
+                    <button class="btn-icon" id="emojiToggle" aria-label="Emoji"><i data-lucide="smile" style="width:24px;height:24px;"></i></button>
+                    <button class="btn-icon" id="attachBtn" aria-label="Lampirkan"><i data-lucide="plus" style="width:24px;height:24px;"></i></button>
+                    <div class="input-wrap">
+                        <textarea id="messageInput" rows="1" placeholder="Ketik pesan..."></textarea>
+                    </div>
+                    <button class="send-btn" id="sendBtn" aria-label="Kirim"><i data-lucide="send" style="width:22px;height:22px;"></i></button>
+                    <button class="btn-icon" id="voiceBtn" aria-label="Suara"><i data-lucide="mic" style="width:24px;height:24px;"></i></button>
+                </div>
+                <div id="emoji-picker">
+                    <div class="emoji-grid" id="emojiGrid"></div>
+                </div>
+            </section>
+
+            <!-- ============================================
+            VIEW: CONTACTS (sudah ada)
+            ============================================ -->
+            <section class="view" id="view-contacts">
+                <div class="contact-list" id="contactList"></div>
+            </section>
+
+            <section class="view" id="view-profile">
+                <div class="profile-view">
+                    <div class="profile-header">
+                        <div class="big-avatar" id="profileAvatar">M</div>
+                        <div class="p-name" id="profileName">User</div>
+                        <div class="p-phone" id="profilePhone">+62 812-3456-7890</div>
+                        <div class="p-status" id="profileStatus">Halo, saya menggunakan GoChat</div>
+                    </div>
+                    <div class="profile-menu">
+                        <div class="menu-item" id="profileAccount"><span class="icon">🔐</span><span class="label">Akun</span><span class="arrow">›</span></div>
+                        <div class="menu-item" id="profilePrivacy"><span class="icon">🛡️</span><span class="label">Privasi</span><span class="arrow">›</span></div>
+                        <div class="menu-item" id="profileChats"><span class="icon">💬</span><span class="label">Chat</span><span class="arrow">›</span></div>
+                        <div class="menu-item" id="profileNotifications"><span class="icon">🔔</span><span class="label">Notifikasi</span><span class="arrow">›</span></div>
+                        <div class="menu-item" id="profileStorage"><span class="icon">📦</span><span class="label">Penyimpanan &amp; Data</span><span class="arrow">›</span></div>
+                        <div class="menu-item" id="profileHelp"><span class="icon">❓</span><span class="label">Bantuan</span><span class="arrow">›</span></div>
+                        <div class="menu-item" id="profileLogout" style="border-bottom:none;color:#d32f2f;">
+                            <span class="icon">🚪</span><span class="label">Logout</span><span class="arrow">›</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="view" id="view-settings">
+                <div class="settings-view">
+                    <h2 style="margin-bottom:16px;font-weight:500;">Pengaturan</h2>
+                    <div class="setting-group">
+                        <div class="group-title">Umum</div>
+                        <div class="setting-item"><span class="icon">🌙</span><span class="label">Mode Gelap</span><span class="value">Nonaktif</span></div>
+                        <div class="setting-item"><span class="icon">🌐</span><span class="label">Bahasa</span><span class="value">Indonesia</span></div>
+                    </div>
+                    <div class="setting-group">
+                        <div class="group-title">Privasi</div>
+                        <div class="setting-item"><span class="icon">👁️</span><span class="label">Terakhir Dilihat</span><span class="value">Semua</span></div>
+                        <div class="setting-item"><span class="icon">📸</span><span class="label">Foto Profil</span><span class="value">Semua</span></div>
+                    </div>
+                    <div class="setting-group">
+                        <div class="group-title">Keamanan</div>
+                        <div class="setting-item"><span class="icon">🔑</span><span class="label">Verifikasi Dua Langkah</span><span class="value">Nonaktif</span></div>
+                    </div>
+                    <div class="setting-item logout" id="settingsLogout" style="margin-top:20px;border-top:1px solid var(--border-color);padding-top:16px;color:#d32f2f;cursor:pointer;">
+                        <span class="icon">🚪</span><span class="label">Logout</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="view" id="view-contact-detail">
+                <div class="contact-detail-view">
+                    <div class="cd-header">
+                        <div class="cd-avatar" id="cdAvatar">K</div>
+                        <div class="cd-name" id="cdName">Kontak</div>
+                        <div class="cd-status" id="cdStatus">online</div>
+                    </div>
+                    <div class="cd-body">
+                        <div class="cd-row"><span class="cd-label">Nama</span><span class="cd-value" id="cdDetailName">-</span></div>
+                        <div class="cd-row"><span class="cd-label">Telepon</span><span class="cd-value" id="cdDetailPhone">-</span></div>
+                        <div class="cd-row"><span class="cd-label">Status</span><span class="cd-value" id="cdDetailStatus">-</span></div>
+                        <div class="cd-row"><span class="cd-label">Terakhir</span><span class="cd-value" id="cdDetailLastSeen">-</span></div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- ============================================================
+        BOTTOM NAV (chat) — SUDAH DIPERBAIKI: KOMUNITAS DIGANTI KONTAK
+        ============================================================ -->
+        <nav id="bottom-nav" style="display:none;">
+            <button class="nav-item active" data-view="chats" aria-label="Chats">
+                <i data-lucide="message-circle"></i>
+                <span>Chats</span>
+            </button>
+            <button class="nav-item" data-view="updates" aria-label="Updates">
+                <i data-lucide="file-text"></i>
+                <span>Updates</span>
+            </button>
+            <button class="nav-item" data-view="contacts" aria-label="Kontak">
+                <i data-lucide="users"></i>
+                <span>Kontak</span>
+            </button>
+            <button class="nav-item" data-view="calls" aria-label="Panggilan">
+                <i data-lucide="phone"></i>
+                <span>Panggilan</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- TOAST -->
+    <div id="toast"></div>
+    <!-- CONTEXT MENU -->
+    <div id="context-menu"></div>
+
+    <!-- ============================================================
+    FIREBASE + APPLICATION
+    ============================================================ -->
+    <script type="module">
+        // ============================================================
+        // 1. FIREBASE CONFIG — GANTI DENGAN KONFIGURASI ANDA
+        // ============================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyDummyKey_12345", // GANTI dengan apiKey Anda
+            authDomain: "mitrabayar-fc8f0.firebaseapp.com",
+            databaseURL: "https://mitrabayar-fc8f0-default-rtdb.firebaseio.com/",
+            projectId: "mitrabayar-fc8f0",
+            storageBucket: "mitrabayar-fc8f0.appspot.com",
+            messagingSenderId: "123456789012",
+            appId: "1:123456789012:web:abcdef123456"
+        };
+
+        // ============================================================
+        // 2. IMPOR FIREBASE (Realtime Database only)
+        // ============================================================
+        import { initializeApp } from 'firebase/app';
+        import {
+            getDatabase,
+            ref,
+            push,
+            set,
+            update,
+            onValue,
+            onChildAdded,
+            onChildChanged,
+            onDisconnect,
+            serverTimestamp,
+            get,
+            query,
+            orderByChild,
+            limitToLast,
+            off,
+            remove,
+            child
+        } from 'firebase/database';
+
+        // ============================================================
+        // 3. INIT FIREBASE
+        // ============================================================
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        console.log('🔥 Firebase initialized');
+
+        // ============================================================
+        // 4. CONSTANTS & HELPERS
+        // ============================================================
+        const SESSION_KEY = 'gochat_session';
+
+        function generateUserId() {
+            if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+                return 'user_' + crypto.randomUUID();
+            }
+            const ts = Date.now().toString(36);
+            const rand = Math.random().toString(36).slice(2, 8);
+            return 'user_' + ts + rand;
+        }
+
+        function normalizePhone(raw) {
+            let cleaned = raw.replace(/\D/g, '');
+            if (cleaned.startsWith('0')) {
+                cleaned = '62' + cleaned.slice(1);
+            }
+            if (!cleaned.startsWith('62')) {
+                cleaned = '62' + cleaned;
+            }
+            return cleaned;
+        }
+
+        function getInitials(name) {
+            if (!name) return '?';
+            const parts = name.trim().split(/\s+/);
+            if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+            return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+        }
+
+        function formatTime(timestamp) {
+            if (!timestamp) return '';
+            const d = new Date(timestamp);
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            if (d >= today) {
+                return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+            } else if (d >= yesterday) {
+                return 'Kemarin';
+            } else {
+                return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+            }
+        }
+
+        function formatTimeFull(timestamp) {
+            if (!timestamp) return '-';
+            const d = new Date(timestamp);
+            return d.toLocaleString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit',
+                minute: '2-digit' });
+        }
+
+        function formatDateDivider(timestamp) {
+            const d = new Date(timestamp);
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            if (d >= today) return 'Hari ini';
+            if (d >= yesterday) return 'Kemarin';
+            return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showToast(msg, duration = 2000) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            clearTimeout(toast._timer);
+            toast._timer = setTimeout(() => toast.classList.remove('show'), duration);
+        }
+
+        function getChatId(userId1, userId2) {
+            const ids = [userId1, userId2].sort();
+            return `chat_${ids[0]}_${ids[1]}`;
+        }
+
+        function initLucide() {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            } else {
+                setTimeout(initLucide, 500);
+            }
+        }
+
+        // ============================================================
+        // 5. STATE
+        // ============================================================
+        let currentUser = null;
+        const state = {
+            currentView: 'chats',
+            currentChatId: null,
+            currentContactId: null,
+            unsubscribe: {
+                chats: null,
+                messages: null,
+                status: null,
+                typing: null,
+                presence: [],
+                newMessage: [],
+                chatList: null,
+            },
+            unread: {},
+            contacts: {},
+            chats: {},
+            typingUsers: {},
+            isSearchMode: false,
+            searchQuery: '',
+            contextTarget: null,
+            chatInputHandler: null,
+            _keyHandler: null,
+        };
+
+        // ============================================================
+        // 6. DOM REFS
+        // ============================================================
+        const $ = (sel) => document.querySelector(sel);
+        const $$ = (sel) => document.querySelectorAll(sel);
+
+        const header = $('#app-header');
+        const headerBack = $('#headerBack');
+        const headerTitle = $('#headerTitle');
+        const headerSearchInput = $('#headerSearchInput');
+        const headerSearchBtn = $('#headerSearch');
+        const headerMoreBtn = $('#headerMore');
+        const headerCameraBtn = $('#headerCamera');
+        const bottomNav = $('#bottom-nav');
+
+        const viewLogin = $('#view-login');
+        const viewChats = $('#view-chats');
+        const viewUpdates = $('#view-updates');
+        const viewCommunities = $('#view-communities');
+        const viewCalls = $('#view-calls');
+        const viewChat = $('#view-chat');
+        const viewContacts = $('#view-contacts');
+        const viewProfile = $('#view-profile');
+        const viewSettings = $('#view-settings');
+        const viewContactDetail = $('#view-contact-detail');
+
+        const chatList = $('#chatList');
+        const contactList = $('#contactList');
+
+        const chatHeader = $('#chat-header');
+        const chatBack = $('#chatBack');
+        const chatAvatar = $('#chatAvatar');
+        const chatName = $('#chatName');
+        const chatStatusText = $('#chatStatusText');
+        const typingDots = $('#typingDots');
+        const messagesContainer = $('#messages-container');
+        const messageInput = $('#messageInput');
+        const sendBtn = $('#sendBtn');
+        const voiceBtn = $('#voiceBtn');
+        const emojiToggle = $('#emojiToggle');
+        const emojiPicker = $('#emojiPicker');
+        const emojiGrid = $('#emojiGrid');
+        const attachBtn = $('#attachBtn');
+
+        const navItems = $$('#bottom-nav .nav-item');
+
+        const profileAvatar = $('#profileAvatar');
+        const profileName = $('#profileName');
+        const profilePhone = $('#profilePhone');
+        const profileStatus = $('#profileStatus');
+
+        const cdAvatar = $('#cdAvatar');
+        const cdName = $('#cdName');
+        const cdStatus = $('#cdStatus');
+        const cdDetailName = $('#cdDetailName');
+        const cdDetailPhone = $('#cdDetailPhone');
+        const cdDetailStatus = $('#cdDetailStatus');
+        const cdDetailLastSeen = $('#cdDetailLastSeen');
+
+        const phoneInput = $('#phoneInput');
+        const nameInput = $('#nameInput');
+        const loginBtn = $('#loginBtn');
+        const loginError = $('#loginError');
+
+        const profileLogout = $('#profileLogout');
+        const settingsLogout = $('#settingsLogout');
+
+        // ============================================================
+        // 7. AUTH NAVIGATION
+        // ============================================================
+        function showAuthView() {
+            document.querySelectorAll('.auth-view').forEach(v => v.classList.remove('active'));
+            viewLogin.classList.add('active');
+            header.style.display = 'none';
+            bottomNav.style.display = 'none';
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        }
+
+        function showChatApp() {
+            document.querySelectorAll('.auth-view').forEach(v => v.classList.remove('active'));
+            header.style.display = 'flex';
+            bottomNav.style.display = 'flex';
+            navigateTo('chats');
+        }
+
+        // ============================================================
+        // 8. VIEW ROUTER (SPA)
+        // ============================================================
+        const views = {
+            chats: viewChats,
+            updates: viewUpdates,
+            communities: viewCommunities,
+            calls: viewCalls,
+            chat: viewChat,
+            contacts: viewContacts,
+            profile: viewProfile,
+            settings: viewSettings,
+            contactDetail: viewContactDetail,
+        };
+
+        function navigateTo(view, data = null) {
+    Object.values(views).forEach(v => v.classList.remove('active'));
+    const target = views[view];
+    if (target) target.classList.add('active');
+
+    navItems.forEach(item => {
+        item.classList.toggle('active', item.dataset.view === view);
+    });
+
+    // ========== PERBAIKAN: Sembunyikan header & bottom nav saat view chat ==========
+    if (view === 'chat') {
+        header.style.display = 'none';
+        bottomNav.style.display = 'none';
+    } else {
+        header.style.display = 'flex';
+        bottomNav.style.display = 'flex';
+    }
+    // ==============================================================================
+
+    headerBack.classList.toggle('show', view === 'chat' || view === 'contactDetail' || view === 'settings' || view === 'contactDetail');
+
+    const titles = {
+        chats: 'GoChat',
+        updates: 'Updates',
+        communities: 'Komunitas',
+        calls: 'Panggilan',
+        contacts: 'Kontak',
+        profile: 'Profil',
+        settings: 'Pengaturan',
+        contactDetail: 'Detail Kontak',
+    };
+    if (view === 'chat' && data && data.name) {
+        headerTitle.innerHTML = `${data.name} <span class="sub">${data.status || 'online'}</span>`;
+    } else if (view === 'chat') {
+        headerTitle.textContent = 'Chat';
+    } else {
+        headerTitle.textContent = titles[view] || 'GoChat';
+    }
+
+    exitSearchMode();
+    state.currentView = view;
+
+    if (view === 'chats') loadChats();
+    if (view === 'contacts') loadContacts();
+    if (view === 'profile') loadProfile();
+    if (view === 'chat' && data && data.chatId) {
+        openChat(data.chatId, data.contactId, data.name);
+    }
+    if (view === 'contactDetail' && data && data.contactId) {
+        loadContactDetail(data.contactId);
+    }
+
+    setTimeout(initLucide, 100);
+}
+
+        // ============================================================
+        // 9. PRESENCE & TYPING
+        // ============================================================
+        function setupPresence() {
+            if (!currentUser) return;
+            const presenceRef = ref(db, `presence/${currentUser.userId}`);
+
+            set(presenceRef, {
+                online: true,
+                lastSeen: serverTimestamp()
+            });
+
+            const disconnectRef = ref(db, `presence/${currentUser.userId}`);
+            onDisconnect(disconnectRef).set({
+                online: false,
+                lastSeen: serverTimestamp()
+            });
+
+            const userRef = ref(db, `users/${currentUser.userId}`);
+            update(userRef, {
+                online: true,
+                lastSeen: serverTimestamp()
+            }).catch(err => console.warn('Presence update error:', err));
+
+            const presenceListener = ref(db, 'presence');
+            const unsub = onValue(presenceListener, (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    Object.keys(data).forEach(uid => {
+                        if (uid !== currentUser.userId) {
+                            const p = data[uid];
+                            if (state.contacts[uid]) {
+                                state.contacts[uid].online = p.online || false;
+                                state.contacts[uid].lastSeen = p.lastSeen || null;
+                            }
+                        }
+                    });
+                    if (state.currentView === 'chats') loadChats();
+                    if (state.currentView === 'chat' && state.currentContactId) {
+                        updateChatHeaderStatus(state.currentContactId);
+                    }
+                }
+            });
+            state.unsubscribe.presence.push(unsub);
+        }
+
+        function setupTyping(chatId) {
+            if (state.unsubscribe.typing) {
+                state.unsubscribe.typing();
+                state.unsubscribe.typing = null;
+            }
+            if (!chatId || !currentUser) return;
+
+            const typingRef = ref(db, `typing/${chatId}`);
+            const unsub = onValue(typingRef, (snapshot) => {
+                const data = snapshot.val();
+                state.typingUsers[chatId] = data || {};
+                if (state.currentChatId === chatId && state.currentContactId) {
+                    updateChatHeaderStatus(state.currentContactId);
+                }
+            });
+            state.unsubscribe.typing = unsub;
+        }
+
+        function sendTyping(chatId, isTyping) {
+            if (!currentUser) return;
+            const typingRef = ref(db, `typing/${chatId}/${currentUser.userId}`);
+            if (isTyping) {
+                set(typingRef, true);
+            } else {
+                remove(typingRef);
+            }
+        }
+
+        function updateChatHeaderStatus(contactId) {
+            const contact = state.contacts[contactId];
+            if (!contact) return;
+
+            const chatId = state.currentChatId;
+            const typingUsers = state.typingUsers[chatId] || {};
+            const isTyping = typingUsers[contactId] === true;
+
+            if (isTyping) {
+                chatStatusText.textContent = 'sedang mengetik...';
+                typingDots.style.display = 'flex';
+                return;
+            }
+            typingDots.style.display = 'none';
+
+            if (contact.online) {
+                chatStatusText.textContent = 'online';
+            } else if (contact.lastSeen) {
+                chatStatusText.textContent = `terakhir ${formatTime(contact.lastSeen)}`;
+            } else {
+                chatStatusText.textContent = 'offline';
+            }
+        }
+
+        // ============================================================
+        // 10. CONTACTS
+        // ============================================================
+        function loadContacts() {
+            if (!currentUser) return;
+            const contactsRef = ref(db, 'contacts');
+            const usersRef = ref(db, 'users');
+
+            get(child(contactsRef, currentUser.userId)).then((snapshot) => {
+                const contactIds = snapshot.val() || {};
+                const ids = Object.keys(contactIds);
+
+                if (ids.length === 0) {
+                    contactList.innerHTML = `
+                            <div class="empty-state">
+                                <div class="icon">👤</div>
+                                <h3>Belum ada kontak</h3>
+                                <p>Tambahkan kontak untuk mulai chatting</p>
+                            </div>
+                        `;
+                    return;
+                }
+
+                get(usersRef).then((userSnap) => {
+                    const allUsers = userSnap.val() || {};
+                    let html = '';
+                    ids.forEach(id => {
+                        const u = allUsers[id];
+                        if (!u) return;
+                        const name = u.name || id;
+                        const photo = u.photo || '';
+                        const status = u.about || '';
+                        const online = u.online || false;
+                        const initials = getInitials(name);
+                        html += `
+                                <div class="contact-item" data-id="${id}">
+                                    <div class="avatar">
+                                        ${photo ? `<img src="${photo}" alt="${name}" />` : initials}
+                                        ${online ? '<div class="online-dot"></div>' : ''}
+                                    </div>
+                                    <div class="info">
+                                        <div class="name">${escapeHtml(name)}</div>
+                                        <div class="phone">${escapeHtml(u.phone || '')}</div>
+                                        ${status ? `<div class="status-text">${escapeHtml(status)}</div>` : ''}
+                                    </div>
+                                </div>
+                            `;
+                    });
+                    contactList.innerHTML = html;
+
+                    contactList.querySelectorAll('.contact-item').forEach(el => {
+                        el.addEventListener('click', () => {
+                            const id = el.dataset.id;
+                            startChatWithContact(id);
+                        });
+                    });
+
+                    ids.forEach(id => {
+                        const u = allUsers[id];
+                        if (u) {
+                            state.contacts[id] = {
+                                name: u.name || id,
+                                phone: u.phone || '',
+                                photo: u.photo || '',
+                                status: u.about || '',
+                                online: u.online || false,
+                                lastSeen: u.lastSeen || null,
+                            };
+                        }
+                    });
+
+                    initLucide();
+                });
+            }).catch(err => {
+                console.warn('Load contacts error:', err);
+                contactList.innerHTML = `
+                        <div class="empty-state">
+                            <div class="icon">⚠️</div>
+                            <h3>Gagal memuat kontak</h3>
+                            <p>${err.message}</p>
+                        </div>
+                    `;
+            });
+        }
+
+        // ============================================================
+        // 11. CHATS LIST
+        // ============================================================
+        function loadChats() {
+            if (!currentUser) return;
+            if (state.unsubscribe.chats) {
+                state.unsubscribe.chats();
+                state.unsubscribe.chats = null;
+            }
+
+            const chatsRef = ref(db, 'chats');
+            const unsub = onValue(chatsRef, (snapshot) => {
+                const data = snapshot.val() || {};
+                const chatIds = Object.keys(data);
+                const userChats = [];
+
+                chatIds.forEach(id => {
+                    const chat = data[id];
+                    if (chat.participants && chat.participants[currentUser.userId]) {
+                        userChats.push({ id, ...chat });
+                    }
+                });
+
+                userChats.sort((a, b) => (b.lastMessageTime || 0) - (a.lastMessageTime || 0));
+
+                if (userChats.length === 0) {
+                    chatList.innerHTML = `
+                            <div class="empty-state">
+                                <div class="icon">💬</div>
+                                <h3>Tidak ada chat</h3>
+                                <p>Mulai chat dengan kontak Anda</p>
+                            </div>
+                        `;
+                    return;
+                }
+
+                get(ref(db, 'users')).then((userSnap) => {
+                    const users = userSnap.val() || {};
+
+                    let html = '';
+                    userChats.forEach(chat => {
+                        const participantIds = Object.keys(chat.participants || {});
+                        const contactId = participantIds.find(id => id !== currentUser.userId) || participantIds[0];
+                        const contact = users[contactId] || { name: contactId || 'Unknown' };
+                        const name = contact.name || contactId || 'Unknown';
+                        const photo = contact.photo || '';
+                        const online = contact.online || false;
+                        const initials = getInitials(name);
+
+                        const lastMsg = chat.lastMessage || 'Pesan baru';
+                        const lastTime = chat.lastMessageTime || null;
+                        const lastSender = chat.lastMessageSenderId || '';
+
+                        const unreadCount = state.unread[chat.id] || 0;
+
+                        let preview = lastMsg;
+                        if (lastSender === currentUser.userId) {
+                            preview = `Anda: ${lastMsg}`;
+                        } else if (lastSender) {
+                            const senderName = users[lastSender]?.name || 'Unknown';
+                            preview = `${senderName}: ${lastMsg}`;
+                        }
+
+                        const isFromMe = lastSender === currentUser.userId;
+
+                        html += `
+                                <div class="chat-item" data-chatid="${chat.id}" data-contactid="${contactId}">
+                                    <div class="avatar">
+                                        ${photo ? `<img src="${photo}" alt="${name}" />` : initials}
+                                        ${online ? '<div class="online-dot"></div>' : ''}
+                                    </div>
+                                    <div class="info">
+                                        <div class="name">${escapeHtml(name)}</div>
+                                        <div class="preview">
+                                            ${isFromMe ? '<span class="sender">Anda:</span>' : ''}
+                                            ${escapeHtml(lastMsg)}
+                                        </div>
+                                    </div>
+                                    <div class="meta">
+                                        <div class="time">${lastTime ? formatTime(lastTime) : ''}</div>
+                                        ${unreadCount > 0 ? `<div class="unread">${unreadCount}</div>` : ''}
+                                    </div>
+                                </div>
+                            `;
+                    });
+
+                    chatList.innerHTML = html;
+
+                    chatList.querySelectorAll('.chat-item').forEach(el => {
+                        el.addEventListener('click', () => {
+                            const chatId = el.dataset.chatid;
+                            const contactId = el.dataset.contactid;
+                            const name = el.querySelector('.info .name')?.textContent || 'Kontak';
+                            state.unread[chatId] = 0;
+                            navigateTo('chat', { chatId, contactId, name });
+                        });
+                    });
+
+                    userChats.forEach(chat => {
+                        state.chats[chat.id] = chat;
+                    });
+
+                    initLucide();
+                });
+            });
+            state.unsubscribe.chats = unsub;
+        }
+
+        // ============================================================
+        // 12. CHAT SCREEN
+        // ============================================================
+        let currentChatId = null;
+        let currentContactId = null;
+
+        function openChat(chatId, contactId, name) {
+            cleanupChatListeners();
+
+            currentChatId = chatId;
+            currentContactId = contactId;
+            state.currentChatId = chatId;
+            state.currentContactId = contactId;
+
+            state.unread[chatId] = 0;
+
+            const contact = state.contacts[contactId] || { name: name || 'Kontak', photo: '', online: false, lastSeen: null };
+            chatName.textContent = contact.name || name || 'Kontak';
+            const initials = getInitials(contact.name || name || 'K');
+            chatAvatar.innerHTML = contact.photo ? `<img src="${contact.photo}" alt="${contact.name}" />` : initials;
+            updateChatHeaderStatus(contactId);
+
+            messagesContainer.innerHTML = '';
+
+            setupTyping(chatId);
+
+            loadMessages(chatId);
+
+            messageInput.value = '';
+            messageInput.dispatchEvent(new Event('input'));
+            messageInput.focus();
+            updateSendButton();
+
+            emojiPicker.classList.remove('show');
+
+            const messagesRef = ref(db, `messages/${chatId}`);
+            const unsubMessages = onChildAdded(messagesRef, (snapshot) => {
+                const msg = snapshot.val();
+                const msgId = snapshot.key;
+                if (msg) {
+                    renderMessage(msg, msgId);
+                    if (msg.senderId === contactId && msg.status !== 'read') {
+                        markMessageAsRead(chatId, msgId, msg);
+                    }
+                    scrollToBottom();
+                }
+            });
+            state.unsubscribe.messages = unsubMessages;
+
+            const unsubStatus = onChildChanged(messagesRef, (snapshot) => {
+                const msg = snapshot.val();
+                const msgId = snapshot.key;
+                if (msg) {
+                    updateMessageStatus(chatId, msgId, msg);
+                }
+            });
+            state.unsubscribe.status = unsubStatus;
+
+            if (state.chatInputHandler) {
+                messageInput.removeEventListener('input', state.chatInputHandler);
+            }
+            let typingTimeout = null;
+            const inputHandler = () => {
+                const hasText = messageInput.value.trim().length > 0;
+                sendTyping(chatId, hasText);
+                clearTimeout(typingTimeout);
+                if (hasText) {
+                    typingTimeout = setTimeout(() => {
+                        sendTyping(chatId, false);
+                    }, 2000);
+                }
+                updateSendButton();
+            };
+            messageInput.addEventListener('input', inputHandler);
+            state.chatInputHandler = inputHandler;
+
+            const keyHandler = (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            };
+            messageInput.addEventListener('keydown', keyHandler);
+            state._keyHandler = keyHandler;
+
+            sendBtn.onclick = sendMessage;
+            voiceBtn.onclick = () => showToast('Fitur suara belum tersedia');
+            emojiToggle.onclick = () => emojiPicker.classList.toggle('show');
+            attachBtn.onclick = () => showToast('Fitur lampiran belum tersedia');
+
+            chatBack.onclick = () => {
+                sendTyping(chatId, false);
+                cleanupChatListeners();
+                navigateTo('chats');
+            };
+
+            setTimeout(scrollToBottom, 100);
+            setTimeout(initLucide, 200);
+        }
+
+        function cleanupChatListeners() {
+            if (state.unsubscribe.messages) {
+                state.unsubscribe.messages();
+                state.unsubscribe.messages = null;
+            }
+            if (state.unsubscribe.status) {
+                state.unsubscribe.status();
+                state.unsubscribe.status = null;
+            }
+            if (state.unsubscribe.typing) {
+                state.unsubscribe.typing();
+                state.unsubscribe.typing = null;
+            }
+            if (state.chatInputHandler) {
+                messageInput.removeEventListener('input', state.chatInputHandler);
+                state.chatInputHandler = null;
+            }
+            if (state._keyHandler) {
+                messageInput.removeEventListener('keydown', state._keyHandler);
+                state._keyHandler = null;
+            }
+        }
+
+        function cleanupAllListeners() {
+            cleanupChatListeners();
+            if (state.unsubscribe.chats) {
+                state.unsubscribe.chats();
+                state.unsubscribe.chats = null;
+            }
+            state.unsubscribe.presence.forEach(u => u());
+            state.unsubscribe.presence = [];
+            state.unsubscribe.newMessage.forEach(u => u());
+            state.unsubscribe.newMessage = [];
+        }
+
+        // ============================================================
+        // 13. LOAD MESSAGES
+        // ============================================================
+        function loadMessages(chatId) {
+            const messagesRef = ref(db, `messages/${chatId}`);
+            const queryRef = query(messagesRef, orderByChild('timestamp'), limitToLast(100));
+
+            get(queryRef).then((snapshot) => {
+                const data = snapshot.val() || {};
+                const keys = Object.keys(data).sort((a, b) => (data[a].timestamp || 0) - (data[b].timestamp || 0));
+
+                if (keys.length === 0) {
+                    messagesContainer.innerHTML = `
+                            <div style="text-align:center;padding:30px 0;color:var(--text-muted);font-size:14px;">
+                                Mulai percakapan dengan mengirim pesan
+                            </div>
+                        `;
+                    return;
+                }
+
+                let lastDate = '';
+                keys.forEach(key => {
+                    const msg = data[key];
+                    const msgDate = formatDateDivider(msg.timestamp || Date.now());
+                    if (msgDate !== lastDate) {
+                        const divider = document.createElement('div');
+                        divider.className = 'date-divider';
+                        divider.innerHTML = `<span>${msgDate}</span>`;
+                        messagesContainer.appendChild(divider);
+                        lastDate = msgDate;
+                    }
+                    renderMessage(msg, key);
+                });
+
+                const contactId = state.currentContactId;
+                if (contactId) {
+                    keys.forEach(key => {
+                        const msg = data[key];
+                        if (msg.senderId === contactId && msg.status !== 'read') {
+                            markMessageAsRead(chatId, key, msg);
+                        }
+                    });
+                }
+
+                scrollToBottom();
+            }).catch(err => {
+                console.warn('Load messages error:', err);
+            });
+        }
+
+        // ============================================================
+        // 14. RENDER MESSAGE
+        // ============================================================
+        function renderMessage(msg, msgId) {
+            const isOut = msg.senderId === currentUser.userId;
+            const container = messagesContainer;
+
+            const existing = container.querySelector(`[data-msgid="${msgId}"]`);
+            if (existing) {
+                const statusIcon = existing.querySelector('.status-icon');
+                if (statusIcon && msg.status) {
+                    statusIcon.textContent = msg.status === 'read' ? '✓✓' : msg.status === 'delivered' ? '✓✓' : '✓';
+                    statusIcon.className = 'status-icon' + (msg.status === 'read' ? ' read' : '');
+                }
+                return;
+            }
+
+            const div = document.createElement('div');
+            div.className = `message ${isOut ? 'out' : 'in'}`;
+            div.dataset.msgid = msgId;
+            div.dataset.sender = msg.senderId;
+
+            let html = '';
+
+            if (msg.replyTo) {
+                html += `<div class="reply-preview"><span class="reply-name">${isOut ? 'Anda' : 'Balasan'}</span> ...</div>`;
+            }
+
+            html += `<div class="text">${escapeHtml(msg.text || '')}</div>`;
+            html += `<div class="time">`;
+            html += `${formatTime(msg.timestamp || Date.now())}`;
+            if (isOut) {
+                const status = msg.status || 'sent';
+                const icon = status === 'read' ? '✓✓' : status === 'delivered' ? '✓✓' : '✓';
+                html += `<span class="status-icon ${status === 'read' ? 'read' : ''}">${icon}</span>`;
+            }
+            html += `</div>`;
+
+            div.innerHTML = html;
+
+            div.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                showContextMenu(e.clientX, e.clientY, msgId, isOut, msg.senderId);
+            });
+
+            let pressTimer = null;
+            div.addEventListener('touchstart', (e) => {
+                pressTimer = setTimeout(() => {
+                    const rect = div.getBoundingClientRect();
+                    showContextMenu(rect.left + 20, rect.top + 20, msgId, isOut, msg.senderId);
+                }, 600);
+            });
+            div.addEventListener('touchend', () => clearTimeout(pressTimer));
+            div.addEventListener('touchmove', () => clearTimeout(pressTimer));
+
+            container.appendChild(div);
+        }
+
+        function updateMessageStatus(chatId, msgId, msg) {
+            const container = messagesContainer;
+            const el = container.querySelector(`[data-msgid="${msgId}"]`);
+            if (el) {
+                const statusIcon = el.querySelector('.status-icon');
+                if (statusIcon && msg.status) {
+                    statusIcon.textContent = msg.status === 'read' ? '✓✓' : msg.status === 'delivered' ? '✓✓' : '✓';
+                    statusIcon.className = 'status-icon' + (msg.status === 'read' ? ' read' : '');
+                }
+            }
+        }
+
+        function markMessageAsRead(chatId, msgId, msg) {
+            if (msg.status === 'read') return;
+            const msgRef = ref(db, `messages/${chatId}/${msgId}`);
+            update(msgRef, { status: 'read' }).catch(err => console.warn('Mark read error:', err));
+        }
+
+        // ============================================================
+        // 15. SEND MESSAGE
+        // ============================================================
+        function sendMessage() {
+            const text = messageInput.value.trim();
+            if (!text) return;
+            if (!currentChatId || !currentContactId || !currentUser) return;
+
+            const msgId = push(ref(db, `messages/${currentChatId}`)).key;
+            const msgData = {
+                senderId: currentUser.userId,
+                receiverId: currentContactId,
+                text: text,
+                type: 'text',
+                timestamp: serverTimestamp(),
+                status: 'sent',
+            };
+
+            set(ref(db, `messages/${currentChatId}/${msgId}`), msgData)
+                .then(() => {
+                    const chatRef = ref(db, `chats/${currentChatId}`);
+                    update(chatRef, {
+                        lastMessage: text,
+                        lastMessageTime: serverTimestamp(),
+                        lastMessageSenderId: currentUser.userId,
+                    }).catch(err => console.warn('Update last message error:', err));
+
+                    sendTyping(currentChatId, false);
+                    messageInput.value = '';
+                    updateSendButton();
+                    messageInput.focus();
+                    emojiPicker.classList.remove('show');
+                    setTimeout(scrollToBottom, 100);
+                })
+                .catch(err => {
+                    console.warn('Send message error:', err);
+                    showToast('Gagal mengirim pesan');
+                });
+        }
+
+        function updateSendButton() {
+    const hasText = messageInput.value.trim().length > 0;
+    sendBtn.classList.toggle('show', hasText);
+    voiceBtn.style.display = hasText ? 'none' : 'flex';
+}
+
+        function scrollToBottom() {
+            setTimeout(() => {
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }, 50);
+        }
+
+        // ============================================================
+        // 16. START CHAT WITH CONTACT
+        // ============================================================
+        function startChatWithContact(contactId) {
+            if (contactId === currentUser.userId) {
+                showToast('Anda tidak bisa chat dengan diri sendiri');
+                return;
+            }
+
+            const chatId = getChatId(currentUser.userId, contactId);
+
+            get(ref(db, `chats/${chatId}`)).then((snapshot) => {
+                if (!snapshot.exists()) {
+                    const chatData = {
+                        participants: {
+                            [currentUser.userId]: true,
+                            [contactId]: true,
+                        },
+                        lastMessage: '',
+                        lastMessageTime: serverTimestamp(),
+                        lastMessageSenderId: '',
+                    };
+                    set(ref(db, `chats/${chatId}`), chatData).then(() => {
+                        set(ref(db, `contacts/${currentUser.userId}/${contactId}`), true).catch(() => {});
+                        navigateTo('chat', {
+                            chatId,
+                            contactId,
+                            name: state.contacts[contactId]?.name || 'Kontak'
+                        });
+                    }).catch(err => {
+                        console.warn('Create chat error:', err);
+                        showToast('Gagal membuat chat');
+                    });
+                } else {
+                    navigateTo('chat', {
+                        chatId,
+                        contactId,
+                        name: state.contacts[contactId]?.name || 'Kontak'
+                    });
+                }
+            }).catch(err => {
+                console.warn('Check chat error:', err);
+                const chatData = {
+                    participants: {
+                        [currentUser.userId]: true,
+                        [contactId]: true,
+                    },
+                    lastMessage: '',
+                    lastMessageTime: serverTimestamp(),
+                    lastMessageSenderId: '',
+                };
+                set(ref(db, `chats/${chatId}`), chatData).then(() => {
+                    set(ref(db, `contacts/${currentUser.userId}/${contactId}`), true).catch(() => {});
+                    navigateTo('chat', {
+                        chatId,
+                        contactId,
+                        name: state.contacts[contactId]?.name || 'Kontak'
+                    });
+                }).catch(() => {
+                    showToast('Gagal membuat chat');
+                });
+            });
+        }
+
+        // ============================================================
+        // 17. CONTEXT MENU (Long Press)
+        // ============================================================
+        let contextTargetMsgId = null;
+
+        function showContextMenu(x, y, msgId, isOut, senderId) {
+            contextTargetMsgId = msgId;
+            const menu = contextMenu;
+            menu.style.display = 'block';
+            menu.style.left = Math.min(x, window.innerWidth - 180) + 'px';
+            menu.style.top = Math.min(y, window.innerHeight - 180) + 'px';
+
+            let items = `
+                    <button class="ctx-item" data-action="copy">📋 Salin</button>
+                `;
+
+            if (isOut) {
+                items += `
+                        <button class="ctx-item danger" data-action="delete">🗑️ Hapus untuk saya</button>
+                        <button class="ctx-item danger" data-action="delete-all">🗑️ Hapus untuk semua</button>
+                    `;
+            } else {
+                items += `
+                        <button class="ctx-item" data-action="reply">↩️ Balas</button>
+                        <button class="ctx-item danger" data-action="delete">🗑️ Hapus</button>
+                    `;
+            }
+
+            menu.innerHTML = items;
+
+            menu.querySelectorAll('.ctx-item').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const action = btn.dataset.action;
+                    handleContextAction(action);
+                    hideContextMenu();
+                });
+            });
+
+            setTimeout(() => {
+                document.addEventListener('click', hideContextMenu, { once: true });
+            }, 10);
+        }
+
+        function hideContextMenu() {
+            contextMenu.style.display = 'none';
+            contextTargetMsgId = null;
+        }
+
+        function handleContextAction(action) {
+            const msgId = contextTargetMsgId;
+            const chatId = state.currentChatId;
+            if (!msgId || !chatId) return;
+
+            const msgRef = ref(db, `messages/${chatId}/${msgId}`);
+
+            switch (action) {
+                case 'copy':
+                    get(msgRef).then(snap => {
+                        const msg = snap.val();
+                        if (msg && msg.text) {
+                            navigator.clipboard.writeText(msg.text).then(() => {
+                                showToast('Pesan disalin');
+                            }).catch(() => {
+                                const textarea = document.createElement('textarea');
+                                textarea.value = msg.text;
+                                document.body.appendChild(textarea);
+                                textarea.select();
+                                document.execCommand('copy');
+                                document.body.removeChild(textarea);
+                                showToast('Pesan disalin');
+                            });
+                        }
+                    });
+                    break;
+
+                case 'delete':
+                    remove(msgRef).then(() => {
+                        showToast('Pesan dihapus');
+                    }).catch(() => showToast('Gagal menghapus'));
+                    break;
+
+                case 'delete-all':
+                    update(msgRef, {
+                        text: 'Pesan ini telah dihapus',
+                        type: 'deleted',
+                    }).then(() => {
+                        showToast('Pesan dihapus untuk semua');
+                    }).catch(() => showToast('Gagal menghapus'));
+                    break;
+
+                case 'reply':
+                    get(msgRef).then(snap => {
+                        const msg = snap.val();
+                        if (msg && msg.text) {
+                            messageInput.value = `> ${msg.text}\n`;
+                            messageInput.focus();
+                            updateSendButton();
+                            const len = messageInput.value.length;
+                            messageInput.setSelectionRange(len, len);
+                        }
+                    });
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+        // ============================================================
+        // 18. EMOJI PICKER
+        // ============================================================
+        const emojis = ['😀', '😁', '😂', '🤣', '😊', '😍', '🥰', '😘', '😗', '😙', '😚', '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', '🤭',
+            '🤫', '🤔', '🤐', '🤨', '😐', '😑', '😶', '😏', '😒', '🙄', '😬', '🤥', '😌', '😔', '😪', '🤤', '😴', '😷', '🤒', '🤕', '🤢',
+            '🤮', '🤧', '🥵', '🥶', '🥴', '😵', '🤯', '🤠', '🥳', '😎', '🤓', '🧐', '😕', '😟', '🙁', '☹️', '😮', '😯', '😲', '😳', '🥺',
+            '😦', '😧', '😨', '😰', '😥', '😢', '😭', '😱', '😖', '😣', '😞', '😓', '😩', '😫', '🥱', '😤', '😡', '😠', '🤬', '😈', '👿',
+            '💀', '☠️', '💩', '🤡', '👹', '👺', '👻', '👽', '👾', '🤖', '😺', '😸', '😹', '😻', '😼', '😽', '🙀', '😿', '😾', '🙌', '👏',
+            '🙏', '🤝', '👍', '👎', '👊', '✊', '🤛', '🤜', '👋', '🤚', '👌', '✌️', '🤘', '👈', '👉', '👆', '👇', '☝️', '✋', '🤟', '👐',
+            '💪', '🦵', '🦶', '👀', '👂', '👃', '🧠', '🦷', '🦴', '👅', '👄', '💋', '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎',
+            '💔', '❤️‍🔥', '❤️‍🩹', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟', '☮️', '✝️', '☪️', '🕉️', '☸️', '✡️', '🔯', '🕎', '☯️',
+            '☦️', '🛐', '⛎', '♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓', '🆔', '⚛️', '🉑', '☢️', '☣️', '📴', '📳',
+            '🈶', '🈚', '🈸', '🈺', '🈷️', '✴️', '🆚', '💮', '🉐', '㊙️', '㊗️', '🈴', '🈵', '🈹', '🈲', '🅰️', '🅱️', '🆎', '🆑', '🅾️', '🆘',
+            '❌', '⭕', '🛑', '⛔', '📛', '🚫', '💯', '💢', '♨️', '🚷', '🚯', '🚳', '🚱', '🔞', '📵', '🚭', '❗', '❕', '❓', '❔', '‼️', '⁉️',
+            '🔅', '🔆', '〽️', '⚠️', '🚸', '🔱', '⚜️', '🔰', '♻️', '✅', '🈯', '💹', '❇️', '✳️', '❎', '🌐', '💠', 'Ⓜ️', '🌀', '💤', '🏧',
+            '🚾', '♿', '🅿️', '🈳', '🈂️', '🛂', '🛃', '🛄', '🛅', '🚹', '🚺', '🚼', '⚧️', '🚻', '🚮', '🎦', '📶', '🈁', '🔣', 'ℹ️', '🔤',
+        ];
+
+        function initEmojiPicker() {
+            emojis.forEach(emoji => {
+                const btn = document.createElement('button');
+                btn.textContent = emoji;
+                btn.addEventListener('click', () => {
+                    const input = messageInput;
+                    const start = input.selectionStart || 0;
+                    const end = input.selectionEnd || 0;
+                    const text = input.value;
+                    input.value = text.slice(0, start) + emoji + text.slice(end);
+                    input.focus();
+                    const newPos = start + emoji.length;
+                    input.setSelectionRange(newPos, newPos);
+                    updateSendButton();
+                    emojiPicker.classList.remove('show');
+                });
+                emojiGrid.appendChild(btn);
+            });
+        }
+
+        // ============================================================
+        // 19. PROFILE (Chat Profile)
+        // ============================================================
+        function loadProfile() {
+            if (!currentUser) return;
+            get(ref(db, `users/${currentUser.userId}`)).then((snapshot) => {
+                const data = snapshot.val() || {};
+                const name = data.name || 'User';
+                const phone = data.phone || '';
+                const status = data.about || '';
+                const photo = data.photo || '';
+
+                profileName.textContent = name;
+                profilePhone.textContent = phone;
+                profileStatus.textContent = status;
+                if (photo) {
+                    profileAvatar.innerHTML = `<img src="${photo}" alt="${name}" />`;
+                } else {
+                    profileAvatar.textContent = getInitials(name);
+                }
+                initLucide();
+            }).catch(() => {
+                profileName.textContent = 'User';
+                profilePhone.textContent = '';
+                profileStatus.textContent = '';
+                profileAvatar.textContent = '?';
+            });
+        }
+
+        // ============================================================
+        // 20. CONTACT DETAIL
+        // ============================================================
+        function loadContactDetail(contactId) {
+            get(ref(db, `users/${contactId}`)).then((snapshot) => {
+                const data = snapshot.val() || {};
+                const name = data.name || contactId;
+                const photo = data.photo || '';
+                const status = data.about || '';
+                const phone = data.phone || '';
+                const online = data.online || false;
+                const lastSeen = data.lastSeen || null;
+
+                cdName.textContent = name;
+                cdStatus.textContent = online ? 'online' : (lastSeen ? `terakhir ${formatTime(lastSeen)}` : 'offline');
+                cdDetailName.textContent = name;
+                cdDetailPhone.textContent = phone || '-';
+                cdDetailStatus.textContent = status || '-';
+                cdDetailLastSeen.textContent = lastSeen ? formatTimeFull(lastSeen) : '-';
+
+                if (photo) {
+                    cdAvatar.innerHTML = `<img src="${photo}" alt="${name}" />`;
+                } else {
+                    cdAvatar.textContent = getInitials(name);
+                }
+                initLucide();
+            }).catch(() => {
+                cdName.textContent = 'Kontak';
+                cdStatus.textContent = 'offline';
+                cdDetailName.textContent = '-';
+                cdDetailPhone.textContent = '-';
+                cdDetailStatus.textContent = '-';
+                cdDetailLastSeen.textContent = '-';
+                cdAvatar.textContent = '?';
+            });
+        }
+
+        // ============================================================
+        // 13. TAMBAH KONTAK
+        // ============================================================
+
+        // View untuk tambah kontak
+        const viewAddContact = document.createElement('section');
+        viewAddContact.className = 'view';
+        viewAddContact.id = 'view-add-contact';
+        viewAddContact.innerHTML = `
+          <div style="flex:1;overflow-y:auto;padding:20px;background:#ffffff;">
+            <h3 style="margin-bottom:16px;">Cari Pengguna</h3>
+            <div class="auth-input-group" style="max-width:100%;">
+              <label>Nomor HP</label>
+              <div class="input-wrap">
+                <input type="tel" id="searchPhoneInput" placeholder="081234567890" inputmode="numeric" />
+              </div>
+            </div>
+            <button class="auth-btn" id="searchUserBtn" style="max-width:100%;">Cari</button>
+            <div id="searchResult" style="margin-top:16px;"></div>
+          </div>
+        `;
+        document.getElementById('app-main').appendChild(viewAddContact);
+
+        // Tambahkan ke views
+        views['add-contact'] = viewAddContact;
+
+        // Fungsi untuk mencari user berdasarkan nomor HP
+        async function searchUserByPhone(phone) {
+          const normalized = normalizePhone(phone);
+          const usersRef = ref(db, 'users');
+          const snapshot = await get(usersRef);
+          const users = snapshot.val() || {};
+          for (const [uid, data] of Object.entries(users)) {
+            if (data.phone === normalized) {
+              return { uid, ...data };
+            }
+          }
+          return null;
+        }
+
+        // Event listener untuk tombol cari
+        document.getElementById('searchUserBtn').addEventListener('click', async () => {
+          const phone = document.getElementById('searchPhoneInput').value.trim();
+          if (!phone) {
+            document.getElementById('searchResult').innerHTML = '<p style="color:#d32f2f;">Masukkan nomor HP</p>';
+            return;
+          }
+          document.getElementById('searchResult').innerHTML = 'Mencari...';
+          try {
+            const user = await searchUserByPhone(phone);
+            const resultDiv = document.getElementById('searchResult');
+            if (!user) {
+              resultDiv.innerHTML = '<p style="color:var(--text-muted);">Pengguna tidak ditemukan.</p>';
+              return;
+            }
+            if (user.uid === currentUser.userId) {
+              resultDiv.innerHTML = '<p style="color:var(--text-muted);">Itu Anda sendiri.</p>';
+              return;
+            }
+            // Cek apakah sudah menjadi kontak
+            const contactRef = ref(db, `contacts/${currentUser.userId}/${user.uid}`);
+            const snap = await get(contactRef);
+            const isContact = snap.exists();
+
+            resultDiv.innerHTML = `
+              <div style="display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--border-color);border-radius:12px;margin-top:8px;">
+                <div style="width:48px;height:48px;border-radius:50%;background:var(--primary-light);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:18px;color:var(--primary);">
+                  ${user.photo ? `<img src="${user.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />` : getInitials(user.name)}
+                </div>
+                <div style="flex:1;">
+                  <div style="font-weight:500;">${escapeHtml(user.name)}</div>
+                  <div style="font-size:13px;color:var(--text-muted);">${escapeHtml(user.phone)}</div>
+                </div>
+                ${isContact ? '<span style="color:var(--text-muted);">Sudah menjadi kontak</span>' :
+                  `<button class="auth-btn" id="addContactBtn" style="max-width:120px;padding:8px 16px;font-size:14px;">Tambah</button>`
+                }
+              </div>
+            `;
+            if (!isContact) {
+              document.getElementById('addContactBtn').addEventListener('click', async () => {
+                try {
+                  await set(ref(db, `contacts/${currentUser.userId}/${user.uid}`), true);
+                  showToast('Kontak berhasil ditambahkan!');
+                  // Refresh kontak
+                  loadContacts();
+                  navigateTo('contacts');
+                } catch (e) {
+                  showToast('Gagal menambahkan kontak.');
+                }
+              });
+            }
+          } catch (e) {
+            document.getElementById('searchResult').innerHTML = '<p style="color:#d32f2f;">Terjadi kesalahan.</p>';
+          }
+        });
+
+        // Tambah tombol "+" di header saat view contacts
+        const origNavigate = navigateTo;
+        navigateTo = function(view, data) {
+          origNavigate(view, data);
+          if (view === 'contacts') {
+            // Tampilkan tombol tambah kontak di header
+            const addBtn = document.createElement('button');
+            addBtn.id = 'headerAddContact';
+            addBtn.innerHTML = '<i data-lucide="plus" style="width:22px;height:22px;"></i>';
+            addBtn.style.cssText = 'background:none;border:none;color:var(--text-light);width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;';
+            addBtn.addEventListener('click', () => {
+              navigateTo('add-contact');
+              setTimeout(initLucide, 100);
+            });
+            const actions = document.getElementById('headerActions');
+            const old = document.getElementById('headerAddContact');
+            if (old) old.remove();
+            actions.prepend(addBtn);
+            setTimeout(initLucide, 100);
+          } else {
+            const old = document.getElementById('headerAddContact');
+            if (old) old.remove();
+          }
+        };
+
+        // ============================================================
+        // 21. HEADER NAVIGATION
+        // ============================================================
+        function setupHeaderNavigation() {
+            headerBack.addEventListener('click', () => {
+                if (state.currentView === 'chat') {
+                    sendTyping(state.currentChatId, false);
+                    cleanupChatListeners();
+                    navigateTo('chats');
+                } else if (state.currentView === 'contactDetail') {
+                    navigateTo('chats');
+                } else if (state.currentView === 'settings') {
+                    navigateTo('profile');
+                } else {
+                    navigateTo('chats');
+                }
+            });
+
+            headerSearchBtn.addEventListener('click', enterSearchMode);
+
+            headerSearchInput.addEventListener('input', (e) => {
+                const query = e.target.value.trim().toLowerCase();
+                state.searchQuery = query;
+                if (state.currentView === 'chats') {
+                    filterChatList(query);
+                } else if (state.currentView === 'contacts') {
+                    filterContactList(query);
+                }
+            });
+
+            headerMoreBtn.addEventListener('click', () => {
+                navigateTo('profile');
+            });
+
+            headerCameraBtn.addEventListener('click', () => {
+                showToast('Fitur kamera belum tersedia');
+            });
+        }
+
+        function enterSearchMode() {
+            state.isSearchMode = true;
+            header.classList.add('search-mode');
+            headerSearchInput.value = '';
+            headerSearchInput.focus();
+            headerSearchInput.placeholder = 'Cari...';
+            headerSearchBtn.innerHTML = '<i data-lucide="x" style="width:22px;height:22px;"></i>';
+            headerSearchBtn.onclick = exitSearchMode;
+            initLucide();
+        }
+
+        function exitSearchMode() {
+            state.isSearchMode = false;
+            header.classList.remove('search-mode');
+            headerSearchInput.value = '';
+            headerSearchBtn.innerHTML = '<i data-lucide="search" style="width:22px;height:22px;"></i>';
+            headerSearchBtn.onclick = enterSearchMode;
+            initLucide();
+            if (state.currentView === 'chats') loadChats();
+        }
+
+        function filterChatList(query) {
+            const items = chatList.querySelectorAll('.chat-item');
+            items.forEach(item => {
+                const name = item.querySelector('.info .name')?.textContent?.toLowerCase() || '';
+                const preview = item.querySelector('.info .preview')?.textContent?.toLowerCase() || '';
+                const match = !query || name.includes(query) || preview.includes(query);
+                item.style.display = match ? 'flex' : 'none';
+            });
+        }
+
+        function filterContactList(query) {
+            const items = contactList.querySelectorAll('.contact-item');
+            items.forEach(item => {
+                const name = item.querySelector('.info .name')?.textContent?.toLowerCase() || '';
+                const phone = item.querySelector('.info .phone')?.textContent?.toLowerCase() || '';
+                const match = !query || name.includes(query) || phone.includes(query);
+                item.style.display = match ? 'flex' : 'none';
+            });
+        }
+
+        // ============================================================
+        // 22. BOTTOM NAV
+        // ============================================================
+        function setupBottomNav() {
+            navItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    const view = item.dataset.view;
+                    if (view === 'chats') {
+                        navigateTo('chats');
+                    } else if (view === 'updates') {
+                        navigateTo('updates');
+                    } else if (view === 'contacts') {
+                        navigateTo('contacts');
+                    } else if (view === 'calls') {
+                        navigateTo('calls');
+                    }
+                });
+            });
+        }
+
+        // ============================================================
+        // 23. NOTIFICATION
+        // ============================================================
+        function setupNotifications() {
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+        }
+
+        function sendNotification(title, body) {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                try {
+                    new Notification(title, {
+                        body: body,
+                        icon: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%2300a884"%3E%3Cpath d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/%3E%3C/svg%3E',
+                    });
+                } catch (e) {}
+            }
+        }
+
+        // ============================================================
+        // 24. NEW MESSAGE LISTENER
+        // ============================================================
+        function setupNewMessageListener() {
+            if (!currentUser) return;
+            const chatsRef = ref(db, 'chats');
+            const unsub = onValue(chatsRef, (snapshot) => {
+                const data = snapshot.val() || {};
+                const chatIds = Object.keys(data);
+                state.unsubscribe.newMessage.forEach(u => u());
+                state.unsubscribe.newMessage = [];
+
+                chatIds.forEach(chatId => {
+                    const chat = data[chatId];
+                    if (chat.participants && chat.participants[currentUser.userId]) {
+                        const msgRef = ref(db, `messages/${chatId}`);
+                        const listener = onChildAdded(msgRef, (snap) => {
+                            const msg = snap.val();
+                            if (msg && msg.senderId !== currentUser.userId) {
+                                const contactId = msg.senderId;
+                                if (state.currentChatId === chatId && state.currentView === 'chat') {
+                                    markMessageAsRead(chatId, snap.key, msg);
+                                } else {
+                                    state.unread[chatId] = (state.unread[chatId] || 0) + 1;
+                                    const contact = state.contacts[contactId];
+                                    const name = contact?.name || contactId || 'Seseorang';
+                                    sendNotification(`Pesan dari ${name}`, msg.text || 'Pesan baru');
+                                    if (state.currentView === 'chats') loadChats();
+                                }
+                            }
+                        });
+                        state.unsubscribe.newMessage.push(listener);
+                    }
+                });
+            });
+            state.unsubscribe.newMessage.push(unsub);
+        }
+
+        // ============================================================
+        // 25. LOGIN LOGIC
+        // ============================================================
+        loginBtn.addEventListener('click', async () => {
+            const rawPhone = phoneInput.value.trim();
+            const rawName = nameInput.value.trim();
+
+            if (!rawPhone) {
+                loginError.textContent = 'Nomor HP wajib diisi.';
+                return;
+            }
+            if (!rawName) {
+                loginError.textContent = 'Nama wajib diisi.';
+                return;
+            }
+            if (rawName.length < 2) {
+                loginError.textContent = 'Nama minimal 2 karakter.';
+                return;
+            }
+
+            const phone = normalizePhone(rawPhone);
+            if (phone.length < 8) {
+                loginError.textContent = 'Nomor HP tidak valid.';
+                return;
+            }
+
+            loginError.textContent = '';
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Memproses...';
+
+            try {
+                const usersRef = ref(db, 'users');
+                const snapshot = await get(usersRef);
+                const users = snapshot.val() || {};
+                let foundUserId = null;
+                let foundUser = null;
+
+                for (const [uid, userData] of Object.entries(users)) {
+                    if (userData.phone === phone) {
+                        foundUserId = uid;
+                        foundUser = userData;
+                        break;
+                    }
+                }
+
+                let userId;
+                let userData;
+
+                if (foundUserId) {
+                    userId = foundUserId;
+                    userData = foundUser;
+                    await update(ref(db, `users/${userId}`), {
+                        name: rawName,
+                        online: true,
+                        lastSeen: serverTimestamp(),
+                        updatedAt: serverTimestamp(),
+                    });
+                    state.contacts[userId] = {
+                        name: rawName,
+                        phone: phone,
+                        photo: userData.photo || '',
+                        status: userData.about || '',
+                        online: true,
+                        lastSeen: Date.now(),
+                    };
+                } else {
+                    userId = generateUserId();
+                    userData = {
+                        uid: userId,
+                        phone: phone,
+                        name: rawName,
+                        photo: '',
+                        about: 'Halo, saya menggunakan GoChat',
+                        online: true,
+                        createdAt: serverTimestamp(),
+                        updatedAt: serverTimestamp(),
+                    };
+                    await set(ref(db, `users/${userId}`), userData);
+                }
+
+                const session = {
+                    userId: userId,
+                    phone: phone,
+                    name: rawName,
+                    loginAt: Date.now(),
+                };
+                localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+
+                currentUser = {
+                    userId: userId,
+                    phone: phone,
+                    name: rawName,
+                };
+
+                setupPresence();
+                setupNewMessageListener();
+                showChatApp();
+                loadChats();
+
+                showToast('Selamat datang, ' + rawName + '!');
+
+            } catch (error) {
+                console.error('Login error:', error);
+                loginError.textContent = 'Terjadi kesalahan. Coba lagi.';
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Masuk';
+            }
+        });
+
+        // ============================================================
+        // 26. LOGOUT
+        // ============================================================
+        async function logout() {
+            if (!currentUser) return;
+            try {
+                await update(ref(db, `users/${currentUser.userId}`), {
+                    online: false,
+                    lastSeen: serverTimestamp(),
+                });
+                await set(ref(db, `presence/${currentUser.userId}`), {
+                    online: false,
+                    lastSeen: serverTimestamp(),
+                });
+            } catch (e) {
+                console.warn('Logout update error:', e);
+            }
+
+            localStorage.removeItem(SESSION_KEY);
+            currentUser = null;
+            cleanupAllListeners();
+            showAuthView();
+            showToast('Anda telah logout');
+        }
+
+        profileLogout.addEventListener('click', logout);
+        settingsLogout.addEventListener('click', logout);
+
+        // ============================================================
+        // 27. AUTO-LOGIN (Session)
+        // ============================================================
+        function tryAutoLogin() {
+            const sessionStr = localStorage.getItem(SESSION_KEY);
+            if (!sessionStr) return false;
+
+            try {
+                const session = JSON.parse(sessionStr);
+                if (!session.userId || !session.phone || !session.name) return false;
+
+                get(ref(db, `users/${session.userId}`)).then((snapshot) => {
+                    if (snapshot.exists()) {
+                        const userData = snapshot.val();
+                        update(ref(db, `users/${session.userId}`), {
+                            online: true,
+                            lastSeen: serverTimestamp(),
+                        }).catch(() => {});
+                        currentUser = {
+                            userId: session.userId,
+                            phone: session.phone,
+                            name: session.name,
+                        };
+                        setupPresence();
+                        setupNewMessageListener();
+                        showChatApp();
+                        loadChats();
+                        showToast('Selamat datang kembali, ' + session.name);
+                    } else {
+                        localStorage.removeItem(SESSION_KEY);
+                        showAuthView();
+                    }
+                }).catch(() => {
+                    localStorage.removeItem(SESSION_KEY);
+                    showAuthView();
+                });
+
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        // ============================================================
+        // 28. INITIALIZATION
+        // ============================================================
+        function init() {
+            console.log('🚀 Starting GoChat...');
+
+            initEmojiPicker();
+            setupBottomNav();
+            setupHeaderNavigation();
+            setupNotifications();
+
+            const loggedIn = tryAutoLogin();
+            if (!loggedIn) {
+                showAuthView();
+            }
+
+            phoneInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    nameInput.focus();
+                }
+            });
+            nameInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    loginBtn.click();
+                }
+            });
+
+            setTimeout(initLucide, 500);
+            console.log('✅ GoChat ready');
+        }
+
+        // ============================================================
+        // 29. START
+        // ============================================================
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+
+        // ============================================================
+        // 30. EXPOSE DEBUG
+        // ============================================================
+        window.__gochat = {
+            db,
+            state,
+            currentUser,
+            navigateTo,
+            sendMessage,
+            loadChats,
+            loadContacts,
+            startChatWithContact,
+            logout,
+        };
+
+        console.log('📱 GoChat loaded.');
+        console.log('🔒 Sistem login tidak memverifikasi kepemilikan nomor HP.');
+    </script>
+
+</body>
+</html>
