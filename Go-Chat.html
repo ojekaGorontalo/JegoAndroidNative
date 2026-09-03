@@ -848,7 +848,7 @@
             color: #fff;
             width: 42px;
             height: 42px;
-            display: none;
+            display: none !important;
             align-items: center;
             justify-content: center;
             cursor: pointer;
@@ -857,7 +857,7 @@
             transition: background var(--transition);
         }
         #chat-input-area .send-btn.show {
-            display: flex;
+            display: flex !important;
         }
         #chat-input-area .send-btn:hover {
             background: var(--primary-dark);
@@ -865,7 +865,7 @@
         #chat-input-area .send-btn:active {
             transform: scale(0.92);
         }
-        #emoji-picker {
+        #emojiPicker {
             display: none;
             position: absolute;
             bottom: 100%;
@@ -880,15 +880,15 @@
             box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.06);
             border-radius: 16px 16px 0 0;
         }
-        #emoji-picker.show {
+        #emojiPicker.show {
             display: block;
         }
-        #emoji-picker .emoji-grid {
+        #emojiPicker .emoji-grid {
             display: grid;
             grid-template-columns: repeat(8, 1fr);
             gap: 4px;
         }
-        #emoji-picker .emoji-grid button {
+        #emojiPicker .emoji-grid button {
             background: none;
             border: none;
             font-size: 28px;
@@ -898,10 +898,10 @@
             transition: background var(--transition);
             line-height: 1.4;
         }
-        #emoji-picker .emoji-grid button:hover {
+        #emojiPicker .emoji-grid button:hover {
             background: #f0f2f5;
         }
-        #emoji-picker .emoji-grid button:active {
+        #emojiPicker .emoji-grid button:active {
             transform: scale(0.9);
         }
 
@@ -1301,6 +1301,19 @@
         #context-menu .ctx-item.danger {
             color: #d32f2f;
         }
+
+        /* ============================================================
+           FORCE SEND BUTTON VISIBILITY
+           ============================================================ */
+        #chat-input-area .send-btn {
+            display: none !important;
+        }
+        #chat-input-area .send-btn.show {
+            display: flex !important;
+        }
+        #voiceBtn {
+            display: flex !important;
+        }
     </style>
 </head>
 <body>
@@ -1415,7 +1428,7 @@
                     <button class="send-btn" id="sendBtn" aria-label="Kirim"><i data-lucide="send" style="width:22px;height:22px;"></i></button>
                     <button class="btn-icon" id="voiceBtn" aria-label="Suara"><i data-lucide="mic" style="width:24px;height:24px;"></i></button>
                 </div>
-                <div id="emoji-picker">
+                <div id="emojiPicker">
                     <div class="emoji-grid" id="emojiGrid"></div>
                 </div>
             </section>
@@ -1789,59 +1802,59 @@
         };
 
         function navigateTo(view, data = null) {
-    Object.values(views).forEach(v => v.classList.remove('active'));
-    const target = views[view];
-    if (target) target.classList.add('active');
+            Object.values(views).forEach(v => v.classList.remove('active'));
+            const target = views[view];
+            if (target) target.classList.add('active');
 
-    navItems.forEach(item => {
-        item.classList.toggle('active', item.dataset.view === view);
-    });
+            navItems.forEach(item => {
+                item.classList.toggle('active', item.dataset.view === view);
+            });
 
-    // ========== PERBAIKAN: Sembunyikan header & bottom nav saat view chat ==========
-    if (view === 'chat') {
-        header.style.display = 'none';
-        bottomNav.style.display = 'none';
-    } else {
-        header.style.display = 'flex';
-        bottomNav.style.display = 'flex';
-    }
-    // ==============================================================================
+            // ========== PERBAIKAN: Sembunyikan header & bottom nav saat view chat ==========
+            if (view === 'chat') {
+                header.style.display = 'none';
+                bottomNav.style.display = 'none';
+            } else {
+                header.style.display = 'flex';
+                bottomNav.style.display = 'flex';
+            }
+            // ==============================================================================
 
-    headerBack.classList.toggle('show', view === 'chat' || view === 'contactDetail' || view === 'settings' || view === 'contactDetail');
+            headerBack.classList.toggle('show', view === 'chat' || view === 'contactDetail' || view === 'settings' || view === 'contactDetail');
 
-    const titles = {
-        chats: 'GoChat',
-        updates: 'Updates',
-        communities: 'Komunitas',
-        calls: 'Panggilan',
-        contacts: 'Kontak',
-        profile: 'Profil',
-        settings: 'Pengaturan',
-        contactDetail: 'Detail Kontak',
-    };
-    if (view === 'chat' && data && data.name) {
-        headerTitle.innerHTML = `${data.name} <span class="sub">${data.status || 'online'}</span>`;
-    } else if (view === 'chat') {
-        headerTitle.textContent = 'Chat';
-    } else {
-        headerTitle.textContent = titles[view] || 'GoChat';
-    }
+            const titles = {
+                chats: 'GoChat',
+                updates: 'Updates',
+                communities: 'Komunitas',
+                calls: 'Panggilan',
+                contacts: 'Kontak',
+                profile: 'Profil',
+                settings: 'Pengaturan',
+                contactDetail: 'Detail Kontak',
+            };
+            if (view === 'chat' && data && data.name) {
+                headerTitle.innerHTML = `${data.name} <span class="sub">${data.status || 'online'}</span>`;
+            } else if (view === 'chat') {
+                headerTitle.textContent = 'Chat';
+            } else {
+                headerTitle.textContent = titles[view] || 'GoChat';
+            }
 
-    exitSearchMode();
-    state.currentView = view;
+            exitSearchMode();
+            state.currentView = view;
 
-    if (view === 'chats') loadChats();
-    if (view === 'contacts') loadContacts();
-    if (view === 'profile') loadProfile();
-    if (view === 'chat' && data && data.chatId) {
-        openChat(data.chatId, data.contactId, data.name);
-    }
-    if (view === 'contactDetail' && data && data.contactId) {
-        loadContactDetail(data.contactId);
-    }
+            if (view === 'chats') loadChats();
+            if (view === 'contacts') loadContacts();
+            if (view === 'profile') loadProfile();
+            if (view === 'chat' && data && data.chatId) {
+                openChat(data.chatId, data.contactId, data.name);
+            }
+            if (view === 'contactDetail' && data && data.contactId) {
+                loadContactDetail(data.contactId);
+            }
 
-    setTimeout(initLucide, 100);
-}
+            setTimeout(initLucide, 100);
+        }
 
         // ============================================================
         // 9. PRESENCE & TYPING
@@ -2163,11 +2176,16 @@
             loadMessages(chatId);
 
             messageInput.value = '';
+            // Paksa update tombol kirim
             messageInput.dispatchEvent(new Event('input'));
             messageInput.focus();
+            // Panggil updateSendButton setelah beberapa saat untuk memastikan
+            setTimeout(() => {
+                updateSendButton();
+            }, 50);
             updateSendButton();
 
-            emojiPicker.classList.remove('show');
+            if (emojiPicker) emojiPicker.classList.remove('show');
 
             const messagesRef = ref(db, `messages/${chatId}`);
             const unsubMessages = onChildAdded(messagesRef, (snapshot) => {
@@ -2221,7 +2239,9 @@
 
             sendBtn.onclick = sendMessage;
             voiceBtn.onclick = () => showToast('Fitur suara belum tersedia');
-            emojiToggle.onclick = () => emojiPicker.classList.toggle('show');
+            emojiToggle.onclick = () => {
+                if (emojiPicker) emojiPicker.classList.toggle('show');
+            };
             attachBtn.onclick = () => showToast('Fitur lampiran belum tersedia');
 
             chatBack.onclick = () => {
@@ -2426,7 +2446,7 @@
                     messageInput.value = '';
                     updateSendButton();
                     messageInput.focus();
-                    emojiPicker.classList.remove('show');
+                    if (emojiPicker) emojiPicker.classList.remove('show');
                     setTimeout(scrollToBottom, 100);
                 })
                 .catch(err => {
@@ -2436,10 +2456,15 @@
         }
 
         function updateSendButton() {
-    const hasText = messageInput.value.trim().length > 0;
-    sendBtn.classList.toggle('show', hasText);
-    voiceBtn.style.display = hasText ? 'none' : 'flex';
-}
+            const hasText = messageInput.value.trim().length > 0;
+            if (hasText) {
+                sendBtn.classList.add('show');
+                voiceBtn.style.display = 'none';
+            } else {
+                sendBtn.classList.remove('show');
+                voiceBtn.style.display = 'flex';
+            }
+        }
 
         function scrollToBottom() {
             setTimeout(() => {
@@ -2651,7 +2676,7 @@
                     const newPos = start + emoji.length;
                     input.setSelectionRange(newPos, newPos);
                     updateSendButton();
-                    emojiPicker.classList.remove('show');
+                    if (emojiPicker) emojiPicker.classList.remove('show');
                 });
                 emojiGrid.appendChild(btn);
             });
