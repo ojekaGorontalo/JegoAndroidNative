@@ -10,6 +10,9 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
   <style>
     /* --- Reset & Variabel --- */
     :root {
@@ -269,6 +272,16 @@
     .modal-box .btn-submit:hover { background: #e68900; transform: translateY(-1px); }
     .modal-box .btn-submit:disabled { background: #ccc; cursor: not-allowed; transform: none; }
     .modal-box .error-msg { color: var(--danger); font-size: 0.85rem; margin-top: 8px; display: none; }
+    .method-display {
+      padding: 10px 12px;
+      background: #f0f0f0;
+      border-radius: 8px;
+      font-weight: 600;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
 
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
@@ -325,6 +338,19 @@
       .quick-actions { grid-template-columns: repeat(4, 1fr); gap: 6px; }
       .quick-actions .qa-item .icon { font-size: 1.4rem; }
     }
+
+    /* --- Status koneksi --- */
+    .connection-status {
+      margin: 10px 0;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      text-align: center;
+      display: none;
+    }
+    .connection-status.online { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; display: block; }
+    .connection-status.offline { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; display: block; }
+    .connection-status.syncing { background: #fff3cd; color: #856404; border: 1px solid #ffc107; display: block; }
   </style>
 </head>
 <body>
@@ -338,9 +364,12 @@
 
   <!-- Kontainer Utama -->
   <div class="container" id="appContainer">
+    <!-- Status Koneksi Redis -->
+    <div id="connectionStatus" class="connection-status"></div>
+
     <!-- Kartu Saldo -->
     <div class="balance-card">
-      <div class="label">Saldo JePay Wallet</div>
+      <div class="label">Saldo JePay</div>
       <div class="amount"><span class="currency">Rp</span><span id="balanceAmount">0</span></div>
       <div class="sub" id="balanceUpdateTime">-</div>
       <div class="balance-actions">
@@ -391,13 +420,10 @@
         </div>
         <div class="form-group">
           <label>Metode Pembayaran</label>
-          <select id="topupMethod">
-            <option value="bank">Transfer Bank</option>
-            <option value="qris">QRIS</option>
-            <option value="gopay">GoPay</option>
-            <option value="ovo">OVO</option>
-            <option value="shopeepay">ShopeePay</option>
-          </select>
+          <div class="method-display">
+            <i class="fas fa-qrcode"></i> QRIS
+          </div>
+          <input type="hidden" id="topupMethod" value="qris">
         </div>
         <div class="error-msg" id="topupError"></div>
         <button type="submit" class="btn-submit" id="topupSubmit">Top Up Sekarang</button>
@@ -464,12 +490,15 @@
     let currentUser = null;          // { uid, email, name }
     let balance = 0;
     let transactions = [];
+    let isRedisOnline = false;
+    let pendingSync = false;
 
     // ==================== DOM REFS ====================
     const balanceEl = document.getElementById('balanceAmount');
     const balanceTime = document.getElementById('balanceUpdateTime');
     const txList = document.getElementById('transactionList');
     const toast = document.getElementById('toast');
+    const connStatus = document.getElementById('connectionStatus');
 
     // ==================== TOAST ====================
     function showToast(msg, duration = 3000) {
@@ -484,33 +513,47 @@
       return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
     }
 
+    // ==================== STATUS KONEKSI ====================
+    function updateConnectionStatus(online, message = '') {
+      connStatus.className = 'connection-status';
+      if (online === true) {
+        connStatus.classList.add('online');
+        connStatus.textContent = '✅ Terhubung ke JeGo ' + (message ? ' • ' + message : '');
+      } else if (online === false) {
+        connStatus.classList.add('offline');
+        connStatus.textContent = '❌ Redis tidak dapat diakses. Transaksi disimpan lokal. ' + (message ? ' • ' + message : '');
+      } else if (online === 'syncing') {
+        connStatus.classList.add('syncing');
+        connStatus.textContent = '🔄 Menyinkronkan data... ' + (message ? ' • ' + message : '');
+      }
+      connStatus.style.display = (online !== undefined) ? 'block' : 'none';
+      isRedisOnline = online === true;
+    }
+
     // ==================== FUNGSI REDIS (WALLET) ====================
-    /**
-     * Ambil data wallet dari Redis
-     * Jika gagal (server down / 404), return null
-     */
     async function getWalletFromRedis(uid) {
       try {
-        const response = await fetch(`${REDIS_API_URL}/api/wallet/${uid}`);
+        const response = await fetch(`${REDIS_API_URL}/api/wallet/${uid}`, {
+          method: 'GET',
+          headers: { 'Accept': 'application/json' }
+        });
         if (!response.ok) {
-          console.warn(`⚠️ Wallet tidak ditemukan di Redis (HTTP ${response.status})`);
-          return null;
+          if (response.status === 404) {
+            return null;
+          }
+          throw new Error(`HTTP ${response.status} - ${response.statusText}`);
         }
         const result = await response.json();
         if (result.success && result.data) {
-          return result.data; // { balance, transactions, last_update }
+          return result.data;
         }
         return null;
       } catch (error) {
         console.error('❌ Gagal fetch wallet dari Redis:', error.message);
-        return null;
+        throw error;
       }
     }
 
-    /**
-     * Simpan wallet ke Redis
-     * Jika gagal, lempar error agar pemanggil tahu
-     */
     async function syncWalletToRedis(uid, walletData) {
       try {
         const response = await fetch(`${REDIS_API_URL}/api/wallet`, {
@@ -534,41 +577,87 @@
         return result;
       } catch (error) {
         console.error('❌ Gagal sync wallet ke Redis:', error.message);
-        throw error; // biar pemanggil menangani error
+        throw error;
       }
     }
 
-    // ==================== LOAD WALLET (HANYA DARI REDIS) ====================
+    // ==================== LOCAL STORAGE (OFFLINE FALLBACK) ====================
+    function saveWalletToLocal(uid, data) {
+      try {
+        localStorage.setItem(`jepay_wallet_${uid}`, JSON.stringify(data));
+        console.log('💾 Wallet disimpan ke localStorage (offline)');
+      } catch (e) {
+        console.warn('Gagal simpan ke localStorage:', e);
+      }
+    }
+
+    function getWalletFromLocal(uid) {
+      try {
+        const raw = localStorage.getItem(`jepay_wallet_${uid}`);
+        if (raw) return JSON.parse(raw);
+        return null;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    // ==================== LOAD WALLET (PRIORITAS REDIS) ====================
     async function loadWalletData(uid) {
       try {
-        const data = await getWalletFromRedis(uid);
+        let data = await getWalletFromRedis(uid);
         if (data) {
           balance = data.balance || 0;
           transactions = data.transactions || [];
+          updateConnectionStatus(true);
           console.log('✅ Data wallet dari Redis');
         } else {
-          // Jika tidak ada di Redis, gunakan data default (kosong)
-          balance = 0;
-          transactions = [];
-          console.log('ℹ️ Wallet kosong atau belum terdaftar di Redis, gunakan default 0');
+          const localData = getWalletFromLocal(uid);
+          if (localData) {
+            balance = localData.balance || 0;
+            transactions = localData.transactions || [];
+            console.log('📦 Data wallet dari localStorage (offline)');
+            updateConnectionStatus(false, 'Data dari cache lokal');
+            try {
+              updateConnectionStatus('syncing', 'Menyinkronkan ke Redis...');
+              await syncWalletToRedis(uid, { balance, transactions });
+              updateConnectionStatus(true);
+              console.log('🔄 Data lokal berhasil disync ke Redis');
+            } catch (syncErr) {
+              console.warn('Gagal sync lokal ke Redis, tetap pakai lokal');
+              updateConnectionStatus(false, 'Gagal sync, pakai lokal');
+            }
+          } else {
+            balance = 0;
+            transactions = [];
+            updateConnectionStatus(false, 'Belum ada data');
+            console.log('ℹ️ Wallet kosong, gunakan default 0');
+          }
         }
 
-        // Urutkan transaksi dari terbaru
         transactions.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
         renderBalance();
         renderTransactions();
-
-        // Tampilkan sumber data
-        balanceTime.textContent = ` ${new Date().toLocaleString('id-ID')}`;
+        balanceTime.textContent = `Sumber: ${isRedisOnline ? 'Redis' : 'Lokal'} • ${new Date().toLocaleString('id-ID')}`;
       } catch (err) {
         console.error('Gagal load wallet:', err);
-        showToast('Gagal memuat data dompet dari server', 'error');
-        // Tampilkan data kosong
-        balance = 0;
-        transactions = [];
-        renderBalance();
-        renderTransactions();
-        balanceTime.textContent = 'Sumber: - • Gagal terhubung';
+        const localData = getWalletFromLocal(uid);
+        if (localData) {
+          balance = localData.balance || 0;
+          transactions = localData.transactions || [];
+          updateConnectionStatus(false, 'Menggunakan data lokal');
+          renderBalance();
+          renderTransactions();
+          balanceTime.textContent = `Sumber: Lokal (offline) • ${new Date().toLocaleString('id-ID')}`;
+          showToast('Gagal terhubung ke server, menggunakan data lokal', 3000);
+        } else {
+          balance = 0;
+          transactions = [];
+          updateConnectionStatus(false, 'Tidak ada data');
+          renderBalance();
+          renderTransactions();
+          balanceTime.textContent = 'Sumber: - • Gagal terhubung';
+          showToast('Gagal memuat data dompet', 3000);
+        }
       }
     }
 
@@ -610,11 +699,27 @@
       txList.innerHTML = html;
     }
 
+    // ==================== SYNC LOCAL KE REDIS (MANUAL) ====================
+    async function syncLocalToRedis() {
+      if (!currentUser) return;
+      try {
+        updateConnectionStatus('syncing', 'Menyinkronkan...');
+        await syncWalletToRedis(currentUser.uid, { balance, transactions });
+        updateConnectionStatus(true);
+        showToast('Data berhasil disinkronkan ke server', 2000);
+        balanceTime.textContent = `Sumber: Redis • ${new Date().toLocaleString('id-ID')}`;
+      } catch (err) {
+        updateConnectionStatus(false, 'Gagal sync: ' + err.message);
+        showToast('Gagal sinkron: ' + err.message, 3000);
+      }
+    }
+    window.syncLocalToRedis = syncLocalToRedis;
+
     // ==================== TOP UP ====================
     document.getElementById('topupForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       const amount = parseInt(document.getElementById('topupAmount').value);
-      const method = document.getElementById('topupMethod').value;
+      const method = document.getElementById('topupMethod').value; // selalu 'qris'
       const errorEl = document.getElementById('topupError');
       const submitBtn = document.getElementById('topupSubmit');
 
@@ -630,23 +735,29 @@
       try {
         const uid = currentUser.uid;
 
-        // Buat transaksi baru
         const newTx = {
           type: 'topup',
           amount: amount,
           method: method,
           status: 'success',
-          note: `Top up via ${method}`,
+          note: `Top up via ${method.toUpperCase()}`,
           createdAt: new Date().toISOString(),
           id: Date.now() + Math.random().toString(36).substring(2,6)
         };
 
-        // Update saldo di memory
         balance += amount;
         transactions.unshift(newTx);
 
-        // Simpan ke Redis (wajib berhasil)
-        await syncWalletToRedis(uid, { balance, transactions });
+        saveWalletToLocal(uid, { balance, transactions });
+
+        try {
+          await syncWalletToRedis(uid, { balance, transactions });
+          updateConnectionStatus(true);
+          balanceTime.textContent = `Sumber: Redis • ${new Date().toLocaleString('id-ID')}`;
+        } catch (redisErr) {
+          updateConnectionStatus(false, 'Transaksi disimpan lokal (server offline)');
+          showToast('Server offline, transaksi disimpan lokal', 3000);
+        }
 
         showToast(`Top up Rp ${formatRupiah(amount)} berhasil!`);
         document.getElementById('modalTopup').classList.remove('show');
@@ -655,12 +766,15 @@
         document.getElementById('topupAmount').value = '';
       } catch (err) {
         console.error(err);
-        // Rollback memory jika gagal simpan ke Redis
-        // Karena kita sudah menambah balance, kita harus rollback
-        // Cara praktis: reload ulang data dari Redis
-        await loadWalletData(currentUser.uid);
         errorEl.textContent = 'Gagal top up: ' + err.message;
         errorEl.style.display = 'block';
+        const local = getWalletFromLocal(currentUser.uid);
+        if (local) {
+          balance = local.balance || 0;
+          transactions = local.transactions || [];
+          renderBalance();
+          renderTransactions();
+        }
       } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = 'Top Up Sekarang';
@@ -691,7 +805,6 @@
       submitBtn.textContent = 'Mengirim...';
 
       try {
-        // Cari penerima berdasarkan email di Firebase (profil)
         const usersSnap = await db.ref('users').orderByChild('email').equalTo(email).once('value');
         if (!usersSnap.exists()) {
           throw new Error('Email penerima tidak ditemukan');
@@ -706,15 +819,15 @@
           throw new Error('Tidak bisa transfer ke diri sendiri');
         }
 
-        // Ambil data wallet penerima dari Redis
-        let receiverWallet = await getWalletFromRedis(receiverUid);
+        let receiverWallet = null;
+        try {
+          receiverWallet = await getWalletFromRedis(receiverUid);
+        } catch (e) {}
         if (!receiverWallet) {
-          // Jika belum punya wallet, buat baru dengan saldo 0
-          receiverWallet = { balance: 0, transactions: [] };
+          receiverWallet = getWalletFromLocal(receiverUid) || { balance: 0, transactions: [] };
         }
         if (!receiverWallet.transactions) receiverWallet.transactions = [];
 
-        // Buat transaksi untuk sender
         const senderTx = {
           type: 'transfer_out',
           amount: -amount,
@@ -725,7 +838,6 @@
           status: 'success',
           id: Date.now() + Math.random().toString(36).substring(2,6)
         };
-        // Buat transaksi untuk receiver
         const receiverTx = {
           type: 'transfer_in',
           amount: amount,
@@ -737,32 +849,44 @@
           id: Date.now() + Math.random().toString(36).substring(2,6)
         };
 
-        // Update saldo di memory
         balance -= amount;
         transactions.unshift(senderTx);
         receiverWallet.balance = (receiverWallet.balance || 0) + amount;
         receiverWallet.transactions.unshift(receiverTx);
 
-        // Simpan ke Redis untuk kedua user (harus berhasil)
-        await Promise.all([
-          syncWalletToRedis(currentUser.uid, { balance, transactions }),
-          syncWalletToRedis(receiverUid, { balance: receiverWallet.balance, transactions: receiverWallet.transactions })
-        ]);
+        saveWalletToLocal(currentUser.uid, { balance, transactions });
+        saveWalletToLocal(receiverUid, { balance: receiverWallet.balance, transactions: receiverWallet.transactions });
+
+        try {
+          await Promise.all([
+            syncWalletToRedis(currentUser.uid, { balance, transactions }),
+            syncWalletToRedis(receiverUid, { balance: receiverWallet.balance, transactions: receiverWallet.transactions })
+          ]);
+          updateConnectionStatus(true);
+          balanceTime.textContent = `Sumber: Redis • ${new Date().toLocaleString('id-ID')}`;
+        } catch (redisErr) {
+          updateConnectionStatus(false, 'Transfer disimpan lokal (server offline)');
+          showToast('Server offline, transfer disimpan lokal', 3000);
+        }
 
         showToast(`Transfer Rp ${formatRupiah(amount)} ke ${receiverName} berhasil!`);
         document.getElementById('modalTransfer').classList.remove('show');
         renderBalance();
         renderTransactions();
-        // Kosongkan form
         document.getElementById('transferEmail').value = '';
         document.getElementById('transferAmount').value = '';
         document.getElementById('transferNote').value = '';
       } catch (err) {
         console.error(err);
-        // Rollback: reload data sender dari Redis
-        await loadWalletData(currentUser.uid);
         errorEl.textContent = err.message || 'Gagal transfer';
         errorEl.style.display = 'block';
+        const local = getWalletFromLocal(currentUser.uid);
+        if (local) {
+          balance = local.balance || 0;
+          transactions = local.transactions || [];
+          renderBalance();
+          renderTransactions();
+        }
       } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = 'Kirim Transfer';
@@ -781,7 +905,6 @@
     document.getElementById('btnTransfer').addEventListener('click', () => {
       document.getElementById('modalTransfer').classList.add('show');
     });
-    // Tutup modal klik overlay
     document.querySelectorAll('.modal-overlay').forEach(el => {
       el.addEventListener('click', function(e) {
         if (e.target === this) this.classList.remove('show');
@@ -802,7 +925,6 @@
     // ==================== AUTH STATE ====================
     auth.onAuthStateChanged(async (user) => {
       if (user) {
-        // Ambil data customer dari localStorage atau Firebase (profil saja)
         const stored = localStorage.getItem('jego_logged_in_user');
         if (stored) {
           try {
@@ -820,10 +942,8 @@
             currentUser = { uid: user.uid, email: user.email, name: 'Customer' };
           }
         }
-        // Load wallet dari Redis (tanpa fallback Firebase)
         await loadWalletData(user.uid);
       } else {
-        // Belum login, redirect ke loginUser.html
         window.location.href = 'loginUser.html';
       }
     });
@@ -833,7 +953,9 @@
       auth.onAuthStateChanged(() => {});
     }
 
-    console.log('💳 JePay loaded with Redis only (no Firebase fallback)');
+    console.log('💳 JePay loaded with Redis + LocalStorage fallback (QRIS only)');
+    console.log(`🔗 Redis API URL: ${REDIS_API_URL}`);
+    console.log('ℹ️ Untuk sync manual, ketik syncLocalToRedis() di console.');
   </script>
 
 </body>
