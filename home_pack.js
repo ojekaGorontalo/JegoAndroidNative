@@ -1353,13 +1353,23 @@ async function showOrderDetail(orderObj, fromAuto = false, isAutoTrigger = false
     }
     currentSelectedOrder = { orderId: orderId, orderData: currentOrder };
 
+    // ===== TAMBAHAN: Badge metode pembayaran untuk modal =====
+    const isJePay = currentOrder.payment_method === 'jepay';
+    const paymentBadgeDetail = isJePay 
+        ? '<span class="payment-badge jepay" style="font-size:0.7rem; padding:2px 8px; border-radius:12px; font-weight:600; background:#e3f2fd; color:#0d47a1; border:1px solid #90caf9; display:inline-block; margin-left:8px;">💳 JePay</span>' 
+        : '<span class="payment-badge cash" style="font-size:0.7rem; padding:2px 8px; border-radius:12px; font-weight:600; background:#e8f5e9; color:#1b5e20; border:1px solid #a5d6a7; display:inline-block; margin-left:8px;">💵 Tunai</span>';
+    // =====================================================
+
     const content = document.getElementById('bottomSheetContent');
     let html = `
         <div id="bottomSheetMap" class="map-container" style="height:180px; margin-bottom:12px;"></div>
         <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
             <img src="${currentOrder.photoURL || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'}" style="width:36px; height:36px; border-radius:50%; object-fit:cover; border:2px solid var(--primary);">
-            <div>
-                <div style="font-weight:600; font-size:0.95rem;">${escapeHtml(currentOrder.customer_name || 'Customer')}</div>
+            <div style="flex:1;">
+                <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                    <span style="font-weight:600; font-size:0.95rem;">${escapeHtml(currentOrder.customer_name || 'Customer')}</span>
+                    ${paymentBadgeDetail}
+                </div>
                 <div style="font-size:0.7rem; color:#666;">⭐ ${(currentOrder.passenger_rating || 0).toFixed(1)} (${currentOrder.perjalanan || 0} perjalanan)</div>
             </div>
         </div>
