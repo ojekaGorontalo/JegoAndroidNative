@@ -29,21 +29,15 @@ window.updateFCMToken = function(token) {
         return;
     }
     console.log('📩 FCM Token diterima dari Android:', token.substring(0, 20) + '...');
+    localStorage.setItem('fcmToken', token);
     if (!globalCurrentUid) {
         console.warn('⚠️ Belum ada UID driver, token FCM ditunda.');
         localStorage.setItem('pending_fcm_token', token);
         return;
     }
-    const updates = {
-        fcmToken: token,
-        last_fcm_update: new Date().toISOString()
-    };
-    database.ref('drivers/' + globalCurrentUid).update(updates)
-        .then(() => console.log('✅ FCM token tersimpan di drivers'))
-        .catch(err => console.error('❌ Gagal simpan token di drivers:', err));
-    database.ref('driver_locations/' + globalCurrentUid).update(updates)
-        .then(() => console.log('✅ FCM token tersimpan di driver_locations'))
-        .catch(err => console.error('❌ Gagal simpan token di driver_locations:', err));
+    // Kirim token ke Redis via sync status (tanpa Firebase)
+    syncDriverStatusToRedis();
+    // Hapus semua pengiriman ke Firebase di sini
 };
 
 function processPendingFCMToken() {
@@ -325,7 +319,7 @@ async function getDriverStatusFromRedis(driverId) {
         }
         const result = await response.json();
         if (result.success && result.data) {
-            return result.data;
+            return result.data; // { tracking_enabled, autobid_enabled, floating_button_enabled, fcmToken, ... }
         }
         return null;
     } catch (error) {
@@ -339,29 +333,84 @@ async function loadStoredSettings() {
     // Prioritas: Redis -> localStorage -> default
     if (globalCurrentUid) {
         const redisStatus = await getDriverStatusFromRedis(globalCurrentUid);
-        if (redisStatus && redisStatus.tracking_enabled !== undefined) {
-            locationTrackingEnabled = redisStatus.tracking_enabled;
-            localStorage.setItem(STORAGE_TRACKING, locationTrackingEnabled);
-            console.log('✅ Status tracking dari Redis:', locationTrackingEnabled);
+        if (redisStatus) {
+            if (redisStatus.tracking_enabled !== undefined) {
+                locationTrackingEnabled = redisStatus.tracking_enabled;
+                localStorage.setItem(STORAGE_TRACKING, locationTrackingEnabled);
+            }
+            if (redisStatus.autobid_enabled !== undefined) {
+                autobidEnabled = redisStatus.autobid_enabled;
+                localStorage.setItem(STORAGE_AUTOBID, autobidEnabled);
+            }
+            if (redisStatus.floating_button_enabled !== undefined) {
+                floatingButtonEnabled = redisStatus.floating_button_enabled;
+                localStorage.setItem(STORAGE_FLOATING, floatingButtonEnabled);
+            }
+            if (redisStatus.fcmToken) {
+                localStorage.setItem('fcmToken', redisStatus.fcmToken);
+            }
+            console.log('✅ Status dari Redis:', { locationTrackingEnabled, autobidEnabled, floatingButtonEnabled });
         } else {
             // fallback ke localStorage
             locationTrackingEnabled = localStorage.getItem(STORAGE_TRACKING) === 'true';
-            console.log('📦 Status tracking dari localStorage (fallback):', locationTrackingEnabled);
+            autobidEnabled = localStorage.getItem(STORAGE_AUTOBID) === 'true';
+            floatingButtonEnabled = localStorage.getItem(STORAGE_FLOATING) === 'true';
+            console.log('📦 Status dari localStorage (fallback)');
         }
     } else {
         locationTrackingEnabled = localStorage.getItem(STORAGE_TRACKING) === 'true';
+        autobidEnabled = localStorage.getItem(STORAGE_AUTOBID) === 'true';
+        floatingButtonEnabled = localStorage.getItem(STORAGE_FLOATING) === 'true';
     }
     updateTrackingButton();
-
-    autobidEnabled = localStorage.getItem(STORAGE_AUTOBID) === 'true';
     updateAutobidButton();
-
-    acceptKurirEnabled = localStorage.getItem(STORAGE_ACCEPT_KURIR) === 'true';
-    const kurirToggle = document.getElementById('acceptKurirToggle');
-    if (kurirToggle) kurirToggle.checked = acceptKurirEnabled;
-
-    floatingButtonEnabled = localStorage.getItem(STORAGE_FLOATING) === 'true';
     updateFloatingButtonUI();
+
+    // Sinkronkan dengan Android service
+    if (locationTrackingEnabled && isAndroidAvailable()) {
+        Android.startDriverTracking();
+    } else if (!locationTrackingEnabled && isAndroidAvailable()) {
+        Android.stopDriverTracking();
+    }
+    if (floatingButtonEnabled && isAndroidAvailable()) {
+        Android.startFloatingButton();
+    } else if (!floatingButtonEnabled && isAndroidAvailable()) {
+        Android.stopFloatingButton();
+    }
+}
+
+// ==================== SINKRON STATUS KE REDIS ====================
+async function syncDriverStatusToRedis() {
+    try {
+        const token = localStorage.getItem('fcmToken') || null;
+        const response = await fetch(`${REDIS_API_URL}/api/driver/status`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                driverId: globalCurrentUid,
+                tracking_enabled: locationTrackingEnabled,
+                autobid_enabled: autobidEnabled,
+                floating_button_enabled: floatingButtonEnabled,
+                fcmToken: token
+            })
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        const result = await response.json();
+        console.log('✅ Status lengkap terkirim ke Redis:', result);
+        return result;
+    } catch (error) {
+        console.error('❌ Gagal sinkron status ke Redis:', error.message);
+    }
+}
+
+// Fungsi pengganti sendStatusToRedis (agar kompatibel dengan panggilan lama)
+async function sendStatusToRedis() {
+    return syncDriverStatusToRedis();
 }
 
 function updateTrackingButton() {
@@ -416,31 +465,6 @@ async function sendLocationToRedis(lat, lng) {
     }
 }
 
-async function sendStatusToRedis() {
-    try {
-        const response = await fetch(`${REDIS_API_URL}/api/driver/status`, {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({
-                driverId: globalCurrentUid,
-                tracking_enabled: locationTrackingEnabled,
-                autobid_enabled: autobidEnabled
-            })
-        });
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        const result = await response.json();
-        console.log('✅ Status terkirim ke Redis:', result);
-        return result;
-    } catch (error) {
-        console.error('❌ Gagal kirim status ke Redis:', error.message);
-    }
-}
-
 // ===== TAMBAHAN: fungsi untuk mengatur floating button =====
 function toggleFloatingButton() {
   if (!locationTrackingEnabled) {
@@ -465,10 +489,8 @@ function toggleFloatingButton() {
   }
 
   if (globalCurrentUid) {
-    database.ref('drivers/' + globalCurrentUid).update({
-      floating_button_enabled: floatingButtonEnabled,
-      last_update: new Date().toISOString()
-    }).catch(console.error);
+    // Kirim status ke Redis (tanpa Firebase)
+    syncDriverStatusToRedis();
   }
 }
 
@@ -553,33 +575,15 @@ function toggleLocationTracking() {
             localStorage.setItem(STORAGE_FLOATING, false);
             updateFloatingButtonUI();
             if (globalCurrentUid) {
-                database.ref('drivers/' + globalCurrentUid).update({
-                    floating_button_enabled: false,
-                    last_update: new Date().toISOString()
-                }).catch(console.error);
+                // Kirim status ke Redis (tanpa Firebase)
+                syncDriverStatusToRedis();
             }
         }
     }
 
     if (globalCurrentUid) {
-        // ✅ KIRIM KE REDIS
-        sendStatusToRedis();
-
-        // ✅ KIRIM KE FIREBASE (HANYA DATA YANG TETAP)
-        database.ref('drivers/' + globalCurrentUid).update({
-            last_update: new Date().toISOString()
-        }).catch(console.error);
-
-        database.ref(`driver_locations/${globalCurrentUid}`).update({
-            floating_button_enabled: floatingButtonEnabled
-        }).catch(console.error);
-    }
-
-    if (locationTrackingEnabled && driverLocation.latitude && currentDriverData && globalCurrentUid) {
-        database.ref('drivers/' + globalCurrentUid).update({
-            latitude: driverLocation.latitude,
-            longitude: driverLocation.longitude
-        }).catch(console.error);
+        // Kirim status ke Redis (tanpa Firebase)
+        syncDriverStatusToRedis();
     }
 }
 
@@ -590,17 +594,8 @@ function toggleAutobid() {
     updateAutobidButton();
 
     if (globalCurrentUid) {
-        // ✅ KIRIM KE REDIS
-        sendStatusToRedis();
-
-        // ✅ KIRIM KE FIREBASE (HANYA DATA YANG TETAP)
-        database.ref('drivers/' + globalCurrentUid).update({
-            last_update: new Date().toISOString()
-        }).catch(console.error);
-
-        database.ref(`driver_locations/${globalCurrentUid}`).update({
-            floating_button_enabled: floatingButtonEnabled
-        }).catch(console.error);
+        // Kirim status ke Redis (tanpa Firebase)
+        syncDriverStatusToRedis();
     }
 }
 
@@ -688,20 +683,8 @@ function updateDriverLocation(position) {
     }
 
     if (shouldUpdate && locationTrackingEnabled && currentDriverData && globalCurrentUid) {
-        // ✅ KIRIM KE REDIS
+        // Kirim ke Redis saja (tidak ke Firebase)
         sendLocationToRedis(lat, lng);
-
-        // ✅ KIRIM KE FIREBASE (HANYA DATA YANG TETAP)
-        database.ref('drivers/' + globalCurrentUid).update({
-            last_update: new Date().toISOString()
-        }).catch(console.error);
-
-        database.ref(`driver_locations/${globalCurrentUid}`).update({
-            floating_button_enabled: floatingButtonEnabled,
-            playerId: currentDriverData?.playerId || null,
-            fcmToken: localStorage.getItem('fcmToken') || null
-        }).catch(console.error);
-
         lastSentLat = lat;
         lastSentLng = lng;
         console.log(`📍 Kirim lokasi ke Redis: ${lat}, ${lng}`);
@@ -1055,19 +1038,8 @@ function loadOrders() {
                     driverLocation.longitude = loc.lng;
 
                     if (globalCurrentUid) {
-                        // ✅ KIRIM KE REDIS
+                        // Kirim ke Redis saja (tidak ke Firebase)
                         sendLocationToRedis(loc.lat, loc.lng);
-
-                        // ✅ KIRIM KE FIREBASE (HANYA DATA YANG TETAP)
-                        database.ref('drivers/' + globalCurrentUid).update({
-                            last_update: new Date().toISOString()
-                        }).catch(console.error);
-
-                        database.ref('driver_locations/' + globalCurrentUid).update({
-                            floating_button_enabled: floatingButtonEnabled,
-                            playerId: currentDriverData?.playerId || null,
-                            fcmToken: localStorage.getItem('fcmToken') || null
-                        }).catch(console.error);
                     }
 
                     const dist = calculateDistance(
@@ -1791,8 +1763,9 @@ async function initOneSignal() {
       await new Promise(r => setTimeout(r, 5000));
     }
     if (playerId && globalCurrentUid) {
-      await database.ref(`drivers/${globalCurrentUid}`).update({ playerId, last_playerid_update: new Date().toISOString() });
-      await database.ref(`driver_locations/${globalCurrentUid}`).update({ playerId, last_update: new Date().toISOString() });
+      // Simpan playerId hanya di Firebase (tanpa waktu)
+      await database.ref(`drivers/${globalCurrentUid}`).update({ playerId });
+      await database.ref(`driver_locations/${globalCurrentUid}`).update({ playerId });
       showToast("Notifikasi Aktif", "success");
       return true;
     }
@@ -2031,28 +2004,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.log('⏹️ Service tracking dihentikan (sinkron dari Redis)');
       }
 
-      // Load autobid dan floating dari Firebase (untuk kompatibilitas)
-      if (globalCurrentUid) {
-        database.ref('drivers/' + globalCurrentUid).once('value').then(snap => {
-          const data = snap.val();
-          if (data) {
-            if (data.autobid_enabled !== undefined) {
-              autobidEnabled = data.autobid_enabled;
-              localStorage.setItem(STORAGE_AUTOBID, autobidEnabled);
-              updateAutobidButton();
-            }
-            if (data.floating_button_enabled !== undefined) {
-              floatingButtonEnabled = data.floating_button_enabled;
-              localStorage.setItem(STORAGE_FLOATING, floatingButtonEnabled);
-              updateFloatingButtonUI();
-              if (locationTrackingEnabled && floatingButtonEnabled && isAndroidAvailable()) {
-                Android.startFloatingButton();
-                console.log('📌 Floating button dinyalakan dari Firebase');
-              }
-            }
-          }
-        }).catch(console.error);
-      }
+      // Load autobid dan floating dari Firebase (untuk kompatibilitas) - sudah ditangani di loadStoredSettings
+      // Tidak perlu lagi pengiriman ke Firebase di sini
+
       loadOrders();
       setTimeout(startGPSMonitoring, 1000);
       await checkPlayerIdAndPrompt();
