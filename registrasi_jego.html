@@ -190,7 +190,7 @@
       return /^\+62[0-9]{9,12}$/.test(phone);
     }
 
-    // Simpan user ke database
+    // Simpan user ke database (Firebase)
     async function saveUserToDatabase(uid, userData) {
       const userRef = firebaseDatabase.ref(`users/${uid}`);
       await userRef.set(userData);
@@ -202,6 +202,26 @@
           status: 'active',
           registered_at: new Date().toISOString()
         });
+      }
+    }
+
+    // ===== FUNGSI SIMPAN KE REDIS =====
+    async function saveCustomerToRedis(userData) {
+      try {
+        const response = await fetch('/api/customer', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(userData)
+        });
+        if (!response.ok) {
+          console.warn('⚠️ Gagal simpan customer ke Redis, status:', response.status);
+        } else {
+          console.log('✅ Customer data saved to Redis');
+        }
+      } catch (err) {
+        console.warn('⚠️ Gagal simpan customer ke Redis:', err.message);
       }
     }
 
@@ -266,12 +286,12 @@
 
         // 3. Siapkan data user
         const userData = {
+          uid: uid,
           name: nama,
           email: email,
           phone: phone,
           address: alamat,
           gender: gender,
-          uid: uid,
           status: 'active',
           photoURL: '',
           rating: 5,
@@ -280,11 +300,15 @@
         };
         if (referredByUid) userData.referred_by = referredByUid;
 
-        // 4. Simpan ke database
+        // 4. Simpan ke Firebase
         await saveUserToDatabase(uid, userData);
         showProgress(85);
 
-        // 5. Session ke localStorage
+        // 5. Simpan ke Redis (tambahan)
+        await saveCustomerToRedis(userData);
+        showProgress(90);
+
+        // 6. Session ke localStorage
         const session = {
           userId: uid,
           uid: uid,
