@@ -183,6 +183,14 @@
       padding: 14px 16px;
       border-bottom: 1px solid #f0f0f0;
       gap: 12px;
+      cursor: default;
+      transition: background 0.2s;
+    }
+    .transaction-item.clickable {
+      cursor: pointer;
+    }
+    .transaction-item.clickable:hover {
+      background: #f8f9fa;
     }
     .transaction-item:last-child { border-bottom: none; }
     .tx-icon {
@@ -197,6 +205,7 @@
     }
     .tx-icon.credit { background: #d4edda; color: #155724; }
     .tx-icon.debit { background: #f8d7da; color: #721c24; }
+    .tx-icon.pending { background: #fff3cd; color: #856404; }
     .tx-info { flex: 1; }
     .tx-info .tx-name { font-weight: 600; font-size: 0.95rem; }
     .tx-info .tx-desc { font-size: 0.75rem; color: #888; margin-top: 2px; }
@@ -235,6 +244,8 @@
       padding: 24px 20px;
       box-shadow: 0 20px 60px rgba(0,0,0,0.3);
       animation: slideUp 0.3s ease;
+      max-height: 95vh;
+      overflow-y: auto;
     }
     .modal-box h3 { margin-bottom: 16px; font-size: 1.3rem; color: var(--dark); display: flex; align-items: center; gap: 8px; }
     .modal-box .close-modal {
@@ -450,6 +461,7 @@
             <div class="amount-label">Total Tagihan</div>
             <div class="amount-value" id="paymentAmount">Rp 0</div>
             <div style="font-size:0.8rem;">Angka unik: <span id="uniqueDigits">000</span></div>
+            <div style="font-size:0.7rem; margin-top:4px;">Kode: <span id="paymentIdDisplay">-</span></div>
           </div>
           <div id="timerSection" class="timer-section">
             <i class="fas fa-clock"></i> Waktu tersisa: <span id="countdown">15:00</span>
@@ -527,7 +539,7 @@
     let isRedisOnline = false;
     let countdownInterval = null;
     let timeLeft = 900;
-    let currentDepositData = null;
+    let currentDepositData = null; // untuk transaksi yang sedang ditampilkan
 
     // ==================== DOM REFS ====================
     const balanceEl = document.getElementById('balanceAmount');
@@ -684,26 +696,33 @@
     function renderBalance() {
       balanceEl.textContent = formatRupiah(balance);
     }
+
     function renderTransactions() {
       if (!transactions.length) {
         txList.innerHTML = '<div class="tx-empty">Belum ada transaksi</div>';
         return;
       }
       let html = '';
-      transactions.slice(0, 10).forEach(tx => {
+      transactions.slice(0, 10).forEach((tx, index) => {
         const isCredit = tx.type === 'topup' || tx.type === 'transfer_in' || tx.type === 'refund';
-        const icon = isCredit ? '⬇️' : '⬆️';
-        const cls = isCredit ? 'positive' : 'negative';
+        const isPending = tx.status === 'pending' && tx.type === 'topup_pending';
+        const icon = isCredit ? '⬇️' : (isPending ? '⏳' : '⬆️');
+        const cls = isCredit ? 'credit' : (isPending ? 'pending' : 'debit');
         let name = tx.type === 'topup' ? 'Top Up' :
-                   tx.type === 'topup_pending' ? 'Top Up (Pending)' :
+                   tx.type === 'topup_pending' ? (isPending ? 'Top Up (Pending)' : 'Top Up') :
                    tx.type === 'transfer_out' ? 'Transfer Keluar' :
                    tx.type === 'transfer_in' ? 'Transfer Masuk' : 'Pembayaran';
         const desc = tx.note || tx.method || '';
-        const amount = (isCredit ? '' : '-') + 'Rp' + formatRupiah(Math.abs(tx.amount));
+        const amount = (isCredit || isPending ? '' : '-') + 'Rp' + formatRupiah(Math.abs(tx.amount));
         const time = tx.createdAt ? new Date(tx.createdAt).toLocaleString('id-ID', {hour:'2-digit', minute:'2-digit'}) : '';
+
+        // Tandai item yang bisa diklik (hanya pending & topup_pending)
+        const clickable = isPending ? 'clickable' : '';
+        const dataAttrs = isPending ? `data-tx='${JSON.stringify(tx).replace(/'/g,"&#39;")}'` : '';
+
         html += `
-          <div class="transaction-item">
-            <div class="tx-icon ${isCredit ? 'credit' : 'debit'}">${icon}</div>
+          <div class="transaction-item ${clickable}" ${dataAttrs}>
+            <div class="tx-icon ${cls}">${icon}</div>
             <div class="tx-info">
               <div class="tx-name">${name}</div>
               <div class="tx-desc">${desc} • ${time}</div>
@@ -716,6 +735,22 @@
         html += `<div class="transaction-item" style="justify-content:center;color:#999;font-size:0.8rem;">+ ${transactions.length - 10} transaksi lainnya</div>`;
       }
       txList.innerHTML = html;
+
+      // Tambahkan event listener untuk item yang pending (clickable)
+      document.querySelectorAll('.transaction-item.clickable').forEach(el => {
+        el.addEventListener('click', function() {
+          try {
+            const raw = this.dataset.tx;
+            if (!raw) return;
+            const tx = JSON.parse(raw);
+            if (tx.type === 'topup_pending' && tx.status === 'pending') {
+              showQrisFromTransaction(tx);
+            }
+          } catch (e) {
+            console.error('Gagal parse transaksi:', e);
+          }
+        });
+      });
     }
 
     // ==================== QRIS GENERATE ====================
@@ -761,6 +796,45 @@
       }
     }
 
+    // ==================== TAMPILKAN QRIS DARI TRANSAKSI PENDING ====================
+    async function showQrisFromTransaction(tx) {
+      // Tutup modal jika ada yang terbuka
+      document.getElementById('modalTopup').classList.add('show');
+
+      // Isi ulang form dengan nominal dari transaksi
+      document.getElementById('topupAmount').value = tx.amount;
+      document.getElementById('topupAmount').disabled = true; // tidak bisa diubah
+
+      // Set data deposit untuk konfirmasi
+      currentDepositData = {
+        amount: tx.amount,
+        uniqueAmount: tx.uniqueAmount,
+        uniqueDigits: tx.uniqueDigits,
+        paymentId: tx.paymentId
+      };
+
+      // Tampilkan area QRIS
+      document.getElementById('paymentAmount').textContent = 'Rp ' + formatRupiah(tx.uniqueAmount);
+      document.getElementById('uniqueDigits').textContent = tx.uniqueDigits || '000';
+      document.getElementById('paymentIdDisplay').textContent = tx.paymentId || '-';
+      document.getElementById('qrisArea').style.display = 'block';
+      document.getElementById('whatsappBtn').style.display = 'block';
+
+      // Generate QRIS
+      try {
+        await generateQRIS(tx.uniqueAmount);
+        startCountdown();
+        document.getElementById('topupSubmit').disabled = true;
+        document.getElementById('topupSubmit').textContent = 'QRIS Ditampilkan';
+        document.getElementById('topupError').style.display = 'none';
+        showToast('QRIS dari transaksi pending berhasil dimuat', 2000);
+      } catch (err) {
+        console.error(err);
+        document.getElementById('topupError').textContent = 'Gagal memuat QRIS: ' + err.message;
+        document.getElementById('topupError').style.display = 'block';
+      }
+    }
+
     // ==================== COUNTDOWN ====================
     function startCountdown() {
       timeLeft = 900;
@@ -798,6 +872,12 @@
       const errorEl = document.getElementById('topupError');
       const submitBtn = document.getElementById('topupSubmit');
 
+      // Jika input disabled, berarti sedang menampilkan QRIS dari riwayat, tidak perlu proses baru
+      if (document.getElementById('topupAmount').disabled) {
+        showToast('QRIS sudah ditampilkan, silakan bayar', 2000);
+        return;
+      }
+
       if (!amount || amount < 10000) {
         errorEl.textContent = 'Minimal top up Rp 10.000';
         errorEl.style.display = 'block';
@@ -813,7 +893,6 @@
         const uniqueAmount = amount + parseInt(uniqueDigits);
         const paymentId = 'DEP_' + Date.now() + '_' + Math.random().toString(36).substr(2,8).toUpperCase();
 
-        // ===== 🔥 HAPUS FIREBASE – PAKAI REDIS SAJA =====
         // Buat transaksi pending (tanpa menambah saldo)
         const pendingTx = {
           type: 'topup_pending',
@@ -828,25 +907,20 @@
           id: Date.now() + Math.random().toString(36).substring(2,6)
         };
 
-        // Tambahkan ke daftar transaksi (tanpa mengubah balance)
         transactions.unshift(pendingTx);
         // Saldo TIDAK bertambah
 
-        // Simpan ke Redis (wallet dengan transaksi pending)
         await syncWalletToRedis(uid, { balance, transactions });
-        // Simpan juga ke localStorage sebagai cadangan
         saveWalletToLocal(uid, { balance, transactions });
 
-        // Generate QRIS
         await generateQRIS(uniqueAmount);
 
-        // Tampilkan area QRIS
         document.getElementById('paymentAmount').textContent = 'Rp ' + formatRupiah(uniqueAmount);
         document.getElementById('uniqueDigits').textContent = uniqueDigits;
+        document.getElementById('paymentIdDisplay').textContent = paymentId;
         document.getElementById('qrisArea').style.display = 'block';
         document.getElementById('whatsappBtn').style.display = 'block';
 
-        // Simpan data untuk konfirmasi WhatsApp
         currentDepositData = {
           amount: amount,
           uniqueAmount: uniqueAmount,
@@ -859,7 +933,6 @@
         submitBtn.disabled = true;
         document.getElementById('topupAmount').disabled = true;
 
-        // Refresh tampilan riwayat (akan muncul transaksi pending)
         renderTransactions();
 
         showToast('QRIS berhasil dibuat! Silakan scan dan bayar. Saldo akan bertambah setelah konfirmasi admin.', 4000);
@@ -886,7 +959,7 @@
       showToast('Konfirmasi dikirim!', 2000);
     });
 
-    // ==================== TRANSFER (tidak berubah) ====================
+    // ==================== TRANSFER ====================
     document.getElementById('transferForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       const email = document.getElementById('transferEmail').value.trim();
@@ -984,18 +1057,32 @@
     // ==================== MODAL CONTROLS ====================
     document.querySelectorAll('[data-close]').forEach(btn => {
       btn.addEventListener('click', function() {
-        document.getElementById(this.dataset.close).classList.remove('show');
-        if (this.dataset.close === 'modalTopup') {
-          document.getElementById('qrisArea').style.display = 'none';
-          document.getElementById('topupSubmit').disabled = false;
-          document.getElementById('topupSubmit').textContent = 'Generate QRIS';
-          document.getElementById('topupAmount').disabled = false;
+        const modalId = this.dataset.close;
+        document.getElementById(modalId).classList.remove('show');
+        if (modalId === 'modalTopup') {
+          // Reset form jika bukan dari riwayat
+          if (!document.getElementById('topupAmount').disabled) {
+            document.getElementById('qrisArea').style.display = 'none';
+            document.getElementById('topupSubmit').disabled = false;
+            document.getElementById('topupSubmit').textContent = 'Generate QRIS';
+            document.getElementById('topupAmount').disabled = false;
+          } else {
+            // Jika dari riwayat, biarkan QRIS tetap tampil jika modal dibuka lagi
+            // Tapi kita reset agar tidak bingung
+            document.getElementById('qrisArea').style.display = 'none';
+            document.getElementById('topupSubmit').disabled = false;
+            document.getElementById('topupSubmit').textContent = 'Generate QRIS';
+            document.getElementById('topupAmount').disabled = false;
+            document.getElementById('topupAmount').value = '';
+          }
           if (countdownInterval) clearInterval(countdownInterval);
         }
       });
     });
+
     document.getElementById('btnTopup').addEventListener('click', () => {
       document.getElementById('modalTopup').classList.add('show');
+      // Reset state
       document.getElementById('qrisArea').style.display = 'none';
       document.getElementById('topupSubmit').disabled = false;
       document.getElementById('topupSubmit').textContent = 'Generate QRIS';
@@ -1004,9 +1091,11 @@
       document.getElementById('topupAmount').value = '';
       if (countdownInterval) clearInterval(countdownInterval);
     });
+
     document.getElementById('btnTransfer').addEventListener('click', () => {
       document.getElementById('modalTransfer').classList.add('show');
     });
+
     document.querySelectorAll('.modal-overlay').forEach(el => {
       el.addEventListener('click', function(e) {
         if (e.target === this) this.classList.remove('show');
