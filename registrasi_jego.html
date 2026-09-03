@@ -304,7 +304,7 @@
         await saveUserToDatabase(uid, userData);
         showProgress(85);
 
-        // 5. Simpan ke Redis (tambahan)
+        // 5. 🔥 SIMPAN KE REDIS
         await saveCustomerToRedis(userData);
         showProgress(90);
 
