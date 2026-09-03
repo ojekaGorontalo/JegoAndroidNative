@@ -1060,10 +1060,10 @@
         #status-modal .status-content {
             background: #fff;
             border-radius: var(--radius-lg);
-            padding: 30px 24px;
-            max-width: 400px;
+            padding: 24px 20px;
+            max-width: 420px;
             width: 100%;
-            max-height: 80vh;
+            max-height: 85vh;
             overflow-y: auto;
             box-shadow: var(--shadow-lg);
             position: relative;
@@ -1072,7 +1072,7 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
             border-bottom: 1px solid var(--border-color);
             padding-bottom: 12px;
         }
@@ -1098,44 +1098,88 @@
             line-height: 1.6;
             white-space: pre-wrap;
             word-wrap: break-word;
-            padding: 12px 0;
+            padding: 8px 0 12px;
         }
         #status-modal .status-content .status-time {
             font-size: 13px;
             color: var(--text-muted);
             text-align: right;
+            margin-bottom: 12px;
         }
-        .status-input-area {
+        /* Viewer list */
+        .viewer-list {
+            margin: 12px 0 16px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 12px;
+        }
+        .viewer-list .viewer-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+        .viewer-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 0;
+        }
+        .viewer-item .v-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: var(--radius-full);
+            background: var(--primary-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--primary);
+            overflow: hidden;
+        }
+        .viewer-item .v-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .viewer-item .v-name {
+            font-size: 14px;
+        }
+        /* Komentar */
+        .comment-area {
             display: flex;
             gap: 8px;
-            margin: 12px 0 8px;
+            margin-top: 12px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 12px;
         }
-        .status-input-area input {
+        .comment-area input {
             flex: 1;
             border: 1px solid var(--border-color);
             border-radius: 30px;
-            padding: 10px 16px;
-            font-size: 15px;
+            padding: 8px 16px;
+            font-size: 14px;
             outline: none;
             transition: border 0.2s;
         }
-        .status-input-area input:focus {
+        .comment-area input:focus {
             border-color: var(--primary);
         }
-        .status-input-area button {
+        .comment-area button {
             background: var(--primary);
             border: none;
             border-radius: 30px;
             color: #fff;
-            padding: 0 20px;
+            padding: 0 18px;
             font-weight: 500;
             cursor: pointer;
             transition: background 0.2s;
+            white-space: nowrap;
         }
-        .status-input-area button:active {
+        .comment-area button:active {
             transform: scale(0.95);
         }
-        .status-input-area button:hover {
+        .comment-area button:hover {
             background: var(--primary-dark);
         }
 
@@ -1969,6 +2013,7 @@
                 newMessage: [],
                 chatList: null,
                 statuses: null,
+                statusViewer: null,
             },
             unread: {},
             contacts: {},
@@ -2538,6 +2583,10 @@
             if (state.unsubscribe.statuses) {
                 state.unsubscribe.statuses();
                 state.unsubscribe.statuses = null;
+            }
+            if (state.unsubscribe.statusViewer) {
+                state.unsubscribe.statusViewer();
+                state.unsubscribe.statusViewer = null;
             }
             state.unsubscribe.presence.forEach(u => u());
             state.unsubscribe.presence = [];
@@ -3232,7 +3281,7 @@
         }
 
         // ============================================================
-        // 26. STATUS / STORY FEATURE (BARU)
+        // 26. STATUS / STORY FEATURE (DIPERBARUI dengan viewer & komentar)
         // ============================================================
 
         // Post status (text only)
@@ -3259,6 +3308,52 @@
             if (!currentUser) return;
             const viewerRef = ref(db, `statuses/${ownerId}/${statusId}/viewers/${currentUser.userId}`);
             set(viewerRef, true).catch(err => console.warn('Mark viewed error:', err));
+        }
+
+        // Kirim komentar pada status (sebagai pesan chat)
+        function sendCommentOnStatus(ownerId, statusId, comment) {
+            if (!currentUser || !comment.trim()) return;
+            const chatId = getChatId(currentUser.userId, ownerId);
+            // Pastikan chat ada
+            get(ref(db, `chats/${chatId}`)).then((snapshot) => {
+                if (!snapshot.exists()) {
+                    const chatData = {
+                        participants: {
+                            [currentUser.userId]: true,
+                            [ownerId]: true,
+                        },
+                        lastMessage: '',
+                        lastMessageTime: serverTimestamp(),
+                        lastMessageSenderId: '',
+                    };
+                    set(ref(db, `chats/${chatId}`), chatData).catch(err => console.warn('Create chat error:', err));
+                }
+                // Kirim pesan
+                const msgId = push(ref(db, `messages/${chatId}`)).key;
+                const msgData = {
+                    senderId: currentUser.userId,
+                    receiverId: ownerId,
+                    text: `💬 Komentar pada status: ${comment}`,
+                    type: 'text',
+                    timestamp: serverTimestamp(),
+                    status: 'sent',
+                };
+                set(ref(db, `messages/${chatId}/${msgId}`), msgData).then(() => {
+                    // Update last message di chat
+                    update(ref(db, `chats/${chatId}`), {
+                        lastMessage: `💬 Komentar: ${comment}`,
+                        lastMessageTime: serverTimestamp(),
+                        lastMessageSenderId: currentUser.userId,
+                    }).catch(() => {});
+                    showToast('Komentar terkirim sebagai pesan chat');
+                }).catch(err => {
+                    console.warn('Send comment error:', err);
+                    showToast('Gagal mengirim komentar');
+                });
+            }).catch(err => {
+                console.warn('Chat check error:', err);
+                showToast('Gagal mengirim komentar');
+            });
         }
 
         // Load statuses dari kontak yang saling terhubung (mutual contacts)
@@ -3384,16 +3479,19 @@
             }).catch(err => console.warn('Render status error:', err));
         }
 
-        // Tampilkan modal status
+        // Tampilkan modal status (dengan viewer & komentar)
         function showStatusModal(uid, statusId, content, timestamp) {
             if (!statusModal || !statusModalContent) return;
-            // Ambil nama pengguna
-            get(ref(db, `users/${uid}`)).then((snap) => {
-                const user = snap.val() || { name: uid };
+
+            // Ambil data pengguna
+            get(ref(db, `users/${uid}`)).then((userSnap) => {
+                const user = userSnap.val() || { name: uid };
                 const name = user.name || uid;
                 const photo = user.photo || '';
                 const initials = getInitials(name);
                 const timeStr = formatTime(timestamp);
+
+                // Tampilkan konten dasar
                 statusModalContent.innerHTML = `
                     <div class="status-user">
                         <div class="avatar">${photo ? `<img src="${photo}" alt="${name}" />` : initials}</div>
@@ -3401,26 +3499,136 @@
                     </div>
                     <div class="status-text">${escapeHtml(content)}</div>
                     <div class="status-time">${timeStr}</div>
+                    <div class="viewer-list" id="viewerList">
+                        <div class="viewer-title">👁️ Telah dilihat oleh</div>
+                        <div id="viewerItems"></div>
+                    </div>
+                    <div class="comment-area">
+                        <input type="text" id="commentInput" placeholder="Tulis komentar..." />
+                        <button id="sendCommentBtn">Kirim</button>
+                    </div>
                 `;
                 statusModal.classList.add('active');
                 initLucide();
+
+                // Load viewer data realtime
+                if (state.unsubscribe.statusViewer) {
+                    state.unsubscribe.statusViewer();
+                    state.unsubscribe.statusViewer = null;
+                }
+                const viewerRef = ref(db, `statuses/${uid}/${statusId}/viewers`);
+                const unsubViewer = onValue(viewerRef, (snapshot) => {
+                    const viewers = snapshot.val() || {};
+                    const viewerIds = Object.keys(viewers);
+                    const viewerContainer = document.getElementById('viewerItems');
+                    if (viewerContainer) {
+                        if (viewerIds.length === 0) {
+                            viewerContainer.innerHTML = '<div style="font-size:13px;color:var(--text-muted);">Belum ada yang melihat</div>';
+                        } else {
+                            // Ambil nama viewer
+                            get(ref(db, 'users')).then((userSnap) => {
+                                const allUsers = userSnap.val() || {};
+                                let html = '';
+                                viewerIds.forEach(vid => {
+                                    const v = allUsers[vid] || { name: vid };
+                                    const vName = v.name || vid;
+                                    const vPhoto = v.photo || '';
+                                    const vInit = getInitials(vName);
+                                    html += `
+                                        <div class="viewer-item">
+                                            <div class="v-avatar">${vPhoto ? `<img src="${vPhoto}" alt="${vName}" />` : vInit}</div>
+                                            <div class="v-name">${escapeHtml(vName)}</div>
+                                        </div>
+                                    `;
+                                });
+                                viewerContainer.innerHTML = html;
+                                initLucide();
+                            }).catch(() => {
+                                viewerContainer.innerHTML = '<div style="font-size:13px;color:var(--text-muted);">Gagal memuat viewer</div>';
+                            });
+                        }
+                    }
+                });
+                state.unsubscribe.statusViewer = unsubViewer;
+
+                // Event komentar
+                const commentInput = document.getElementById('commentInput');
+                const sendCommentBtn = document.getElementById('sendCommentBtn');
+                if (commentInput && sendCommentBtn) {
+                    const sendComment = () => {
+                        const comment = commentInput.value.trim();
+                        if (comment) {
+                            sendCommentOnStatus(uid, statusId, comment);
+                            commentInput.value = '';
+                        } else {
+                            showToast('Komentar tidak boleh kosong');
+                        }
+                    };
+                    sendCommentBtn.addEventListener('click', sendComment);
+                    commentInput.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            sendComment();
+                        }
+                    });
+                }
+
             }).catch(() => {
-                statusModalContent.innerHTML = `<div class="status-text">${escapeHtml(content)}</div>`;
+                // Fallback jika gagal ambil data user
+                statusModalContent.innerHTML = `
+                    <div class="status-text">${escapeHtml(content)}</div>
+                    <div class="status-time">${formatTime(timestamp)}</div>
+                    <div class="comment-area">
+                        <input type="text" id="commentInput" placeholder="Tulis komentar..." />
+                        <button id="sendCommentBtn">Kirim</button>
+                    </div>
+                `;
                 statusModal.classList.add('active');
+                // Event komentar juga diset di sini
+                const commentInput = document.getElementById('commentInput');
+                const sendCommentBtn = document.getElementById('sendCommentBtn');
+                if (commentInput && sendCommentBtn) {
+                    const sendComment = () => {
+                        const comment = commentInput.value.trim();
+                        if (comment) {
+                            sendCommentOnStatus(uid, statusId, comment);
+                            commentInput.value = '';
+                        } else {
+                            showToast('Komentar tidak boleh kosong');
+                        }
+                    };
+                    sendCommentBtn.addEventListener('click', sendComment);
+                    commentInput.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            sendComment();
+                        }
+                    });
+                }
+                initLucide();
             });
         }
 
         // Event untuk modal close
         statusModalClose.addEventListener('click', () => {
             statusModal.classList.remove('active');
+            if (state.unsubscribe.statusViewer) {
+                state.unsubscribe.statusViewer();
+                state.unsubscribe.statusViewer = null;
+            }
         });
         statusModal.addEventListener('click', (e) => {
-            if (e.target === statusModal) statusModal.classList.remove('active');
+            if (e.target === statusModal) {
+                statusModal.classList.remove('active');
+                if (state.unsubscribe.statusViewer) {
+                    state.unsubscribe.statusViewer();
+                    state.unsubscribe.statusViewer = null;
+                }
+            }
         });
 
         // Tombol tambah status
         addStatusBtn.addEventListener('click', () => {
-            // Tampilkan input popup sederhana (gunakan prompt untuk kemudahan)
             const text = prompt('Tulis status Anda:', '');
             if (text && text.trim().length > 0) {
                 postStatus(text.trim());
@@ -3647,6 +3855,7 @@
             logout,
             postStatus,
             loadStatuses,
+            sendCommentOnStatus,
         };
 
         console.log('📱 GoChat loaded.');
