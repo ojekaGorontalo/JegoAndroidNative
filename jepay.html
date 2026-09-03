@@ -10,6 +10,9 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
+  <!-- QRCode.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
@@ -272,16 +275,47 @@
     .modal-box .btn-submit:hover { background: #e68900; transform: translateY(-1px); }
     .modal-box .btn-submit:disabled { background: #ccc; cursor: not-allowed; transform: none; }
     .modal-box .error-msg { color: var(--danger); font-size: 0.85rem; margin-top: 8px; display: none; }
-    .method-display {
-      padding: 10px 12px;
-      background: #f0f0f0;
-      border-radius: 8px;
-      font-weight: 600;
-      color: var(--primary);
-      display: flex;
-      align-items: center;
-      gap: 8px;
+
+    /* QRIS Payment Display */
+    .qris-payment {
+      margin-top: 16px;
+      padding: 16px;
+      background: #f8f9fa;
+      border-radius: 12px;
+      text-align: center;
     }
+    .qris-payment .amount-display {
+      background: linear-gradient(135deg, #3b82f6, #1e40af);
+      color: white;
+      padding: 16px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+    }
+    .qris-payment .amount-label { font-size: 0.8rem; opacity: 0.9; }
+    .qris-payment .amount-value { font-size: 1.8rem; font-weight: 800; }
+    #qrcode { display: flex; justify-content: center; margin: 12px 0; min-height: 200px; align-items: center; }
+    #qrcode canvas { max-width: 100%; height: auto; border-radius: 12px; background: white; padding: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .timer-section {
+      background: #f0f4ff;
+      padding: 10px;
+      border-radius: 12px;
+      margin: 12px 0;
+      font-weight: 600;
+      color: #3b82f6;
+    }
+    .timer-section.warning { background: #FFE6E6; color: #D63031; }
+    .btn-whatsapp {
+      background: #25D366;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 40px;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 12px;
+    }
+    .btn-whatsapp:hover { background: #20b859; }
 
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
@@ -305,7 +339,7 @@
     }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-    /* --- Bottom Nav (sederhana) --- */
+    /* --- Bottom Nav --- */
     .bottom-nav {
       position: fixed;
       bottom: 0;
@@ -332,14 +366,11 @@
     .bottom-nav a .nav-icon { font-size: 1.5rem; }
     .bottom-nav a.active { color: var(--primary); font-weight: 600; }
 
-    /* --- Responsive --- */
     @media (max-width: 400px) {
       .balance-card .amount { font-size: 2rem; }
       .quick-actions { grid-template-columns: repeat(4, 1fr); gap: 6px; }
       .quick-actions .qa-item .icon { font-size: 1.4rem; }
     }
-
-    /* --- Status koneksi --- */
     .connection-status {
       margin: 10px 0;
       padding: 8px 12px;
@@ -364,10 +395,8 @@
 
   <!-- Kontainer Utama -->
   <div class="container" id="appContainer">
-    <!-- Status Koneksi Redis -->
     <div id="connectionStatus" class="connection-status"></div>
 
-    <!-- Kartu Saldo -->
     <div class="balance-card">
       <div class="label">Saldo JePay</div>
       <div class="amount"><span class="currency">Rp</span><span id="balanceAmount">0</span></div>
@@ -378,27 +407,13 @@
       </div>
     </div>
 
-    <!-- Quick Actions -->
     <div class="quick-actions">
-      <div class="qa-item" onclick="showToast('Fitur sedang dikembangkan')">
-        <div class="icon">💳</div>
-        <div class="label">Bayar</div>
-      </div>
-      <div class="qa-item" onclick="showToast('Fitur sedang dikembangkan')">
-        <div class="icon">📱</div>
-        <div class="label">Pulsa</div>
-      </div>
-      <div class="qa-item" onclick="showToast('Fitur sedang dikembangkan')">
-        <div class="icon">⚡</div>
-        <div class="label">Listrik</div>
-      </div>
-      <div class="qa-item" onclick="showToast('Fitur sedang dikembangkan')">
-        <div class="icon">🎁</div>
-        <div class="label">Promo</div>
-      </div>
+      <div class="qa-item" onclick="showToast('Fitur sedang dikembangkan')"><div class="icon">💳</div><div class="label">Bayar</div></div>
+      <div class="qa-item" onclick="showToast('Fitur sedang dikembangkan')"><div class="icon">📱</div><div class="label">Pulsa</div></div>
+      <div class="qa-item" onclick="showToast('Fitur sedang dikembangkan')"><div class="icon">⚡</div><div class="label">Listrik</div></div>
+      <div class="qa-item" onclick="showToast('Fitur sedang dikembangkan')"><div class="icon">🎁</div><div class="label">Promo</div></div>
     </div>
 
-    <!-- Riwayat Transaksi -->
     <div class="section-title">
       <span>📋 Riwayat Transaksi</span>
       <a href="#" id="refreshHistory" style="font-size:0.8rem;">↻ Refresh</a>
@@ -408,7 +423,7 @@
     </div>
   </div>
 
-  <!-- Modal Top Up -->
+  <!-- Modal Top Up (QRIS) -->
   <div class="modal-overlay" id="modalTopup">
     <div class="modal-box">
       <button class="close-modal" data-close="modalTopup">✕</button>
@@ -420,14 +435,33 @@
         </div>
         <div class="form-group">
           <label>Metode Pembayaran</label>
-          <div class="method-display">
+          <div style="padding:10px 12px; background:#f0f0f0; border-radius:8px; font-weight:600; color:var(--primary);">
             <i class="fas fa-qrcode"></i> QRIS
           </div>
           <input type="hidden" id="topupMethod" value="qris">
         </div>
         <div class="error-msg" id="topupError"></div>
-        <button type="submit" class="btn-submit" id="topupSubmit">Top Up Sekarang</button>
+        <button type="submit" class="btn-submit" id="topupSubmit">Generate QRIS</button>
       </form>
+
+      <div id="qrisArea" style="display: none;">
+        <div class="qris-payment">
+          <div class="amount-display">
+            <div class="amount-label">Total Tagihan</div>
+            <div class="amount-value" id="paymentAmount">Rp 0</div>
+            <div style="font-size:0.8rem;">Angka unik: <span id="uniqueDigits">000</span></div>
+          </div>
+          <div id="timerSection" class="timer-section">
+            <i class="fas fa-clock"></i> Waktu tersisa: <span id="countdown">15:00</span>
+          </div>
+          <div id="qrcode"></div>
+          <p style="margin-top:8px; font-size:0.8rem; color:#666;">Scan QRIS di atas untuk melakukan pembayaran</p>
+          <button class="btn-whatsapp" id="whatsappBtn">
+            <i class="fab fa-whatsapp"></i> Konfirmasi ke Admin
+          </button>
+          <p style="margin-top:8px; font-size:0.7rem; color:#999;">Setelah transfer, konfirmasi ke admin via WhatsApp untuk verifikasi</p>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -458,10 +492,8 @@
   <!-- Toast -->
   <div class="toast" id="toast"></div>
 
-  <!-- Bottom Navigation -->
   <nav class="bottom-nav">
     <a href="jenis_kenderaan.html"><span class="nav-icon">🏠</span>Beranda</a>
- <!-- <a href="order.html"><span class="nav-icon">🛵</span>Pesan</a> -->
     <a href="JePay.html" class="active"><span class="nav-icon">💳</span>JePay</a>
     <a href="userAccount.html"><span class="nav-icon">👤</span>Akun</a>
   </nav>
@@ -478,20 +510,24 @@
       appId: "1:600037007040:web:ac3243ad9b472647ffd725"
     };
 
-    // Inisialisasi Firebase (hanya Auth & DB untuk profil)
     if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
     const auth = firebase.auth();
-    const db = firebase.database();
+    const db = firebase.database(); // hanya untuk profil customer
 
-    // ==================== KONFIGURASI REDIS (WALLET) ====================
+    // ==================== KONFIGURASI REDIS ====================
     const REDIS_API_URL = 'https://movego.my.id';
 
+    // ==================== QRIS STATIS ====================
+    const QRIS_STRING = '00020101021126650013ID.CO.BCA.WWW011893600014000163408402150008850016340840303UMI51440014ID.CO.QRIS.WWW0215ID10221858786030303UMI5204599953033605802ID5914ASIA PAINTMENT6009GORONTALO61059611962070703A0163041490';
+
     // ==================== GLOBAL STATE ====================
-    let currentUser = null;          // { uid, email, name }
+    let currentUser = null;
     let balance = 0;
     let transactions = [];
     let isRedisOnline = false;
-    let pendingSync = false;
+    let countdownInterval = null;
+    let timeLeft = 900;
+    let currentDepositData = null;
 
     // ==================== DOM REFS ====================
     const balanceEl = document.getElementById('balanceAmount');
@@ -518,7 +554,7 @@
       connStatus.className = 'connection-status';
       if (online === true) {
         connStatus.classList.add('online');
-        connStatus.textContent = '✅ Terhubung ke JeGo ' + (message ? ' • ' + message : '');
+        connStatus.textContent = '✅ Terhubung ke Redis ' + (message ? ' • ' + message : '');
       } else if (online === false) {
         connStatus.classList.add('offline');
         connStatus.textContent = '❌ Redis tidak dapat diakses. Transaksi disimpan lokal. ' + (message ? ' • ' + message : '');
@@ -538,15 +574,11 @@
           headers: { 'Accept': 'application/json' }
         });
         if (!response.ok) {
-          if (response.status === 404) {
-            return null;
-          }
+          if (response.status === 404) return null;
           throw new Error(`HTTP ${response.status} - ${response.statusText}`);
         }
         const result = await response.json();
-        if (result.success && result.data) {
-          return result.data;
-        }
+        if (result.success && result.data) return result.data;
         return null;
       } catch (error) {
         console.error('❌ Gagal fetch wallet dari Redis:', error.message);
@@ -569,9 +601,7 @@
             last_update: new Date().toISOString()
           })
         });
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status} - ${response.statusText}`);
-        }
+        if (!response.ok) throw new Error(`HTTP ${response.status} - ${response.statusText}`);
         const result = await response.json();
         console.log('✅ Wallet tersimpan ke Redis:', result);
         return result;
@@ -586,22 +616,17 @@
       try {
         localStorage.setItem(`jepay_wallet_${uid}`, JSON.stringify(data));
         console.log('💾 Wallet disimpan ke localStorage (offline)');
-      } catch (e) {
-        console.warn('Gagal simpan ke localStorage:', e);
-      }
+      } catch (e) { console.warn('Gagal simpan ke localStorage:', e); }
     }
-
     function getWalletFromLocal(uid) {
       try {
         const raw = localStorage.getItem(`jepay_wallet_${uid}`);
         if (raw) return JSON.parse(raw);
         return null;
-      } catch (e) {
-        return null;
-      }
+      } catch (e) { return null; }
     }
 
-    // ==================== LOAD WALLET (PRIORITAS REDIS) ====================
+    // ==================== LOAD WALLET ====================
     async function loadWalletData(uid) {
       try {
         let data = await getWalletFromRedis(uid);
@@ -609,31 +634,25 @@
           balance = data.balance || 0;
           transactions = data.transactions || [];
           updateConnectionStatus(true);
-          console.log('✅ Data wallet dari Redis');
         } else {
           const localData = getWalletFromLocal(uid);
           if (localData) {
             balance = localData.balance || 0;
             transactions = localData.transactions || [];
-            console.log('📦 Data wallet dari localStorage (offline)');
             updateConnectionStatus(false, 'Data dari cache lokal');
             try {
               updateConnectionStatus('syncing', 'Menyinkronkan ke Redis...');
               await syncWalletToRedis(uid, { balance, transactions });
               updateConnectionStatus(true);
-              console.log('🔄 Data lokal berhasil disync ke Redis');
             } catch (syncErr) {
-              console.warn('Gagal sync lokal ke Redis, tetap pakai lokal');
               updateConnectionStatus(false, 'Gagal sync, pakai lokal');
             }
           } else {
             balance = 0;
             transactions = [];
             updateConnectionStatus(false, 'Belum ada data');
-            console.log('ℹ️ Wallet kosong, gunakan default 0');
           }
         }
-
         transactions.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
         renderBalance();
         renderTransactions();
@@ -665,7 +684,6 @@
     function renderBalance() {
       balanceEl.textContent = formatRupiah(balance);
     }
-
     function renderTransactions() {
       if (!transactions.length) {
         txList.innerHTML = '<div class="tx-empty">Belum ada transaksi</div>';
@@ -676,9 +694,10 @@
         const isCredit = tx.type === 'topup' || tx.type === 'transfer_in' || tx.type === 'refund';
         const icon = isCredit ? '⬇️' : '⬆️';
         const cls = isCredit ? 'positive' : 'negative';
-        const name = tx.type === 'topup' ? 'Top Up' :
-                    tx.type === 'transfer_out' ? 'Transfer Keluar' :
-                    tx.type === 'transfer_in' ? 'Transfer Masuk' : 'Pembayaran';
+        let name = tx.type === 'topup' ? 'Top Up' :
+                   tx.type === 'topup_pending' ? 'Top Up (Pending)' :
+                   tx.type === 'transfer_out' ? 'Transfer Keluar' :
+                   tx.type === 'transfer_in' ? 'Transfer Masuk' : 'Pembayaran';
         const desc = tx.note || tx.method || '';
         const amount = (isCredit ? '' : '-') + 'Rp' + formatRupiah(Math.abs(tx.amount));
         const time = tx.createdAt ? new Date(tx.createdAt).toLocaleString('id-ID', {hour:'2-digit', minute:'2-digit'}) : '';
@@ -699,27 +718,83 @@
       txList.innerHTML = html;
     }
 
-    // ==================== SYNC LOCAL KE REDIS (MANUAL) ====================
-    async function syncLocalToRedis() {
-      if (!currentUser) return;
+    // ==================== QRIS GENERATE ====================
+    async function generateQRIS(amount) {
       try {
-        updateConnectionStatus('syncing', 'Menyinkronkan...');
-        await syncWalletToRedis(currentUser.uid, { balance, transactions });
-        updateConnectionStatus(true);
-        showToast('Data berhasil disinkronkan ke server', 2000);
-        balanceTime.textContent = `Sumber: Redis • ${new Date().toLocaleString('id-ID')}`;
-      } catch (err) {
-        updateConnectionStatus(false, 'Gagal sync: ' + err.message);
-        showToast('Gagal sinkron: ' + err.message, 3000);
+        const qrContainer = document.getElementById('qrcode');
+        qrContainer.innerHTML = '<div style="padding:20px;"><i class="fas fa-spinner fa-spin fa-2x"></i></div>';
+
+        const response = await fetch(`https://api-mininxd.vercel.app/qris?qris=${QRIS_STRING}&nominal=${amount}`);
+        const data = await response.json();
+        if (!data || (!data.QR && !data.qr)) {
+          throw new Error('Gagal generate QRIS dari API');
+        }
+        const qrString = data.QR || data.qr || data.qris;
+
+        qrContainer.innerHTML = '';
+        const qrCodeDiv = document.createElement('div');
+        qrCodeDiv.id = 'qrcodeCanvas';
+        qrContainer.appendChild(qrCodeDiv);
+
+        new QRCode(qrCodeDiv, {
+          text: qrString,
+          width: 280,
+          height: 280,
+          colorDark: '#000000',
+          colorLight: '#FFFFFF',
+          correctLevel: QRCode.CorrectLevel.H
+        });
+
+        const canvas = qrCodeDiv.querySelector('canvas');
+        if (canvas) {
+          canvas.style.width = '100%';
+          canvas.style.height = 'auto';
+          canvas.style.maxWidth = '280px';
+          canvas.style.borderRadius = '12px';
+          canvas.style.background = '#FFFFFF';
+          canvas.style.padding = '8px';
+        }
+        return true;
+      } catch (error) {
+        console.error('Error generate QRIS:', error);
+        throw error;
       }
     }
-    window.syncLocalToRedis = syncLocalToRedis;
+
+    // ==================== COUNTDOWN ====================
+    function startCountdown() {
+      timeLeft = 900;
+      updateCountdownDisplay();
+      if (countdownInterval) clearInterval(countdownInterval);
+      countdownInterval = setInterval(() => {
+        timeLeft--;
+        updateCountdownDisplay();
+        if (timeLeft <= 0) {
+          clearInterval(countdownInterval);
+          document.getElementById('qrcode').innerHTML = `
+            <div style="text-align:center;padding:20px;">
+              <i class="fas fa-clock" style="font-size:2rem;color:var(--warning);"></i>
+              <p>QR Code Kedaluwarsa</p>
+              <button onclick="location.reload()" class="btn-submit" style="width:auto;padding:8px 16px;">Refresh</button>
+            </div>
+          `;
+          document.getElementById('whatsappBtn').style.display = 'none';
+        }
+      }, 1000);
+    }
+    function updateCountdownDisplay() {
+      const minutes = Math.floor(timeLeft / 60);
+      const seconds = timeLeft % 60;
+      document.getElementById('countdown').textContent = `${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
+      const timerSection = document.getElementById('timerSection');
+      if (timeLeft <= 60) timerSection.classList.add('warning');
+      else timerSection.classList.remove('warning');
+    }
 
     // ==================== TOP UP ====================
     document.getElementById('topupForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       const amount = parseInt(document.getElementById('topupAmount').value);
-      const method = document.getElementById('topupMethod').value; // selalu 'qris'
       const errorEl = document.getElementById('topupError');
       const submitBtn = document.getElementById('topupSubmit');
 
@@ -734,54 +809,84 @@
 
       try {
         const uid = currentUser.uid;
+        const uniqueDigits = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+        const uniqueAmount = amount + parseInt(uniqueDigits);
+        const paymentId = 'DEP_' + Date.now() + '_' + Math.random().toString(36).substr(2,8).toUpperCase();
 
-        const newTx = {
-          type: 'topup',
+        // ===== 🔥 HAPUS FIREBASE – PAKAI REDIS SAJA =====
+        // Buat transaksi pending (tanpa menambah saldo)
+        const pendingTx = {
+          type: 'topup_pending',
           amount: amount,
-          method: method,
-          status: 'success',
-          note: `Top up via ${method.toUpperCase()}`,
+          uniqueAmount: uniqueAmount,
+          uniqueDigits: uniqueDigits,
+          paymentId: paymentId,
+          method: 'qris',
+          status: 'pending',
+          note: `Top up via QRIS (pending)`,
           createdAt: new Date().toISOString(),
           id: Date.now() + Math.random().toString(36).substring(2,6)
         };
 
-        balance += amount;
-        transactions.unshift(newTx);
+        // Tambahkan ke daftar transaksi (tanpa mengubah balance)
+        transactions.unshift(pendingTx);
+        // Saldo TIDAK bertambah
 
+        // Simpan ke Redis (wallet dengan transaksi pending)
+        await syncWalletToRedis(uid, { balance, transactions });
+        // Simpan juga ke localStorage sebagai cadangan
         saveWalletToLocal(uid, { balance, transactions });
 
-        try {
-          await syncWalletToRedis(uid, { balance, transactions });
-          updateConnectionStatus(true);
-          balanceTime.textContent = `Sumber: Redis • ${new Date().toLocaleString('id-ID')}`;
-        } catch (redisErr) {
-          updateConnectionStatus(false, 'Transaksi disimpan lokal (server offline)');
-          showToast('Server offline, transaksi disimpan lokal', 3000);
-        }
+        // Generate QRIS
+        await generateQRIS(uniqueAmount);
 
-        showToast(`Top up Rp ${formatRupiah(amount)} berhasil!`);
-        document.getElementById('modalTopup').classList.remove('show');
-        renderBalance();
+        // Tampilkan area QRIS
+        document.getElementById('paymentAmount').textContent = 'Rp ' + formatRupiah(uniqueAmount);
+        document.getElementById('uniqueDigits').textContent = uniqueDigits;
+        document.getElementById('qrisArea').style.display = 'block';
+        document.getElementById('whatsappBtn').style.display = 'block';
+
+        // Simpan data untuk konfirmasi WhatsApp
+        currentDepositData = {
+          amount: amount,
+          uniqueAmount: uniqueAmount,
+          uniqueDigits: uniqueDigits,
+          paymentId: paymentId
+        };
+
+        startCountdown();
+        submitBtn.textContent = 'QRIS Berhasil Digenerate';
+        submitBtn.disabled = true;
+        document.getElementById('topupAmount').disabled = true;
+
+        // Refresh tampilan riwayat (akan muncul transaksi pending)
         renderTransactions();
-        document.getElementById('topupAmount').value = '';
+
+        showToast('QRIS berhasil dibuat! Silakan scan dan bayar. Saldo akan bertambah setelah konfirmasi admin.', 4000);
       } catch (err) {
         console.error(err);
-        errorEl.textContent = 'Gagal top up: ' + err.message;
+        errorEl.textContent = 'Gagal membuat QRIS: ' + err.message;
         errorEl.style.display = 'block';
-        const local = getWalletFromLocal(currentUser.uid);
-        if (local) {
-          balance = local.balance || 0;
-          transactions = local.transactions || [];
-          renderBalance();
-          renderTransactions();
-        }
-      } finally {
         submitBtn.disabled = false;
-        submitBtn.textContent = 'Top Up Sekarang';
+        submitBtn.textContent = 'Generate QRIS';
       }
     });
 
-    // ==================== TRANSFER ====================
+    // ==================== WHATSAPP KONFIRMASI ====================
+    document.getElementById('whatsappBtn').addEventListener('click', function() {
+      if (!currentDepositData) {
+        showToast('Generate QRIS terlebih dahulu', 2000);
+        return;
+      }
+      const adminPhone = '6281994174297';
+      const { amount, uniqueAmount, uniqueDigits, paymentId } = currentDepositData;
+      const message = `Halo Admin JePay%0A%0ASaya *${currentUser.name}* (ID: ${currentUser.uid}) ingin konfirmasi top-up JePay.%0A%0ADetail:%0A- Jumlah Deposit: Rp ${amount.toLocaleString('id-ID')}%0A- Total Transfer: Rp ${uniqueAmount.toLocaleString('id-ID')}%0A- Angka Unik: ${uniqueDigits}%0A- Kode Pembayaran: ${paymentId}%0A- Waktu: ${new Date().toLocaleString('id-ID')}%0A%0AMohon segera diproses. Terima kasih.`;
+      const whatsappUrl = `https://wa.me/${adminPhone}?text=${message}`;
+      window.open(whatsappUrl, '_blank');
+      showToast('Konfirmasi dikirim!', 2000);
+    });
+
+    // ==================== TRANSFER (tidak berubah) ====================
     document.getElementById('transferForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       const email = document.getElementById('transferEmail').value.trim();
@@ -806,26 +911,14 @@
 
       try {
         const usersSnap = await db.ref('users').orderByChild('email').equalTo(email).once('value');
-        if (!usersSnap.exists()) {
-          throw new Error('Email penerima tidak ditemukan');
-        }
-        let receiverUid = null;
-        let receiverName = email;
-        usersSnap.forEach(child => {
-          receiverUid = child.key;
-          receiverName = child.val().name || email;
-        });
-        if (receiverUid === currentUser.uid) {
-          throw new Error('Tidak bisa transfer ke diri sendiri');
-        }
+        if (!usersSnap.exists()) throw new Error('Email penerima tidak ditemukan');
+        let receiverUid = null, receiverName = email;
+        usersSnap.forEach(child => { receiverUid = child.key; receiverName = child.val().name || email; });
+        if (receiverUid === currentUser.uid) throw new Error('Tidak bisa transfer ke diri sendiri');
 
         let receiverWallet = null;
-        try {
-          receiverWallet = await getWalletFromRedis(receiverUid);
-        } catch (e) {}
-        if (!receiverWallet) {
-          receiverWallet = getWalletFromLocal(receiverUid) || { balance: 0, transactions: [] };
-        }
+        try { receiverWallet = await getWalletFromRedis(receiverUid); } catch (e) {}
+        if (!receiverWallet) receiverWallet = getWalletFromLocal(receiverUid) || { balance: 0, transactions: [] };
         if (!receiverWallet.transactions) receiverWallet.transactions = [];
 
         const senderTx = {
@@ -881,12 +974,7 @@
         errorEl.textContent = err.message || 'Gagal transfer';
         errorEl.style.display = 'block';
         const local = getWalletFromLocal(currentUser.uid);
-        if (local) {
-          balance = local.balance || 0;
-          transactions = local.transactions || [];
-          renderBalance();
-          renderTransactions();
-        }
+        if (local) { balance = local.balance || 0; transactions = local.transactions || []; renderBalance(); renderTransactions(); }
       } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = 'Kirim Transfer';
@@ -897,10 +985,24 @@
     document.querySelectorAll('[data-close]').forEach(btn => {
       btn.addEventListener('click', function() {
         document.getElementById(this.dataset.close).classList.remove('show');
+        if (this.dataset.close === 'modalTopup') {
+          document.getElementById('qrisArea').style.display = 'none';
+          document.getElementById('topupSubmit').disabled = false;
+          document.getElementById('topupSubmit').textContent = 'Generate QRIS';
+          document.getElementById('topupAmount').disabled = false;
+          if (countdownInterval) clearInterval(countdownInterval);
+        }
       });
     });
     document.getElementById('btnTopup').addEventListener('click', () => {
       document.getElementById('modalTopup').classList.add('show');
+      document.getElementById('qrisArea').style.display = 'none';
+      document.getElementById('topupSubmit').disabled = false;
+      document.getElementById('topupSubmit').textContent = 'Generate QRIS';
+      document.getElementById('topupAmount').disabled = false;
+      document.getElementById('topupError').style.display = 'none';
+      document.getElementById('topupAmount').value = '';
+      if (countdownInterval) clearInterval(countdownInterval);
     });
     document.getElementById('btnTransfer').addEventListener('click', () => {
       document.getElementById('modalTransfer').classList.add('show');
@@ -953,9 +1055,8 @@
       auth.onAuthStateChanged(() => {});
     }
 
-    console.log('💳 JePay loaded with Redis + LocalStorage fallback (QRIS only)');
+    console.log('💳 JePay loaded with QRIS top-up (Redis only, no Firebase deposit)');
     console.log(`🔗 Redis API URL: ${REDIS_API_URL}`);
-    console.log('ℹ️ Untuk sync manual, ketik syncLocalToRedis() di console.');
   </script>
 
 </body>
