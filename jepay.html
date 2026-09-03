@@ -340,7 +340,7 @@
   <div class="container" id="appContainer">
     <!-- Kartu Saldo -->
     <div class="balance-card">
-      <div class="label">Saldo JePay</div>
+      <div class="label">Saldo JePay Wallet</div>
       <div class="amount"><span class="currency">Rp</span><span id="balanceAmount">0</span></div>
       <div class="sub" id="balanceUpdateTime">-</div>
       <div class="balance-actions">
@@ -559,7 +559,7 @@
         renderTransactions();
 
         // Tampilkan sumber data
-        balanceTime.textContent = `Sumber: Redis • ${new Date().toLocaleString('id-ID')}`;
+        balanceTime.textContent = ` ${new Date().toLocaleString('id-ID')}`;
       } catch (err) {
         console.error('Gagal load wallet:', err);
         showToast('Gagal memuat data dompet dari server', 'error');
