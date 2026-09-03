@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JePay - Dompet Jego</title>
+
+  <!-- Firebase SDK (hanya untuk Auth & Profil) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+  <style>
+    /* --- Reset & Variabel --- */
+    :root {
+      --primary: #FF9800;
+      --secondary: #FF5722;
+      --accent: #FFC107;
+      --dark: #343a40;
+      --light: #f8f9fa;
+      --success: #28a745;
+      --danger: #dc3545;
+      --border-radius: 12px;
+      --shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #f0f2f5;
+      color: #333;
+      padding-bottom: 80px;
+    }
+
+    /* --- Header --- */
+    .app-header {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .app-header .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.3rem;
+      font-weight: 700;
+    }
+    .app-header .brand span { background: var(--accent); color: var(--dark); padding: 2px 10px; border-radius: 20px; font-size: 0.8rem; }
+    .app-header .back-btn {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: white;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      font-size: 1.4rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .app-header .back-btn:hover { background: rgba(255,255,255,0.3); }
+
+    /* --- Kontainer --- */
+    .container {
+      max-width: 480px;
+      margin: 16px auto;
+      padding: 0 16px;
+    }
+
+    /* --- Kartu Saldo --- */
+    .balance-card {
+      background: linear-gradient(145deg, #ffffff, #f5f7fa);
+      border-radius: var(--border-radius);
+      padding: 24px 20px;
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+      text-align: center;
+      border: 1px solid rgba(255,152,0,0.15);
+    }
+    .balance-card .label {
+      font-size: 0.85rem;
+      color: #777;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .balance-card .amount {
+      font-size: 2.6rem;
+      font-weight: 800;
+      color: var(--dark);
+      margin: 6px 0 4px;
+    }
+    .balance-card .amount .currency { font-size: 1.6rem; font-weight: 600; color: var(--primary); margin-right: 4px; }
+    .balance-card .sub {
+      font-size: 0.8rem;
+      color: #999;
+    }
+    .balance-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+      justify-content: center;
+    }
+    .balance-actions button {
+      flex: 1;
+      max-width: 140px;
+      padding: 10px 12px;
+      border: none;
+      border-radius: 30px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .btn-topup {
+      background: var(--primary);
+      color: white;
+      box-shadow: 0 4px 10px rgba(255,152,0,0.3);
+    }
+    .btn-topup:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(255,152,0,0.4); }
+    .btn-transfer {
+      background: #e9ecef;
+      color: var(--dark);
+    }
+    .btn-transfer:hover { background: #dee2e6; }
+
+    /* --- Kartu Fitur Cepat --- */
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+    .quick-actions .qa-item {
+      background: white;
+      border-radius: var(--border-radius);
+      padding: 14px 6px;
+      text-align: center;
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      transition: 0.2s;
+      border: 1px solid transparent;
+    }
+    .quick-actions .qa-item:hover { border-color: var(--primary); transform: translateY(-2px); }
+    .quick-actions .qa-item .icon { font-size: 1.8rem; margin-bottom: 4px; }
+    .quick-actions .qa-item .label { font-size: 0.7rem; color: #555; font-weight: 500; }
+
+    /* --- Riwayat Transaksi --- */
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin: 20px 0 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .section-title a { font-size: 0.8rem; font-weight: 400; color: var(--primary); text-decoration: none; }
+    .transaction-list {
+      background: white;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .transaction-item {
+      display: flex;
+      align-items: center;
+      padding: 14px 16px;
+      border-bottom: 1px solid #f0f0f0;
+      gap: 12px;
+    }
+    .transaction-item:last-child { border-bottom: none; }
+    .tx-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+    .tx-icon.credit { background: #d4edda; color: #155724; }
+    .tx-icon.debit { background: #f8d7da; color: #721c24; }
+    .tx-info { flex: 1; }
+    .tx-info .tx-name { font-weight: 600; font-size: 0.95rem; }
+    .tx-info .tx-desc { font-size: 0.75rem; color: #888; margin-top: 2px; }
+    .tx-amount {
+      font-weight: 700;
+      font-size: 0.95rem;
+      text-align: right;
+    }
+    .tx-amount.positive { color: var(--success); }
+    .tx-amount.negative { color: var(--danger); }
+    .tx-empty {
+      padding: 30px 16px;
+      text-align: center;
+      color: #aaa;
+      font-size: 0.9rem;
+    }
+
+    /* --- Modal --- */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 16px;
+      animation: fadeIn 0.25s;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal-box {
+      background: white;
+      border-radius: var(--border-radius);
+      max-width: 420px;
+      width: 100%;
+      padding: 24px 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      animation: slideUp 0.3s ease;
+    }
+    .modal-box h3 { margin-bottom: 16px; font-size: 1.3rem; color: var(--dark); display: flex; align-items: center; gap: 8px; }
+    .modal-box .close-modal {
+      float: right;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #999;
+    }
+    .modal-box .close-modal:hover { color: #333; }
+    .modal-box .form-group { margin-bottom: 14px; }
+    .modal-box .form-group label { display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 4px; color: #555; }
+    .modal-box .form-group input, .modal-box .form-group select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+    .modal-box .form-group input:focus, .modal-box .form-group select:focus {
+      border-color: var(--primary);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(255,152,0,0.15);
+    }
+    .modal-box .btn-submit {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 30px;
+      background: var(--primary);
+      color: white;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .modal-box .btn-submit:hover { background: #e68900; transform: translateY(-1px); }
+    .modal-box .btn-submit:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+    .modal-box .error-msg { color: var(--danger); font-size: 0.85rem; margin-top: 8px; display: none; }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    /* --- Toast --- */
+    .toast {
+      position: fixed;
+      bottom: 90px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: white;
+      padding: 10px 24px;
+      border-radius: 30px;
+      font-size: 0.9rem;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+      opacity: 0;
+      transition: opacity 0.3s, transform 0.3s;
+      z-index: 200;
+      pointer-events: none;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* --- Bottom Nav (sederhana) --- */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      border-top: 1px solid #e0e0e0;
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 0 env(safe-area-inset-bottom, 8px);
+      z-index: 50;
+    }
+    .bottom-nav a {
+      text-decoration: none;
+      color: #888;
+      font-size: 0.7rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      padding: 4px 12px;
+      transition: 0.2s;
+    }
+    .bottom-nav a .nav-icon { font-size: 1.5rem; }
+    .bottom-nav a.active { color: var(--primary); font-weight: 600; }
+
+    /* --- Responsive --- */
+    @media (max-width: 400px) {
+      .balance-card .amount { font-size: 2rem; }
+      .quick-actions { grid-template-columns: repeat(4, 1fr); gap: 6px; }
+      .quick-actions .qa-item .icon { font-size: 1.4rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="app-header">
+    <button class="back-btn" id="backBtn" aria-label="Kembali">‹</button>
+    <div class="brand">JePay <span>Jego</span></div>
+    <div style="width:36px;"></div>
+  </header>
+
+  <!-- Kontainer Utama -->
+  <div class="container" id="appContainer">
+    <!-- Kartu Saldo -->
+    <div class="balance-card">
+      <div class="label">Saldo JePay</div>
+      <div class="amount"><span class="currency">Rp</span><span id="balanceAmount">0</span></div>
+      <div class="sub" id="balanceUpdateTime">-</div>
+      <div class="balance-actions">
+        <button class="btn-topup" id="btnTopup">➕ Top Up</button>
+        <button class="btn-transfer" id="btnTransfer">↗️ Transfer</button>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+      <div class="qa-item" onclick="showToast('Fitur sedang dikembangkan')">
+        <div class="icon">💳</div>
+        <div class="label">Bayar</div>
+      </div>
+      <div class="qa-item" onclick="showToast('Fitur sedang dikembangkan')">
+        <div class="icon">📱</div>
+        <div class="label">Pulsa</div>
+      </div>
+      <div class="qa-item" onclick="showToast('Fitur sedang dikembangkan')">
+        <div class="icon">⚡</div>
+        <div class="label">Listrik</div>
+      </div>
+      <div class="qa-item" onclick="showToast('Fitur sedang dikembangkan')">
+        <div class="icon">🎁</div>
+        <div class="label">Promo</div>
+      </div>
+    </div>
+
+    <!-- Riwayat Transaksi -->
+    <div class="section-title">
+      <span>📋 Riwayat Transaksi</span>
+      <a href="#" id="refreshHistory" style="font-size:0.8rem;">↻ Refresh</a>
+    </div>
+    <div class="transaction-list" id="transactionList">
+      <div class="tx-empty">Belum ada transaksi</div>
+    </div>
+  </div>
+
+  <!-- Modal Top Up -->
+  <div class="modal-overlay" id="modalTopup">
+    <div class="modal-box">
+      <button class="close-modal" data-close="modalTopup">✕</button>
+      <h3>💰 Top Up Saldo</h3>
+      <form id="topupForm">
+        <div class="form-group">
+          <label>Nominal (Rp)</label>
+          <input type="number" id="topupAmount" placeholder="Minimal 10.000" min="10000" step="1000" required>
+        </div>
+        <div class="form-group">
+          <label>Metode Pembayaran</label>
+          <select id="topupMethod">
+            <option value="bank">Transfer Bank</option>
+            <option value="qris">QRIS</option>
+            <option value="gopay">GoPay</option>
+            <option value="ovo">OVO</option>
+            <option value="shopeepay">ShopeePay</option>
+          </select>
+        </div>
+        <div class="error-msg" id="topupError"></div>
+        <button type="submit" class="btn-submit" id="topupSubmit">Top Up Sekarang</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Transfer -->
+  <div class="modal-overlay" id="modalTransfer">
+    <div class="modal-box">
+      <button class="close-modal" data-close="modalTransfer">✕</button>
+      <h3>↗️ Transfer ke Sesama</h3>
+      <form id="transferForm">
+        <div class="form-group">
+          <label>Email Penerima</label>
+          <input type="email" id="transferEmail" placeholder="email@example.com" required>
+        </div>
+        <div class="form-group">
+          <label>Jumlah (Rp)</label>
+          <input type="number" id="transferAmount" placeholder="Masukkan nominal" min="1000" step="1000" required>
+        </div>
+        <div class="form-group">
+          <label>Catatan (opsional)</label>
+          <input type="text" id="transferNote" placeholder="Untuk ...">
+        </div>
+        <div class="error-msg" id="transferError"></div>
+        <button type="submit" class="btn-submit" id="transferSubmit">Kirim Transfer</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav">
+    <a href="jenis_kenderaan.html"><span class="nav-icon">🏠</span>Beranda</a>
+ <!-- <a href="order.html"><span class="nav-icon">🛵</span>Pesan</a> -->
+    <a href="JePay.html" class="active"><span class="nav-icon">💳</span>JePay</a>
+    <a href="userAccount.html"><span class="nav-icon">👤</span>Akun</a>
+  </nav>
+
+  <script>
+    // ==================== KONFIGURASI FIREBASE (AUTH & PROFIL SAJA) ====================
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyCD0pgeZio-LdKqYDtWxcdXcZwyL4ngYQI",
+      authDomain: "jego-35a2b.firebaseapp.com",
+      databaseURL: "https://jego-35a2b-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "jego-35a2b",
+      storageBucket: "jego-35a2b.firebasestorage.app",
+      messagingSenderId: "600037007040",
+      appId: "1:600037007040:web:ac3243ad9b472647ffd725"
+    };
+
+    // Inisialisasi Firebase (hanya Auth & DB untuk profil)
+    if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+    const auth = firebase.auth();
+    const db = firebase.database();
+
+    // ==================== KONFIGURASI REDIS (WALLET) ====================
+    const REDIS_API_URL = 'https://movego.my.id';
+
+    // ==================== GLOBAL STATE ====================
+    let currentUser = null;          // { uid, email, name }
+    let balance = 0;
+    let transactions = [];
+
+    // ==================== DOM REFS ====================
+    const balanceEl = document.getElementById('balanceAmount');
+    const balanceTime = document.getElementById('balanceUpdateTime');
+    const txList = document.getElementById('transactionList');
+    const toast = document.getElementById('toast');
+
+    // ==================== TOAST ====================
+    function showToast(msg, duration = 3000) {
+      toast.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(toast._timer);
+      toast._timer = setTimeout(() => toast.classList.remove('show'), duration);
+    }
+
+    // ==================== FORMAT RUPIAH ====================
+    function formatRupiah(num) {
+      return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    }
+
+    // ==================== FUNGSI REDIS (WALLET) ====================
+    /**
+     * Ambil data wallet dari Redis
+     * Jika gagal (server down / 404), return null
+     */
+    async function getWalletFromRedis(uid) {
+      try {
+        const response = await fetch(`${REDIS_API_URL}/api/wallet/${uid}`);
+        if (!response.ok) {
+          console.warn(`⚠️ Wallet tidak ditemukan di Redis (HTTP ${response.status})`);
+          return null;
+        }
+        const result = await response.json();
+        if (result.success && result.data) {
+          return result.data; // { balance, transactions, last_update }
+        }
+        return null;
+      } catch (error) {
+        console.error('❌ Gagal fetch wallet dari Redis:', error.message);
+        return null;
+      }
+    }
+
+    /**
+     * Simpan wallet ke Redis
+     * Jika gagal, lempar error agar pemanggil tahu
+     */
+    async function syncWalletToRedis(uid, walletData) {
+      try {
+        const response = await fetch(`${REDIS_API_URL}/api/wallet`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({
+            userId: uid,
+            balance: walletData.balance,
+            transactions: walletData.transactions,
+            last_update: new Date().toISOString()
+          })
+        });
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status} - ${response.statusText}`);
+        }
+        const result = await response.json();
+        console.log('✅ Wallet tersimpan ke Redis:', result);
+        return result;
+      } catch (error) {
+        console.error('❌ Gagal sync wallet ke Redis:', error.message);
+        throw error; // biar pemanggil menangani error
+      }
+    }
+
+    // ==================== LOAD WALLET (HANYA DARI REDIS) ====================
+    async function loadWalletData(uid) {
+      try {
+        const data = await getWalletFromRedis(uid);
+        if (data) {
+          balance = data.balance || 0;
+          transactions = data.transactions || [];
+          console.log('✅ Data wallet dari Redis');
+        } else {
+          // Jika tidak ada di Redis, gunakan data default (kosong)
+          balance = 0;
+          transactions = [];
+          console.log('ℹ️ Wallet kosong atau belum terdaftar di Redis, gunakan default 0');
+        }
+
+        // Urutkan transaksi dari terbaru
+        transactions.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+        renderBalance();
+        renderTransactions();
+
+        // Tampilkan sumber data
+        balanceTime.textContent = `Sumber: Redis • ${new Date().toLocaleString('id-ID')}`;
+      } catch (err) {
+        console.error('Gagal load wallet:', err);
+        showToast('Gagal memuat data dompet dari server', 'error');
+        // Tampilkan data kosong
+        balance = 0;
+        transactions = [];
+        renderBalance();
+        renderTransactions();
+        balanceTime.textContent = 'Sumber: - • Gagal terhubung';
+      }
+    }
+
+    // ==================== RENDER ====================
+    function renderBalance() {
+      balanceEl.textContent = formatRupiah(balance);
+    }
+
+    function renderTransactions() {
+      if (!transactions.length) {
+        txList.innerHTML = '<div class="tx-empty">Belum ada transaksi</div>';
+        return;
+      }
+      let html = '';
+      transactions.slice(0, 10).forEach(tx => {
+        const isCredit = tx.type === 'topup' || tx.type === 'transfer_in' || tx.type === 'refund';
+        const icon = isCredit ? '⬇️' : '⬆️';
+        const cls = isCredit ? 'positive' : 'negative';
+        const name = tx.type === 'topup' ? 'Top Up' :
+                    tx.type === 'transfer_out' ? 'Transfer Keluar' :
+                    tx.type === 'transfer_in' ? 'Transfer Masuk' : 'Pembayaran';
+        const desc = tx.note || tx.method || '';
+        const amount = (isCredit ? '' : '-') + 'Rp' + formatRupiah(Math.abs(tx.amount));
+        const time = tx.createdAt ? new Date(tx.createdAt).toLocaleString('id-ID', {hour:'2-digit', minute:'2-digit'}) : '';
+        html += `
+          <div class="transaction-item">
+            <div class="tx-icon ${isCredit ? 'credit' : 'debit'}">${icon}</div>
+            <div class="tx-info">
+              <div class="tx-name">${name}</div>
+              <div class="tx-desc">${desc} • ${time}</div>
+            </div>
+            <div class="tx-amount ${cls}">${amount}</div>
+          </div>
+        `;
+      });
+      if (transactions.length > 10) {
+        html += `<div class="transaction-item" style="justify-content:center;color:#999;font-size:0.8rem;">+ ${transactions.length - 10} transaksi lainnya</div>`;
+      }
+      txList.innerHTML = html;
+    }
+
+    // ==================== TOP UP ====================
+    document.getElementById('topupForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const amount = parseInt(document.getElementById('topupAmount').value);
+      const method = document.getElementById('topupMethod').value;
+      const errorEl = document.getElementById('topupError');
+      const submitBtn = document.getElementById('topupSubmit');
+
+      if (!amount || amount < 10000) {
+        errorEl.textContent = 'Minimal top up Rp 10.000';
+        errorEl.style.display = 'block';
+        return;
+      }
+      errorEl.style.display = 'none';
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Memproses...';
+
+      try {
+        const uid = currentUser.uid;
+
+        // Buat transaksi baru
+        const newTx = {
+          type: 'topup',
+          amount: amount,
+          method: method,
+          status: 'success',
+          note: `Top up via ${method}`,
+          createdAt: new Date().toISOString(),
+          id: Date.now() + Math.random().toString(36).substring(2,6)
+        };
+
+        // Update saldo di memory
+        balance += amount;
+        transactions.unshift(newTx);
+
+        // Simpan ke Redis (wajib berhasil)
+        await syncWalletToRedis(uid, { balance, transactions });
+
+        showToast(`Top up Rp ${formatRupiah(amount)} berhasil!`);
+        document.getElementById('modalTopup').classList.remove('show');
+        renderBalance();
+        renderTransactions();
+        document.getElementById('topupAmount').value = '';
+      } catch (err) {
+        console.error(err);
+        // Rollback memory jika gagal simpan ke Redis
+        // Karena kita sudah menambah balance, kita harus rollback
+        // Cara praktis: reload ulang data dari Redis
+        await loadWalletData(currentUser.uid);
+        errorEl.textContent = 'Gagal top up: ' + err.message;
+        errorEl.style.display = 'block';
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Top Up Sekarang';
+      }
+    });
+
+    // ==================== TRANSFER ====================
+    document.getElementById('transferForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const email = document.getElementById('transferEmail').value.trim();
+      const amount = parseInt(document.getElementById('transferAmount').value);
+      const note = document.getElementById('transferNote').value.trim();
+      const errorEl = document.getElementById('transferError');
+      const submitBtn = document.getElementById('transferSubmit');
+
+      if (!email || !amount || amount < 1000) {
+        errorEl.textContent = 'Isi email dan nominal minimal Rp 1.000';
+        errorEl.style.display = 'block';
+        return;
+      }
+      if (amount > balance) {
+        errorEl.textContent = 'Saldo tidak mencukupi';
+        errorEl.style.display = 'block';
+        return;
+      }
+      errorEl.style.display = 'none';
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Mengirim...';
+
+      try {
+        // Cari penerima berdasarkan email di Firebase (profil)
+        const usersSnap = await db.ref('users').orderByChild('email').equalTo(email).once('value');
+        if (!usersSnap.exists()) {
+          throw new Error('Email penerima tidak ditemukan');
+        }
+        let receiverUid = null;
+        let receiverName = email;
+        usersSnap.forEach(child => {
+          receiverUid = child.key;
+          receiverName = child.val().name || email;
+        });
+        if (receiverUid === currentUser.uid) {
+          throw new Error('Tidak bisa transfer ke diri sendiri');
+        }
+
+        // Ambil data wallet penerima dari Redis
+        let receiverWallet = await getWalletFromRedis(receiverUid);
+        if (!receiverWallet) {
+          // Jika belum punya wallet, buat baru dengan saldo 0
+          receiverWallet = { balance: 0, transactions: [] };
+        }
+        if (!receiverWallet.transactions) receiverWallet.transactions = [];
+
+        // Buat transaksi untuk sender
+        const senderTx = {
+          type: 'transfer_out',
+          amount: -amount,
+          to: receiverUid,
+          toName: receiverName,
+          note: note || `Transfer ke ${receiverName}`,
+          createdAt: new Date().toISOString(),
+          status: 'success',
+          id: Date.now() + Math.random().toString(36).substring(2,6)
+        };
+        // Buat transaksi untuk receiver
+        const receiverTx = {
+          type: 'transfer_in',
+          amount: amount,
+          from: currentUser.uid,
+          fromName: currentUser.name || currentUser.email,
+          note: note || `Transfer dari ${currentUser.name || currentUser.email}`,
+          createdAt: new Date().toISOString(),
+          status: 'success',
+          id: Date.now() + Math.random().toString(36).substring(2,6)
+        };
+
+        // Update saldo di memory
+        balance -= amount;
+        transactions.unshift(senderTx);
+        receiverWallet.balance = (receiverWallet.balance || 0) + amount;
+        receiverWallet.transactions.unshift(receiverTx);
+
+        // Simpan ke Redis untuk kedua user (harus berhasil)
+        await Promise.all([
+          syncWalletToRedis(currentUser.uid, { balance, transactions }),
+          syncWalletToRedis(receiverUid, { balance: receiverWallet.balance, transactions: receiverWallet.transactions })
+        ]);
+
+        showToast(`Transfer Rp ${formatRupiah(amount)} ke ${receiverName} berhasil!`);
+        document.getElementById('modalTransfer').classList.remove('show');
+        renderBalance();
+        renderTransactions();
+        // Kosongkan form
+        document.getElementById('transferEmail').value = '';
+        document.getElementById('transferAmount').value = '';
+        document.getElementById('transferNote').value = '';
+      } catch (err) {
+        console.error(err);
+        // Rollback: reload data sender dari Redis
+        await loadWalletData(currentUser.uid);
+        errorEl.textContent = err.message || 'Gagal transfer';
+        errorEl.style.display = 'block';
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Kirim Transfer';
+      }
+    });
+
+    // ==================== MODAL CONTROLS ====================
+    document.querySelectorAll('[data-close]').forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.getElementById(this.dataset.close).classList.remove('show');
+      });
+    });
+    document.getElementById('btnTopup').addEventListener('click', () => {
+      document.getElementById('modalTopup').classList.add('show');
+    });
+    document.getElementById('btnTransfer').addEventListener('click', () => {
+      document.getElementById('modalTransfer').classList.add('show');
+    });
+    // Tutup modal klik overlay
+    document.querySelectorAll('.modal-overlay').forEach(el => {
+      el.addEventListener('click', function(e) {
+        if (e.target === this) this.classList.remove('show');
+      });
+    });
+
+    // ==================== REFRESH ====================
+    document.getElementById('refreshHistory').addEventListener('click', (e) => {
+      e.preventDefault();
+      if (currentUser) loadWalletData(currentUser.uid);
+    });
+
+    // ==================== BACK BUTTON ====================
+    document.getElementById('backBtn').addEventListener('click', () => {
+      window.history.back();
+    });
+
+    // ==================== AUTH STATE ====================
+    auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        // Ambil data customer dari localStorage atau Firebase (profil saja)
+        const stored = localStorage.getItem('jego_logged_in_user');
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            currentUser = { uid: user.uid, email: user.email, name: parsed.name || 'Customer' };
+          } catch (e) {
+            currentUser = { uid: user.uid, email: user.email, name: 'Customer' };
+          }
+        } else {
+          try {
+            const snap = await db.ref(`users/${user.uid}/name`).once('value');
+            const name = snap.val() || 'Customer';
+            currentUser = { uid: user.uid, email: user.email, name };
+          } catch (e) {
+            currentUser = { uid: user.uid, email: user.email, name: 'Customer' };
+          }
+        }
+        // Load wallet dari Redis (tanpa fallback Firebase)
+        await loadWalletData(user.uid);
+      } else {
+        // Belum login, redirect ke loginUser.html
+        window.location.href = 'loginUser.html';
+      }
+    });
+
+    // ==================== INIT ====================
+    if (auth.currentUser) {
+      auth.onAuthStateChanged(() => {});
+    }
+
+    console.log('💳 JePay loaded with Redis only (no Firebase fallback)');
+  </script>
+
+</body>
+</html>
