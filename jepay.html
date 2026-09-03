@@ -566,7 +566,7 @@
       connStatus.className = 'connection-status';
       if (online === true) {
         connStatus.classList.add('online');
-        connStatus.textContent = '✅ Terhubung ke Redis ' + (message ? ' • ' + message : '');
+        connStatus.textContent = '✅ Terhubung ke JeGo ' + (message ? ' • ' + message : '');
       } else if (online === false) {
         connStatus.classList.add('offline');
         connStatus.textContent = '❌ Redis tidak dapat diakses. Transaksi disimpan lokal. ' + (message ? ' • ' + message : '');
