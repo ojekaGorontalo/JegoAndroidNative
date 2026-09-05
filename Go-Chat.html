@@ -610,6 +610,7 @@
             color: #fff;
             flex-shrink: 0;
             overflow: hidden;
+            cursor: pointer;
         }
         #chat-header .chat-avatar img {
             width: 100%;
@@ -624,6 +625,7 @@
             font-weight: 500;
             font-size: 16px;
             line-height: 1.2;
+            cursor: pointer;
         }
         #chat-header .chat-info .status {
             font-size: 12px;
@@ -1241,7 +1243,7 @@
         }
 
         /* ============================================================
-           PROFILE VIEW (Chat Profile)
+           PROFILE VIEW
            ============================================================ */
         .profile-view {
             flex: 1;
@@ -1271,6 +1273,7 @@
             margin-bottom: 12px;
             overflow: hidden;
             border: 4px solid rgba(255, 255, 255, 0.3);
+            cursor: pointer;
         }
         .profile-view .profile-header .big-avatar img {
             width: 100%;
@@ -1280,6 +1283,7 @@
         .profile-view .profile-header .p-name {
             font-size: 22px;
             font-weight: 600;
+            cursor: pointer;
         }
         .profile-view .profile-header .p-phone {
             font-size: 14px;
@@ -1289,6 +1293,7 @@
             font-size: 14px;
             opacity: 0.8;
             margin-top: 4px;
+            cursor: pointer;
         }
         .profile-view .profile-menu {
             padding: 16px 0;
@@ -1318,6 +1323,166 @@
         .profile-view .profile-menu .menu-item .arrow {
             color: var(--text-muted);
             font-size: 18px;
+        }
+
+        /* ============================================================
+           PROFILE SUB VIEW (Akun, Privasi, dll)
+           ============================================================ */
+        .profile-sub-view {
+            flex: 1;
+            overflow-y: auto;
+            background: #ffffff;
+            padding: 16px 20px;
+        }
+        .profile-sub-view .back-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 16px;
+        }
+        .profile-sub-view .back-header button {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: var(--text-primary);
+            padding: 0 4px;
+            line-height: 1;
+        }
+        .profile-sub-view .back-header h3 {
+            font-weight: 500;
+            font-size: 18px;
+            margin: 0;
+        }
+        .profile-sub-view .info-row {
+            display: flex;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .profile-sub-view .info-row .label {
+            color: var(--text-muted);
+            width: 110px;
+            flex-shrink: 0;
+            font-size: 14px;
+        }
+        .profile-sub-view .info-row .value {
+            flex: 1;
+            font-size: 14px;
+        }
+        .profile-sub-view .info-row .value select,
+        .profile-sub-view .info-row .value input[type="text"] {
+            width: 100%;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-size: 14px;
+            font-family: var(--font);
+            outline: none;
+            transition: border 0.2s;
+            background: #fff;
+        }
+        .profile-sub-view .info-row .value select:focus,
+        .profile-sub-view .info-row .value input[type="text"]:focus {
+            border-color: var(--primary);
+        }
+        .profile-sub-view .info-row .value .toggle-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .profile-sub-view .info-row .value .toggle {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            background: #ccc;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.3s;
+            flex-shrink: 0;
+        }
+        .profile-sub-view .info-row .value .toggle.active {
+            background: var(--primary);
+        }
+        .profile-sub-view .info-row .value .toggle .toggle-knob {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: #fff;
+            border-radius: 50%;
+            transition: transform 0.3s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .profile-sub-view .info-row .value .toggle.active .toggle-knob {
+            transform: translateX(20px);
+        }
+        .profile-sub-view .save-btn {
+            background: var(--primary);
+            border: none;
+            border-radius: 30px;
+            color: #fff;
+            padding: 10px 20px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 16px;
+            width: 100%;
+        }
+        .profile-sub-view .save-btn:hover {
+            background: var(--primary-dark);
+        }
+        .profile-sub-view .save-btn:active {
+            transform: scale(0.97);
+        }
+        .profile-sub-view .save-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .profile-sub-view .edit-hint {
+            font-size: 13px;
+            color: var(--text-muted);
+            text-align: center;
+            margin-top: 8px;
+        }
+        .profile-sub-view .privacy-note {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+            padding-left: 110px;
+        }
+        .profile-sub-view .photo-upload-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            margin: 12px 0;
+        }
+        .profile-sub-view .photo-upload-area .upload-btn {
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: 30px;
+            padding: 8px 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .profile-sub-view .photo-upload-area .upload-btn:hover {
+            background: var(--primary-dark);
+        }
+        .profile-sub-view .photo-upload-area .upload-btn:active {
+            transform: scale(0.95);
+        }
+        .profile-sub-view .photo-upload-area input[type="file"] {
+            display: none;
+        }
+        .profile-sub-view .photo-upload-area .upload-status {
+            font-size: 13px;
+            color: var(--text-muted);
         }
 
         /* ============================================================
@@ -1517,6 +1682,15 @@
             #status-modal .status-content {
                 padding: 20px 16px;
             }
+            .profile-sub-view {
+                padding: 12px 16px;
+            }
+            .profile-sub-view .info-row .label {
+                width: 90px;
+            }
+            .profile-sub-view .privacy-note {
+                padding-left: 90px;
+            }
         }
 
         /* ============================================================
@@ -1655,7 +1829,7 @@
             </section>
 
             <!-- ============================================
-            UPDATES / STATUS VIEW (diperbarui)
+            UPDATES / STATUS VIEW
             ============================================ -->
             <section class="view" id="view-updates">
                 <div style="padding:12px 0;">
@@ -1771,6 +1945,15 @@
             </section>
 
             <!-- ============================================
+            VIEW: PROFILE SUB (Akun, Privasi, dll)
+            ============================================ -->
+            <section class="view" id="view-profile-sub">
+                <div class="profile-sub-view" id="profileSubContent">
+                    <!-- Diisi dinamis oleh JavaScript -->
+                </div>
+            </section>
+
+            <!-- ============================================
             VIEW: SETTINGS
             ============================================ -->
             <section class="view" id="view-settings">
@@ -1873,7 +2056,12 @@
         };
 
         // ============================================================
-        // 2. IMPOR FIREBASE
+        // 2. KONFIGURASI IMGBB API
+        // ============================================================
+        const IMGBB_API_KEY = '3e91402da92a6766dffaa72e0500f025'; // GANTI DENGAN API KEY ANDA
+
+        // ============================================================
+        // 3. IMPOR FIREBASE
         // ============================================================
         import { initializeApp } from 'firebase/app';
         import {
@@ -1897,14 +2085,14 @@
         } from 'firebase/database';
 
         // ============================================================
-        // 3. INIT FIREBASE
+        // 4. INIT FIREBASE
         // ============================================================
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         console.log('🔥 Firebase initialized');
 
         // ============================================================
-        // 4. CONSTANTS & HELPERS
+        // 5. CONSTANTS & HELPERS
         // ============================================================
         const SESSION_KEY = 'gochat_session';
 
@@ -1997,7 +2185,7 @@
         }
 
         // ============================================================
-        // 5. STATE
+        // 6. STATE
         // ============================================================
         let currentUser = null;
         const state = {
@@ -2024,10 +2212,11 @@
             contextTarget: null,
             chatInputHandler: null,
             _keyHandler: null,
+            _headerClickHandler: null,
         };
 
         // ============================================================
-        // 6. DOM REFS
+        // 7. DOM REFS
         // ============================================================
         const $ = (sel) => document.querySelector(sel);
         const $$ = (sel) => document.querySelectorAll(sel);
@@ -2049,6 +2238,7 @@
         const viewChat = $('#view-chat');
         const viewContacts = $('#view-contacts');
         const viewProfile = $('#view-profile');
+        const viewProfileSub = $('#view-profile-sub');
         const viewSettings = $('#view-settings');
         const viewContactDetail = $('#view-contact-detail');
 
@@ -2076,6 +2266,7 @@
         const profileName = $('#profileName');
         const profilePhone = $('#profilePhone');
         const profileStatus = $('#profileStatus');
+        const profileSubContent = $('#profileSubContent');
 
         const cdAvatar = $('#cdAvatar');
         const cdName = $('#cdName');
@@ -2104,7 +2295,23 @@
         const statusModalContent = $('#statusModalContent');
 
         // ============================================================
-        // 7. AUTH NAVIGATION
+        // 8. VIEWS DICTIONARY
+        // ============================================================
+        const views = {
+            chats: viewChats,
+            updates: viewUpdates,
+            communities: viewCommunities,
+            calls: viewCalls,
+            chat: viewChat,
+            contacts: viewContacts,
+            profile: viewProfile,
+            'profile-sub': viewProfileSub,
+            settings: viewSettings,
+            contactDetail: viewContactDetail,
+        };
+
+        // ============================================================
+        // 9. AUTH NAVIGATION
         // ============================================================
         function showAuthView() {
             document.querySelectorAll('.auth-view').forEach(v => v.classList.remove('active'));
@@ -2122,20 +2329,8 @@
         }
 
         // ============================================================
-        // 8. VIEW ROUTER (SPA)
+        // 10. VIEW ROUTER (SPA)
         // ============================================================
-        const views = {
-            chats: viewChats,
-            updates: viewUpdates,
-            communities: viewCommunities,
-            calls: viewCalls,
-            chat: viewChat,
-            contacts: viewContacts,
-            profile: viewProfile,
-            settings: viewSettings,
-            contactDetail: viewContactDetail,
-        };
-
         function navigateTo(view, data = null) {
             Object.values(views).forEach(v => v.classList.remove('active'));
             const target = views[view];
@@ -2153,7 +2348,7 @@
                 bottomNav.style.display = 'flex';
             }
 
-            headerBack.classList.toggle('show', view === 'chat' || view === 'contactDetail' || view === 'settings' || view === 'contactDetail');
+            headerBack.classList.toggle('show', view === 'chat' || view === 'contactDetail' || view === 'settings' || view === 'profile-sub');
 
             const titles = {
                 chats: 'GoChat',
@@ -2162,6 +2357,7 @@
                 calls: 'Panggilan',
                 contacts: 'Kontak',
                 profile: 'Profil',
+                'profile-sub': 'Profil',
                 settings: 'Pengaturan',
                 contactDetail: 'Detail Kontak',
             };
@@ -2191,7 +2387,7 @@
         }
 
         // ============================================================
-        // 9. PRESENCE & TYPING (tidak diubah)
+        // 11. PRESENCE & TYPING
         // ============================================================
         function setupPresence() {
             if (!currentUser) return;
@@ -2282,7 +2478,7 @@
         }
 
         // ============================================================
-        // 10. CONTACTS (tidak diubah)
+        // 12. CONTACTS
         // ============================================================
         function loadContacts() {
             if (!currentUser) return;
@@ -2361,7 +2557,7 @@
         }
 
         // ============================================================
-        // 11. CHATS LIST (tidak diubah)
+        // 13. CHATS LIST
         // ============================================================
         function loadChats() {
             if (!currentUser) return;
@@ -2454,7 +2650,7 @@
         }
 
         // ============================================================
-        // 12. CHAT SCREEN (tidak diubah)
+        // 14. CHAT SCREEN
         // ============================================================
         let currentChatId = null;
         let currentContactId = null;
@@ -2472,6 +2668,23 @@
             const initials = getInitials(contact.name || name || 'K');
             chatAvatar.innerHTML = contact.photo ? `<img src="${contact.photo}" alt="${contact.name}" />` : initials;
             updateChatHeaderStatus(contactId);
+
+            // Klik header untuk buka profil kontak
+            if (state._headerClickHandler) {
+                chatName.removeEventListener('click', state._headerClickHandler);
+                chatAvatar.removeEventListener('click', state._headerClickHandler);
+            }
+            const headerClickHandler = () => {
+                if (contactId) {
+                    navigateTo('contactDetail', { contactId });
+                }
+            };
+            chatName.style.cursor = 'pointer';
+            chatAvatar.style.cursor = 'pointer';
+            chatName.addEventListener('click', headerClickHandler);
+            chatAvatar.addEventListener('click', headerClickHandler);
+            state._headerClickHandler = headerClickHandler;
+
             messagesContainer.innerHTML = '';
             setupTyping(chatId);
             loadMessages(chatId);
@@ -2572,6 +2785,11 @@
                 messageInput.removeEventListener('keydown', state._keyHandler);
                 state._keyHandler = null;
             }
+            if (state._headerClickHandler) {
+                chatName.removeEventListener('click', state._headerClickHandler);
+                chatAvatar.removeEventListener('click', state._headerClickHandler);
+                state._headerClickHandler = null;
+            }
         }
 
         function cleanupAllListeners() {
@@ -2595,7 +2813,7 @@
         }
 
         // ============================================================
-        // 13. LOAD MESSAGES (tidak diubah)
+        // 15. LOAD MESSAGES
         // ============================================================
         function loadMessages(chatId) {
             const messagesRef = ref(db, `messages/${chatId}`);
@@ -2640,7 +2858,7 @@
         }
 
         // ============================================================
-        // 14. RENDER MESSAGE (tidak diubah)
+        // 16. RENDER MESSAGE
         // ============================================================
         function renderMessage(msg, msgId) {
             const isOut = msg.senderId === currentUser.userId;
@@ -2707,7 +2925,7 @@
         }
 
         // ============================================================
-        // 15. SEND MESSAGE (tidak diubah)
+        // 17. SEND MESSAGE
         // ============================================================
         function sendMessage() {
             const text = messageInput.value.trim();
@@ -2761,7 +2979,7 @@
         }
 
         // ============================================================
-        // 16. START CHAT WITH CONTACT (tidak diubah)
+        // 18. START CHAT WITH CONTACT
         // ============================================================
         function startChatWithContact(contactId) {
             if (contactId === currentUser.userId) {
@@ -2823,7 +3041,7 @@
         }
 
         // ============================================================
-        // 17. CONTEXT MENU (tidak diubah)
+        // 19. CONTEXT MENU
         // ============================================================
         let contextTargetMsgId = null;
         function showContextMenu(x, y, msgId, isOut, senderId) {
@@ -2917,7 +3135,7 @@
         }
 
         // ============================================================
-        // 18. EMOJI PICKER (tidak diubah)
+        // 20. EMOJI PICKER
         // ============================================================
         const emojis = ['😀', '😁', '😂', '🤣', '😊', '😍', '🥰', '😘', '😗', '😙', '😚', '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', '🤭',
             '🤫', '🤔', '🤐', '🤨', '😐', '😑', '😶', '😏', '😒', '🙄', '😬', '🤥', '😌', '😔', '😪', '🤤', '😴', '😷', '🤒', '🤕', '🤢',
@@ -2955,7 +3173,7 @@
         }
 
         // ============================================================
-        // 19. PROFILE (tidak diubah)
+        // 21. PROFILE
         // ============================================================
         function loadProfile() {
             if (!currentUser) return;
@@ -2963,7 +3181,7 @@
                 const data = snapshot.val() || {};
                 const name = data.name || 'User';
                 const phone = data.phone || '';
-                const status = data.about || '';
+                const status = data.about || 'Halo, saya menggunakan GoChat';
                 const photo = data.photo || '';
                 profileName.textContent = name;
                 profilePhone.textContent = phone;
@@ -2973,6 +3191,10 @@
                 } else {
                     profileAvatar.textContent = getInitials(name);
                 }
+                // Klik pada avatar, nama, atau status untuk edit profil
+                profileAvatar.onclick = () => showEditProfile();
+                profileName.onclick = () => showEditProfile();
+                profileStatus.onclick = () => showEditProfile();
                 initLucide();
             }).catch(() => {
                 profileName.textContent = 'User';
@@ -2983,7 +3205,481 @@
         }
 
         // ============================================================
-        // 20. CONTACT DETAIL (tidak diubah)
+        // 22. EDIT PROFILE (dengan upload foto)
+        // ============================================================
+        function showEditProfile() {
+            if (!currentUser) return;
+            get(ref(db, `users/${currentUser.userId}`)).then((snapshot) => {
+                const data = snapshot.val() || {};
+                const name = data.name || '';
+                const phone = data.phone || '';
+                const status = data.about || '';
+                const photo = data.photo || '';
+
+                profileSubContent.innerHTML = `
+                    <div class="back-header">
+                        <button id="editProfileBack">‹</button>
+                        <h3>Edit Profil</h3>
+                    </div>
+                    <div style="text-align:center;margin-bottom:16px;">
+                        <div style="width:100px;height:100px;border-radius:50%;background:var(--primary-light);display:flex;align-items:center;justify-content:center;font-size:40px;font-weight:600;color:var(--primary);margin:0 auto;overflow:hidden;border:3px solid var(--primary);">
+                            ${photo ? `<img src="${photo}" style="width:100%;height:100%;object-fit:cover;" />` : getInitials(name || 'U')}
+                        </div>
+                        <div class="photo-upload-area">
+                            <button class="upload-btn" id="uploadPhotoBtn">📷 Upload Foto</button>
+                            <input type="file" id="photoFileInput" accept="image/*" />
+                            <div class="upload-status" id="uploadStatus"></div>
+                        </div>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Nama</span>
+                        <span class="value"><input type="text" id="editName" value="${escapeHtml(name)}" placeholder="Nama Anda" /></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Nomor HP</span>
+                        <span class="value"><input type="text" id="editPhone" value="${escapeHtml(phone)}" placeholder="Nomor HP" /></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Status</span>
+                        <span class="value"><input type="text" id="editStatus" value="${escapeHtml(status)}" placeholder="Status Anda" /></span>
+                    </div>
+                    <button class="save-btn" id="saveProfileBtn">Simpan Profil</button>
+                    <div class="edit-hint">Klik Simpan untuk memperbarui profil Anda</div>
+                `;
+
+                // Back
+                document.getElementById('editProfileBack').addEventListener('click', () => {
+                    navigateTo('profile');
+                });
+
+                // Upload foto
+                const fileInput = document.getElementById('photoFileInput');
+                const uploadBtn = document.getElementById('uploadPhotoBtn');
+                const uploadStatus = document.getElementById('uploadStatus');
+
+                uploadBtn.addEventListener('click', () => fileInput.click());
+
+                fileInput.addEventListener('change', async (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    uploadStatus.textContent = 'Mengupload...';
+                    uploadBtn.disabled = true;
+
+                    try {
+                        // Baca file sebagai base64
+                        const reader = new FileReader();
+                        reader.readAsDataURL(file);
+                        reader.onload = async () => {
+                            const base64 = reader.result.split(',')[1];
+                            const formData = new FormData();
+                            formData.append('key', IMGBB_API_KEY);
+                            formData.append('image', base64);
+                            formData.append('name', file.name);
+
+                            const response = await fetch('https://api.imgbb.com/1/upload', {
+                                method: 'POST',
+                                body: formData
+                            });
+                            const result = await response.json();
+                            if (result.success) {
+                                const imageUrl = result.data.url;
+                                // Simpan URL foto ke database
+                                await update(ref(db, `users/${currentUser.userId}`), { photo: imageUrl });
+                                uploadStatus.textContent = '✅ Foto berhasil diupload!';
+                                showToast('Foto profil diperbarui');
+                                // Refresh tampilan
+                                loadProfile();
+                                // Update foto di edit profil
+                                const avatarDiv = document.querySelector('.profile-sub-view .big-avatar');
+                                if (avatarDiv) avatarDiv.innerHTML = `<img src="${imageUrl}" style="width:100%;height:100%;object-fit:cover;" />`;
+                            } else {
+                                uploadStatus.textContent = '❌ Gagal upload: ' + (result.error?.message || 'Unknown error');
+                            }
+                        };
+                    } catch (err) {
+                        console.warn('Upload error:', err);
+                        uploadStatus.textContent = '❌ Gagal upload foto';
+                    } finally {
+                        uploadBtn.disabled = false;
+                        fileInput.value = '';
+                    }
+                });
+
+                // Save profil
+                document.getElementById('saveProfileBtn').addEventListener('click', async () => {
+                    const newName = document.getElementById('editName').value.trim();
+                    const newPhone = document.getElementById('editPhone').value.trim();
+                    const newStatus = document.getElementById('editStatus').value.trim();
+
+                    if (!newName) {
+                        showToast('Nama tidak boleh kosong');
+                        return;
+                    }
+
+                    const updateData = {
+                        name: newName,
+                        about: newStatus || 'Halo, saya menggunakan GoChat',
+                        updatedAt: serverTimestamp(),
+                    };
+                    if (newPhone) {
+                        updateData.phone = normalizePhone(newPhone);
+                    }
+
+                    try {
+                        await update(ref(db, `users/${currentUser.userId}`), updateData);
+                        currentUser.name = newName;
+                        currentUser.phone = newPhone || currentUser.phone;
+                        showToast('Profil berhasil diperbarui!');
+                        navigateTo('profile');
+                        loadProfile();
+                    } catch (err) {
+                        console.warn('Update profile error:', err);
+                        showToast('Gagal memperbarui profil');
+                    }
+                });
+
+                navigateTo('profile-sub');
+                initLucide();
+            }).catch(() => {
+                showToast('Gagal memuat data profil');
+            });
+        }
+
+        // ============================================================
+        // 23. PRIVACY SETTINGS (INTERAKTIF)
+        // ============================================================
+        function loadPrivacySettings() {
+            if (!currentUser) return;
+            const userRef = ref(db, `users/${currentUser.userId}/privacy`);
+            get(userRef).then((snapshot) => {
+                const privacy = snapshot.val() || {};
+                const defaults = {
+                    lastSeen: 'semua',
+                    profilePhoto: 'semua',
+                    status: 'semua',
+                    readReceipts: true,
+                    groups: 'semua'
+                };
+                const settings = { ...defaults, ...privacy };
+                showPrivacyUI(settings);
+            }).catch(() => {
+                showPrivacyUI({
+                    lastSeen: 'semua',
+                    profilePhoto: 'semua',
+                    status: 'semua',
+                    readReceipts: true,
+                    groups: 'semua'
+                });
+            });
+        }
+
+        function showPrivacyUI(settings) {
+            const options = ['semua', 'kontak', 'tidak ada'];
+            const optionLabels = { 'semua': 'Semua', 'kontak': 'Kontak', 'tidak ada': 'Tidak Ada' };
+
+            profileSubContent.innerHTML = `
+                <div class="back-header">
+                    <button id="privacyBack">‹</button>
+                    <h3>Privasi</h3>
+                </div>
+                <div class="info-row">
+                    <span class="label">Terakhir Dilihat</span>
+                    <span class="value">
+                        <select id="privacyLastSeen">
+                            ${options.map(opt => `<option value="${opt}" ${settings.lastSeen === opt ? 'selected' : ''}>${optionLabels[opt]}</option>`).join('')}
+                        </select>
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Foto Profil</span>
+                    <span class="value">
+                        <select id="privacyProfilePhoto">
+                            ${options.map(opt => `<option value="${opt}" ${settings.profilePhoto === opt ? 'selected' : ''}>${optionLabels[opt]}</option>`).join('')}
+                        </select>
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Status</span>
+                    <span class="value">
+                        <select id="privacyStatus">
+                            ${options.map(opt => `<option value="${opt}" ${settings.status === opt ? 'selected' : ''}>${optionLabels[opt]}</option>`).join('')}
+                        </select>
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Baca Pesan</span>
+                    <span class="value">
+                        <div class="toggle-wrap">
+                            <div class="toggle ${settings.readReceipts ? 'active' : ''}" id="privacyReadReceipts">
+                                <div class="toggle-knob"></div>
+                            </div>
+                            <span id="readReceiptsLabel">${settings.readReceipts ? 'Aktif' : 'Nonaktif'}</span>
+                        </div>
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Grup</span>
+                    <span class="value">
+                        <select id="privacyGroups">
+                            ${options.map(opt => `<option value="${opt}" ${settings.groups === opt ? 'selected' : ''}>${optionLabels[opt]}</option>`).join('')}
+                        </select>
+                    </span>
+                </div>
+                <button class="save-btn" id="savePrivacyBtn">Simpan Pengaturan</button>
+                <div class="privacy-note">Pengaturan ini akan mempengaruhi visibilitas informasi Anda kepada pengguna lain.</div>
+            `;
+
+            document.getElementById('privacyBack').addEventListener('click', () => {
+                navigateTo('profile');
+            });
+
+            const toggle = document.getElementById('privacyReadReceipts');
+            const label = document.getElementById('readReceiptsLabel');
+            toggle.addEventListener('click', () => {
+                toggle.classList.toggle('active');
+                const isActive = toggle.classList.contains('active');
+                label.textContent = isActive ? 'Aktif' : 'Nonaktif';
+            });
+
+            document.getElementById('savePrivacyBtn').addEventListener('click', async () => {
+                const lastSeen = document.getElementById('privacyLastSeen').value;
+                const profilePhoto = document.getElementById('privacyProfilePhoto').value;
+                const status = document.getElementById('privacyStatus').value;
+                const readReceipts = document.getElementById('privacyReadReceipts').classList.contains('active');
+                const groups = document.getElementById('privacyGroups').value;
+
+                const privacyData = { lastSeen, profilePhoto, status, readReceipts, groups };
+                try {
+                    await set(ref(db, `users/${currentUser.userId}/privacy`), privacyData);
+                    showToast('Pengaturan privasi disimpan!');
+                    navigateTo('profile');
+                } catch (err) {
+                    console.warn('Save privacy error:', err);
+                    showToast('Gagal menyimpan pengaturan');
+                }
+            });
+
+            navigateTo('profile-sub');
+            initLucide();
+        }
+
+        // ============================================================
+        // 24. CHAT SETTINGS (INTERAKTIF)
+        // ============================================================
+        function loadChatSettings() {
+            if (!currentUser) return;
+            const chatRef = ref(db, `users/${currentUser.userId}/chatSettings`);
+            get(chatRef).then((snapshot) => {
+                const settings = snapshot.val() || {};
+                const defaults = {
+                    theme: 'terang',
+                    wallpaper: 'default',
+                    font: 'system',
+                    enterToSend: true
+                };
+                const data = { ...defaults, ...settings };
+                showChatSettingsUI(data);
+            }).catch(() => {
+                showChatSettingsUI({
+                    theme: 'terang',
+                    wallpaper: 'default',
+                    font: 'system',
+                    enterToSend: true
+                });
+            });
+        }
+
+        function showChatSettingsUI(settings) {
+            const themeOptions = ['terang', 'gelap'];
+            const themeLabels = { 'terang': 'Terang', 'gelap': 'Gelap' };
+            const wallpaperOptions = ['default', 'gambar'];
+            const wallpaperLabels = { 'default': 'Default', 'gambar': 'Gambar' };
+            const fontOptions = ['system', 'sans', 'serif'];
+            const fontLabels = { 'system': 'System', 'sans': 'Sans Serif', 'serif': 'Serif' };
+
+            profileSubContent.innerHTML = `
+                <div class="back-header">
+                    <button id="chatSettingsBack">‹</button>
+                    <h3>Chat</h3>
+                </div>
+                <div class="info-row">
+                    <span class="label">Tema</span>
+                    <span class="value">
+                        <select id="chatTheme">
+                            ${themeOptions.map(opt => `<option value="${opt}" ${settings.theme === opt ? 'selected' : ''}>${themeLabels[opt]}</option>`).join('')}
+                        </select>
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Wallpaper</span>
+                    <span class="value">
+                        <select id="chatWallpaper">
+                            ${wallpaperOptions.map(opt => `<option value="${opt}" ${settings.wallpaper === opt ? 'selected' : ''}>${wallpaperLabels[opt]}</option>`).join('')}
+                        </select>
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Font</span>
+                    <span class="value">
+                        <select id="chatFont">
+                            ${fontOptions.map(opt => `<option value="${opt}" ${settings.font === opt ? 'selected' : ''}>${fontLabels[opt]}</option>`).join('')}
+                        </select>
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Enter untuk kirim</span>
+                    <span class="value">
+                        <div class="toggle-wrap">
+                            <div class="toggle ${settings.enterToSend ? 'active' : ''}" id="chatEnterToggle">
+                                <div class="toggle-knob"></div>
+                            </div>
+                            <span id="enterToSendLabel">${settings.enterToSend ? 'Aktif' : 'Nonaktif'}</span>
+                        </div>
+                    </span>
+                </div>
+                <button class="save-btn" id="saveChatSettingsBtn">Simpan Pengaturan Chat</button>
+            `;
+
+            document.getElementById('chatSettingsBack').addEventListener('click', () => {
+                navigateTo('profile');
+            });
+
+            const toggle = document.getElementById('chatEnterToggle');
+            const label = document.getElementById('enterToSendLabel');
+            toggle.addEventListener('click', () => {
+                toggle.classList.toggle('active');
+                label.textContent = toggle.classList.contains('active') ? 'Aktif' : 'Nonaktif';
+            });
+
+            document.getElementById('saveChatSettingsBtn').addEventListener('click', async () => {
+                const theme = document.getElementById('chatTheme').value;
+                const wallpaper = document.getElementById('chatWallpaper').value;
+                const font = document.getElementById('chatFont').value;
+                const enterToSend = document.getElementById('chatEnterToggle').classList.contains('active');
+
+                const data = { theme, wallpaper, font, enterToSend };
+                try {
+                    await set(ref(db, `users/${currentUser.userId}/chatSettings`), data);
+                    showToast('Pengaturan chat disimpan!');
+                    navigateTo('profile');
+                } catch (err) {
+                    console.warn('Save chat settings error:', err);
+                    showToast('Gagal menyimpan pengaturan chat');
+                }
+            });
+
+            navigateTo('profile-sub');
+            initLucide();
+        }
+
+        // ============================================================
+        // 25. PROFILE SUB MENUS (Akun, Privasi, Chat, Notifikasi, Storage, Help)
+        // ============================================================
+        function showProfileSub(title, content) {
+            profileSubContent.innerHTML = `
+                <div class="back-header">
+                    <button id="profileSubBack">‹</button>
+                    <h3>${escapeHtml(title)}</h3>
+                </div>
+                <div class="sub-content">
+                    ${content}
+                </div>
+            `;
+            document.getElementById('profileSubBack').addEventListener('click', () => {
+                navigateTo('profile');
+            });
+            navigateTo('profile-sub');
+            initLucide();
+        }
+
+        // Event listener untuk menu profil
+        document.getElementById('profileAccount').addEventListener('click', () => {
+            if (!currentUser) return;
+            get(ref(db, `users/${currentUser.userId}`)).then((snapshot) => {
+                const data = snapshot.val() || {};
+                const name = data.name || 'User';
+                const phone = data.phone || '';
+                const status = data.about || 'Halo, saya menggunakan GoChat';
+                showProfileSub('Akun', `
+                    <div class="info-row"><span class="label">Nama</span><span class="value">${escapeHtml(name)}</span></div>
+                    <div class="info-row"><span class="label">Nomor HP</span><span class="value">${escapeHtml(phone)}</span></div>
+                    <div class="info-row"><span class="label">Status</span><span class="value">${escapeHtml(status)}</span></div>
+                    <div class="info-row"><span class="label">User ID</span><span class="value" style="font-size:12px;color:var(--text-muted);">${escapeHtml(currentUser.userId)}</span></div>
+                    <button class="save-btn" id="editProfileFromAccount" style="margin-top:12px;">✏️ Edit Profil</button>
+                `);
+                document.getElementById('editProfileFromAccount').addEventListener('click', showEditProfile);
+            }).catch(() => {
+                showProfileSub('Akun', `<p style="color:var(--text-muted);">Gagal memuat data akun.</p>`);
+            });
+        });
+
+        document.getElementById('profilePrivacy').addEventListener('click', loadPrivacySettings);
+
+        document.getElementById('profileChats').addEventListener('click', loadChatSettings);
+
+        document.getElementById('profileNotifications').addEventListener('click', () => {
+            showProfileSub('Notifikasi', `
+                <div class="info-row"><span class="label">Pesan</span><span class="value">Aktif</span></div>
+                <div class="info-row"><span class="label">Grup</span><span class="value">Aktif</span></div>
+                <div class="info-row"><span class="label">Suara</span><span class="value">Default</span></div>
+                <div class="info-row"><span class="label">Pop-up</span><span class="value">Nonaktif</span></div>
+            `);
+        });
+
+        document.getElementById('profileStorage').addEventListener('click', () => {
+            if (!currentUser) return;
+            const chatsRef = ref(db, 'chats');
+            get(chatsRef).then((snapshot) => {
+                const chats = snapshot.val() || {};
+                let totalChats = 0;
+                let totalMessages = 0;
+                const chatPromises = [];
+                Object.keys(chats).forEach(chatId => {
+                    const chat = chats[chatId];
+                    if (chat.participants && chat.participants[currentUser.userId]) {
+                        totalChats++;
+                        const msgRef = ref(db, `messages/${chatId}`);
+                        chatPromises.push(get(msgRef).then(msgSnap => {
+                            const msgs = msgSnap.val() || {};
+                            totalMessages += Object.keys(msgs).length;
+                        }));
+                    }
+                });
+                Promise.all(chatPromises).then(() => {
+                    showProfileSub('Penyimpanan & Data', `
+                        <div class="info-row"><span class="label">Total Chat</span><span class="value">${totalChats} chat</span></div>
+                        <div class="info-row"><span class="label">Total Pesan</span><span class="value">${totalMessages} pesan</span></div>
+                        <div class="info-row"><span class="label">Penyimpanan</span><span class="value">~ ${Math.round(totalMessages * 0.1)} KB</span></div>
+                        <div class="info-row"><span class="label">Gunakan Data</span><span class="value">Ringan</span></div>
+                    `);
+                });
+            }).catch(() => {
+                showProfileSub('Penyimpanan & Data', `<p style="color:var(--text-muted);">Gagal memuat data penyimpanan.</p>`);
+            });
+        });
+
+        document.getElementById('profileHelp').addEventListener('click', () => {
+            showProfileSub('Bantuan', `
+                <div style="padding:8px 0;line-height:1.8;color:var(--text-secondary);">
+                    <p><strong>GoChat v1.0</strong></p>
+                    <p>Aplikasi chatting sederhana berbasis Firebase Realtime Database.</p>
+                    <br>
+                    <p><strong>Fitur:</strong></p>
+                    <p>• Chat real-time dengan teman</p>
+                    <p>• Status / Story (24 jam)</p>
+                    <p>• Kontak &amp; pencarian pengguna</p>
+                    <p>• Komentar pada status</p>
+                    <p>• Edit Profil (upload foto via ImgBB)</p>
+                    <p>• Pengaturan Privasi</p>
+                    <p>• Pengaturan Chat</p>
+                    <br>
+                    <p style="font-size:13px;color:var(--text-muted);">Dibuat dengan ❤️ menggunakan Firebase</p>
+                </div>
+            `);
+        });
+
+        // ============================================================
+        // 26. CONTACT DETAIL
         // ============================================================
         function loadContactDetail(contactId) {
             get(ref(db, `users/${contactId}`)).then((snapshot) => {
@@ -3018,7 +3714,7 @@
         }
 
         // ============================================================
-        // 21. TAMBAH KONTAK (tidak diubah)
+        // 27. TAMBAH KONTAK
         // ============================================================
         const viewAddContact = document.createElement('section');
         viewAddContact.className = 'view';
@@ -3128,7 +3824,7 @@
         };
 
         // ============================================================
-        // 22. HEADER NAVIGATION (tidak diubah)
+        // 28. HEADER NAVIGATION
         // ============================================================
         function setupHeaderNavigation() {
             headerBack.addEventListener('click', () => {
@@ -3139,6 +3835,8 @@
                 } else if (state.currentView === 'contactDetail') {
                     navigateTo('chats');
                 } else if (state.currentView === 'settings') {
+                    navigateTo('profile');
+                } else if (state.currentView === 'profile-sub') {
                     navigateTo('profile');
                 } else {
                     navigateTo('chats');
@@ -3204,7 +3902,7 @@
         }
 
         // ============================================================
-        // 23. BOTTOM NAV (tidak diubah)
+        // 29. BOTTOM NAV
         // ============================================================
         function setupBottomNav() {
             navItems.forEach(item => {
@@ -3224,7 +3922,7 @@
         }
 
         // ============================================================
-        // 24. NOTIFICATION (tidak diubah)
+        // 30. NOTIFICATION
         // ============================================================
         function setupNotifications() {
             if ('Notification' in window && Notification.permission === 'default') {
@@ -3244,7 +3942,7 @@
         }
 
         // ============================================================
-        // 25. NEW MESSAGE LISTENER (tidak diubah)
+        // 31. NEW MESSAGE LISTENER
         // ============================================================
         function setupNewMessageListener() {
             if (!currentUser) return;
@@ -3281,10 +3979,9 @@
         }
 
         // ============================================================
-        // 26. STATUS / STORY FEATURE (DIPERBARUI dengan viewer & komentar)
+        // 32. STATUS / STORY FEATURE
         // ============================================================
 
-        // Post status (text only)
         function postStatus(text) {
             if (!currentUser) return;
             const statusRef = ref(db, `statuses/${currentUser.userId}`);
@@ -3293,28 +3990,25 @@
                 type: 'text',
                 content: text,
                 timestamp: serverTimestamp(),
-                viewers: {} // akan diisi oleh orang yang melihat
+                viewers: {}
             }).then(() => {
                 showToast('Status berhasil dibagikan');
-                loadStatuses(); // refresh
+                loadStatuses();
             }).catch(err => {
                 console.warn('Post status error:', err);
                 showToast('Gagal membagikan status');
             });
         }
 
-        // Mark status as viewed
         function markStatusViewed(ownerId, statusId) {
             if (!currentUser) return;
             const viewerRef = ref(db, `statuses/${ownerId}/${statusId}/viewers/${currentUser.userId}`);
             set(viewerRef, true).catch(err => console.warn('Mark viewed error:', err));
         }
 
-        // Kirim komentar pada status (sebagai pesan chat)
         function sendCommentOnStatus(ownerId, statusId, comment) {
             if (!currentUser || !comment.trim()) return;
             const chatId = getChatId(currentUser.userId, ownerId);
-            // Pastikan chat ada
             get(ref(db, `chats/${chatId}`)).then((snapshot) => {
                 if (!snapshot.exists()) {
                     const chatData = {
@@ -3328,7 +4022,6 @@
                     };
                     set(ref(db, `chats/${chatId}`), chatData).catch(err => console.warn('Create chat error:', err));
                 }
-                // Kirim pesan
                 const msgId = push(ref(db, `messages/${chatId}`)).key;
                 const msgData = {
                     senderId: currentUser.userId,
@@ -3339,7 +4032,6 @@
                     status: 'sent',
                 };
                 set(ref(db, `messages/${chatId}/${msgId}`), msgData).then(() => {
-                    // Update last message di chat
                     update(ref(db, `chats/${chatId}`), {
                         lastMessage: `💬 Komentar: ${comment}`,
                         lastMessageTime: serverTimestamp(),
@@ -3356,42 +4048,31 @@
             });
         }
 
-        // Load statuses dari kontak yang saling terhubung (mutual contacts)
         function loadStatuses() {
             if (!currentUser) return;
             if (state.unsubscribe.statuses) {
                 state.unsubscribe.statuses();
                 state.unsubscribe.statuses = null;
             }
-
-            // Ambil daftar kontak user
             get(child(ref(db, 'contacts'), currentUser.userId)).then((snapshot) => {
                 const contactIds = Object.keys(snapshot.val() || {});
                 if (contactIds.length === 0) {
                     contactStatusList.innerHTML = `<div class="empty-state"><p>Tidak ada status dari kontak.</p></div>`;
                     return;
                 }
-
-                // Subscribe ke semua status dari kontak
                 const statusRef = ref(db, 'statuses');
                 const unsub = onValue(statusRef, (snapshot) => {
                     const allStatuses = snapshot.val() || {};
                     const now = Date.now();
                     const oneDay = 24 * 60 * 60 * 1000;
                     const activeStatuses = [];
-
-                    // Loop setiap user yang punya status
                     Object.keys(allStatuses).forEach(uid => {
-                        // Hanya tampilkan jika uid adalah kontak (mutual)
                         if (!contactIds.includes(uid) && uid !== currentUser.userId) return;
-
                         const userStatuses = allStatuses[uid];
                         Object.keys(userStatuses).forEach(statusId => {
                             const status = userStatuses[statusId];
                             const ts = status.timestamp || 0;
-                            // Status kadaluarsa jika lebih dari 24 jam
                             if (now - ts > oneDay) return;
-                            // Jika sudah dilihat oleh user, tandai
                             const viewed = status.viewers && status.viewers[currentUser.userId] || false;
                             activeStatuses.push({
                                 uid,
@@ -3403,11 +4084,7 @@
                             });
                         });
                     });
-
-                    // Urutkan berdasarkan timestamp (terbaru dulu)
                     activeStatuses.sort((a, b) => b.timestamp - a.timestamp);
-
-                    // Render ke UI
                     renderStatusList(activeStatuses);
                 });
                 state.unsubscribe.statuses = unsub;
@@ -3416,15 +4093,12 @@
             });
         }
 
-        // Render daftar status di view-updates
         function renderStatusList(statuses) {
             if (!contactStatusList) return;
             if (statuses.length === 0) {
                 contactStatusList.innerHTML = `<div class="empty-state" style="padding:20px 0;"><p style="font-size:14px;">Tidak ada status terbaru dari kontak.</p></div>`;
                 return;
             }
-
-            // Ambil data user untuk nama dan foto
             get(ref(db, 'users')).then((userSnap) => {
                 const users = userSnap.val() || {};
                 let html = '';
@@ -3449,49 +4123,37 @@
                     `;
                 });
                 contactStatusList.innerHTML = html;
-
-                // Event klik untuk melihat status
                 contactStatusList.querySelectorAll('.status-item').forEach(el => {
                     el.addEventListener('click', () => {
                         const uid = el.dataset.uid;
                         const statusId = el.dataset.statusid;
                         const status = statuses.find(s => s.uid === uid && s.statusId === statusId);
                         if (status) {
-                            // Tandai sebagai viewed
                             if (!status.viewed) {
                                 markStatusViewed(uid, statusId);
                             }
-                            // Tampilkan modal
                             showStatusModal(uid, statusId, status.content, status.timestamp);
                         }
                     });
                 });
-
-                // Update my status info
                 if (currentUser) {
                     const myData = users[currentUser.userId] || {};
                     myStatusAvatar.textContent = getInitials(myData.name || currentUser.userId);
                     myStatusName.textContent = myData.name || 'Status Saya';
                     myStatusSub.textContent = 'Ketuk untuk tambah status';
                 }
-
                 initLucide();
             }).catch(err => console.warn('Render status error:', err));
         }
 
-        // Tampilkan modal status (dengan viewer & komentar)
         function showStatusModal(uid, statusId, content, timestamp) {
             if (!statusModal || !statusModalContent) return;
-
-            // Ambil data pengguna
             get(ref(db, `users/${uid}`)).then((userSnap) => {
                 const user = userSnap.val() || { name: uid };
                 const name = user.name || uid;
                 const photo = user.photo || '';
                 const initials = getInitials(name);
                 const timeStr = formatTime(timestamp);
-
-                // Tampilkan konten dasar
                 statusModalContent.innerHTML = `
                     <div class="status-user">
                         <div class="avatar">${photo ? `<img src="${photo}" alt="${name}" />` : initials}</div>
@@ -3511,7 +4173,6 @@
                 statusModal.classList.add('active');
                 initLucide();
 
-                // Load viewer data realtime
                 if (state.unsubscribe.statusViewer) {
                     state.unsubscribe.statusViewer();
                     state.unsubscribe.statusViewer = null;
@@ -3525,7 +4186,6 @@
                         if (viewerIds.length === 0) {
                             viewerContainer.innerHTML = '<div style="font-size:13px;color:var(--text-muted);">Belum ada yang melihat</div>';
                         } else {
-                            // Ambil nama viewer
                             get(ref(db, 'users')).then((userSnap) => {
                                 const allUsers = userSnap.val() || {};
                                 let html = '';
@@ -3551,7 +4211,6 @@
                 });
                 state.unsubscribe.statusViewer = unsubViewer;
 
-                // Event komentar
                 const commentInput = document.getElementById('commentInput');
                 const sendCommentBtn = document.getElementById('sendCommentBtn');
                 if (commentInput && sendCommentBtn) {
@@ -3572,9 +4231,7 @@
                         }
                     });
                 }
-
             }).catch(() => {
-                // Fallback jika gagal ambil data user
                 statusModalContent.innerHTML = `
                     <div class="status-text">${escapeHtml(content)}</div>
                     <div class="status-time">${formatTime(timestamp)}</div>
@@ -3584,7 +4241,6 @@
                     </div>
                 `;
                 statusModal.classList.add('active');
-                // Event komentar juga diset di sini
                 const commentInput = document.getElementById('commentInput');
                 const sendCommentBtn = document.getElementById('sendCommentBtn');
                 if (commentInput && sendCommentBtn) {
@@ -3609,7 +4265,6 @@
             });
         }
 
-        // Event untuk modal close
         statusModalClose.addEventListener('click', () => {
             statusModal.classList.remove('active');
             if (state.unsubscribe.statusViewer) {
@@ -3627,7 +4282,6 @@
             }
         });
 
-        // Tombol tambah status
         addStatusBtn.addEventListener('click', () => {
             const text = prompt('Tulis status Anda:', '');
             if (text && text.trim().length > 0) {
@@ -3638,7 +4292,7 @@
         });
 
         // ============================================================
-        // 27. LOGIN LOGIC (tidak diubah)
+        // 33. LOGIN LOGIC
         // ============================================================
         loginBtn.addEventListener('click', async () => {
             const rawPhone = phoneInput.value.trim();
@@ -3736,7 +4390,7 @@
         });
 
         // ============================================================
-        // 28. LOGOUT (tidak diubah)
+        // 34. LOGOUT
         // ============================================================
         async function logout() {
             if (!currentUser) return;
@@ -3763,7 +4417,7 @@
         settingsLogout.addEventListener('click', logout);
 
         // ============================================================
-        // 29. AUTO-LOGIN (tidak diubah)
+        // 35. AUTO-LOGIN
         // ============================================================
         function tryAutoLogin() {
             const sessionStr = localStorage.getItem(SESSION_KEY);
@@ -3803,7 +4457,7 @@
         }
 
         // ============================================================
-        // 30. INITIALIZATION (tidak diubah)
+        // 36. INITIALIZATION
         // ============================================================
         function init() {
             console.log('🚀 Starting GoChat...');
@@ -3832,7 +4486,7 @@
         }
 
         // ============================================================
-        // 31. START
+        // 37. START
         // ============================================================
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', init);
@@ -3841,7 +4495,7 @@
         }
 
         // ============================================================
-        // 32. EXPOSE DEBUG
+        // 38. EXPOSE DEBUG
         // ============================================================
         window.__gochat = {
             db,
@@ -3856,6 +4510,7 @@
             postStatus,
             loadStatuses,
             sendCommentOnStatus,
+            showEditProfile,
         };
 
         console.log('📱 GoChat loaded.');
