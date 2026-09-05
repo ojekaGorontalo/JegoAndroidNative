@@ -2058,7 +2058,7 @@
         // ============================================================
         // 2. KONFIGURASI IMGBB API
         // ============================================================
-        const IMGBB_API_KEY = '3e91402da92a6766dffaa72e0500f025'; // GANTI DENGAN API KEY ANDA
+        const IMGBB_API_KEY = 'YOUR_IMGBB_API_KEY'; // GANTI DENGAN API KEY ANDA
 
         // ============================================================
         // 3. IMPOR FIREBASE
@@ -3266,7 +3266,6 @@
                     uploadBtn.disabled = true;
 
                     try {
-                        // Baca file sebagai base64
                         const reader = new FileReader();
                         reader.readAsDataURL(file);
                         reader.onload = async () => {
@@ -3283,13 +3282,10 @@
                             const result = await response.json();
                             if (result.success) {
                                 const imageUrl = result.data.url;
-                                // Simpan URL foto ke database
                                 await update(ref(db, `users/${currentUser.userId}`), { photo: imageUrl });
                                 uploadStatus.textContent = '✅ Foto berhasil diupload!';
                                 showToast('Foto profil diperbarui');
-                                // Refresh tampilan
                                 loadProfile();
-                                // Update foto di edit profil
                                 const avatarDiv = document.querySelector('.profile-sub-view .big-avatar');
                                 if (avatarDiv) avatarDiv.innerHTML = `<img src="${imageUrl}" style="width:100%;height:100%;object-fit:cover;" />`;
                             } else {
@@ -3346,7 +3342,7 @@
         }
 
         // ============================================================
-        // 23. PRIVACY SETTINGS (INTERAKTIF)
+        // 23. PRIVACY SETTINGS
         // ============================================================
         function loadPrivacySettings() {
             if (!currentUser) return;
@@ -3464,7 +3460,7 @@
         }
 
         // ============================================================
-        // 24. CHAT SETTINGS (INTERAKTIF)
+        // 24. CHAT SETTINGS
         // ============================================================
         function loadChatSettings() {
             if (!currentUser) return;
@@ -3942,7 +3938,7 @@
         }
 
         // ============================================================
-        // 31. NEW MESSAGE LISTENER
+        // 31. NEW MESSAGE LISTENER — DIPERBAIKI
         // ============================================================
         function setupNewMessageListener() {
             if (!currentUser) return;
@@ -3958,11 +3954,17 @@
                         const msgRef = ref(db, `messages/${chatId}`);
                         const listener = onChildAdded(msgRef, (snap) => {
                             const msg = snap.val();
+                            // Hanya proses jika pesan dari kontak dan status belum 'read'
                             if (msg && msg.senderId !== currentUser.userId) {
+                                // Jika status sudah 'read', abaikan (tidak tambah unread)
+                                if (msg.status === 'read') return;
+
                                 const contactId = msg.senderId;
                                 if (state.currentChatId === chatId && state.currentView === 'chat') {
+                                    // Jika sedang di chat, tandai sebagai read
                                     markMessageAsRead(chatId, snap.key, msg);
                                 } else {
+                                    // Tambah unread dan notifikasi
                                     state.unread[chatId] = (state.unread[chatId] || 0) + 1;
                                     const contact = state.contacts[contactId];
                                     const name = contact?.name || contactId || 'Seseorang';
