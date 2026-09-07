@@ -1761,51 +1761,9 @@ function navigateToScreen(screen) {
     else if (screen === 'notif_status') window.location.href = 'statusOneSignal.html';
 }
 
-// ==================== NOTIFICATIONS ====================
-async function initOneSignal() {
-  if (typeof median === 'undefined' || !median.onesignal) {
-    console.warn("⚠️ Median OneSignal tidak tersedia");
-    showToast("OneSignal tidak tersedia.", "warning");
-    return false;
-  }
-  try {
-    if (median.onesignal.setConsentGiven) await median.onesignal.setConsentGiven(true);
-    await median.onesignal.register();
-    if (median.onesignal.promptForPushNotificationsWithUserResponse) {
-      await median.onesignal.promptForPushNotificationsWithUserResponse();
-    }
-    await new Promise(r => setTimeout(r, 8000));
-    let playerId = null;
-    for (let i = 0; i < 3; i++) {
-      const info = await median.onesignal.onesignalInfo();
-      playerId = info?.userId || info?.oneSignalUserId || info?.subscription?.id;
-      if (playerId) break;
-      await new Promise(r => setTimeout(r, 5000));
-    }
-    if (playerId && globalCurrentUid) {
-      // Simpan playerId hanya di Firebase (tanpa waktu)
-      await database.ref(`drivers/${globalCurrentUid}`).update({ playerId });
-      await database.ref(`driver_locations/${globalCurrentUid}`).update({ playerId });
-      showToast("Notifikasi Aktif", "success");
-      return true;
-    }
-    return false;
-  } catch (err) {
-    console.error("OneSignal error:", err);
-    return false;
-  }
-}
-
-async function checkPlayerIdAndPrompt() {
-  if (!globalCurrentUid) return;
-  try {
-    const snap = await database.ref(`drivers/${globalCurrentUid}/playerId`).once('value');
-    if (!snap.val()) {
-      document.getElementById('notifPromptModal').style.display = 'flex';
-    }
-  } catch (err) {}
-}
-function closeNotifPrompt() { document.getElementById('notifPromptModal').style.display = 'none'; }
+// ==================== NOTIFICATIONS (INTERNAL, BUKAN ONESIGNAL) ====================
+// Bagian ini hanya untuk notifikasi internal dari Firebase (driver_notifications)
+// Tidak ada kode OneSignal lagi.
 
 let notifListenerRef = null;
 let notifListener = null;
@@ -2024,12 +1982,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.log('⏹️ Service tracking dihentikan (sinkron dari Redis)');
       }
 
-      // Load autobid dan floating dari Firebase (untuk kompatibilitas) - sudah ditangani di loadStoredSettings
-      // Tidak perlu lagi pengiriman ke Firebase di sini
+      // Tidak ada lagi OneSignal prompt
+      // Hapus semua panggilan OneSignal
 
       loadOrders();
       setTimeout(startGPSMonitoring, 1000);
-      await checkPlayerIdAndPrompt();
+      // checkPlayerIdAndPrompt dihapus
     } else {
       console.warn('❌ Driver tidak login, redirect ke loginDriver.html');
       window.location.href = 'loginDriver.html';
@@ -2105,18 +2063,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const floatingToggle = document.getElementById('floatingToggle');
   if (floatingToggle) floatingToggle.addEventListener('change', toggleFloatingButton);
 
-  const promptAllow = document.getElementById('promptAllowBtn');
-  if (promptAllow) {
-      promptAllow.addEventListener('click', async () => {
-          closeNotifPrompt();
-          await initOneSignal();
-      });
-  }
-
-  const promptLater = document.getElementById('promptLaterBtn');
-  if (promptLater) {
-      promptLater.addEventListener('click', closeNotifPrompt);
-  }
+  // Semua event listener OneSignal dihapus
 });
 
 function refreshData() {
