@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Jego Notifikasi</title>
+    <title>Jego Notifikasi FCM</title>
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
@@ -203,7 +203,7 @@
 <div class="container">
     <div class="card">
         <div class="status-icon" id="statusIcon">🔔</div>
-        <h1>Jego Notifikasi</h1>
+        <h1>Jego Notifikasi FCM</h1>
         <div class="subhead">Pastikan tetap terhubung dengan order</div>
         
         <div id="statusBadge" class="status-badge badge-inactive">Memeriksa...</div>
@@ -216,6 +216,10 @@
             <div class="driver-row">
                 <span class="driver-label">📱 Status perangkat</span>
                 <span id="deviceStatusText" style="font-weight:500;">-</span>
+            </div>
+            <div class="driver-row">
+                <span class="driver-label">🔑 Token FCM</span>
+                <span id="tokenPreview" style="font-size:0.7rem; color:#666; max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">-</span>
             </div>
         </div>
 
@@ -256,9 +260,12 @@
     const database = firebase.database();
     const auth = firebase.auth();
 
+    // ========== Konfigurasi Redis ==========
+    const REDIS_API_URL = 'https://movego.my.id';
+
     let currentUid = null;
     let isProcessing = false;
-    let medianReady = false;
+    let fcmReady = false;
 
     function showToast(message, isError = false) {
         let toast = document.querySelector('.toast-message');
@@ -271,20 +278,20 @@
         setTimeout(() => toast.remove(), 3000);
     }
 
-    // Menunggu median.onesignal
-    async function waitForMedian() {
+    // ========== Tunggu median.firebaseMessaging ==========
+    async function waitForFCM() {
         return new Promise((resolve) => {
-            if (typeof median !== 'undefined' && median.onesignal) {
-                medianReady = true;
+            if (typeof median !== 'undefined' && median.firebaseMessaging) {
+                fcmReady = true;
                 resolve(true);
                 return;
             }
             let attempts = 0;
             const interval = setInterval(() => {
                 attempts++;
-                if (typeof median !== 'undefined' && median.onesignal) {
+                if (typeof median !== 'undefined' && median.firebaseMessaging) {
                     clearInterval(interval);
-                    medianReady = true;
+                    fcmReady = true;
                     resolve(true);
                 } else if (attempts > 30) {
                     clearInterval(interval);
@@ -294,59 +301,84 @@
         });
     }
 
-    // Ekstrak Player ID dari berbagai field
-    function extractPlayerId(info) {
-        if (!info) return null;
-        if (info.oneSignalUserId) return info.oneSignalUserId;
-        if (info.userId) return info.userId;
-        if (info.subscription && info.subscription.id) return info.subscription.id;
-        if (info.oneSignalId) return info.oneSignalId;
-        return null;
-    }
-
-    async function fetchPlayerIdWithRetry(retries = 5, delay = 2000) {
-        for (let i = 1; i <= retries; i++) {
-            try {
-                const info = await median.onesignal.onesignalInfo();
-                const playerId = extractPlayerId(info);
-                if (playerId) return playerId;
-            } catch (err) {}
-            if (i < retries) await new Promise(r => setTimeout(r, delay));
+    // ========== FCM Token Helpers ==========
+    async function getFCMToken() {
+        if (!fcmReady || !median.firebaseMessaging) return null;
+        try {
+            const result = await median.firebaseMessaging.getToken();
+            return result?.token || null;
+        } catch (e) {
+            console.warn('getFCMToken error:', e);
+            return null;
         }
-        return null;
     }
 
-    // Firebase helpers
-    async function getFirebasePlayerId() {
+    async function checkFCMPermission() {
+        if (!fcmReady || !median.firebaseMessaging) return false;
+        try {
+            const result = await median.firebaseMessaging.checkPermission();
+            return result?.granted === true;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    // ========== Firebase storage ==========
+    async function getFirebaseFCMToken() {
         if (!currentUid) return null;
-        let snap = await database.ref(`driver_locations/${currentUid}`).once('value');
-        let data = snap.val();
-        let pid = data?.playerId || data?.subscriptionId || null;
-        if (!pid) {
-            snap = await database.ref(`drivers/${currentUid}`).once('value');
-            data = snap.val();
-            pid = data?.playerId || data?.subscriptionId || null;
+        let snap = await database.ref(`driver_locations/${currentUid}/fcmToken`).once('value');
+        let token = snap.val();
+        if (!token) {
+            snap = await database.ref(`drivers/${currentUid}/fcmToken`).once('value');
+            token = snap.val();
         }
-        return pid;
+        return token;
     }
 
-    async function savePlayerIdToFirebase(playerId) {
-        if (!currentUid || !playerId) return;
-        await database.ref(`drivers/${currentUid}`).update({ playerId: playerId, subscriptionId: playerId, last_update: new Date().toISOString() });
-        await database.ref(`driver_locations/${currentUid}`).update({ playerId: playerId, subscriptionId: playerId, last_update: new Date().toISOString() });
+    async function saveFCMTokenToFirebase(token) {
+        if (!currentUid || !token) return;
+        await database.ref(`drivers/${currentUid}`).update({
+            fcmToken: token,
+            last_fcm_update: new Date().toISOString()
+        });
+        await database.ref(`driver_locations/${currentUid}`).update({
+            fcmToken: token,
+            last_update: new Date().toISOString()
+        });
     }
 
-    async function clearFirebasePlayerId() {
+    async function clearFirebaseFCMToken() {
         if (!currentUid) return;
-        await database.ref(`drivers/${currentUid}`).update({ playerId: null, subscriptionId: null });
-        await database.ref(`driver_locations/${currentUid}`).update({ playerId: null, subscriptionId: null });
+        await database.ref(`drivers/${currentUid}`).update({ fcmToken: null });
+        await database.ref(`driver_locations/${currentUid}`).update({ fcmToken: null });
     }
 
-    // Proses aktivasi notifikasi
+    // ========== Redis sync ==========
+    async function syncDriverStatusToRedis(token) {
+        try {
+            const response = await fetch(`${REDIS_API_URL}/api/driver/status`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({
+                    driverId: currentUid,
+                    tracking_enabled: false, // tidak diubah di sini
+                    autobid_enabled: false,
+                    fcmToken: token || null
+                })
+            });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const result = await response.json();
+            console.log('✅ Status terkirim ke Redis:', result);
+        } catch (error) {
+            console.error('❌ Gagal sync ke Redis:', error.message);
+        }
+    }
+
+    // ========== Proses aktivasi FCM ==========
     async function activateNotifications() {
         if (isProcessing) return showToast("Proses sedang berjalan");
         if (!currentUid) return showToast("Driver belum login", true);
-        if (!medianReady || !median.onesignal) return showToast("SDK OneSignal tidak siap", true);
+        if (!fcmReady || !median.firebaseMessaging) return showToast("SDK FCM tidak siap", true);
 
         isProcessing = true;
         const actionBtn = document.getElementById('actionBtn');
@@ -355,52 +387,63 @@
         actionBtn.disabled = true;
 
         try {
-            await clearFirebasePlayerId();
+            // Hapus token lama
+            await clearFirebaseFCMToken();
 
-            if (median.onesignal.setConsentGiven) {
-                await median.onesignal.setConsentGiven(true);
-            }
-
-            await median.onesignal.register();
-
-            if (median.onesignal.promptForPushNotificationsWithUserResponse) {
-                await median.onesignal.promptForPushNotificationsWithUserResponse();
-            }
-
-            await new Promise(r => setTimeout(r, 8000));
-
-            const playerId = await fetchPlayerIdWithRetry(5, 2000);
-            if (playerId) {
-                await savePlayerIdToFirebase(playerId);
-                showToast("Notifikasi berhasil diaktifkan! 🎉");
+            // Minta izin
+            const permResult = await median.firebaseMessaging.requestPermission();
+            if (!permResult.granted) {
+                showToast("Izin notifikasi ditolak. Aktifkan di pengaturan HP.", true);
                 await refreshStatus();
+                return;
+            }
+
+            // Daftar perangkat
+            await median.firebaseMessaging.register();
+
+            // Aktifkan banner di foreground (opsional)
+            await median.firebaseMessaging.enableForegroundBanners();
+
+            // Ambil token (dengan retry)
+            let token = null;
+            for (let i = 0; i < 5; i++) {
+                token = await getFCMToken();
+                if (token) break;
+                await new Promise(r => setTimeout(r, 2000));
+            }
+
+            if (token) {
+                // Simpan ke Firebase
+                await saveFCMTokenToFirebase(token);
+                // Simpan ke Redis
+                await syncDriverStatusToRedis(token);
+                showToast("Notifikasi FCM berhasil diaktifkan! 🎉");
             } else {
-                showToast("Gagal mendapatkan Player ID. Coba lagi.", true);
-                await refreshStatus();
+                showToast("Gagal mendapatkan FCM token. Coba lagi.", true);
             }
         } catch (err) {
             showToast("Error: " + err.message, true);
-            await refreshStatus();
         } finally {
             isProcessing = false;
             actionBtn.innerText = originalText;
             actionBtn.disabled = false;
+            await refreshStatus();
         }
     }
 
-    async function syncPlayerId() {
+    async function syncFCMToken() {
         if (isProcessing) return showToast("Tunggu proses lain selesai");
-        if (!currentUid || !medianReady) return;
+        if (!currentUid || !fcmReady) return;
         isProcessing = true;
         try {
-            const info = await median.onesignal.onesignalInfo();
-            const playerId = extractPlayerId(info);
-            const isSubscribed = info?.subscription?.optedIn === true || info?.oneSignalSubscribed === true;
-            if (playerId && isSubscribed) {
-                await savePlayerIdToFirebase(playerId);
+            const token = await getFCMToken();
+            const granted = await checkFCMPermission();
+            if (token && granted) {
+                await saveFCMTokenToFirebase(token);
+                await syncDriverStatusToRedis(token);
                 showToast("Sinkron berhasil!");
             } else {
-                showToast("Tidak ada Player ID aktif. Aktifkan notifikasi dulu.", true);
+                showToast("Tidak ada token aktif. Aktifkan notifikasi dulu.", true);
             }
         } catch (err) {
             showToast("Gagal sinkron: " + err.message, true);
@@ -412,12 +455,14 @@
 
     async function resetAndReRegister() {
         if (!confirm("Reset akan menghapus data notifikasi. Lanjutkan?")) return;
-        await clearFirebasePlayerId();
+        await clearFirebaseFCMToken();
+        // Hapus juga dari Redis
+        await syncDriverStatusToRedis(null);
         showToast("Data direset. Silakan klik 'Aktifkan Notifikasi'", false);
         await refreshStatus();
     }
 
-    // Update UI
+    // ========== Update UI ==========
     async function refreshStatus() {
         if (!currentUid) {
             document.getElementById('driverName').innerText = "(Belum login)";
@@ -425,6 +470,7 @@
             document.getElementById('statusBadge').className = "status-badge badge-inactive";
             document.getElementById('statusIcon').innerHTML = "🔒";
             document.getElementById('deviceStatusText').innerHTML = "-";
+            document.getElementById('tokenPreview').innerHTML = "-";
             return;
         }
 
@@ -432,22 +478,26 @@
         const driverData = driverSnap.val();
         document.getElementById('driverName').innerText = driverData?.name || driverData?.fullName || "Driver";
 
-        const firebaseId = await getFirebasePlayerId();
-        let sdkStatus = { playerId: null, isSubscribed: false };
-        if (medianReady && median.onesignal) {
+        const firebaseToken = await getFirebaseFCMToken();
+        let sdkToken = null;
+        let permissionGranted = false;
+        if (fcmReady && median.firebaseMessaging) {
             try {
-                const info = await median.onesignal.onesignalInfo();
-                sdkStatus.playerId = extractPlayerId(info);
-                sdkStatus.isSubscribed = info?.subscription?.optedIn === true || info?.oneSignalSubscribed === true;
+                sdkToken = await getFCMToken();
+                permissionGranted = await checkFCMPermission();
             } catch(e) {}
         }
 
-        const isMatch = (firebaseId && sdkStatus.playerId && firebaseId === sdkStatus.playerId);
-        const isActive = (isMatch && sdkStatus.isSubscribed);
+        const isMatch = (firebaseToken && sdkToken && firebaseToken === sdkToken);
+        const isActive = (isMatch && permissionGranted);
         const badgeElem = document.getElementById('statusBadge');
         const statusIconElem = document.getElementById('statusIcon');
         const deviceSpan = document.getElementById('deviceStatusText');
+        const tokenSpan = document.getElementById('tokenPreview');
         const actionBtn = document.getElementById('actionBtn');
+
+        // Tampilkan preview token
+        tokenSpan.textContent = firebaseToken ? firebaseToken.substring(0, 12) + '...' : '-';
 
         if (isActive) {
             badgeElem.innerHTML = "✅ Notifikasi Aktif";
@@ -460,7 +510,7 @@
             actionBtn.classList.add("btn-secondary");
             actionBtn.onclick = null;
         } 
-        else if (sdkStatus.playerId && sdkStatus.isSubscribed && !isMatch) {
+        else if (sdkToken && permissionGranted && !isMatch) {
             badgeElem.innerHTML = "🔄 Perlu Sinkronisasi";
             badgeElem.className = "status-badge badge-warning";
             statusIconElem.innerHTML = "🔄";
@@ -469,7 +519,7 @@
             actionBtn.disabled = false;
             actionBtn.classList.remove("btn-secondary");
             actionBtn.classList.add("btn-primary");
-            actionBtn.onclick = () => syncPlayerId();
+            actionBtn.onclick = () => syncFCMToken();
         }
         else {
             badgeElem.innerHTML = "🔕 Notifikasi Tidak Aktif";
@@ -484,9 +534,9 @@
         }
     }
 
-    // Inisialisasi
+    // ========== Inisialisasi ==========
     async function init() {
-        await waitForMedian();
+        await waitForFCM();
         auth.onAuthStateChanged(async (user) => {
             if (user) {
                 currentUid = user.uid;
@@ -505,7 +555,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', init);
-    document.addEventListener('deviceready', () => { if (!medianReady) init(); });
+    document.addEventListener('deviceready', () => { if (!fcmReady) init(); });
 </script>
 </body>
 </html>
