@@ -221,6 +221,10 @@
                 <span class="driver-label">🔑 Token FCM</span>
                 <span id="tokenPreview" style="font-size:0.7rem; color:#666; max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">-</span>
             </div>
+            <div class="driver-row">
+                <span class="driver-label">☁️ Redis Status</span>
+                <span id="redisStatusText" style="font-weight:500; font-size:0.8rem;">-</span>
+            </div>
         </div>
 
         <div class="tips-box">
@@ -353,7 +357,28 @@
         await database.ref(`driver_locations/${currentUid}`).update({ fcmToken: null });
     }
 
-    // ========== Redis sync ==========
+    // ========== Redis Helpers ==========
+    async function getDriverStatusFromRedis(driverId) {
+        try {
+            const response = await fetch(`${REDIS_API_URL}/api/driver/status/${driverId}`);
+            if (!response.ok) {
+                if (response.status === 404) {
+                    return null;
+                }
+                console.warn(`⚠️ Gagal ambil status Redis (${response.status})`);
+                return null;
+            }
+            const result = await response.json();
+            if (result.success && result.data) {
+                return result.data;
+            }
+            return null;
+        } catch (error) {
+            console.warn('⚠️ Error ambil status dari Redis:', error.message);
+            return null;
+        }
+    }
+
     async function syncDriverStatusToRedis(token) {
         try {
             const response = await fetch(`${REDIS_API_URL}/api/driver/status`, {
@@ -369,8 +394,10 @@
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const result = await response.json();
             console.log('✅ Status terkirim ke Redis:', result);
+            return result;
         } catch (error) {
             console.error('❌ Gagal sync ke Redis:', error.message);
+            return null;
         }
     }
 
@@ -387,8 +414,9 @@
         actionBtn.disabled = true;
 
         try {
-            // Hapus token lama
+            // Hapus token lama di Firebase & Redis
             await clearFirebaseFCMToken();
+            await syncDriverStatusToRedis(null);
 
             // Minta izin
             const permResult = await median.firebaseMessaging.requestPermission();
@@ -456,7 +484,6 @@
     async function resetAndReRegister() {
         if (!confirm("Reset akan menghapus data notifikasi. Lanjutkan?")) return;
         await clearFirebaseFCMToken();
-        // Hapus juga dari Redis
         await syncDriverStatusToRedis(null);
         showToast("Data direset. Silakan klik 'Aktifkan Notifikasi'", false);
         await refreshStatus();
@@ -471,14 +498,19 @@
             document.getElementById('statusIcon').innerHTML = "🔒";
             document.getElementById('deviceStatusText').innerHTML = "-";
             document.getElementById('tokenPreview').innerHTML = "-";
+            document.getElementById('redisStatusText').innerHTML = "-";
             return;
         }
 
+        // Ambil data driver
         const driverSnap = await database.ref(`drivers/${currentUid}`).once('value');
         const driverData = driverSnap.val();
         document.getElementById('driverName').innerText = driverData?.name || driverData?.fullName || "Driver";
 
+        // Ambil token dari Firebase
         const firebaseToken = await getFirebaseFCMToken();
+
+        // Ambil token dari SDK
         let sdkToken = null;
         let permissionGranted = false;
         if (fcmReady && median.firebaseMessaging) {
@@ -488,29 +520,51 @@
             } catch(e) {}
         }
 
-        const isMatch = (firebaseToken && sdkToken && firebaseToken === sdkToken);
-        const isActive = (isMatch && permissionGranted);
+        // Ambil status dari Redis
+        let redisStatus = null;
+        let redisToken = null;
+        try {
+            redisStatus = await getDriverStatusFromRedis(currentUid);
+            if (redisStatus) {
+                redisToken = redisStatus.fcmToken || null;
+            }
+        } catch(e) {}
+
+        const isMatchFirebase = (firebaseToken && sdkToken && firebaseToken === sdkToken);
+        const isMatchRedis = (redisToken && sdkToken && redisToken === sdkToken);
+        const isActive = (isMatchFirebase && isMatchRedis && permissionGranted);
+
         const badgeElem = document.getElementById('statusBadge');
         const statusIconElem = document.getElementById('statusIcon');
         const deviceSpan = document.getElementById('deviceStatusText');
         const tokenSpan = document.getElementById('tokenPreview');
+        const redisStatusSpan = document.getElementById('redisStatusText');
         const actionBtn = document.getElementById('actionBtn');
 
         // Tampilkan preview token
         tokenSpan.textContent = firebaseToken ? firebaseToken.substring(0, 12) + '...' : '-';
 
+        // Status Redis
+        if (redisToken) {
+            redisStatusSpan.innerHTML = '✅ Tersimpan di Redis';
+            redisStatusSpan.style.color = '#1f7b4d';
+        } else {
+            redisStatusSpan.innerHTML = '❌ Tidak ada di Redis';
+            redisStatusSpan.style.color = '#b91c1c';
+        }
+
         if (isActive) {
             badgeElem.innerHTML = "✅ Notifikasi Aktif";
             badgeElem.className = "status-badge badge-active";
             statusIconElem.innerHTML = "✅🔔";
-            deviceSpan.innerHTML = "Siap menerima order";
+            deviceSpan.innerHTML = "Siap menerima order (Firebase + Redis)";
             actionBtn.innerHTML = "✅ Notifikasi Aktif";
             actionBtn.disabled = true;
             actionBtn.classList.remove("btn-primary");
             actionBtn.classList.add("btn-secondary");
             actionBtn.onclick = null;
         } 
-        else if (sdkToken && permissionGranted && !isMatch) {
+        else if (sdkToken && permissionGranted && (!isMatchFirebase || !isMatchRedis)) {
             badgeElem.innerHTML = "🔄 Perlu Sinkronisasi";
             badgeElem.className = "status-badge badge-warning";
             statusIconElem.innerHTML = "🔄";
