@@ -240,7 +240,7 @@
             </div>
         </div>
 
-        <button id="actionBtn" class="btn btn-primary">🔔 Aktifkan Notifikasi</button>
+        <button id="actionBtn" class="btn btn-primary">🔄 Sinkronkan ke Redis</button>
         <button id="refreshBtn" class="btn btn-secondary">🔄 Refresh Status</button>
         <button id="resetBtn" class="btn btn-outline" style="margin-top: 8px;">🗑️ Reset & Daftar Ulang</button>
     </div>
@@ -269,7 +269,6 @@
 
     let currentUid = null;
     let isProcessing = false;
-    let fcmReady = false;
 
     function showToast(message, isError = false) {
         let toast = document.querySelector('.toast-message');
@@ -279,52 +278,12 @@
         toast.textContent = message;
         toast.style.background = isError ? '#b91c1c' : '#1f7b4d';
         document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
+        setTimeout(() => toast.remove(), 4000);
     }
 
-    // ========== Tunggu median.firebaseMessaging ==========
-    async function waitForFCM() {
-        return new Promise((resolve) => {
-            if (typeof median !== 'undefined' && median.firebaseMessaging) {
-                fcmReady = true;
-                resolve(true);
-                return;
-            }
-            let attempts = 0;
-            const interval = setInterval(() => {
-                attempts++;
-                if (typeof median !== 'undefined' && median.firebaseMessaging) {
-                    clearInterval(interval);
-                    fcmReady = true;
-                    resolve(true);
-                } else if (attempts > 30) {
-                    clearInterval(interval);
-                    resolve(false);
-                }
-            }, 500);
-        });
-    }
-
-    // ========== FCM Token Helpers ==========
-    async function getFCMToken() {
-        if (!fcmReady || !median.firebaseMessaging) return null;
-        try {
-            const result = await median.firebaseMessaging.getToken();
-            return result?.token || null;
-        } catch (e) {
-            console.warn('getFCMToken error:', e);
-            return null;
-        }
-    }
-
-    async function checkFCMPermission() {
-        if (!fcmReady || !median.firebaseMessaging) return false;
-        try {
-            const result = await median.firebaseMessaging.checkPermission();
-            return result?.granted === true;
-        } catch (e) {
-            return false;
-        }
+    // ========== FCM Token dari localStorage (dikirim dari Android native) ==========
+    function getLocalFCMToken() {
+        return localStorage.getItem('fcmToken') || null;
     }
 
     // ========== Firebase storage ==========
@@ -386,7 +345,7 @@
                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
                 body: JSON.stringify({
                     driverId: currentUid,
-                    tracking_enabled: false, // tidak diubah di sini
+                    tracking_enabled: false,
                     autobid_enabled: false,
                     fcmToken: token || null
                 })
@@ -401,54 +360,35 @@
         }
     }
 
-    // ========== Proses aktivasi FCM ==========
-    async function activateNotifications() {
+    // ========== Proses Sinkronisasi ke Redis ==========
+    async function syncToRedis() {
         if (isProcessing) return showToast("Proses sedang berjalan");
         if (!currentUid) return showToast("Driver belum login", true);
-        if (!fcmReady || !median.firebaseMessaging) return showToast("SDK FCM tidak siap", true);
 
         isProcessing = true;
         const actionBtn = document.getElementById('actionBtn');
         const originalText = actionBtn.innerText;
-        actionBtn.innerText = "⏳ Memproses...";
+        actionBtn.innerText = "⏳ Menyinkronkan...";
         actionBtn.disabled = true;
 
         try {
-            // Hapus token lama di Firebase & Redis
-            await clearFirebaseFCMToken();
-            await syncDriverStatusToRedis(null);
-
-            // Minta izin
-            const permResult = await median.firebaseMessaging.requestPermission();
-            if (!permResult.granted) {
-                showToast("Izin notifikasi ditolak. Aktifkan di pengaturan HP.", true);
+            // Ambil token dari localStorage (dikirim dari Android)
+            const localToken = getLocalFCMToken();
+            
+            if (!localToken) {
+                showToast("Token FCM tidak ditemukan. Buka aplikasi utama dan aktifkan notifikasi.", true);
                 await refreshStatus();
                 return;
             }
 
-            // Daftar perangkat
-            await median.firebaseMessaging.register();
-
-            // Aktifkan banner di foreground (opsional)
-            await median.firebaseMessaging.enableForegroundBanners();
-
-            // Ambil token (dengan retry)
-            let token = null;
-            for (let i = 0; i < 5; i++) {
-                token = await getFCMToken();
-                if (token) break;
-                await new Promise(r => setTimeout(r, 2000));
-            }
-
-            if (token) {
-                // Simpan ke Firebase
-                await saveFCMTokenToFirebase(token);
-                // Simpan ke Redis
-                await syncDriverStatusToRedis(token);
-                showToast("Notifikasi FCM berhasil diaktifkan! 🎉");
-            } else {
-                showToast("Gagal mendapatkan FCM token. Coba lagi.", true);
-            }
+            // Simpan ke Firebase
+            await saveFCMTokenToFirebase(localToken);
+            
+            // Simpan ke Redis
+            await syncDriverStatusToRedis(localToken);
+            
+            showToast("✅ Token FCM berhasil disinkronkan ke Redis!");
+            
         } catch (err) {
             showToast("Error: " + err.message, true);
         } finally {
@@ -459,33 +399,12 @@
         }
     }
 
-    async function syncFCMToken() {
-        if (isProcessing) return showToast("Tunggu proses lain selesai");
-        if (!currentUid || !fcmReady) return;
-        isProcessing = true;
-        try {
-            const token = await getFCMToken();
-            const granted = await checkFCMPermission();
-            if (token && granted) {
-                await saveFCMTokenToFirebase(token);
-                await syncDriverStatusToRedis(token);
-                showToast("Sinkron berhasil!");
-            } else {
-                showToast("Tidak ada token aktif. Aktifkan notifikasi dulu.", true);
-            }
-        } catch (err) {
-            showToast("Gagal sinkron: " + err.message, true);
-        } finally {
-            isProcessing = false;
-            await refreshStatus();
-        }
-    }
-
     async function resetAndReRegister() {
         if (!confirm("Reset akan menghapus data notifikasi. Lanjutkan?")) return;
         await clearFirebaseFCMToken();
         await syncDriverStatusToRedis(null);
-        showToast("Data direset. Silakan klik 'Aktifkan Notifikasi'", false);
+        localStorage.removeItem('fcmToken');
+        showToast("Data direset. Buka aplikasi utama untuk aktivasi ulang.", false);
         await refreshStatus();
     }
 
@@ -507,18 +426,11 @@
         const driverData = driverSnap.val();
         document.getElementById('driverName').innerText = driverData?.name || driverData?.fullName || "Driver";
 
+        // Ambil token dari localStorage (dari Android)
+        const localToken = getLocalFCMToken();
+
         // Ambil token dari Firebase
         const firebaseToken = await getFirebaseFCMToken();
-
-        // Ambil token dari SDK
-        let sdkToken = null;
-        let permissionGranted = false;
-        if (fcmReady && median.firebaseMessaging) {
-            try {
-                sdkToken = await getFCMToken();
-                permissionGranted = await checkFCMPermission();
-            } catch(e) {}
-        }
 
         // Ambil status dari Redis
         let redisStatus = null;
@@ -530,9 +442,9 @@
             }
         } catch(e) {}
 
-        const isMatchFirebase = (firebaseToken && sdkToken && firebaseToken === sdkToken);
-        const isMatchRedis = (redisToken && sdkToken && redisToken === sdkToken);
-        const isActive = (isMatchFirebase && isMatchRedis && permissionGranted);
+        const isMatchFirebase = (firebaseToken && localToken && firebaseToken === localToken);
+        const isMatchRedis = (redisToken && localToken && redisToken === localToken);
+        const isActive = (isMatchFirebase && isMatchRedis && localToken !== null);
 
         const badgeElem = document.getElementById('statusBadge');
         const statusIconElem = document.getElementById('statusIcon');
@@ -542,7 +454,7 @@
         const actionBtn = document.getElementById('actionBtn');
 
         // Tampilkan preview token
-        tokenSpan.textContent = firebaseToken ? firebaseToken.substring(0, 12) + '...' : '-';
+        tokenSpan.textContent = localToken ? localToken.substring(0, 15) + '...' : '(kosong)';
 
         // Status Redis
         if (redisToken) {
@@ -557,40 +469,52 @@
             badgeElem.innerHTML = "✅ Notifikasi Aktif";
             badgeElem.className = "status-badge badge-active";
             statusIconElem.innerHTML = "✅🔔";
-            deviceSpan.innerHTML = "Siap menerima order (Firebase + Redis)";
-            actionBtn.innerHTML = "✅ Notifikasi Aktif";
+            deviceSpan.innerHTML = "Siap menerima order";
+            actionBtn.innerHTML = "✅ Sudah Sinkron";
             actionBtn.disabled = true;
             actionBtn.classList.remove("btn-primary");
             actionBtn.classList.add("btn-secondary");
             actionBtn.onclick = null;
         } 
-        else if (sdkToken && permissionGranted && (!isMatchFirebase || !isMatchRedis)) {
-            badgeElem.innerHTML = "🔄 Perlu Sinkronisasi";
+        else if (localToken && !isMatchRedis) {
+            badgeElem.innerHTML = "🔄 Perlu Sinkronisasi ke Redis";
             badgeElem.className = "status-badge badge-warning";
             statusIconElem.innerHTML = "🔄";
-            deviceSpan.innerHTML = "Klik tombol di bawah untuk sinkron";
-            actionBtn.innerHTML = "🔄 Sinkronkan Sekarang";
+            deviceSpan.innerHTML = "Token ada tapi belum di Redis";
+            actionBtn.innerHTML = "🔄 Sinkronkan ke Redis";
             actionBtn.disabled = false;
             actionBtn.classList.remove("btn-secondary");
             actionBtn.classList.add("btn-primary");
-            actionBtn.onclick = () => syncFCMToken();
+            actionBtn.onclick = () => syncToRedis();
+        }
+        else if (localToken && !isMatchFirebase) {
+            badgeElem.innerHTML = "🔄 Perlu Sinkronisasi ke Firebase";
+            badgeElem.className = "status-badge badge-warning";
+            statusIconElem.innerHTML = "🔄";
+            deviceSpan.innerHTML = "Token ada tapi belum di Firebase";
+            actionBtn.innerHTML = "🔄 Sinkronkan ke Firebase & Redis";
+            actionBtn.disabled = false;
+            actionBtn.classList.remove("btn-secondary");
+            actionBtn.classList.add("btn-primary");
+            actionBtn.onclick = () => syncToRedis();
         }
         else {
-            badgeElem.innerHTML = "🔕 Notifikasi Tidak Aktif";
+            badgeElem.innerHTML = "🔕 Tidak Ada Token";
             badgeElem.className = "status-badge badge-inactive";
             statusIconElem.innerHTML = "🔕";
-            deviceSpan.innerHTML = "Belum diaktifkan";
-            actionBtn.innerHTML = "🔔 Aktifkan Notifikasi";
+            deviceSpan.innerHTML = "Belum ada token FCM";
+            actionBtn.innerHTML = "📱 Buka Aplikasi Utama";
             actionBtn.disabled = false;
             actionBtn.classList.remove("btn-secondary");
             actionBtn.classList.add("btn-primary");
-            actionBtn.onclick = () => activateNotifications();
+            actionBtn.onclick = () => {
+                showToast("Buka halaman utama Jego untuk mengaktifkan notifikasi.", false);
+            };
         }
     }
 
     // ========== Inisialisasi ==========
     async function init() {
-        await waitForFCM();
         auth.onAuthStateChanged(async (user) => {
             if (user) {
                 currentUid = user.uid;
@@ -600,16 +524,42 @@
                 await refreshStatus();
             }
         });
+        
         document.getElementById('refreshBtn').addEventListener('click', refreshStatus);
         document.getElementById('resetBtn').addEventListener('click', resetAndReRegister);
+        
         if (auth.currentUser) {
             currentUid = auth.currentUser.uid;
             await refreshStatus();
         }
+
+        // ===== LISTENER: Token dikirim dari Android native =====
+        window.updateFCMToken = function(token) {
+            if (!token) {
+                console.warn('⚠️ Token FCM kosong');
+                return;
+            }
+            console.log('📩 FCM Token diterima dari Android:', token.substring(0, 20) + '...');
+            localStorage.setItem('fcmToken', token);
+            
+            // Auto-sync ke Redis jika sudah login
+            if (currentUid) {
+                setTimeout(async () => {
+                    await saveFCMTokenToFirebase(token);
+                    await syncDriverStatusToRedis(token);
+                    await refreshStatus();
+                    showToast("✅ Token FCM otomatis tersinkron!");
+                }, 1000);
+            } else {
+                showToast("📩 Token diterima, tunggu login untuk sinkron.", false);
+            }
+        };
+
+        console.log('🔔 Halaman status FCM siap (Kotlin WebView)');
+        console.log('📌 Fungsi window.updateFCMToken() tersedia untuk dipanggil dari Android');
     }
 
     document.addEventListener('DOMContentLoaded', init);
-    document.addEventListener('deviceready', () => { if (!fcmReady) init(); });
 </script>
 </body>
 </html>
