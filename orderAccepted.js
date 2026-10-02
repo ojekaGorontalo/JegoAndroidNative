@@ -583,7 +583,7 @@ async function cancelTrip() {
         }
         await database.ref('orders/'+orderId).update({ status:'cancelled', cancelled_by:'driver', cancelled_at: new Date().toISOString() });
         showToast("Perjalanan dibatalkan.");
-        setTimeout(() => { window.location.href = 'index.html'; }, 1500);
+        setTimeout(() => { window.location.href = 'home_pack.html'; }, 1500);
       } catch (err) {
         console.error(err);
         showToast("Gagal membatalkan: " + err.message);
@@ -912,7 +912,7 @@ async function loadOrder() {
   orderId = await getOrderId();
   if (!orderId) {
     document.getElementById('errorView').style.display = 'flex';
-    document.getElementById('errorMessage').innerHTML = 'Tidak ada order aktif untuk driver ini. <a href="index.html" style="color:#FF8A00;font-weight:600;">Kembali ke beranda</a>';
+    document.getElementById('errorMessage').innerHTML = 'Tidak ada order aktif untuk driver ini. <a href="home_pack.html" style="color:#FF8A00;font-weight:600;">Kembali ke beranda</a>';
     return;
   }
   let snap = await database.ref('orders/' + orderId).once('value');
