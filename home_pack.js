@@ -84,6 +84,31 @@ const STORAGE_ACCEPT_KURIR = 'jego_accept_kurir';
 const STORAGE_FLOATING = 'jego_floating_button';
 let floatingButtonEnabled = false;
 
+// ============ ⚡ INSTANT LOAD DARI CACHE ============
+// Baca status toggle langsung dari localStorage (sync, tanpa tunggu Firebase)
+locationTrackingEnabled = localStorage.getItem(STORAGE_TRACKING) === 'true';
+autobidEnabled          = localStorage.getItem(STORAGE_AUTOBID) === 'true';
+acceptKurirEnabled      = localStorage.getItem(STORAGE_ACCEPT_KURIR) === 'true';
+floatingButtonEnabled   = localStorage.getItem(STORAGE_FLOATING) === 'true';
+
+// Baca lokasi GPS terakhir dari cache (sync, instant)
+try {
+    const _cachedLoc = localStorage.getItem('jego_last_driver_location');
+    if (_cachedLoc) {
+        const _loc = JSON.parse(_cachedLoc);
+        if (_loc && _loc.lat && _loc.lng) {
+            driverLocation = { latitude: _loc.lat, longitude: _loc.lng };
+            gpsReady = true;
+            lastSentLat = _loc.lat;
+            lastSentLng = _loc.lng;
+            console.log('⚡ [Instant] Pakai lokasi cache:', _loc.lat, _loc.lng);
+        }
+    }
+} catch (e) {
+    console.warn('⚠️ Gagal baca cache lokasi:', e);
+}
+// ============ END INSTANT LOAD ============
+
 // ==================== FUNGSI BANTUAN ====================
 function applyTheme() {
   const savedTheme = localStorage.getItem('jego_driver_theme');
@@ -411,6 +436,13 @@ async function loadStoredSettings() {
     updateAutobidButton();
     updateFloatingButtonUI();
 
+    // ⬇️⬇️⬇️ TAMBAHAN: Restore toggle "Terima Kurir" — WAJIB agar order kurir & titip beli tampil ⬇️⬇️⬇️
+    acceptKurirEnabled = localStorage.getItem(STORAGE_ACCEPT_KURIR) === 'true';
+    const kurirToggle = document.getElementById('acceptKurirToggle');
+    if (kurirToggle) kurirToggle.checked = acceptKurirEnabled;
+    console.log('📦 acceptKurirEnabled (restored):', acceptKurirEnabled);
+    // ⬆️⬆️⬆️ END TAMBAHAN ⬆️⬆️⬆️
+
     // Sinkronkan dengan Android service
     if (locationTrackingEnabled && isAndroidAvailable()) {
         Android.startDriverTracking();
@@ -583,6 +615,7 @@ function updateAcceptKurirSetting() {
     if (!toggle) return;
     acceptKurirEnabled = toggle.checked;
     localStorage.setItem(STORAGE_ACCEPT_KURIR, acceptKurirEnabled);
+    console.log('📦 acceptKurirEnabled diubah menjadi:', acceptKurirEnabled);
     refreshDisplay();
 }
 
@@ -1038,17 +1071,12 @@ function loadOrders() {
     }
     if (!checkDriverData()) return;
 
+    // ⚡ FIX: Jangan return lebih awal — tampilkan radar, tapi listener Firebase tetap di-attach
     if (!gpsReady || !driverLocation.latitude || !driverLocation.longitude) {
-        const messages = ["Mencari sinyal GPS...", "Menunggu sinyal stabil...", "Memastikan akurasi lokasi..."];
-        let msgIndex = 0;
-        if (gpsLoadingInterval) clearInterval(gpsLoadingInterval);
-        ordersList.innerHTML = `<div class="loading"><div class="spinner"></div><p id="gpsLoadingMessage">${messages[0]}</p></div>`;
-        gpsLoadingInterval = setInterval(() => {
-            msgIndex = (msgIndex + 1) % messages.length;
-            const msgElement = document.getElementById('gpsLoadingMessage');
-            if (msgElement) msgElement.textContent = messages[msgIndex];
-        }, 3000);
-        return;
+        document.getElementById('radarContainer').style.display = 'flex';
+        document.querySelector('.container').style.display = 'none';
+        startRadarMessages();
+        // ⬅️ TIDAK return — listener Firebase di bawah tetap dijalankan
     }
 
     if (!currentDriverData?.vehicleType) {
@@ -2014,6 +2042,14 @@ async function checkDriverActiveOrder() {
 // ==================== DOM READY ====================
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('📄 DOM siap, memulai inisialisasi...');
+
+  // ⚡ Update toggle INSTAN dari cache (sebelum tunggu Firebase)
+  updateTrackingButton();
+  updateAutobidButton();
+  updateFloatingButtonUI();
+  const _kurirToggle = document.getElementById('acceptKurirToggle');
+  if (_kurirToggle) _kurirToggle.checked = acceptKurirEnabled;
+
   auth.onAuthStateChanged(async (user) => {
     if (user) {
       console.log('🔐 Driver terautentikasi dengan UID:', user.uid);
