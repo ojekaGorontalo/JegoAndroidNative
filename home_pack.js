@@ -35,9 +35,8 @@ window.updateFCMToken = function(token) {
         localStorage.setItem('pending_fcm_token', token);
         return;
     }
-    // Kirim token ke Redis via sync status (tanpa Firebase)
-    syncDriverStatusToRedis();
-    // Hapus semua pengiriman ke Firebase di sini
+    // Kirim token ke Firebase
+    syncDriverStatusToFirebase();
 };
 
 function processPendingFCMToken() {
@@ -84,9 +83,6 @@ const STORAGE_AUTOBID = 'jego_autobid_enabled';
 const STORAGE_ACCEPT_KURIR = 'jego_accept_kurir';
 const STORAGE_FLOATING = 'jego_floating_button';
 let floatingButtonEnabled = false;
-
-// ==================== CONFIG REDIS ====================
-const REDIS_API_URL = 'https://movego.my.id';
 
 // ==================== FUNGSI BANTUAN ====================
 function applyTheme() {
@@ -179,7 +175,7 @@ function showPopup(title, message, type = 'info', options = {}) {
   document.getElementById('popupMessage').textContent = message;
   const iconMap = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
   document.getElementById('popupIcon').innerHTML = iconMap[type] || 'ℹ️';
-  
+
   const confirmBtn = document.getElementById('popupButton');
   confirmBtn.onclick = () => {
     hidePopup();
@@ -189,8 +185,8 @@ function showPopup(title, message, type = 'info', options = {}) {
   };
   document.getElementById('popupOverlay').style.display = 'flex';
 }
-function hidePopup() { 
-  document.getElementById('popupOverlay').style.display = 'none'; 
+function hidePopup() {
+  document.getElementById('popupOverlay').style.display = 'none';
 }
 
 function showConfirmPopupTracking(title, message, onConfirm, onCancel) {
@@ -309,47 +305,96 @@ function stopRadarMessages() {
   }
 }
 
-// ==================== FUNGSI AMBIL STATUS DARI REDIS ====================
-async function getDriverStatusFromRedis(driverId) {
+// ==================== FUNGSI FIREBASE (LOKASI & STATUS DRIVER) ====================
+async function getDriverStatusFromFirebase(driverId) {
     try {
-        const response = await fetch(`${REDIS_API_URL}/api/driver/status/${driverId}`);
-        if (!response.ok) {
-            console.warn('⚠️ Gagal ambil status dari Redis (HTTP ' + response.status + '), fallback ke localStorage');
-            return null;
-        }
-        const result = await response.json();
-        if (result.success && result.data) {
-            return result.data; // { tracking_enabled, autobid_enabled, floating_button_enabled, fcmToken, ... }
-        }
-        return null;
+        const snap = await database.ref(`driver_locations/${driverId}`).once('value');
+        const data = snap.val();
+        if (!data) return null;
+        return {
+            tracking_enabled: data.tracking_enabled ?? false,
+            autobid_enabled: data.autobid_enabled ?? false,
+            floating_button_enabled: data.floating_button_enabled ?? false,
+            fcmToken: data.fcmToken || null
+        };
     } catch (error) {
-        console.warn('⚠️ Error ambil status dari Redis:', error.message);
+        console.warn('⚠️ Gagal ambil status dari Firebase:', error.message);
         return null;
+    }
+}
+
+async function syncDriverStatusToFirebase() {
+    if (!globalCurrentUid) return;
+    try {
+        const token = localStorage.getItem('fcmToken') || null;
+        const playerId = localStorage.getItem('onesignal_player_id')
+                      || localStorage.getItem('playerId')
+                      || '';
+        await database.ref(`driver_locations/${globalCurrentUid}`).update({
+            uid: globalCurrentUid,
+            tracking_enabled: locationTrackingEnabled,
+            autobid_enabled: autobidEnabled,
+            floating_button_enabled: floatingButtonEnabled,
+            fcmToken: token,
+            playerId: playerId,
+            subscriptionId: playerId,
+            last_update: new Date().toISOString()
+        });
+        console.log('✅ Status terkirim ke Firebase:', {
+            tracking_enabled: locationTrackingEnabled,
+            autobid_enabled: autobidEnabled,
+            floating_button_enabled: floatingButtonEnabled
+        });
+    } catch (error) {
+        console.error('❌ Gagal sinkron status ke Firebase:', error.message);
+    }
+}
+
+async function sendLocationToFirebase(lat, lng) {
+    if (!globalCurrentUid) return;
+    try {
+        const playerId = localStorage.getItem('onesignal_player_id')
+                      || localStorage.getItem('playerId')
+                      || '';
+        await database.ref(`driver_locations/${globalCurrentUid}`).update({
+            uid: globalCurrentUid,
+            latitude: lat,
+            longitude: lng,
+            tracking_enabled: locationTrackingEnabled,
+            autobid_enabled: autobidEnabled,
+            floating_button_enabled: floatingButtonEnabled,
+            playerId: playerId,
+            subscriptionId: playerId,
+            last_update: new Date().toISOString()
+        });
+        console.log('✅ Lokasi terkirim ke Firebase:', lat, lng);
+    } catch (error) {
+        console.error('❌ Gagal kirim lokasi ke Firebase:', error.message);
     }
 }
 
 // ==================== SETTINGS ====================
 async function loadStoredSettings() {
-    // Prioritas: Redis -> localStorage -> default
+    // Prioritas: Firebase -> localStorage -> default
     if (globalCurrentUid) {
-        const redisStatus = await getDriverStatusFromRedis(globalCurrentUid);
-        if (redisStatus) {
-            if (redisStatus.tracking_enabled !== undefined) {
-                locationTrackingEnabled = redisStatus.tracking_enabled;
+        const fbStatus = await getDriverStatusFromFirebase(globalCurrentUid);
+        if (fbStatus) {
+            if (fbStatus.tracking_enabled !== undefined) {
+                locationTrackingEnabled = fbStatus.tracking_enabled;
                 localStorage.setItem(STORAGE_TRACKING, locationTrackingEnabled);
             }
-            if (redisStatus.autobid_enabled !== undefined) {
-                autobidEnabled = redisStatus.autobid_enabled;
+            if (fbStatus.autobid_enabled !== undefined) {
+                autobidEnabled = fbStatus.autobid_enabled;
                 localStorage.setItem(STORAGE_AUTOBID, autobidEnabled);
             }
-            if (redisStatus.floating_button_enabled !== undefined) {
-                floatingButtonEnabled = redisStatus.floating_button_enabled;
+            if (fbStatus.floating_button_enabled !== undefined) {
+                floatingButtonEnabled = fbStatus.floating_button_enabled;
                 localStorage.setItem(STORAGE_FLOATING, floatingButtonEnabled);
             }
-            if (redisStatus.fcmToken) {
-                localStorage.setItem('fcmToken', redisStatus.fcmToken);
+            if (fbStatus.fcmToken) {
+                localStorage.setItem('fcmToken', fbStatus.fcmToken);
             }
-            console.log('✅ Status dari Redis:', { locationTrackingEnabled, autobidEnabled, floatingButtonEnabled });
+            console.log('✅ Status dari Firebase:', { locationTrackingEnabled, autobidEnabled, floatingButtonEnabled });
         } else {
             // fallback ke localStorage
             locationTrackingEnabled = localStorage.getItem(STORAGE_TRACKING) === 'true';
@@ -379,40 +424,6 @@ async function loadStoredSettings() {
     }
 }
 
-// ==================== SINKRON STATUS KE REDIS ====================
-async function syncDriverStatusToRedis() {
-    try {
-        const token = localStorage.getItem('fcmToken') || null;
-        const response = await fetch(`${REDIS_API_URL}/api/driver/status`, {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({
-                driverId: globalCurrentUid,
-                tracking_enabled: locationTrackingEnabled,
-                autobid_enabled: autobidEnabled,
-                floating_button_enabled: floatingButtonEnabled,
-                fcmToken: token
-            })
-        });
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        const result = await response.json();
-        console.log('✅ Status lengkap terkirim ke Redis:', result);
-        return result;
-    } catch (error) {
-        console.error('❌ Gagal sinkron status ke Redis:', error.message);
-    }
-}
-
-// Fungsi pengganti sendStatusToRedis (agar kompatibel dengan panggilan lama)
-async function sendStatusToRedis() {
-    return syncDriverStatusToRedis();
-}
-
 function updateTrackingButton() {
   const toggleBtn = document.getElementById('locationToggleBtn');
   if (!toggleBtn) return;
@@ -435,34 +446,6 @@ function updateAutobidButton() {
 function updateFloatingButtonUI() {
   const toggle = document.getElementById('floatingToggle');
   if (toggle) toggle.checked = floatingButtonEnabled;
-}
-
-// ============ FUNGSI KIRIM KE REDIS ============
-async function sendLocationToRedis(lat, lng) {
-    try {
-        const response = await fetch(`${REDIS_API_URL}/api/driver/location`, {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({
-                driverId: globalCurrentUid,
-                latitude: lat,
-                longitude: lng,
-                tracking_enabled: locationTrackingEnabled,
-                autobid_enabled: autobidEnabled
-            })
-        });
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        const result = await response.json();
-        console.log('✅ Lokasi terkirim ke Redis:', result);
-        return result;
-    } catch (error) {
-        console.error('❌ Gagal kirim lokasi ke Redis:', error.message);
-    }
 }
 
 // ===== TAMBAHAN: fungsi untuk mengatur floating button =====
@@ -489,15 +472,15 @@ function toggleFloatingButton() {
   }
 
   if (globalCurrentUid) {
-    // Kirim status ke Redis (tanpa Firebase)
-    syncDriverStatusToRedis();
+    // Kirim status ke Firebase
+    syncDriverStatusToFirebase();
   }
 }
 
 // ===== PERBAIKAN: toggleLocationTrackingWithConfirm async =====
 async function toggleLocationTrackingWithConfirm() {
     console.log('🔄 toggleLocationTrackingWithConfirm dipanggil');
-    
+
     if (locationTrackingEnabled) {
         const confirmed = await showConfirmPopupTracking(
             '📴 Nonaktifkan Mode',
@@ -574,16 +557,12 @@ function toggleLocationTracking() {
             floatingButtonEnabled = false;
             localStorage.setItem(STORAGE_FLOATING, false);
             updateFloatingButtonUI();
-            if (globalCurrentUid) {
-                // Kirim status ke Redis (tanpa Firebase)
-                syncDriverStatusToRedis();
-            }
         }
     }
 
     if (globalCurrentUid) {
-        // Kirim status ke Redis (tanpa Firebase)
-        syncDriverStatusToRedis();
+        // Kirim status ke Firebase
+        syncDriverStatusToFirebase();
     }
 }
 
@@ -594,8 +573,8 @@ function toggleAutobid() {
     updateAutobidButton();
 
     if (globalCurrentUid) {
-        // Kirim status ke Redis (tanpa Firebase)
-        syncDriverStatusToRedis();
+        // Kirim status ke Firebase
+        syncDriverStatusToFirebase();
     }
 }
 
@@ -683,11 +662,11 @@ function updateDriverLocation(position) {
     }
 
     if (shouldUpdate && locationTrackingEnabled && currentDriverData && globalCurrentUid) {
-        // Kirim ke Redis saja (tidak ke Firebase)
-        sendLocationToRedis(lat, lng);
+        // Kirim ke Firebase
+        sendLocationToFirebase(lat, lng);
         lastSentLat = lat;
         lastSentLng = lng;
-        console.log(`📍 Kirim lokasi ke Redis: ${lat}, ${lng}`);
+        console.log(`📍 Kirim lokasi ke Firebase: ${lat}, ${lng}`);
     } else {
         refreshDisplay();
     }
@@ -814,17 +793,91 @@ function createOrderElement(order) {
     const jarak = order.distance_meters ? (order.distance_meters / 1000).toFixed(1) + ' km' : '-';
     const harga = order.price || 0;
     const isKurir = order.transport_type && order.transport_type.includes('kurir');
+    const isTitipBeli = order.is_titip_beli === true || order.order_type === 'titip_beli';
 
-    // ===== BARU: Badge metode pembayaran =====
-    const isJePay = order.payment_method === 'jepay';
-    const paymentBadge = isJePay 
-        ? '<span class="payment-badge jepay">💳 JePay</span>' 
-        : '<span class="payment-badge cash">💵 Tunai</span>';
-    // =====================================
+    // Badge pembayaran
+    const payMethod = order.payment_method || 'cash';
+    let paymentBadge = '';
+    if (isTitipBeli) {
+        const resp = order.payment_responsibility || 'driver_pays';
+        if (resp === 'driver_pays') {
+            paymentBadge = '<span style="background:#fff3e0;color:#e65100;padding:2px 8px;border-radius:12px;font-size:0.65rem;font-weight:700;">💰 TALANGAN</span>';
+        } else {
+            paymentBadge = '<span style="background:#e8f5e9;color:#1b5e20;padding:2px 8px;border-radius:12px;font-size:0.65rem;font-weight:700;">✅ SUDAH DIBAYAR</span>';
+        }
+    } else {
+        const isJePay = order.payment_method === 'jepay';
+        paymentBadge = isJePay
+            ? '<span class="payment-badge jepay">💳 JePay</span>'
+            : '<span class="payment-badge cash">💵 Tunai</span>';
+    }
 
     let deskripsiBarang = '';
-    if (isKurir && order.item_description) {
+    if (order.item_description) {
         deskripsiBarang = `<div class="delivery-desc-card">${escapeHtml(order.item_description)}</div>`;
+    }
+
+    // Box info talangan (khusus titip beli)
+    let paymentInfoBox = '';
+    if (isTitipBeli) {
+        const resp = order.payment_responsibility || 'driver_pays';
+        const foodEst = order.food_estimate || 0;
+        const ongkir = order.price || 0;
+        if (resp === 'driver_pays' && foodEst > 0) {
+            const advance = foodEst.toLocaleString('id-ID');
+            const total = (foodEst + ongkir).toLocaleString('id-ID');
+            const fee = ongkir.toLocaleString('id-ID');
+            paymentInfoBox = `
+                <div style="background:#fff8e1;border-left:4px solid #f57c00;padding:8px 10px;border-radius:6px;margin-top:8px;font-size:0.75rem;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                        <strong style="color:#e65100;">💰 DRIVER TALANGIN</strong>
+                        <span style="background:#f57c00;color:white;padding:1px 6px;border-radius:8px;font-size:0.6rem;font-weight:700;">WAJIB BAYAR DULU</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:2px 0;">
+                        <span style="color:#666;">Bayar ke penjual (perkiraan):</span>
+                        <strong style="color:#d32f2f;">Rp ${advance}</strong>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:2px 0;">
+                        <span style="color:#666;">Customer bayar ke Anda:</span>
+                        <strong style="color:#2e7d32;">Rp ${total}</strong>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:2px 0;border-top:1px dashed #ffcc80;margin-top:4px;padding-top:4px;">
+                        <span style="color:#666;">💰 Untung Anda:</span>
+                        <strong style="color:#1565c0;">Rp ${fee}</strong>
+                    </div>
+                </div>
+            `;
+        } else if (resp === 'driver_pays') {
+            const fee = ongkir.toLocaleString('id-ID');
+            paymentInfoBox = `
+                <div style="background:#fff8e1;border-left:4px solid #f57c00;padding:8px 10px;border-radius:6px;margin-top:8px;font-size:0.75rem;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <strong style="color:#e65100;">💰 DRIVER TALANGIN</strong>
+                        <span style="background:#f57c00;color:white;padding:1px 6px;border-radius:8px;font-size:0.6rem;font-weight:700;">TANYA HARGA DULU</span>
+                    </div>
+                    <div style="padding:4px 0;color:#666;font-size:0.7rem;">Customer tidak tahu harga makanan — tanya penjual dulu, lalu kabari customer via chat.</div>
+                    <div style="display:flex;justify-content:space-between;padding:2px 0;border-top:1px dashed #ffcc80;margin-top:4px;padding-top:4px;">
+                        <span style="color:#666;">💰 Ongkir Anda:</span>
+                        <strong style="color:#1565c0;">Rp ${fee}</strong>
+                    </div>
+                </div>
+            `;
+        } else {
+            const fee = ongkir.toLocaleString('id-ID');
+            paymentInfoBox = `
+                <div style="background:#e8f5e9;border-left:4px solid #43a047;padding:8px 10px;border-radius:6px;margin-top:8px;font-size:0.75rem;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <strong style="color:#1b5e20;">✅ SUDAH DIBAYAR</strong>
+                        <span style="background:#43a047;color:white;padding:1px 6px;border-radius:8px;font-size:0.6rem;font-weight:700;">TIDAK PERLU BAYAR</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:2px 0;margin-top:4px;">
+                        <span style="color:#666;">💰 Uang jasa Anda:</span>
+                        <strong style="color:#2e7d32;">Rp ${fee}</strong>
+                    </div>
+                    <div style="font-size:0.65rem;color:#2e7d32;margin-top:2px;">Tinggal ambil &amp; antar</div>
+                </div>
+            `;
+        }
     }
 
     let jarakDriver = '-';
@@ -862,6 +915,7 @@ function createOrderElement(order) {
         <div class="order-header">
             <div class="order-badges">
                 ${isKurir ? '<span class="kurir-badge">📦 KURIR</span>' : ''}
+                ${isTitipBeli ? '<span style="background:#f3e5f5;color:#6a1b9a;padding:2px 8px;border-radius:12px;font-size:0.65rem;font-weight:700;">🛒 TITIP BELI</span>' : ''}
                 ${paymentBadge}
             </div>
         </div>
@@ -881,10 +935,11 @@ function createOrderElement(order) {
             </div>
         </div>
         ${deskripsiBarang}
+        ${paymentInfoBox}
         <div class="order-details">
             <div class="detail-item"><span class="detail-value">${durasi}</span><span class="detail-label">Durasi</span></div>
             <div class="detail-item"><span class="detail-value">${jarak}</span><span class="detail-label">Jarak</span></div>
-            <div class="detail-item"><span class="detail-value price-highlight">Rp ${harga.toLocaleString('id-ID')}</span><span class="detail-label">Harga</span></div>
+            <div class="detail-item"><span class="detail-value price-highlight">Rp ${harga.toLocaleString('id-ID')}</span><span class="detail-label">Ongkir</span></div>
             <div class="detail-item"><span class="detail-value">${jarakDriver}</span><span class="detail-label">Jarak Driver</span></div>
         </div>
     `;
@@ -1048,8 +1103,8 @@ function loadOrders() {
                     driverLocation.longitude = loc.lng;
 
                     if (globalCurrentUid) {
-                        // Kirim ke Redis saja (tidak ke Firebase)
-                        sendLocationToRedis(loc.lat, loc.lng);
+                        // Kirim ke Firebase
+                        sendLocationToFirebase(loc.lat, loc.lng);
                     }
 
                     const dist = calculateDistance(
@@ -1058,8 +1113,17 @@ function loadOrders() {
                     );
 
                     if (dist !== null && dist < 3 && locationTrackingEnabled && !isWaitingForConfirmation) {
+                        // Klasifikasi jenis order
+                        const isTitipBeli = orderData.is_titip_beli === true || orderData.order_type === 'titip_beli';
                         const isKurir = (orderData.transport_type || '').includes('kurir');
-                        const fromAuto = (autobidEnabled && !isKurir);
+                        const isPenumpang = !isKurir && !isTitipBeli;
+
+                        // Auto-bid HANYA untuk penumpang (ojek/ride)
+                        // Kurir & Titip Beli: driver HARUS klik manual
+                        const fromAuto = (autobidEnabled && isPenumpang);
+
+                        console.log(`📋 [Order ${orderId}] isKurir=${isKurir}, isTitipBeli=${isTitipBeli}, isPenumpang=${isPenumpang}, fromAuto=${fromAuto}`);
+
                         showOrderDetail({ orderId: orderId, orderData: orderData }, fromAuto, true);
                     }
                 } else {
@@ -1227,17 +1291,17 @@ function initBottomSheetMap() {
         mapContainer.innerHTML = '';
     }
     bottomSheetMap = new google.maps.Map(mapContainer, {
-    center: { lat: 0.5441, lng: 123.0595 },
-    zoom: 12,
-    mapTypeControl: false,
-    fullscreenControl: false,
-    streetViewControl: false,
-    zoomControl: false,
-    rotateControl: false,
-    scaleControl: false,
-    clickableIcons: false,
-    disableDefaultUI: true,
-});
+        center: { lat: 0.5441, lng: 123.0595 },
+        zoom: 12,
+        mapTypeControl: false,
+        fullscreenControl: false,
+        streetViewControl: false,
+        zoomControl: false,
+        rotateControl: false,
+        scaleControl: false,
+        clickableIcons: false,
+        disableDefaultUI: true,
+    });
 }
 
 function showRouteOnBottomSheetMap(order) {
@@ -1343,7 +1407,7 @@ async function showOrderDetail(orderObj, fromAuto = false, isAutoTrigger = false
     if (!checkDriverData() || !globalCurrentUid) return;
     const { orderId, orderData } = orderObj;
     console.log(`👆 [showOrderDetail] User mengklik order ${orderId}`);
-    
+
     const snapshot = await database.ref(`orders/${orderId}`).once('value');
     const currentOrder = snapshot.val();
     if (!currentOrder || currentOrder.status !== 'waiting') {
@@ -1353,12 +1417,89 @@ async function showOrderDetail(orderObj, fromAuto = false, isAutoTrigger = false
     }
     currentSelectedOrder = { orderId: orderId, orderData: currentOrder };
 
-    // ===== TAMBAHAN: Badge metode pembayaran untuk modal =====
-    const isJePay = currentOrder.payment_method === 'jepay';
-    const paymentBadgeDetail = isJePay 
-        ? '<span class="payment-badge jepay" style="font-size:0.7rem; padding:2px 8px; border-radius:12px; font-weight:600; background:#e3f2fd; color:#0d47a1; border:1px solid #90caf9; display:inline-block; margin-left:8px;">💳 JePay</span>' 
-        : '<span class="payment-badge cash" style="font-size:0.7rem; padding:2px 8px; border-radius:12px; font-weight:600; background:#e8f5e9; color:#1b5e20; border:1px solid #a5d6a7; display:inline-block; margin-left:8px;">💵 Tunai</span>';
-    // =====================================================
+    const isTitipBeliDetail = currentOrder.is_titip_beli === true || currentOrder.order_type === 'titip_beli';
+    let paymentBadgeDetail = '';
+    if (isTitipBeliDetail) {
+        const resp = currentOrder.payment_responsibility || 'driver_pays';
+        if (resp === 'driver_pays') {
+            paymentBadgeDetail = '<span style="font-size:0.7rem;padding:2px 8px;border-radius:12px;font-weight:600;background:#fff3e0;color:#e65100;border:1px solid #ffcc80;display:inline-block;margin-left:8px;">💰 TALANGAN</span>';
+        } else {
+            paymentBadgeDetail = '<span style="font-size:0.7rem;padding:2px 8px;border-radius:12px;font-weight:600;background:#e8f5e9;color:#1b5e20;border:1px solid #a5d6a7;display:inline-block;margin-left:8px;">✅ SUDAH DIBAYAR</span>';
+        }
+    } else {
+        const isJePay = currentOrder.payment_method === 'jepay';
+        paymentBadgeDetail = isJePay
+            ? '<span style="font-size:0.7rem;padding:2px 8px;border-radius:12px;font-weight:600;background:#e3f2fd;color:#0d47a1;border:1px solid #90caf9;display:inline-block;margin-left:8px;">💳 JePay</span>'
+            : '<span style="font-size:0.7rem;padding:2px 8px;border-radius:12px;font-weight:600;background:#e8f5e9;color:#1b5e20;border:1px solid #a5d6a7;display:inline-block;margin-left:8px;">💵 Tunai</span>';
+    }
+
+    // ===== BOX INFO TALANGAN (TITIP BELI) =====
+    const isTitipBeli = currentOrder.is_titip_beli === true || currentOrder.order_type === 'titip_beli';
+    let paymentBoxHtml = '';
+    if (isTitipBeli) {
+        const resp = currentOrder.payment_responsibility || 'driver_pays';
+        const foodEst = currentOrder.food_estimate || 0;
+        const ongkir = currentOrder.price || 0;
+
+        if (resp === 'driver_pays' && foodEst > 0) {
+            const advance = foodEst.toLocaleString('id-ID');
+            const total = (foodEst + ongkir).toLocaleString('id-ID');
+            const fee = ongkir.toLocaleString('id-ID');
+            paymentBoxHtml = `
+                <div style="background:#fff8e1;border:2px solid #f57c00;border-radius:10px;padding:12px;margin-bottom:12px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                        <strong style="color:#e65100;font-size:0.9rem;">💰 DRIVER TALANGIN</strong>
+                        <span style="background:#f57c00;color:white;padding:2px 10px;border-radius:10px;font-size:0.65rem;font-weight:700;">WAJIB BAYAR DULU</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:0.85rem;">
+                        <span style="color:#666;">Bayar ke penjual (perkiraan):</span>
+                        <strong style="color:#d32f2f;">Rp ${advance}</strong>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:0.85rem;">
+                        <span style="color:#666;">Customer bayar ke Anda:</span>
+                        <strong style="color:#2e7d32;">Rp ${total}</strong>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:6px 0 0;border-top:1px dashed #ffcc80;margin-top:4px;font-size:0.85rem;">
+                        <span style="color:#666;">💰 Untung Anda:</span>
+                        <strong style="color:#1565c0;">Rp ${fee}</strong>
+                    </div>
+                    <div style="font-size:0.7rem;color:#e65100;margin-top:6px;">⚠️ Siapkan uang tunai sebelum ambil order</div>
+                </div>
+            `;
+        } else if (resp === 'driver_pays') {
+            const fee = ongkir.toLocaleString('id-ID');
+            paymentBoxHtml = `
+                <div style="background:#fff8e1;border:2px solid #f57c00;border-radius:10px;padding:12px;margin-bottom:12px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                        <strong style="color:#e65100;font-size:0.9rem;">💰 DRIVER TALANGIN</strong>
+                        <span style="background:#f57c00;color:white;padding:2px 10px;border-radius:10px;font-size:0.65rem;font-weight:700;">TANYA HARGA DULU</span>
+                    </div>
+                    <div style="padding:4px 0;color:#666;font-size:0.8rem;line-height:1.4;">
+                        Customer tidak tahu harga — <strong>tanya penjual dulu</strong>, lalu kabari customer via chat/telepon.
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:6px 0 0;border-top:1px dashed #ffcc80;margin-top:4px;font-size:0.85rem;">
+                        <span style="color:#666;">💰 Ongkir Anda:</span>
+                        <strong style="color:#1565c0;">Rp ${fee}</strong>
+                    </div>
+                </div>
+            `;
+        } else {
+            const fee = ongkir.toLocaleString('id-ID');
+            paymentBoxHtml = `
+                <div style="background:#e8f5e9;border:2px solid #43a047;border-radius:10px;padding:12px;margin-bottom:12px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                        <strong style="color:#1b5e20;font-size:0.9rem;">✅ SUDAH DIBAYAR</strong>
+                        <span style="background:#43a047;color:white;padding:2px 10px;border-radius:10px;font-size:0.65rem;font-weight:700;">TIDAK PERLU BAYAR</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:0.85rem;">
+                        <span style="color:#666;">💰 Uang jasa Anda:</span>
+                        <strong style="color:#2e7d32;">Rp ${fee}</strong>
+                    </div>
+                    <div style="font-size:0.7rem;color:#2e7d32;margin-top:6px;">Tinggal ambil &amp; antar</div>
+                </div>
+            `;
+        }
+    }
 
     const content = document.getElementById('bottomSheetContent');
     let html = `
@@ -1373,6 +1514,7 @@ async function showOrderDetail(orderObj, fromAuto = false, isAutoTrigger = false
                 <div style="font-size:0.7rem; color:#666;">⭐ ${(currentOrder.passenger_rating || 0).toFixed(1)} (${currentOrder.perjalanan || 0} perjalanan)</div>
             </div>
         </div>
+        ${paymentBoxHtml}
         <div style="display:flex; flex-direction:column; gap:4px; margin-bottom:8px; background:#f8f9fa; padding:8px 10px; border-radius:8px;">
             <div style="display:flex; align-items:flex-start; gap:6px; font-size:0.85rem;">
                 <span style="color:var(--primary);">🟢</span>
@@ -1391,13 +1533,13 @@ async function showOrderDetail(orderObj, fromAuto = false, isAutoTrigger = false
         <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; background:#f0f0f0; padding:8px; border-radius:8px; margin-bottom:12px; text-align:center;">
             <div><span style="font-size:0.7rem; color:#666;">Durasi</span><br><span style="font-weight:700;">${currentOrder.duration_seconds ? Math.round(currentOrder.duration_seconds / 60) + ' min' : '-'}</span></div>
             <div><span style="font-size:0.7rem; color:#666;">Jarak</span><br><span style="font-weight:700;">${currentOrder.distance_meters ? (currentOrder.distance_meters / 1000).toFixed(1) + ' km' : '-'}</span></div>
-            <div><span style="font-size:0.7rem; color:#666;">Harga</span><br><span style="font-weight:700; color:var(--success);">Rp ${(currentOrder.price || 0).toLocaleString('id-ID')}</span></div>
+            <div><span style="font-size:0.7rem; color:#666;">Ongkir</span><br><span style="font-weight:700; color:var(--success);">Rp ${(currentOrder.price || 0).toLocaleString('id-ID')}</span></div>
         </div>
         ${currentOrder.item_description ? `<div style="background:#fff3e0; border-left:3px solid var(--primary); padding:6px 8px; border-radius:6px; font-size:0.75rem; margin-bottom:10px;">${escapeHtml(currentOrder.item_description)}</div>` : ''}
         <div id="bottomSheetBidOptions" class="bid-options-container" style="display:flex; flex-direction:column; gap:8px; margin-bottom:8px;"></div>
         <div id="bottomSheetCountdown" style="display:none; margin-bottom:8px;">
             <div class="progress-container"><div id="bottomSheetProgress" class="progress-bar" style="width:100%"></div></div>
-            <div class="progress-info"><span>Menunggu konfirmasi customer...</span><span id="bottomSheetSeconds">30 detik</span></div>
+            <div class="progress-info"><span>Menunggu konfirmasi merchant...</span><span id="bottomSheetSeconds">30 detik</span></div>
         </div>
         <div style="display:flex; gap:8px; margin-top:4px;">
             <button class="ambil-btn" id="bottomSheetAmbilBtn" style="flex:2;">Kirim Penawaran</button>
@@ -1430,7 +1572,6 @@ async function showOrderDetail(orderObj, fromAuto = false, isAutoTrigger = false
     const ambilBtn = document.getElementById('bottomSheetAmbilBtn');
     const skipBtn = document.getElementById('bottomSheetSkipBtn');
     const bidContainer = document.getElementById('bottomSheetBidOptions');
-    const countdownContainer = document.getElementById('bottomSheetCountdown');
 
     if (isWaitingForConfirmation) {
         skipBtn.disabled = true;
@@ -1510,7 +1651,7 @@ async function sendDriverOffer(isAuto = false, bidPrice = null, bidPercent = nul
   }
   if (!currentSelectedOrder || !globalCurrentUid) return;
   if (!checkDriverData()) return;
-  
+
   const { orderId, orderData } = currentSelectedOrder;
   const originalPrice = orderData.price;
 
@@ -1525,12 +1666,12 @@ async function sendDriverOffer(isAuto = false, bidPrice = null, bidPercent = nul
     finalOfferPrice = bidPrice;
     percentUsed = bidPercent;
   }
-  
+
   if (isAuto && autobidOfferedOrders.has(orderId)) {
     console.log(`Autobid: Order ${orderId} sudah pernah ditawarkan, lewat.`);
     return;
   }
-  
+
   let freshBalance = 0;
   try {
     const driverSnap = await database.ref(`drivers/${globalCurrentUid}/balance`).once('value');
@@ -1541,9 +1682,9 @@ async function sendDriverOffer(isAuto = false, bidPrice = null, bidPercent = nul
     console.warn("Gagal ambil saldo terbaru dari Firebase:", e);
     freshBalance = currentDriverData?.balance || 0;
   }
-  
+
   const driverBalance = freshBalance;
-  
+
   let feePersen = 0, pajakPersen = 0;
   try {
     const potonganSnap = await database.ref('data-jego/potongan').once('value');
@@ -1553,11 +1694,11 @@ async function sendDriverOffer(isAuto = false, bidPrice = null, bidPercent = nul
   } catch(e) {
     console.warn("Gagal ambil fee/pajak:", e);
   }
-  
+
   const potonganRupiah = finalOfferPrice * (feePersen / 100);
   const pajakRupiah = potonganRupiah * (pajakPersen / 100);
   const totalPotongan = potonganRupiah + pajakRupiah;
-  
+
   if (driverBalance < totalPotongan) {
     console.log(`Saldo tidak cukup: ${driverBalance} < ${totalPotongan}`);
     showToast(
@@ -1571,7 +1712,7 @@ async function sendDriverOffer(isAuto = false, bidPrice = null, bidPercent = nul
     }
     return;
   }
-  
+
   const ambilBtn = document.getElementById('bottomSheetAmbilBtn');
   if (ambilBtn) {
     ambilBtn.disabled = true;
@@ -1579,7 +1720,7 @@ async function sendDriverOffer(isAuto = false, bidPrice = null, bidPercent = nul
   } else {
     document.querySelectorAll('#bottomSheetBidOptions .bid-option').forEach(btn => btn.disabled = true);
   }
-  
+
   const snapshot = await database.ref(`orders/${orderId}`).once('value');
   const currentOrder = snapshot.val();
   if (!currentOrder || currentOrder.status !== 'waiting') {
@@ -1592,7 +1733,7 @@ async function sendDriverOffer(isAuto = false, bidPrice = null, bidPercent = nul
     }
     return;
   }
-  
+
   const driverDataForOffer = {
     driver_id: globalCurrentUid,
     driver_name: currentDriverData.fullName,
@@ -1607,10 +1748,10 @@ async function sendDriverOffer(isAuto = false, bidPrice = null, bidPercent = nul
     bid_percent: percentUsed,
     bid_requested: (bidPrice !== null)
   };
-  
+
   try {
     await database.ref(`orders/${orderId}/driver_offers/${globalCurrentUid}`).set(driverDataForOffer);
-    
+
     if (isAuto) {
       autobidOfferedOrders.add(orderId);
       let storedOffers = JSON.parse(localStorage.getItem('autobid_offered_orders') || '[]');
@@ -1619,7 +1760,7 @@ async function sendDriverOffer(isAuto = false, bidPrice = null, bidPercent = nul
         localStorage.setItem('autobid_offered_orders', JSON.stringify(storedOffers));
       }
     }
-    
+
     if (ambilBtn) ambilBtn.textContent = 'Menunggu Konfirmasi';
     startCountdown(orderId, globalCurrentUid);
   } catch (err) {
@@ -1695,7 +1836,7 @@ function startCountdown(orderId, driverId) {
       database.ref(`orders/${orderId}/driver_offers/${driverId}`).remove().then(() => closeBottomSheet()).catch(() => closeBottomSheet());
     }
   }, 1000);
-  
+
   orderStatusListener = database.ref(`orders/${orderId}`).on('value', (snapshot) => {
     const order = snapshot.val();
     if (!order) { stopCountdown(); closeBottomSheet(); return; }
@@ -1724,7 +1865,7 @@ function startCountdown(orderId, driverId) {
       closeBottomSheet();
     }
   });
-  
+
   offerRejectionListener = database.ref(`orders/${orderId}/driver_offers/${driverId}/status`).on('value', (snap) => {
     const status = snap.val();
     if (status === 'rejected') {
@@ -1761,10 +1902,7 @@ function navigateToScreen(screen) {
     else if (screen === 'notif_status') window.location.href = 'statusOneSignal.html';
 }
 
-// ==================== NOTIFICATIONS (INTERNAL, BUKAN ONESIGNAL) ====================
-// Bagian ini hanya untuk notifikasi internal dari Firebase (driver_notifications)
-// Tidak ada kode OneSignal lagi.
-
+// ==================== NOTIFICATIONS (INTERNAL) ====================
 let notifListenerRef = null;
 let notifListener = null;
 
@@ -1911,7 +2049,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           return;
         }
       }
-      
+
       const kompensasiBtn = document.getElementById('kompensasiBtn');
       if (kompensasiBtn) {
         kompensasiBtn.addEventListener('click', () => {
@@ -1954,7 +2092,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.location.href = 'loginDriver.html';
         return;
       }
-      
+
       try {
         const keySnap = await database.ref('data-jego/apikey-google-maps').once('value');
         const apiKey = keySnap.val();
@@ -1970,24 +2108,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         showToast('Gagal memuat Google Maps', 'error');
       }
 
-      // 🔥 PRIORITASKAN AMBIL STATUS DARI REDIS
+      // 🔥 PRIORITASKAN AMBIL STATUS DARI FIREBASE
       await loadStoredSettings();
 
       // Sinkronkan dengan Android service
       if (locationTrackingEnabled && isAndroidAvailable()) {
         Android.startDriverTracking();
-        console.log('📍 Service tracking dimulai (sinkron dari Redis)');
+        console.log('📍 Service tracking dimulai (sinkron dari Firebase)');
       } else if (!locationTrackingEnabled && isAndroidAvailable()) {
         Android.stopDriverTracking();
-        console.log('⏹️ Service tracking dihentikan (sinkron dari Redis)');
+        console.log('⏹️ Service tracking dihentikan (sinkron dari Firebase)');
       }
-
-      // Tidak ada lagi OneSignal prompt
-      // Hapus semua panggilan OneSignal
 
       loadOrders();
       setTimeout(startGPSMonitoring, 1000);
-      // checkPlayerIdAndPrompt dihapus
     } else {
       console.warn('❌ Driver tidak login, redirect ke loginDriver.html');
       window.location.href = 'loginDriver.html';
@@ -2062,8 +2196,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const floatingToggle = document.getElementById('floatingToggle');
   if (floatingToggle) floatingToggle.addEventListener('change', toggleFloatingButton);
-
-  // Semua event listener OneSignal dihapus
 });
 
 function refreshData() {
